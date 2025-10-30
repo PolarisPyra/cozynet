@@ -30,8 +30,8 @@ const OngekiStaticMusic = new Hono().get("music", async (c) => {
         ) AS earliest
         ON m.songId = earliest.songId AND m.chartId = earliest.chartId AND m.version = earliest.maxVersion
         LEFT JOIN ongeki_static_opt o ON m.opt = o.id
-        LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
-        WHERE (dwp.status = 1 OR o.name = 'A000' OR o.name IS NULL)
+		LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
+		WHERE (dwp.status = 1 OR o.isEnable = 1 OR o.name = 'A000' OR o.name IS NULL)
         ORDER BY earliest.version DESC, m.id DESC`,
 			[version, userId]
 		);
