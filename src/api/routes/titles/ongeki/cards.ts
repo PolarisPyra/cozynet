@@ -39,7 +39,7 @@ const OngekiCardsRoutes = new Hono().get("/", async (c) => {
 		uc.isAcquired,
 		uc.created
 			FROM ongeki_static_cards sc
-			LEFT JOIN ongeki_user_card uc ON uc.cardId = sc.cardId AND uc.user = ? AND (uc.isAcquired = 1 OR uc.digitalStock > 0 OR uc.analogStock > 0)
+			INNER JOIN ongeki_user_card uc ON uc.cardId = sc.cardId AND uc.user = ? AND (uc.isAcquired = 1 OR uc.digitalStock > 0 OR uc.analogStock > 0)
 			LEFT JOIN ongeki_static_opt o ON sc.opt = o.id
 			LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
 			WHERE sc.imagePath IS NOT NULL AND (dwp.status = 1 OR o.isEnable = 1 OR o.name = 'A000' OR o.name IS NULL)
