@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,11 +74,24 @@ const AimeCardSwap = () => {
 						/>
 					</div>
 
-					<div className="pt-4">
-						<Button variant="custom" type="submit" disabled={!isFormValid} className="w-full">
-							{updateAimecard.isPending ? "Updating..." : "Update Aime Card"}
-						</Button>
-					</div>
+				<div className="pt-4">
+					<Button
+						variant="custom"
+						type="submit"
+						disabled={!isFormValid}
+						className="w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
+						aria-busy={updateAimecard.isPending}
+					>
+					{updateAimecard.isPending ? (
+						<>
+							<Loader2 className="h-4 w-4 animate-spin" />
+							<span>Updating...</span>
+						</>
+					) : (
+						<span>Update</span>
+					)}
+					</Button>
+				</div>
 				</form>
 			</div>
 		</div>

@@ -131,10 +131,15 @@ const ArcadeLocation = () => {
 						<label className="text-primary block pb-2 text-sm font-medium">Select Arcade</label>
 						<Popover open={openArcade} onOpenChange={setOpenArcade}>
 							<PopoverTrigger asChild>
-								<Button variant="dropdown" role="combobox" aria-expanded={openArcade}>
-									{selectedArcade ? selectedArcade.name : "Choose an arcade"}
-									<ChevronsUpDown className="flex-shrink-0 opacity-50" />
-								</Button>
+						<Button
+							variant="outline"
+							role="combobox"
+							aria-expanded={openArcade}
+							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+						>
+							{selectedArcade ? selectedArcade.name : "Choose an arcade"}
+							<ChevronsUpDown className="flex-shrink-0 opacity-50" />
+						</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80 rounded-sm p-0">
 								<Command className="w-full">
@@ -172,10 +177,16 @@ const ArcadeLocation = () => {
 						<label className="text-primary block pb-2 text-sm font-medium">Country</label>
 						<Popover open={openCountry} onOpenChange={setOpenCountry}>
 							<PopoverTrigger asChild>
-								<Button variant="dropdown" role="combobox" aria-expanded={openCountry} disabled={!selectedArcade}>
-									{selectedCountry || "Select Country"}
-									<ChevronsUpDown className="flex-shrink-0 opacity-50" />
-								</Button>
+						<Button
+							variant="outline"
+							role="combobox"
+							aria-expanded={openCountry}
+							disabled={!selectedArcade}
+							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+						>
+							{selectedCountry || "Select Country"}
+							<ChevronsUpDown className="flex-shrink-0 opacity-50" />
+						</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80 rounded-sm p-0">
 								<Command className="w-full">
@@ -211,10 +222,16 @@ const ArcadeLocation = () => {
 						<label className="text-primary block pb-2 text-sm font-medium">State / Region</label>
 						<Popover open={openState} onOpenChange={setOpenState}>
 							<PopoverTrigger asChild>
-								<Button variant="dropdown" role="combobox" aria-expanded={openState} disabled={!selectedCountry}>
-									{selectedState || "Select State / Region"}
-									<ChevronsUpDown className="opacity-50" />
-								</Button>
+						<Button
+							variant="outline"
+							role="combobox"
+							aria-expanded={openState}
+							disabled={!selectedCountry}
+							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+						>
+							{selectedState || "Select State / Region"}
+							<ChevronsUpDown className="opacity-50" />
+						</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80 p-0">
 								<Command>
@@ -246,14 +263,21 @@ const ArcadeLocation = () => {
 
 					{/* Submit Button */}
 					<div className="pt-4">
-						<Button variant="custom" onClick={handleSubmit} disabled={!isFormValid} className="w-full">
-							{isPending ? (
-								<>
-									<Spinner size={16} className="mr-2" /> Updating Location...
-								</>
-							) : (
-								"Update Location"
-							)}
+						<Button
+							variant="custom"
+							onClick={handleSubmit}
+							disabled={!isFormValid}
+							className="w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
+							aria-busy={isPending}
+						>
+						{isPending ? (
+							<>
+								<Spinner size={16} className="mr-2" />
+								<span>Updating Location...</span>
+							</>
+						) : (
+							<span>Update</span>
+						)}
 						</Button>
 					</div>
 				</div>

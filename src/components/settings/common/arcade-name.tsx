@@ -112,10 +112,15 @@ const ArcadeName = () => {
 						<label className="text-foreground block pb-2 text-sm font-medium">Select Arcade</label>
 						<Popover open={openArcade} onOpenChange={setOpenArcade}>
 							<PopoverTrigger asChild>
-								<Button variant="dropdown" role="combobox" aria-expanded={openArcade}>
-									{selectedArcade ? selectedArcade.name : "Choose an arcade"}
-									<ChevronsUpDown className="opacity-50" />
-								</Button>
+						<Button
+							variant="outline"
+							role="combobox"
+							aria-expanded={openArcade}
+							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+						>
+							{selectedArcade ? selectedArcade.name : "Choose an arcade"}
+							<ChevronsUpDown className="opacity-50" />
+						</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80 p-0">
 								<Command>
@@ -173,23 +178,24 @@ const ArcadeName = () => {
 						</div>
 					</div>
 
-					<div className="pt-4">
-						<Button
-							variant="custom"
-							onClick={handleSubmit}
-							disabled={!canSubmit || isPending}
-							className="w-full cursor-pointer"
-						>
-							{isPending ? (
-								<>
-									<Spinner size={16} className="mr-2" />
-									Updating Name...
-								</>
-							) : (
-								"Update Arcade Name or Nickname"
-							)}
-						</Button>
-					</div>
+				<div className="pt-4">
+					<Button
+						variant="custom"
+						onClick={handleSubmit}
+						disabled={!canSubmit || isPending}
+						className="w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
+						aria-busy={isPending}
+					>
+						{isPending ? (
+							<>
+								<Spinner size={16} className="mr-2" />
+								<span>Updating Name...</span>
+							</>
+						) : (
+							<span>Update</span>
+						)}
+					</Button>
+				</div>
 				</div>
 			)}
 		</div>

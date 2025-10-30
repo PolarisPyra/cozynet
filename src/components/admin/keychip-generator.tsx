@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -176,24 +176,34 @@ const KeychipGenerator = () => {
 					/>
 				</div>
 
-				<Button
-					variant="custom"
-					type="button"
-					onClick={generateRandomSerial}
-					disabled={isLoading}
-					className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm p-3 font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-80"
-				>
-					Generate random serial
-				</Button>
+		<Button
+			variant="custom"
+			type="button"
+			onClick={generateRandomSerial}
+			disabled={isLoading}
+			className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-secondary p-3 font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
+			aria-busy={isLoading}
+		>
+			<Shuffle className="h-4 w-4" />
+			<span>Generate random serial</span>
+		</Button>
 
-				<Button
-					variant="custom"
-					type="submit"
-					disabled={isLoading || !hasSerialId}
-					className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm p-3 font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-80"
-				>
-					{isLoading ? "Generating..." : "Add new keychip"}
-				</Button>
+		<Button
+			variant="custom"
+			type="submit"
+			disabled={isLoading || !hasSerialId}
+			className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
+			aria-busy={isLoading}
+		>
+			{isLoading ? (
+				<>
+					<Loader2 className="h-4 w-4 animate-spin" />
+					<span>Generating...</span>
+				</>
+			) : (
+				<span>Add new keychip</span>
+			)}
+		</Button>
 			</form>
 		</div>
 	);
