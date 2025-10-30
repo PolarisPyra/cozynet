@@ -44,7 +44,7 @@ const ChunithmStaticMusic = new Hono().get("chuni_static_music", async (c) => {
 				AND m.version = COALESCE(uv.latest_version, sv.earliest_version)
 			LEFT JOIN chuni_static_opts o ON m.opt = o.id
 			LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
-			WHERE (dwp.status = 1 OR o.name = 'A000' OR o.name IS NULL)
+			WHERE (dwp.status = 1 OR o.isEnable = 1 OR o.name = 'A000' OR o.name IS NULL)
 				AND sv.songId NOT IN (
 					SELECT songId 
 					FROM chuni_static_music 
