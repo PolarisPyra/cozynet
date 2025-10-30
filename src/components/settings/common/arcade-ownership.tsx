@@ -53,7 +53,12 @@ const ArcadeOwnership = () => {
 				<label className="text-primary block pb-2 text-sm font-medium">Select Arcade</label>
 				<Popover open={openArcade} onOpenChange={setOpenArcade}>
 					<PopoverTrigger asChild>
-						<Button variant="dropdown" role="combobox" aria-expanded={openArcade}>
+						<Button
+							variant="outline"
+							role="combobox"
+							aria-expanded={openArcade}
+							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+						>
 							{selectedArcade
 								? arcades?.find((a) => `${a.arcade}` === selectedArcade)?.name || `Arcade #${selectedArcade}`
 								: "Select Arcade..."}
@@ -136,9 +141,22 @@ const ArcadeOwnership = () => {
 				</Popover>
 			</div>
 
-			<Button onClick={handleSubmit} variant="custom" disabled={isPending || !selectedArcade || !selectedUser}>
-				{isPending ? "Updating..." : "Update assigned user"}
-			</Button>
+		<Button
+			onClick={handleSubmit}
+			variant="custom"
+			disabled={isPending || !selectedArcade || !selectedUser}
+			className="w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
+			aria-busy={isPending}
+		>
+			{isPending ? (
+				<>
+					<Spinner size={16} className="mr-2" />
+					<span>Updating...</span>
+				</>
+			) : (
+				<span>Update</span>
+			)}
+		</Button>
 		</div>
 	);
 };
