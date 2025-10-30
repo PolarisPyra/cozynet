@@ -1,0 +1,7 @@
+dist
+node_modules
+.gitignore
+.prettierignore
+package.json
+package-lock.json
+*.ejs
