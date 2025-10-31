@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import { useChunithmScores, useChunithmVersion } from "@/hooks/chunithm";
+import { convertRomVersionToVersion } from "@/utils/helpers";
 
 import { scoreFilters } from "../definitions/score-filters";
 import type { UseChunithmFilteringParams } from "../types/music-types";
@@ -21,10 +22,11 @@ export const useChunithmScoreFiltering = ({ searchQuery, filterValues }: UseChun
 				return false;
 			}
 
-			// Apply version filter separately (needs access to user's current version)
+			// Apply version filter: include scores set on current version (based on romVersion)
 			const versionFilterValue = filterValues?.["version"] || "current";
-			if (versionFilterValue === "current" && version != null && score.songVersion != null) {
-				if (score.songVersion !== version) return false;
+			if (versionFilterValue === "current" && version != null) {
+				const setVersion = convertRomVersionToVersion(score.romVersion);
+				if (setVersion !== version) return false;
 			}
 
 			// Apply all other filters
