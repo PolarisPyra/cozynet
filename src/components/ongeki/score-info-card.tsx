@@ -167,7 +167,7 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 								Tech Score
 							</span>
 							<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">
-								{score.techScore?.toLocaleString() ?? "-"}
+								{score.techScore != null ? Math.min(score.techScore, 1010000).toLocaleString() : "-"}
 							</span>
 						</div>
 						<div className="flex flex-col items-end">
