@@ -91,23 +91,46 @@ export const getChunithmComboStatus = (isFullCombo: number, isAllJustice: number
 };
 
 export function ChunitmRating(level: number, score: number): number {
+	const chartConstant = level * 100;
+
 	if (score >= 1009000) {
-		return level * 100 + 215;
+		// SSS+: Chart constant +2.15 (capped, no further increase)
+		return chartConstant + 215;
 	} else if (score >= 1007500) {
-		return level * 100 + 200 + (score - 1007500) / 100;
+		// SSS: Chart constant +2.0, +0.01 per 100 points
+		return chartConstant + 200 + Math.floor((score - 1007500) / 100);
 	} else if (score >= 1005000) {
-		return level * 100 + 150 + (score - 1005000) / 50;
+		// SS+: Chart constant +1.5, +0.1 per 500 points = +0.01 per 50 points
+		return chartConstant + 150 + Math.floor((score - 1005000) / 50);
 	} else if (score >= 1000000) {
-		return level * 100 + 100 + (score - 1000000) / 100;
+		// SS: Chart constant +1.0, +0.1 per 1000 points = +0.01 per 100 points
+		return chartConstant + 100 + Math.floor((score - 1000000) / 100);
+	} else if (score >= 990000) {
+		// S+: Chart constant +0, +0.1 per 2500 points = +0.01 per 250 points
+		// At 990000: 0, interpolate to 1000000 where it should be +100
+		// So from 990000-999999: +0.1 per 2500 points
+		return chartConstant + Math.floor((score - 990000) / 250);
 	} else if (score >= 975000) {
-		return level * 100 + (score - 975000) / 250;
+		// S: Chart constant +0, +0.1 per 2500 points = +0.01 per 250 points
+		return chartConstant + Math.floor((score - 975000) / 250);
 	} else if (score >= 925000) {
-		return level * 100 - 300 + ((score - 925000) * 3) / 500;
+		// AA: Chart constant -3.0, linear interpolation to A at 900000
+		// From 925000 (-3.0) to 900000 (-5.0): difference of -2.0 over 25000 points
+		return chartConstant - 300 + Math.floor(((score - 925000) * -200) / 25000);
 	} else if (score >= 900000) {
-		return level * 100 - 500 + ((score - 900000) * 4) / 500;
+		// A: Chart constant -5.0, linear interpolation to BBB at 800000
+		// From 900000 (-5.0) to 800000 (-5.0/2 = -2.5): difference of +2.5 over 100000 points
+		return chartConstant - 500 + Math.floor(((score - 900000) * 250) / 100000);
 	} else if (score >= 800000) {
-		return (level * 100 - 500) / 2 + ((score - 800000) * ((level - 500) / 2)) / 100000;
+		// BBB: (Chart constant -5.0)/2, linear interpolation from A at 900000
+		const bbb = (chartConstant - 500) / 2;
+		// At 800000, rating is (Chart constant -5.0)/2
+		// At 900000, rating is Chart constant -5.0
+		// Linear interpolation from 800000 to 900000
+		const progress = (score - 800000) / 100000;
+		return Math.floor(bbb + (chartConstant - 500 - bbb) * progress);
 	} else {
+		// C and below: 0
 		return 0;
 	}
 }
@@ -249,54 +272,85 @@ export function OngekiGekForceRating(
 	isAllBreake: number,
 	isFullBell: number
 ): number {
-	const internalChartRating = level * 1000;
-	let rating = 0;
-
+	// Using integer arithmetic to avoid floating point precision issues
+	const chartConstant = Math.floor(level * 1000);
 	const fullCombo = isFullCombo === 1;
 	const allBreake = isAllBreake === 1;
 	const fullBell = isFullBell === 1;
 
-	if (score < 500000) {
-		return 0;
-	} else if (score < 800000) {
-		rating = ((internalChartRating - 6000) * (score - 500000)) / 300000;
-	} else if (score < 900000) {
-		rating = internalChartRating - 6000 + (2000 * (score - 800000)) / 100000;
-	} else if (score < 970000) {
-		rating = internalChartRating - 4000 + (4000 * (score - 900000)) / 70000;
-	} else if (score < 990000) {
-		rating = internalChartRating + (750 * (score - 970000)) / 20000;
-	} else if (score < 1000000) {
-		rating = internalChartRating + 750 + (500 * (score - 990000)) / 10000;
-	} else if (score < 1007500) {
-		rating = internalChartRating + 1250 + (500 * (score - 1000000)) / 7500;
-	} else if (score <= 1010000) {
-		rating = internalChartRating + 1750 + (250 * (score - 1007500)) / 2500;
-	} else {
+	let baseRating = 0;
+
+	// If score <= 500000, base rating is 0
+	if (score <= 500000) {
 		return 0;
 	}
 
-	// Apply bonuses
-	if (score === 1010000) {
-		rating += 350; // AB+
+	// For 500000 < score <= 800000
+	if (score > 500000 && score <= 800000) {
+		baseRating = ((chartConstant - 6000) * (score - 500000)) / 300000;
+		if (baseRating < 0) {
+			return 0;
+		}
+		return baseRating;
+	}
+
+	// For score > 800000, calculate technical score bonus using linear interpolation
+	let techScoreBonus = 0;
+
+	if (score >= 1010000) {
+		techScoreBonus = 2000; // 2.0 * 1000
+	} else if (score >= 1007500) {
+		// Linear interpolation between 1007500 (1.75) and 1010000 (2.0)
+		techScoreBonus = 1750 + Math.floor((250 * (score - 1007500)) / 2500);
+	} else if (score >= 1000000) {
+		// Linear interpolation between 1000000 (1.25) and 1007500 (1.75)
+		techScoreBonus = 1250 + Math.floor((500 * (score - 1000000)) / 7500);
+	} else if (score >= 990000) {
+		// Linear interpolation between 990000 (0.75) and 1000000 (1.25)
+		techScoreBonus = 750 + Math.floor((500 * (score - 990000)) / 10000);
+	} else if (score >= 970000) {
+		// Linear interpolation between 970000 (0) and 990000 (0.75)
+		techScoreBonus = Math.floor((750 * (score - 970000)) / 20000);
+	} else if (score >= 900000) {
+		// Linear interpolation between 900000 (-4) and 970000 (0)
+		techScoreBonus = -4000 + Math.floor((4000 * (score - 900000)) / 70000);
+	} else {
+		// Linear interpolation between 800000 (-6) and 900000 (-4)
+		techScoreBonus = -6000 + Math.floor((2000 * (score - 800000)) / 100000);
+	}
+
+	// Calculate technical rank bonus
+	let techRankBonus = 0;
+	if (score >= 1007500) {
+		techRankBonus = 300; // SSS+ = 0.3 * 1000
+	} else if (score >= 1000000) {
+		techRankBonus = 200; // SSS = 0.2 * 1000
+	} else if (score >= 990000) {
+		techRankBonus = 100; // SS = 0.1 * 1000
+	}
+	// S and below = 0
+
+	// Calculate clear badge bonuses
+	let clearBadgeBonus = 0;
+	// Note: All Break+ requires score = 1010000, all breaks, all bells caught, no damage
+	// Since we don't have damage info, we'll check for score = 1010000 with all breaks
+	if (score === 1010000 && allBreake) {
+		clearBadgeBonus = 350; // All Break+ = 0.35 * 1000
 	} else if (allBreake) {
-		rating += 300;
+		clearBadgeBonus = 300; // All Break = 0.3 * 1000
 	} else if (fullCombo) {
-		rating += 100;
+		clearBadgeBonus = 100; // Full Combo = 0.1 * 1000
 	}
 
 	if (fullBell) {
-		rating += 50;
-	}
-	if (score >= 1007500) {
-		rating += 300; // SSS+
-	} else if (score >= 1000000) {
-		rating += 200; // SSS
-	} else if (score >= 990000) {
-		rating += 100; // SS
+		clearBadgeBonus += 50; // Full Bell = 0.05 * 1000 (can stack with other badges)
 	}
 
-	return rating;
+	// Base rating = Chart Constant + Technical score bonus + Technical rank bonus + Clear badge bonuses
+	baseRating = chartConstant + techScoreBonus + techRankBonus + clearBadgeBonus;
+
+	// Return base rating (already in integer form, caller will divide by 1000)
+	return baseRating;
 }
 
 // ===================================

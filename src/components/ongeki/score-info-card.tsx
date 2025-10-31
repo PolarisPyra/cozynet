@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CDN } from "@/lib/constants";
 import { OngekiPlaylog } from "@/shared/types";
-import { getOngekiGrade } from "@/utils/helpers";
+import { OngekiGekForceRating, OngekiRating as OngekiRatingCalc, getOngekiGrade } from "@/utils/helpers";
 
 import { OngekiRatingColors } from "../common/rating-colors";
 
@@ -115,11 +115,22 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 		return Number.isFinite(level) ? level.toFixed(1) : "?";
 	};
 
-	const calculatedRating = score.playerRating
-		? isRefreshOrAbove
-			? score.playerRating / 1000
-			: score.playerRating / 100
-		: null;
+	const calculatedRating =
+		score.playerRating && score.playerRating > 0
+			? isRefreshOrAbove
+				? score.playerRating / 1000
+				: score.playerRating / 100
+			: score.techScore != null && score.level != null
+				? isRefreshOrAbove
+					? OngekiGekForceRating(
+							score.level,
+							score.techScore,
+							score.isFullCombo ?? 0,
+							score.isAllBreak ?? 0,
+							score.isFullBell ?? 0
+						) / 1000
+					: OngekiRatingCalc(score.level, score.techScore) / 100
+				: null;
 
 	return (
 		<div

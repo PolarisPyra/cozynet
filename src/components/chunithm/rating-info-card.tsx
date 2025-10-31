@@ -162,9 +162,7 @@ const ChunithmRatingInfoCard: React.FC<ChunithmRatingInfoCardProps> = ({
 						</div>
 					)}
 					<div className="flex flex-col items-end">
-						<span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
-							{isPotential ? "Rating" : "Player Rating"}
-						</span>
+						<span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">Rating</span>
 						<div className="mt-0.5">
 							<ChunithmRatingColors rating={calculatedRating} />
 						</div>
