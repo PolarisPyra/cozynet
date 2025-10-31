@@ -156,7 +156,7 @@ const OngekiRatingInfoCard: React.FC<OngekiRatingInfoCardProps> = (props) => {
 					)}
 					<div className="flex flex-col items-end">
 						<span className="text-muted-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
-							{isRecommend ? "Rating" : "Player Rating"}
+							Rating
 						</span>
 						<div className="mt-0.5">
 							<OngekiRatingColors rating={calculatedRating} decimals={isRefreshOrAbove ? 3 : 2} isRefresh={isRefreshOrAbove} />
