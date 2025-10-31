@@ -49,7 +49,7 @@ function AchievementBadges({
 						className="h-8 w-20 object-contain md:h-10 md:w-20"
 					/>
 				) : (
-					<div className="bg-placeholder h-2 w-16 rounded-sm" />
+					<Skeleton className="h-2 w-16 rounded-sm" />
 				)}
 			</div>
 
