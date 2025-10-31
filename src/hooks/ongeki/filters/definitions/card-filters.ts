@@ -1,6 +1,20 @@
+import ongekiSkills from "../ongekiSkill.json";
 import type { CardFilter } from "../types/card-types";
 
-// Skill category mapping removed; category filter disabled
+type SkillData = {
+	id: number;
+	name: string;
+	category: string;
+	info: string;
+};
+
+const skills = ongekiSkills as SkillData[];
+
+const skillIdToCategoryMap = new Map<number, string>();
+
+skills.forEach((skill) => {
+	skillIdToCategoryMap.set(skill.id, skill.category);
+});
 
 export const rarityFilter: CardFilter = {
 	identifier: "rarity",
@@ -83,4 +97,31 @@ export const levelFilter: CardFilter = {
 		}
 	},
 };
-export const cardFilters: CardFilter[] = [rarityFilter, attributeFilter, acquisitionFilter, levelFilter];
+export const skillIdFilter: CardFilter = {
+	identifier: "skillId",
+	label: "Skill Category",
+	options: [
+		{ label: "All", value: "all" },
+		{ label: "Attack", value: "Attack" },
+		{ label: "Boost", value: "Boost" },
+		{ label: "Danger Attack", value: "DangerAttack" },
+		{ label: "Danger Boost", value: "DangerBoost" },
+		{ label: "Danger Guard", value: "DangerGuard" },
+		{ label: "Guard", value: "Guard" },
+		{ label: "None", value: "None" },
+		{ label: "Support", value: "Support" },
+	],
+	predicate: (card, value) => {
+		if (value === "all") return true;
+
+		const cardSkillId = card.skillId;
+		if (cardSkillId === null || cardSkillId === undefined) {
+			return value === "None";
+		}
+
+		const skillCategory = skillIdToCategoryMap.get(cardSkillId);
+		return skillCategory === value;
+	},
+};
+
+export const cardFilters: CardFilter[] = [rarityFilter, attributeFilter, acquisitionFilter, levelFilter, skillIdFilter];

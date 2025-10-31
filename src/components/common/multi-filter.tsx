@@ -49,7 +49,7 @@ export const MultiFilter = ({ filters, filterValues, onFilterChange, onClearAll 
 					<Badge variant="secondary" className="text-xs">
 						{activeFilterCount} active
 					</Badge>
-					<Button variant="ghost" size="sm" onClick={onClearAll} className="h-7 text-xs">
+					<Button variant="ghost" size="sm" onClick={onClearAll} className="h-7 text-xs hover:cursor-pointer">
 						Clear All
 					</Button>
 				</div>
