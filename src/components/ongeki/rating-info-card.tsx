@@ -150,7 +150,7 @@ const OngekiRatingInfoCard: React.FC<OngekiRatingInfoCardProps> = (props) => {
 								Tech Score
 							</span>
 							<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">
-								{rating.techScoreMax?.toLocaleString() ?? "-"}
+								{rating.techScoreMax != null ? Math.min(rating.techScoreMax, 1010000).toLocaleString() : "-"}
 							</span>
 						</div>
 					)}
