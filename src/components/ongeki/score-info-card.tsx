@@ -166,9 +166,24 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 							<span className="text-muted-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
 								Tech Score
 							</span>
-							<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">
-								{score.techScore != null ? Math.min(score.techScore, 1010000).toLocaleString() : "-"}
-							</span>
+							{score.techScore != null ? (
+								score.techScore >= 1010000 ? (
+									<div className="flex flex-col items-end gap-0.5">
+										<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">
+											1,010,000
+										</span>
+										<span className="text-muted-foreground text-xs font-medium whitespace-nowrap tabular-nums">
+											(AB+: +{(score.techScore - 1010000).toLocaleString()})
+										</span>
+									</div>
+								) : (
+									<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">
+										{score.techScore.toLocaleString()}
+									</span>
+								)
+							) : (
+								<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">-</span>
+							)}
 						</div>
 						<div className="flex flex-col items-end">
 							<span className="text-muted-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
