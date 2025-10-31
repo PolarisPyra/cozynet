@@ -59,8 +59,8 @@ function AchievementBadges({ isFullCombo, isAllBreak, isFullBell, techScore }: A
 			<div className="flex h-8 w-8 items-center justify-start md:h-10 md:w-10">
 				{isAllBreak === 1 ? (
 					<img
-						src={`${CDN}/ongeki/badges/filled/allbreak.webp`}
-						alt="AB Badge"
+						src={`${CDN}/ongeki/badges/filled/${techScore >= 1010000 ? "allbreakplus" : "allbreak"}.webp`}
+						alt={techScore >= 1010000 ? "AB+ Badge" : "AB Badge"}
 						className="h-8 w-8 object-contain md:h-10 md:w-10"
 					/>
 				) : isFullCombo === 1 ? (
