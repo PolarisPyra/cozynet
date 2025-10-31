@@ -157,6 +157,14 @@ const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, le
 							</span>
 							<span className="text-foreground text-sm font-bold">{getChunithmGrade(score.score ?? 0)}</span>
 						</div>
+						{score.skillName && (
+							<Badge
+								variant="secondary"
+								className="mt-1 h-6 max-w-full overflow-hidden rounded-sm px-2 text-ellipsis whitespace-nowrap"
+							>
+								{score.skillName}
+							</Badge>
+						)}
 					</div>
 					<div className="flex flex-col items-end">
 						<span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
