@@ -139,7 +139,6 @@ export function MapiconCustomization() {
 					onUnlock={handleUnlock}
 					hasChanges={hasChanges}
 					customPreview={customPreview}
-					useCompactImageSizing={true}
 				/>
 			</UserboxContent>
 		</UserboxPageWrapper>

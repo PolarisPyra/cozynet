@@ -139,7 +139,6 @@ export function SystemvoiceCustomization() {
 					onUnlock={handleUnlock}
 					hasChanges={hasChanges}
 					customPreview={customPreview}
-					useCompactImageSizing={true}
 				/>
 			</UserboxContent>
 		</UserboxPageWrapper>

@@ -29,7 +29,7 @@ interface UserboxContentProps {
 }
 
 export function UserboxContent({ children, className }: UserboxContentProps) {
-	return <div className={cn("flex-1 px-2 pb-2 sm:p-4", className)}>{children}</div>
+	return <div className={cn("px-2 pb-2 sm:p-4", className)}>{children}</div>
 }
 
 interface UserboxPreviewWrapperProps {

@@ -37,7 +37,6 @@ export interface GridProps<T extends BaseItem> {
 	customPreview?: (item: T | null) => React.ReactNode
 	className?: string
 	hideImage?: boolean
-	useCompactImageSizing?: boolean
 }
 
 // Utility
@@ -62,8 +61,7 @@ const GridItem = <T extends BaseItem>({
 	isSelected,
 	onClick,
 	imageBasePath,
-	hideImage,
-	useCompactImageSizing
+	hideImage
 }: {
 	item: T
 	isEquipped: boolean
@@ -71,12 +69,10 @@ const GridItem = <T extends BaseItem>({
 	onClick?: (item: T) => void
 	imageBasePath: string
 	hideImage: boolean
-	useCompactImageSizing: boolean
 }) => {
 	const imageUrl = `${CDN}/${imageBasePath}/${item.imagePath}`
 	const [loaded, setLoaded] = useState(false)
 
-	// Detect item types for appropriate sizing
 	const isNameplate = item.nameplateId !== undefined
 	const isTrophy = item.trophyId !== undefined
 	const isSystemVoice = item.systemVoiceId !== undefined
@@ -84,27 +80,27 @@ const GridItem = <T extends BaseItem>({
 	const isCharacter = item.characterId !== undefined
 	const isStage = item.stageId !== undefined
 
-	// Wide items (nameplates and trophies)
-	const isWide = isNameplate || isTrophy
-	// Compact items (system voice, map icon, stage)
-	const isCompact = isSystemVoice || isMapIcon || isStage
+	const getBorderClasses = () => {
+		if (isSelected) return "border-primary bg-background/20"
+		if (isEquipped) return "border-primary/80 bg-background/20"
+		return "border-border bg-background/20 hover:border-primary/60 hover:bg-accent"
+	}
 
-	const borderClass = isSelected
-		? "border-primary bg-primary/15 dark:bg-primary/20 shadow-md shadow-primary/20"
-		: isEquipped
-			? "border-primary/80 bg-primary/10 dark:bg-primary/10 shadow-sm shadow-primary/10"
-			: "border-border bg-surface hover:border-primary/60 hover:bg-accent"
+	const getImageContainerClasses = () => {
+		if (isNameplate) return "h-[40px] p-2 md:h-[45px] md:p-2.5 lg:h-[50px] lg:p-3"
+		if (isTrophy) return "h-[40px] p-2.5 md:h-[45px] md:p-3 lg:h-[50px] lg:p-3.5"
+		if (isCharacter) return "h-[120px] p-2 md:h-[140px] lg:h-[160px]"
+		if (isSystemVoice) return "h-[60px] p-1.5 md:h-[70px] lg:h-[80px]"
+		if (isMapIcon) return "h-[60px] p-1.5 md:h-[70px] lg:h-[80px]"
+		if (isStage) return "h-[60px] p-1.5 md:h-[70px] lg:h-[80px]"
+		return "h-[80px] p-2 md:h-[100px] lg:h-[110px]"
+	}
 
 	return (
 		<div
 			className={cn(
 				"group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-sm border-2 shadow-sm transition-all hover:shadow-md",
-				isWide
-					? "max-w-[200px] md:max-w-[240px] lg:max-w-[280px]"
-					: isCompact
-						? "max-w-[120px] md:max-w-[140px] lg:max-w-[160px]"
-						: "max-w-[100px] md:max-w-[120px] lg:max-w-[140px]",
-				borderClass,
+				getBorderClasses(),
 				item.locked && "opacity-60"
 			)}
 			onClick={() => onClick?.(item)}
@@ -112,16 +108,8 @@ const GridItem = <T extends BaseItem>({
 			{!hideImage && (
 				<div
 					className={cn(
-						"border-border from-surface to-background dark:from-background/20 dark:to-background/40 relative flex w-full items-center justify-center border-b bg-gradient-to-b",
-						isWide
-							? "h-[40px] p-1 md:h-[45px] lg:h-[50px]"
-							: isCharacter
-								? "h-[120px] p-2 md:h-[140px] lg:h-[160px]"
-								: isCompact
-									? "h-[60px] p-1.5 md:h-[70px] lg:h-[80px]"
-									: useCompactImageSizing
-										? "h-[80px] p-2 md:h-[90px]"
-										: "h-[80px] p-2 md:h-[100px] lg:h-[110px]"
+						"border-border from-surface to-background dark:from-background/20 dark:to-background/40 relative flex w-full items-center justify-center overflow-hidden border-b bg-gradient-to-b",
+						getImageContainerClasses()
 					)}
 				>
 					{!loaded && <div className="bg-muted/30 dark:bg-muted/50 absolute inset-0 animate-pulse" />}
@@ -130,15 +118,11 @@ const GridItem = <T extends BaseItem>({
 						src={imageUrl}
 						alt={item.label}
 						className={cn(
-							"object-contain transition-opacity duration-300",
-							isWide || isCompact || isCharacter
-								? "h-full w-full"
-								: useCompactImageSizing
-									? "max-h-full w-full"
-									: "max-h-full max-w-full",
+							"h-auto max-h-full w-auto max-w-full object-contain transition-opacity duration-300",
 							loaded ? "opacity-100" : "opacity-0",
 							item.locked && !isSelected ? "grayscale group-hover:grayscale-[50%]" : ""
 						)}
+						style={{ maxHeight: "100%", maxWidth: "100%" }}
 						loading="lazy"
 						onLoad={() => setLoaded(true)}
 						draggable={false}
@@ -156,7 +140,7 @@ const GridItem = <T extends BaseItem>({
 				</div>
 			)}
 
-			<div className="bg-muted/40 dark:bg-muted/10 border-border flex h-6 items-center justify-center border-t px-1 md:h-7 md:px-2">
+			<div className="bg-muted/40 dark:bg-muted/10 border-border flex min-h-[28px] items-center justify-center border-t p-1.5 md:min-h-[32px] md:p-2">
 				<div
 					className="text-foreground w-full overflow-hidden text-center text-xs whitespace-nowrap md:text-sm"
 					title={item.label}
@@ -183,8 +167,7 @@ export const Grid = <T extends BaseItem>({
 	hasChanges = false,
 	customPreview,
 	className,
-	hideImage = false,
-	useCompactImageSizing = false
+	hideImage = false
 }: GridProps<T>) => {
 	const [page, setPage] = useState(1)
 	const pageSize = 36
@@ -219,9 +202,9 @@ export const Grid = <T extends BaseItem>({
 
 	if (loading) {
 		return (
-			<div className={cn("flex h-full w-full flex-col", className)}>
-				<div className="flex flex-1 items-center justify-center">
-					<div className="bg-surface border-border dark:bg-card grid w-full grid-cols-4 gap-3 rounded-md border p-2 shadow-sm md:grid-cols-4 lg:grid-cols-9">
+			<div className={cn("flex w-full flex-col", className)}>
+				<div className="flex w-full justify-center">
+					<div className="bg-surface border-border dark:bg-card grid w-full max-w-7xl grid-cols-4 gap-2 rounded-md border p-2 shadow-sm md:grid-cols-5 md:gap-3 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-9">
 						{Array.from({ length: 12 }).map((_, i) => (
 							<Skeleton key={i} className="aspect-square rounded-sm" />
 						))}
@@ -232,13 +215,13 @@ export const Grid = <T extends BaseItem>({
 	}
 
 	return (
-		<div className={cn("flex h-full w-full flex-col", className)}>
+		<div className={cn("flex w-full flex-col", className)}>
 			{preview}
 
-			<div className="flex flex-1 items-center justify-center">
-				<div className="bg-surface border-border dark:bg-card w-full rounded-md border p-2 shadow-sm">
+			<div className="flex w-full justify-center">
+				<div className="bg-surface border-border dark:bg-card w-full max-w-7xl rounded-md border p-2 shadow-sm">
 					{paginatedItems.length > 0 ? (
-						<div className="grid grid-cols-4 justify-items-center gap-2 md:grid-cols-4 md:gap-3 lg:grid-cols-9">
+						<div className="grid grid-cols-4 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-9">
 							{paginatedItems.map(item => {
 								const itemId = getItemId(item)
 								const isEquipped = equippedItemIds?.has(itemId) ?? false
@@ -253,7 +236,6 @@ export const Grid = <T extends BaseItem>({
 										onClick={onItemClick}
 										imageBasePath={imageBasePath}
 										hideImage={hideImage}
-										useCompactImageSizing={useCompactImageSizing}
 									/>
 								)
 							})}

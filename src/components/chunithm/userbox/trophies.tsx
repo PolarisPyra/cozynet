@@ -311,7 +311,6 @@ export function TrophyCustomization() {
 					onEquip={handleGridEquip}
 					onUnlock={handleUnlockClick}
 					customPreview={customPreview}
-					useCompactImageSizing={true}
 				/>
 			</UserboxContent>
 		</UserboxPageWrapper>
