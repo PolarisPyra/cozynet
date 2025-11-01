@@ -3,7 +3,16 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { UserboxSearchCommand } from "@/components/chunithm/userbox/userbox-search-command";
-import { Button } from "@/components/ui/button";
+import {
+	UserboxContent,
+	UserboxEquipUnlockButton,
+	UserboxPageWrapper,
+	UserboxPreviewEmpty,
+	UserboxPreviewImage,
+	UserboxPreviewWrapper,
+	UserboxSearchBar,
+	UserboxSearchCommandWrapper,
+} from "@/components/chunithm/userbox/userbox-layout";
 import {
 	MapiconItem,
 	useCurrentMapicon,
@@ -96,67 +105,44 @@ const MapiconCustomization: React.FC = () => {
 	const customPreview = useCallback(
 		(item: MapiconItem | null) => {
 			if (!item) {
-				return (
-					<div className="mb-4 flex h-fit flex-col items-center justify-center">
-						<h3 className="text-primary text-xl font-semibold">Select a Map Icon</h3>
-						<p className="text-muted-foreground mt-2">Choose a map icon to preview and equip</p>
-					</div>
-				);
+				return <UserboxPreviewEmpty title="Select a Map Icon" description="Choose a map icon to preview and equip" />;
 			}
 
 			return (
-				<div className="mb-4 flex h-fit flex-col items-center justify-center">
-					{/* Preview Image */}
-					<div style={{ maxWidth: "100%" }}>
-						<img
-							src={`${CDN}/chunithm/map_icon/${item.imagePath || ""}`}
-							alt={item.label}
-							className="mx-auto mb-2"
-							style={{
-								width: 120 * 2,
-								height: 120 * 2,
-								objectFit: "contain",
-								borderRadius: "0.5rem",
-							}}
-						/>
-					</div>
-
-					{/* Equip/Unlock Button */}
-					<Button
-						onClick={() => (item.locked ? handleUnlock(item) : handleEquip(item))}
-						disabled={!hasChanges && !item.locked}
-						variant="custom"
-						className="mt-2 rounded-sm text-sm"
-					>
-						{item.locked ? "Unlock" : "Equip"}
-					</Button>
-				</div>
+				<UserboxPreviewWrapper>
+					<UserboxPreviewImage
+						src={`${CDN}/chunithm/map_icon/${item.imagePath || ""}`}
+						alt={item.label}
+						width={120 * 2}
+						height={120 * 2}
+					/>
+					<UserboxEquipUnlockButton
+						item={item}
+						hasChanges={hasChanges}
+						onEquip={() => handleEquip(item)}
+						onUnlock={() => handleUnlock(item)}
+					/>
+				</UserboxPreviewWrapper>
 			);
 		},
 		[hasChanges, handleEquip, handleUnlock]
 	);
 
 	return (
-		<div className="flex h-full flex-col">
-			{/* Search Bar */}
-			<div className="border-border bg-background/95 flex-shrink-0 backdrop-blur-sm">
-				<div className="px-4 py-3">
-					<div className="flex items-center gap-2">
-						<div className="flex-1">
-							<UserboxSearchCommand
-								items={searchData?.items || []}
-								searchQuery={searchTerm}
-								onSearchChange={setSearchTerm}
-								onItemSelect={handleSelect}
-								itemType="mapicon"
-							/>
-						</div>
-					</div>
-				</div>
-			</div>
+		<UserboxPageWrapper>
+			<UserboxSearchBar>
+				<UserboxSearchCommandWrapper>
+					<UserboxSearchCommand
+						items={searchData?.items || []}
+						searchQuery={searchTerm}
+						onSearchChange={setSearchTerm}
+						onItemSelect={handleSelect}
+						itemType="mapicon"
+					/>
+				</UserboxSearchCommandWrapper>
+			</UserboxSearchBar>
 
-			{/* Grid Content */}
-			<div className="flex-1 px-2 pb-2 sm:p-4">
+			<UserboxContent>
 				<Grid
 					items={filteredItems}
 					equippedItemIds={equippedItemIds}
@@ -170,8 +156,8 @@ const MapiconCustomization: React.FC = () => {
 					customPreview={customPreview}
 					useCompactImageSizing={true}
 				/>
-			</div>
-		</div>
+			</UserboxContent>
+		</UserboxPageWrapper>
 	);
 };
 
