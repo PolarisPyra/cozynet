@@ -1,22 +1,22 @@
-import React from "react";
+import React from "react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 type ContainerProps = React.HTMLAttributes<HTMLDivElement> & {
-	children: React.ReactNode;
-};
+	children: React.ReactNode
+}
 
 export const Container = ({ className, children, ...props }: ContainerProps) => (
 	<div className={cn("relative flex-1 overflow-auto", className)} {...props}>
 		{children}
 	</div>
-);
+)
 
 export const Body = ({ className, children, ...props }: ContainerProps) => (
 	<div className={cn("mb-4 px-4 pb-4 sm:py-0", className)} {...props}>
 		{children}
 	</div>
-);
+)
 
 export const FilterArea = ({ className, children, ...props }: ContainerProps) => (
 	<div
@@ -25,6 +25,6 @@ export const FilterArea = ({ className, children, ...props }: ContainerProps) =>
 	>
 		{children}
 	</div>
-);
+)
 
-export default Container;
+export default Container

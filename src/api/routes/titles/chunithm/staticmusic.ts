@@ -1,16 +1,16 @@
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
 
-import { db } from "@/api/db";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { DB } from "@/shared/types";
+import { db } from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { DB } from "@/shared/types"
 
-const ChunithmStaticMusic = new Hono().get("chuni_static_music", async (c) => {
+const ChunithmStaticMusic = new Hono().get("chuni_static_music", async c => {
 	try {
-		const { userId, versions } = c.payload;
-		const version = versions.chunithm_version;
-		const ULTIMA_CHART_ID = 4;
-		const ULTIMA_MINIMUM_VERSION = 11;
+		const { userId, versions } = c.payload
+		const version = versions.chunithm_version
+		const ULTIMA_CHART_ID = 4
+		const ULTIMA_MINIMUM_VERSION = 11
 
 		const [results] = await db.execute<(DB.ChuniStaticMusic & RowDataPacket)[]>(
 			`
@@ -54,12 +54,12 @@ const ChunithmStaticMusic = new Hono().get("chuni_static_music", async (c) => {
 			ORDER BY sv.earliest_version DESC, m.id DESC
 			`,
 			[version, version, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION, userId, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION]
-		);
+		)
 
-		return c.json(results);
+		return c.json(results)
 	} catch (error) {
-		throw rethrowWithMessage("Failed to get static music", error);
+		throw rethrowWithMessage("Failed to get static music", error)
 	}
-});
+})
 
-export { ChunithmStaticMusic };
+export { ChunithmStaticMusic }

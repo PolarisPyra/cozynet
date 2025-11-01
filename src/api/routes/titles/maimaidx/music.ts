@@ -1,14 +1,14 @@
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
 
-import { db } from "@/api/db";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { Mai2StaticMusic } from "@/shared/types";
+import { db } from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { Mai2StaticMusic } from "@/shared/types"
 
-const MaimaiDXStaticMusic = new Hono().get("music", async (c) => {
+const MaimaiDXStaticMusic = new Hono().get("music", async c => {
 	try {
-		const { versions } = c.payload;
-		const version = versions.maimaidx_version;
+		const { versions } = c.payload
+		const version = versions.maimaidx_version
 
 		const [results] = await db.execute<(Mai2StaticMusic & RowDataPacket)[]>(
 			`WITH song_versions AS (
@@ -37,11 +37,11 @@ const MaimaiDXStaticMusic = new Hono().get("music", async (c) => {
                 AND m.version = sv.earliest_version
             ORDER BY sv.earliest_version DESC, m.id DESC`,
 			[version]
-		);
-		return c.json(results);
+		)
+		return c.json(results)
 	} catch (error) {
-		throw rethrowWithMessage("Failed to get static music", error);
+		throw rethrowWithMessage("Failed to get static music", error)
 	}
-});
+})
 
-export { MaimaiDXStaticMusic };
+export { MaimaiDXStaticMusic }

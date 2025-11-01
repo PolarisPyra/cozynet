@@ -1,17 +1,11 @@
-import React from "react";
+import Header from "@/components/common/header"
+import CardManagement from "@/components/settings/ongeki/card-managment"
+import ItemManagement from "@/components/settings/ongeki/item-management"
+import JsonExport from "@/components/settings/ongeki/json-export"
+import OngekiVersionManager from "@/components/settings/ongeki/version-management"
+import { Body, Container } from "@/pages/layout/layout"
 
-import Header from "@/components/common/header";
-import CardManagement from "@/components/settings/ongeki/card-managment";
-import ItemManagement from "@/components/settings/ongeki/item-management";
-import JsonExport from "@/components/settings/ongeki/json-export";
-import OngekiVersionManager from "@/components/settings/ongeki/version-management";
-import { Body, Container } from "@/pages/layout/layout";
-
-interface GameSettingsProps {
-	onUpdate?: () => void;
-}
-
-const OngekiSettingsPage: React.FC<GameSettingsProps> = () => {
+export function OngekiSettingsPage() {
 	return (
 		<Container>
 			<Header title="Ongeki Settings" />
@@ -22,7 +16,5 @@ const OngekiSettingsPage: React.FC<GameSettingsProps> = () => {
 				<JsonExport />
 			</Body>
 		</Container>
-	);
-};
-
-export default OngekiSettingsPage;
+	)
+}

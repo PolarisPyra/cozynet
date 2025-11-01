@@ -1,13 +1,13 @@
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
 
-import { db } from "@/api/db";
-import { rethrowWithMessage } from "@/api/utils/error";
-import type { DB } from "@/shared/types";
+import { db } from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
+import type { DB } from "@/shared/types"
 
-const OngekiCardsRoutes = new Hono().get("/", async (c) => {
+const OngekiCardsRoutes = new Hono().get("/", async c => {
 	try {
-		const { userId } = c.payload;
+		const { userId } = c.payload
 
 		const [cards] = await db.execute<(RowDataPacket & DB.OngekiUserCard & DB.OngekiStaticCards)[]>(
 			`SELECT 
@@ -46,12 +46,12 @@ const OngekiCardsRoutes = new Hono().get("/", async (c) => {
 		ORDER BY sc.cardId DESC
 				`,
 			[userId, userId]
-		);
+		)
 
-		return c.json({ cards });
+		return c.json({ cards })
 	} catch (error) {
-		throw rethrowWithMessage("Failed to fetch Ongeki cards", error);
+		throw rethrowWithMessage("Failed to fetch Ongeki cards", error)
 	}
-});
+})
 
-export { OngekiCardsRoutes };
+export { OngekiCardsRoutes }

@@ -1,77 +1,77 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from "react"
 
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom"
 
-import Header from "@/components/common/header";
-import { MultiFilter } from "@/components/common/multi-filter";
-import ResponsiveGrid from "@/components/common/responsive-grid";
-import Spinner from "@/components/common/spinner";
-import MaimaiDxSongInfoCard from "@/components/maimaidx/song-info-card";
+import Header from "@/components/common/header"
+import { MultiFilter } from "@/components/common/multi-filter"
+import ResponsiveGrid from "@/components/common/responsive-grid"
+import Spinner from "@/components/common/spinner"
+import { MaimaiDxSongInfoCard } from "@/components/maimaidx/song-info-card"
 import {
 	getDefaultSongFilterValues,
 	useMaimaiDxSongFiltering,
 	useMaimaiDxVersion,
-	useSongFilters,
-} from "@/hooks/maimaidx";
-import { Mai2StaticMusic } from "@/shared/types";
-import type { FilterValues } from "@/shared/types";
-import { maimaiDxBadgeColors } from "@/utils/helpers";
+	useSongFilters
+} from "@/hooks/maimaidx"
+import { Mai2StaticMusic } from "@/shared/types"
+import type { FilterValues } from "@/shared/types"
+import { maimaiDxBadgeColors } from "@/utils/helpers"
 
-const MaimaiDxAllSongs = () => {
-	const [searchParams, setSearchParams] = useSearchParams();
-	const searchQuery = searchParams.get("search") || "";
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultSongFilterValues());
+export function MaimaiDxAllSongs() {
+	const [searchParams, setSearchParams] = useSearchParams()
+	const searchQuery = searchParams.get("search") || ""
+	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultSongFilterValues())
 
-	const version = useMaimaiDxVersion();
-	const songFilters = useSongFilters();
+	const version = useMaimaiDxVersion()
+	const songFilters = useSongFilters()
 	const { filteredSongs, isLoading } = useMaimaiDxSongFiltering({
 		searchQuery,
-		filterValues,
-	});
+		filterValues
+	})
 
 	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues((prev) => ({
+		setFilterValues(prev => ({
 			...prev,
-			[identifier]: value,
-		}));
-	};
+			[identifier]: value
+		}))
+	}
 
 	const handleClearAll = () => {
-		setFilterValues(getDefaultSongFilterValues());
-	};
+		setFilterValues(getDefaultSongFilterValues())
+	}
 
 	const groupedSongs = useMemo(() => {
-		const songsMap = new Map<number, Mai2StaticMusic>();
+		const songsMap = new Map<number, Mai2StaticMusic>()
 
-		filteredSongs.forEach((song) => {
-			if (song.difficulty == null || !song.songId || !song.title) return;
+		filteredSongs.forEach(song => {
+			if (song.difficulty == null || !song.songId || !song.title) return
 
 			if (!songsMap.has(song.songId)) {
 				songsMap.set(song.songId, {
 					...song,
-					charts: [],
-				});
+					charts: []
+				})
 			}
 
 			songsMap.get(song.songId)!.charts.push({
 				chartId: song.chartId ?? null,
 				difficulty: song.difficulty,
-				level: song.level,
-			});
-		});
+				level: song.level
+			})
+		})
 
-		return Array.from(songsMap.values());
-	}, [filteredSongs]);
+		return Array.from(songsMap.values())
+	}, [filteredSongs])
 
 	const searchItems = groupedSongs
-		.filter((song) => song.songId !== null)
-		.map((song) => ({
+		.filter(song => song.songId !== null)
+		.map(song => ({
 			id: song.songId as number,
-			title: song.title || "",
-		}));
+			title: song.title || ""
+		}))
 
-	if (isLoading) return <LoadingState />;
-	if (!version) return <NoVersionState />;
+	if (isLoading) return <LoadingState />
+	if (!version) return <NoVersionState />
 
 	return (
 		<div className="relative flex-1 overflow-auto">
@@ -80,10 +80,10 @@ const MaimaiDxAllSongs = () => {
 				searchProps={{
 					items: searchItems,
 					searchQuery,
-					onSearchChange: (value) => setSearchParams({ search: value }),
+					onSearchChange: value => setSearchParams({ search: value }),
 					placeholder: "Search songs...",
 					emptyMessage: "No songs found.",
-					groupLabel: "Songs",
+					groupLabel: "Songs"
 				}}
 			/>
 			<div className="mb-4 px-4 pb-4 sm:py-0">
@@ -108,25 +108,27 @@ const MaimaiDxAllSongs = () => {
 				/>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-const LoadingState = () => (
-	<div className="relative flex-1 overflow-auto">
-		<Header title="All Songs" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<Spinner />
+function LoadingState() {
+	return (
+		<div className="relative flex-1 overflow-auto">
+			<Header title="All Songs" />
+			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
+				<Spinner />
+			</div>
 		</div>
-	</div>
-);
+	)
+}
 
-const NoVersionState = () => (
-	<div className="relative flex-1 overflow-auto">
-		<Header title="All Songs" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">Please set your Maimai DX version in settings first</p>
+function NoVersionState() {
+	return (
+		<div className="relative flex-1 overflow-auto">
+			<Header title="All Songs" />
+			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
+				<p className="text-primary">Please set your Maimai DX version in settings first</p>
+			</div>
 		</div>
-	</div>
-);
-
-export default MaimaiDxAllSongs;
+	)
+}

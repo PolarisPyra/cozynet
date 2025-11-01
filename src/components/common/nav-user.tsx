@@ -1,7 +1,7 @@
-import { ChevronsUpDown, LogOut, SettingsIcon, UserCog } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronsUpDown, LogOut, SettingsIcon, UserCog } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -9,23 +9,23 @@ import {
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { useAuth } from "@/hooks/auth";
+	DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import { useAuth } from "@/hooks/auth"
 
 export function NavUser({
-	user,
+	user
 }: {
 	user: {
-		username: string;
-		aimeCardId: string;
-		avatar: string;
-	};
+		username: string
+		aimeCardId: string
+		avatar: string
+	}
 }) {
-	const { isMobile } = useSidebar();
-	const { logout } = useAuth();
-	const navigate = useNavigate();
+	const { isMobile } = useSidebar()
+	const { logout } = useAuth()
+	const navigate = useNavigate()
 
 	return (
 		<SidebarMenu>
@@ -119,5 +119,5 @@ export function NavUser({
 				</DropdownMenu>
 			</SidebarMenuItem>
 		</SidebarMenu>
-	);
+	)
 }

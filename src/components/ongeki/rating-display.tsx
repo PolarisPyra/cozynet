@@ -1,18 +1,18 @@
-import { OngekiRatingColors } from "@/components/common/rating-colors";
+import { OngekiRatingColors } from "@/components/common/rating-colors"
 
 interface OngekiRatingDisplayProps {
-	playerRating: number;
-	highestRating: number;
-	ratingDecimals: number;
-	isRefreshOrAbove?: boolean;
+	playerRating: number
+	highestRating: number
+	ratingDecimals: number
+	isRefreshOrAbove?: boolean
 }
 
-const OngekiRatingDisplay = ({
+export function OngekiRatingDisplay({
 	playerRating,
 	highestRating,
 	ratingDecimals,
-	isRefreshOrAbove,
-}: OngekiRatingDisplayProps) => {
+	isRefreshOrAbove
+}: OngekiRatingDisplayProps) {
 	return (
 		<div className="flex flex-col gap-1">
 			<div className="flex flex-col">
@@ -34,7 +34,5 @@ const OngekiRatingDisplay = ({
 				</div>
 			</div>
 		</div>
-	);
-};
-
-export default OngekiRatingDisplay;
+	)
+}

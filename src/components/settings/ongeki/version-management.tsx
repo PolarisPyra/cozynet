@@ -1,25 +1,25 @@
-import { toast } from "sonner";
+import { toast } from "sonner"
 
-import VersionManagement from "@/components/common/version-management";
-import { useOngekiVersion, useOngekiVersions, useUpdateOngekiVersion } from "@/hooks/ongeki";
-import { OngekiVersions } from "@/utils/enums";
+import { VersionManagement } from "@/components/common/version-management"
+import { useOngekiVersion, useOngekiVersions, useUpdateOngekiVersion } from "@/hooks/ongeki"
+import { OngekiVersions } from "@/utils/enums"
 
 const OngekiVersionManager = () => {
-	const version = useOngekiVersion();
+	const version = useOngekiVersion()
 
-	const { data: availableVersions } = useOngekiVersions();
-	const { mutate: updateVersion, isPending } = useUpdateOngekiVersion();
+	const { data: availableVersions } = useOngekiVersions()
+	const { mutate: updateVersion, isPending } = useUpdateOngekiVersion()
 
 	const handleUpdateVersion = (version: number) => {
 		updateVersion(version, {
 			onSuccess: () => {
-				toast.success("Ongeki version updated successfully!");
+				toast.success("Ongeki version updated successfully!")
 			},
 			onError: () => {
-				toast.error("Failed to update Ongeki version");
-			},
-		});
-	};
+				toast.error("Failed to update Ongeki version")
+			}
+		})
+	}
 
 	return (
 		<VersionManagement
@@ -32,7 +32,7 @@ const OngekiVersionManager = () => {
 			buttonLabel="Update Ongeki settings"
 			updatingLabel="Updating..."
 		/>
-	);
-};
+	)
+}
 
-export default OngekiVersionManager;
+export default OngekiVersionManager

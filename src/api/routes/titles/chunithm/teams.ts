@@ -1,21 +1,21 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { DB } from "@/shared/types";
+import { db } from "@/api/db"
+import { validateJson } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { DB } from "@/shared/types"
 
 const ChunithmTeamsRoutes = new Hono()
 
-	.get("teams", async (c) => {
+	.get("teams", async c => {
 		try {
-			const [results] = await db.execute<(DB.ChuniProfileTeam & RowDataPacket)[]>(`SELECT * FROM chuni_profile_team`);
-			return c.json(results);
+			const [results] = await db.execute<(DB.ChuniProfileTeam & RowDataPacket)[]>(`SELECT * FROM chuni_profile_team`)
+			return c.json(results)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get teams", error);
+			throw rethrowWithMessage("Failed to get teams", error)
 		}
 	})
 
@@ -23,15 +23,15 @@ const ChunithmTeamsRoutes = new Hono()
 		"updateteam",
 		validateJson(
 			z.object({
-				teamId: z.number(),
+				teamId: z.number()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const { teamId } = await c.req.json();
+				const { userId, versions } = c.payload
+				const { teamId } = await c.req.json()
 
-				const version = versions.chunithm_version;
+				const version = versions.chunithm_version
 
 				const [result] = await db.execute<ResultSetHeader>(
 					`
@@ -41,10 +41,10 @@ const ChunithmTeamsRoutes = new Hono()
                 WHERE user = ? 
                 AND version = ?`,
 					[teamId, userId, version]
-				);
-				return c.json(result);
+				)
+				return c.json(result)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to remove favorite", error);
+				throw rethrowWithMessage("Failed to remove favorite", error)
 			}
 		}
 	)
@@ -53,30 +53,31 @@ const ChunithmTeamsRoutes = new Hono()
 		"addteam",
 		validateJson(
 			z.object({
-				teamName: z.string().min(1),
+				teamName: z.string().min(1)
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { teamName } = await c.req.json();
+				const { teamName } = await c.req.json()
 
-				const [existingTeam] = await db.execute<RowDataPacket[]>(`SELECT id FROM chuni_profile_team WHERE teamName = ?`, [
-					teamName,
-				]);
+				const [existingTeam] = await db.execute<RowDataPacket[]>(
+					`SELECT id FROM chuni_profile_team WHERE teamName = ?`,
+					[teamName]
+				)
 
 				if (existingTeam.length > 0) {
-					throw new HTTPException(409, { message: "Team already exists" });
+					throw new HTTPException(409, { message: "Team already exists" })
 				}
 
 				const [insert] = await db.execute<ResultSetHeader>(`INSERT INTO chuni_profile_team (teamName) VALUES (?)`, [
-					teamName,
-				]);
+					teamName
+				])
 
-				return c.json(insert);
+				return c.json(insert)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to add team", error);
+				throw rethrowWithMessage("Failed to add team", error)
 			}
 		}
-	);
+	)
 
-export { ChunithmTeamsRoutes };
+export { ChunithmTeamsRoutes }

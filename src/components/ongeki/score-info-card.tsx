@@ -1,27 +1,27 @@
-import React from "react";
+import { useState } from "react"
 
-import { DateTime } from "luxon";
+import { DateTime } from "luxon"
 
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CDN } from "@/lib/constants";
-import { OngekiPlaylog } from "@/shared/types";
-import { OngekiGekForceRating, OngekiRating as OngekiRatingCalc, getOngekiGrade } from "@/utils/helpers";
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { CDN } from "@/lib/constants"
+import { OngekiPlaylog } from "@/shared/types"
+import { OngekiGekForceRating, OngekiRating as OngekiRatingCalc, getOngekiGrade } from "@/utils/helpers"
 
-import { OngekiRatingColors } from "../common/rating-colors";
+import { OngekiRatingColors } from "../common/rating-colors"
 
 interface PlatinumStarsProps {
-	count: number;
+	count: number
 }
 
 function PlatinumStars({ count }: PlatinumStarsProps) {
-	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`;
+	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`
 
 	return (
 		<div className="flex items-center gap-0.5 md:gap-1">
 			{Array.from({ length: 5 }, (_, i) => {
-				const filled = i < count;
+				const filled = i < count
 				return (
 					<span
 						key={i}
@@ -34,25 +34,25 @@ function PlatinumStars({ count }: PlatinumStarsProps) {
 							maskRepeat: "no-repeat",
 							WebkitMaskSize: "contain",
 							maskSize: "contain",
-							backgroundColor: filled ? "var(--foreground)" : "var(--muted-foreground)",
+							backgroundColor: filled ? "var(--foreground)" : "var(--muted-foreground)"
 						}}
 					/>
-				);
+				)
 			})}
 		</div>
-	);
+	)
 }
 
 interface AchievementBadgesProps {
-	isFullCombo: number;
-	isAllBreak: number;
-	isFullBell: number;
-	techScore: number;
+	isFullCombo: number
+	isAllBreak: number
+	isFullBell: number
+	techScore: number
 }
 
 function AchievementBadges({ isFullCombo, isAllBreak, isFullBell, techScore }: AchievementBadgesProps) {
-	const grade = getOngekiGrade(techScore);
-	const gradeImage = grade;
+	const grade = getOngekiGrade(techScore)
+	const gradeImage = grade
 
 	return (
 		<div className="flex items-center gap-1">
@@ -92,28 +92,28 @@ function AchievementBadges({ isFullCombo, isAllBreak, isFullBell, techScore }: A
 				/>
 			</div>
 		</div>
-	);
+	)
 }
 
 export type OngekiScoreInfoCardProps = {
-	score: OngekiPlaylog;
-	isRefreshOrAbove?: boolean;
-	levelColorBadge?: (chartId?: number | undefined) => string;
-	className?: string;
-};
+	score: OngekiPlaylog
+	isRefreshOrAbove?: boolean
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+}
 
-const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
+export function OngekiScoreInfoCard({
 	score,
 	isRefreshOrAbove,
 	levelColorBadge,
-	className = "",
-}) => {
-	const [imageLoaded, setImageLoaded] = React.useState(false);
+	className = ""
+}: OngekiScoreInfoCardProps) {
+	const [imageLoaded, setImageLoaded] = useState(false)
 
 	const formatLevel = (level?: number | null) => {
-		if (level == null) return "?";
-		return Number.isFinite(level) ? level.toFixed(1) : "?";
-	};
+		if (level == null) return "?"
+		return Number.isFinite(level) ? level.toFixed(1) : "?"
+	}
 
 	const calculatedRating =
 		score.playerRating && score.playerRating > 0
@@ -130,7 +130,7 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 							score.isFullBell ?? 0
 						) / 1000
 					: OngekiRatingCalc(score.level, score.techScore) / 100
-				: null;
+				: null
 
 	return (
 		<div
@@ -152,7 +152,9 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
-							<div className="text-foreground mb-2 line-clamp-2 text-base leading-tight font-bold">{score.title}</div>
+							<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
+								{score.title}
+							</div>
 							<span
 								className={`inline-block rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : "text-primary-foreground bg-primary"}`}
 							>
@@ -163,13 +165,13 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 
 					<div className="flex flex-shrink-0 flex-col items-end gap-1.5">
 						<div className="flex flex-col items-end">
-							<span className="text-muted-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
+							<span className="text-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
 								Tech Score
 							</span>
 							{score.techScore != null ? (
 								score.techScore >= 1010000 ? (
 									<div className="flex flex-col items-end gap-0.5">
-										<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">
+										<span className="text-foreground text-base font-medium whitespace-nowrap tabular-nums">
 											1,010,000
 										</span>
 										<span className="text-muted-foreground text-xs font-medium whitespace-nowrap tabular-nums">
@@ -177,16 +179,16 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 										</span>
 									</div>
 								) : (
-									<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">
+									<span className="text-foreground text-base font-medium whitespace-nowrap tabular-nums">
 										{score.techScore.toLocaleString()}
 									</span>
 								)
 							) : (
-								<span className="text-foreground text-lg font-semibold whitespace-nowrap tabular-nums">-</span>
+								<span className="text-foreground text-base font-medium whitespace-nowrap tabular-nums">-</span>
 							)}
 						</div>
 						<div className="flex flex-col items-end">
-							<span className="text-muted-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
+							<span className="text-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
 								Player Rating
 							</span>
 							<div className="mt-0.5">
@@ -233,12 +235,18 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 						</div>
 						<div className="flex flex-wrap items-center gap-2 md:justify-end">
 							{score.isTechNewRecord === 1 && (
-								<Badge variant="secondary" className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase">
+								<Badge
+									variant="secondary"
+									className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase"
+								>
 									New Score Record
 								</Badge>
 							)}
 							{score.isBattleNewRecord === 1 && (
-								<Badge variant="secondary" className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase">
+								<Badge
+									variant="secondary"
+									className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase"
+								>
 									New Battle Record
 								</Badge>
 							)}
@@ -249,7 +257,5 @@ const OngekiScoreInfoCard: React.FC<OngekiScoreInfoCardProps> = ({
 				<div className="h-[52px]" />
 			)}
 		</div>
-	);
-};
-
-export default OngekiScoreInfoCard;
+	)
+}

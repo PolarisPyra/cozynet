@@ -1,34 +1,34 @@
-import React from "react";
+import React from "react"
 
-import { Star } from "lucide-react";
+import { Star } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CDN } from "@/lib/constants";
-import { StaticMusic } from "@/shared/types";
-import { getChunithmLogo } from "@/utils/version-logos";
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { CDN } from "@/lib/constants"
+import { StaticMusic } from "@/shared/types"
+import { getChunithmLogo } from "@/utils/version-logos"
 
 type CardProps = {
-	score: StaticMusic;
-	levelColorBadge?: (chartId?: number | undefined) => string;
-	className?: string;
-	jacketArt?: string;
-};
+	score: StaticMusic
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+	jacketArt?: string
+}
 
 export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jacketArt }) => {
-	const [imageLoaded, setImageLoaded] = React.useState(false);
-	const song = score;
+	const [imageLoaded, setImageLoaded] = React.useState(false)
+	const song = score
 
 	const worldsEnd = (level?: number | null, chartId?: number | null) => {
-		if (level == null) return "?";
+		if (level == null) return "?"
 		if (chartId === 5) {
-			const stars = Math.floor((level + 1) / 2);
-			return { isWorldsEnd: true, starCount: stars > 0 ? stars : 1 };
+			const stars = Math.floor((level + 1) / 2)
+			return { isWorldsEnd: true, starCount: stars > 0 ? stars : 1 }
 		}
-		return { isWorldsEnd: false, value: Number.isFinite(level) ? level.toFixed(1) : "?" };
-	};
+		return { isWorldsEnd: false, value: Number.isFinite(level) ? level.toFixed(1) : "?" }
+	}
 
-	const logoUrl = getChunithmLogo.getLogo(song.version);
+	const logoUrl = getChunithmLogo.getLogo(song.version)
 
 	return (
 		<div className="bg-card border-border flex flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -46,15 +46,17 @@ export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jack
 					/>
 				</div>
 				<div className="min-w-0 flex-1">
-					<div className="text-foreground mb-1 truncate text-base leading-tight font-bold">{song.title}</div>
-					<div className="text-muted-foreground mb-0.5 truncate text-sm">{song.artist || "Unknown"}</div>
+					<div className="text-foreground mb-1 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
+						{song.title}
+					</div>
+					<div className="text-muted-foreground mb-0.5 text-[10px] sm:text-xs">{song.artist || "Unknown"}</div>
 					<div className="text-muted-foreground text-xs">{song.genre || "N/A"}</div>
 				</div>
 			</div>
 			<div className="flex flex-wrap gap-2">
 				{(song.charts || []).map((c, idx) => {
-					const levelData = worldsEnd(c.level, c.chartId);
-					const isWorldsEnd = typeof levelData === "object" && levelData.isWorldsEnd;
+					const levelData = worldsEnd(c.level, c.chartId)
+					const isWorldsEnd = typeof levelData === "object" && levelData.isWorldsEnd
 
 					return (
 						<span
@@ -75,7 +77,7 @@ export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jack
 								levelData
 							)}
 						</span>
-					);
+					)
 				})}
 			</div>
 
@@ -87,7 +89,7 @@ export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jack
 				</div>
 			)}
 		</div>
-	);
-};
+	)
+}
 
-export default SongInfoCard;
+export default SongInfoCard

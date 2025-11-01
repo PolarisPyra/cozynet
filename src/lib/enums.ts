@@ -19,5 +19,5 @@ export enum TrophyRareType {
 	Lamp2 = 19,
 	Lamp3 = 20,
 	Kop = 21,
-	Kop2 = 22,
+	Kop2 = 22
 }

@@ -1,54 +1,54 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { api } from "@/utils";
+import { api } from "@/utils"
 
-import { useAuth } from "../auth";
-import { useCurrentUser } from "../users";
+import { useAuth } from "../auth"
+import { useCurrentUser } from "../users"
 
 interface VersionsResponse {
-  versions?: number[];
+	versions?: number[]
 }
 
 export const useOngekiVersion = () => {
-  const { versions } = useCurrentUser();
-  return versions.ongeki_version;
-};
+	const { versions } = useCurrentUser()
+	return versions.ongeki_version
+}
 
 export const useOngekiVersions = () => {
-  return useQuery({
-    queryKey: ["ongekiVersions"],
-    queryFn: async () => {
-      const response = await api.ongeki.settings.versions.$get();
+	return useQuery({
+		queryKey: ["ongekiVersions"],
+		queryFn: async () => {
+			const response = await api.ongeki.settings.versions.$get()
 
-      if (!response.ok) {
-        throw new Error();
-      }
+			if (!response.ok) {
+				throw new Error()
+			}
 
-      const data = (await response.json()) as VersionsResponse;
+			const data = (await response.json()) as VersionsResponse
 
-      if (!data.versions) {
-        throw new Error();
-      }
+			if (!data.versions) {
+				throw new Error()
+			}
 
-      return data.versions;
-    },
-  });
-};
+			return data.versions
+		}
+	})
+}
 
 export const useUpdateOngekiVersion = () => {
-  const { setUser } = useAuth();
-  return useMutation({
-    mutationFn: async (version: number) => {
-      const response = await api.ongeki.settings.update.$post({
-        json: { version },
-      });
+	const { setUser } = useAuth()
+	return useMutation({
+		mutationFn: async (version: number) => {
+			const response = await api.ongeki.settings.update.$post({
+				json: { version }
+			})
 
-      if (!response.ok) {
-        throw new Error();
-      }
+			if (!response.ok) {
+				throw new Error()
+			}
 
-      const user = await response.json();
-      setUser(user);
-    },
-  });
-};
+			const user = await response.json()
+			setUser(user)
+		}
+	})
+}

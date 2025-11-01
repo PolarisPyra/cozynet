@@ -1,33 +1,33 @@
-import * as React from "react";
+import * as React from "react"
 
-import { type DialogProps } from "@radix-ui/react-dialog";
-import { ArrowRight, CornerDownLeft } from "lucide-react";
+import { type DialogProps } from "@radix-ui/react-dialog"
+import { ArrowRight, CornerDownLeft } from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Button } from "@/components/ui/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+	DialogTrigger
+} from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
 
 export type SearchItem = {
-	id: string | number;
-	title: string;
-};
+	id: string | number
+	title: string
+}
 
 export type SearchProps = DialogProps & {
-	items?: SearchItem[];
-	searchQuery?: string;
-	onSearchChange?: (value: string) => void;
-	placeholder?: string;
-	emptyMessage?: string;
-	groupLabel?: string;
-};
+	items?: SearchItem[]
+	searchQuery?: string
+	onSearchChange?: (value: string) => void
+	placeholder?: string
+	emptyMessage?: string
+	groupLabel?: string
+}
 
 export const Search = ({
 	items = [],
@@ -38,23 +38,23 @@ export const Search = ({
 	groupLabel = "Results",
 	...props
 }: SearchProps) => {
-	const [open, setOpen] = React.useState(false);
+	const [open, setOpen] = React.useState(false)
 
 	const uniqueItems = React.useMemo(() => {
-		if (!items) return [];
-		const seen = new Set<string>();
-		return items.filter((item) => {
-			const title = item.title || "";
-			if (seen.has(title)) return false;
-			seen.add(title);
-			return true;
-		});
-	}, [items]);
+		if (!items) return []
+		const seen = new Set<string>()
+		return items.filter(item => {
+			const title = item.title || ""
+			if (seen.has(title)) return false
+			seen.add(title)
+			return true
+		})
+	}, [items])
 
 	const runCommand = React.useCallback((command: () => unknown) => {
-		setOpen(false);
-		command();
-	}, []);
+		setOpen(false)
+		command()
+	}, [])
 
 	React.useEffect(() => {
 		const down = (e: KeyboardEvent) => {
@@ -65,15 +65,15 @@ export const Search = ({
 					e.target instanceof HTMLTextAreaElement ||
 					e.target instanceof HTMLSelectElement
 				) {
-					return;
+					return
 				}
-				e.preventDefault();
-				setOpen((open) => !open);
+				e.preventDefault()
+				setOpen(open => !open)
 			}
-		};
-		document.addEventListener("keydown", down);
-		return () => document.removeEventListener("keydown", down);
-	}, []);
+		}
+		document.addEventListener("keydown", down)
+		return () => document.removeEventListener("keydown", down)
+	}, [])
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -102,11 +102,11 @@ export const Search = ({
 				<Command
 					className="**:data-[slot=command-input-wrapper]:bg-input/50 **:data-[slot=command-input-wrapper]:border-input rounded-none bg-transparent **:data-[slot=command-input]:!h-9 **:data-[slot=command-input]:py-0 **:data-[slot=command-input-wrapper]:mb-1.5 **:data-[slot=command-input-wrapper]:!h-9 **:data-[slot=command-input-wrapper]:rounded-sm **:data-[slot=command-input-wrapper]:border"
 					filter={(value, search, keywords) => {
-						const extendValue = value + " " + (keywords?.join(" ") || "");
+						const extendValue = value + " " + (keywords?.join(" ") || "")
 						if (extendValue.toLowerCase().includes(search.toLowerCase())) {
-							return 1;
+							return 1
 						}
-						return 0;
+						return 0
 					}}
 				>
 					<CommandInput
@@ -120,13 +120,13 @@ export const Search = ({
 								heading={groupLabel}
 								className="!p-0 [&_[cmdk-group-heading]]:scroll-mt-16 [&_[cmdk-group-heading]]:!p-3 [&_[cmdk-group-heading]]:!pb-1"
 							>
-								{uniqueItems.slice(0, 10).map((item) => (
+								{uniqueItems.slice(0, 10).map(item => (
 									<CommandMenuItem
 										key={item.id}
 										value={item.title || ""}
 										keywords={[(item.title || "").toLowerCase()]}
 										onSelect={() => {
-											runCommand(() => onSearchChange && onSearchChange(item.title || ""));
+											runCommand(() => onSearchChange && onSearchChange(item.title || ""))
 										}}
 									>
 										<ArrowRight />
@@ -152,8 +152,8 @@ export const Search = ({
 				</div>
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}
 
 const CommandMenuItem = ({ children, className, ...props }: React.ComponentProps<typeof CommandItem>) => {
 	return (
@@ -166,8 +166,8 @@ const CommandMenuItem = ({ children, className, ...props }: React.ComponentProps
 		>
 			{children}
 		</CommandItem>
-	);
-};
+	)
+}
 
 const CommandMenuKbd = ({ className, ...props }: React.ComponentProps<"kbd">) => {
 	return (
@@ -178,5 +178,5 @@ const CommandMenuKbd = ({ className, ...props }: React.ComponentProps<"kbd">) =>
 			)}
 			{...props}
 		/>
-	);
-};
+	)
+}

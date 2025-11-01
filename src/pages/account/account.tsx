@@ -1,17 +1,17 @@
-import { CreditCardIcon, Gamepad, TriangleAlert } from "lucide-react";
+import { CreditCardIcon, Gamepad, TriangleAlert } from "lucide-react"
 
-import KeychipGenerator from "@/components/admin/keychip-generator";
-import Header from "@/components/common/header";
-import AimeCardSwap from "@/components/settings/common/aime-card";
-import ArcadeLocation from "@/components/settings/common/arcade-location";
-import ArcadeName from "@/components/settings/common/arcade-name";
-import ArcadeOwnership from "@/components/settings/common/arcade-ownership";
-import { useAdmin } from "@/hooks/admin";
-import { hasAdminAccess } from "@/utils/permissions";
+import { KeychipGenerator } from "@/components/admin/keychip-generator"
+import Header from "@/components/common/header"
+import AimeCardSwap from "@/components/settings/common/aime-card"
+import ArcadeLocation from "@/components/settings/common/arcade-location"
+import ArcadeName from "@/components/settings/common/arcade-name"
+import ArcadeOwnership from "@/components/settings/common/arcade-ownership"
+import { useAdmin } from "@/hooks/admin"
+import { hasAdminAccess } from "@/utils/permissions"
 
 const Account = () => {
-	const { data: systemAdmin } = useAdmin();
-	const adminPerms = hasAdminAccess(systemAdmin);
+	const { data: systemAdmin } = useAdmin()
+	const adminPerms = hasAdminAccess(systemAdmin)
 
 	return (
 		<div className="relative flex-1 overflow-auto">
@@ -54,7 +54,7 @@ const Account = () => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-export default Account;
+export default Account

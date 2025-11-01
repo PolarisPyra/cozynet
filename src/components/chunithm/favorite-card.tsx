@@ -1,29 +1,29 @@
-import { Heart } from "lucide-react";
+import { Heart } from "lucide-react"
 
-import { CDN } from "@/lib/constants";
+import { CDN } from "@/lib/constants"
 
 interface ChunithmFavorite {
-	songId?: number | null;
-	title?: string | null;
-	chartId?: number | null;
-	isFavorited?: boolean;
-	jacketPath?: string | null;
-	id?: number;
-	user?: number;
-	version?: number;
-	favId?: number;
-	favKind?: number;
-	option?: string;
+	songId?: number | null
+	title?: string | null
+	chartId?: number | null
+	isFavorited?: boolean
+	jacketPath?: string | null
+	id?: number
+	user?: number
+	version?: number
+	favId?: number
+	favKind?: number
+	option?: string
 }
 
 interface FavoriteCardProps {
-	score: ChunithmFavorite;
-	favoriteSongIds: ChunithmFavorite[];
-	onToggleFavorite: (songId: number) => void;
+	score: ChunithmFavorite
+	favoriteSongIds: ChunithmFavorite[]
+	onToggleFavorite: (songId: number) => void
 }
 
 const FavoriteCard = ({ score, favoriteSongIds, onToggleFavorite }: FavoriteCardProps) => {
-	const isFavorited = favoriteSongIds.some((favorite: ChunithmFavorite) => favorite.favId === score.songId);
+	const isFavorited = favoriteSongIds.some((favorite: ChunithmFavorite) => favorite.favId === score.songId)
 
 	return (
 		<div className="bg-card flex items-center justify-between rounded-sm border p-4 transition-colors">
@@ -43,7 +43,7 @@ const FavoriteCard = ({ score, favoriteSongIds, onToggleFavorite }: FavoriteCard
 				onClick={() => score.songId && onToggleFavorite(score.songId)}
 			/>
 		</div>
-	);
-};
+	)
+}
 
-export default FavoriteCard;
+export default FavoriteCard

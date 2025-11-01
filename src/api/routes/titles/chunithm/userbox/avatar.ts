@@ -1,11 +1,11 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson, validateParams } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson, validateParams } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 enum AvatarSlot {
 	BACK = "back",
@@ -13,17 +13,17 @@ enum AvatarSlot {
 	HEAD = "head",
 	ITEM = "item",
 	SKIN = "skin",
-	WEAR = "wear",
+	WEAR = "wear"
 }
 
 interface AvatarItem {
-	avatarAccessoryId: number;
-	imagePath: string;
-	label: string;
-	slot: AvatarSlot;
-	locked: boolean;
+	avatarAccessoryId: number
+	imagePath: string
+	label: string
+	slot: AvatarSlot
+	locked: boolean
 }
-const validAvatarItemId = z.number().gte(0).optional();
+const validAvatarItemId = z.number().gte(0).optional()
 
 async function getCurrentAvatarItems(userId: number, version: number): Promise<AvatarItem[]> {
 	const [result] = await db.execute<(AvatarItem & RowDataPacket)[]>(
@@ -68,21 +68,21 @@ async function getCurrentAvatarItems(userId: number, version: number): Promise<A
 		ORDER BY csa.category
       	`,
 		[userId, userId, version, userId, version]
-	);
-	return result;
+	)
+	return result
 }
 
 const routes = new Hono()
-	.get("", async (c) => {
+	.get("", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
-			const result = await getCurrentAvatarItems(userId, version);
+			const result = await getCurrentAvatarItems(userId, version)
 			// If no current avatar items, return empty array instead of 404
-			return c.json(result);
+			return c.json(result)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get current avatar", error);
+			throw rethrowWithMessage("Failed to get current avatar", error)
 		}
 	})
 	.post(
@@ -94,24 +94,24 @@ const routes = new Hono()
 				[AvatarSlot.HEAD]: validAvatarItemId,
 				[AvatarSlot.ITEM]: validAvatarItemId,
 				[AvatarSlot.SKIN]: validAvatarItemId,
-				[AvatarSlot.WEAR]: validAvatarItemId,
+				[AvatarSlot.WEAR]: validAvatarItemId
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
-				const { back, face, head, item, skin, wear } = await c.req.json();
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
+				const { back, face, head, item, skin, wear } = await c.req.json()
 
 				// Validate able to update
-				const itemIds = [back, face, head, item, skin, wear].filter((id) => id !== undefined && id !== null);
+				const itemIds = [back, face, head, item, skin, wear].filter(id => id !== undefined && id !== null)
 				if (itemIds.length === 0) {
 					throw new HTTPException(400, {
-						message: "At least one avatar item must be provided",
-					});
+						message: "At least one avatar item must be provided"
+					})
 				}
 
-				const placeholders = itemIds.map(() => "?").join(",");
+				const placeholders = itemIds.map(() => "?").join(",")
 				const [items] = await db.execute<(AvatarItem & RowDataPacket)[]>(
 					`
 					SELECT avatarAccessoryId as avatarAcessoryId
@@ -120,11 +120,11 @@ const routes = new Hono()
 					  AND version = ?
 				`,
 					[...itemIds, version]
-				);
+				)
 				if (items.length !== itemIds.length) {
 					throw new HTTPException(400, {
-						message: "Invalid avatar item IDs",
-					});
+						message: "Invalid avatar item IDs"
+					})
 				}
 
 				const [result] = await db.execute<ResultSetHeader>(
@@ -141,17 +141,17 @@ const routes = new Hono()
 					  AND version = ?
 				`,
 					[back ?? null, face ?? null, head ?? null, item ?? null, skin ?? null, wear ?? null, userId, version]
-				);
+				)
 
 				if (result.affectedRows === 0) {
-					throw new HTTPException(404);
+					throw new HTTPException(404)
 				}
 
 				// Return the updated current avatar items
-				const updatedAvatar = await getCurrentAvatarItems(userId, version);
-				return c.json(updatedAvatar);
+				const updatedAvatar = await getCurrentAvatarItems(userId, version)
+				return c.json(updatedAvatar)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to update avatar", error);
+				throw rethrowWithMessage("Failed to update avatar", error)
 			}
 		}
 	)
@@ -161,17 +161,17 @@ const routes = new Hono()
 			z.object({
 				filter: z.object({
 					slot: z.array(z.nativeEnum(AvatarSlot)),
-					locked: z.boolean().nullable(),
-				}),
+					locked: z.boolean().nullable()
+				})
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
 
-				const { filter } = await c.req.json();
-				const { slot, locked } = filter;
+				const { filter } = await c.req.json()
+				const { slot, locked } = filter
 
 				// Map category numbers to slot names for the IN clause
 				const categoryMap: Record<string, number> = {
@@ -180,12 +180,12 @@ const routes = new Hono()
 					face: 3,
 					skin: 4,
 					item: 5,
-					back: 7,
-				};
-				const categoryNumbers = slot.map((s: AvatarSlot) => categoryMap[s]);
+					back: 7
+				}
+				const categoryNumbers = slot.map((s: AvatarSlot) => categoryMap[s])
 
 				// Generate placeholders for IN clause
-				const placeholders = categoryNumbers.map(() => "?").join(",");
+				const placeholders = categoryNumbers.map(() => "?").join(",")
 
 				const query = `
 				SELECT
@@ -235,7 +235,7 @@ const routes = new Hono()
 					sort_current,
 					locked DESC, 
 					csa.avatarAccessoryId DESC
-			`;
+			`
 
 				const [items] = await db.execute<(AvatarItem & { sort_current: number } & RowDataPacket)[]>(query, [
 					userId,
@@ -243,18 +243,18 @@ const routes = new Hono()
 					version,
 					userId,
 					version,
-					...categoryNumbers,
-				]);
+					...categoryNumbers
+				])
 
 				// Return items with the sort_current property removed
-				const cleanItems = items.map(({ sort_current, ...item }) => item);
+				const cleanItems = items.map(({ sort_current, ...item }) => item)
 
 				return c.json({
 					items: cleanItems,
-					total: cleanItems.length,
-				});
+					total: cleanItems.length
+				})
 			} catch (error) {
-				throw rethrowWithMessage("Failed to search avatar items", error);
+				throw rethrowWithMessage("Failed to search avatar items", error)
 			}
 		}
 	)
@@ -264,18 +264,18 @@ const routes = new Hono()
 			z.object({
 				id: z
 					.string()
-					.transform((val) => parseInt(val))
-					.refine((val) => !isNaN(val), {
-						message: "Invalid avatar item ID",
-					}),
+					.transform(val => parseInt(val))
+					.refine(val => !isNaN(val), {
+						message: "Invalid avatar item ID"
+					})
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
 
-				const { id } = c.req.param();
+				const { id } = c.req.param()
 
 				// Validate item id
 				const [items] = await db.execute<RowDataPacket[]>(
@@ -286,11 +286,11 @@ const routes = new Hono()
 						AND version = ?
 					`,
 					[id, version]
-				);
+				)
 				if (items.length === 0) {
 					throw new HTTPException(404, {
-						message: "Avatar item not found",
-					});
+						message: "Avatar item not found"
+					})
 				}
 				await db.execute<ResultSetHeader>(
 					`
@@ -299,19 +299,19 @@ const routes = new Hono()
 						ON DUPLICATE KEY UPDATE user = user
 					`,
 					[userId, id, version]
-				);
-				return c.json({ message: "Avatar item unlocked successfully" });
+				)
+				return c.json({ message: "Avatar item unlocked successfully" })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to unlock avatar item", error);
+				throw rethrowWithMessage("Failed to unlock avatar item", error)
 			}
 		}
 	)
-	.get(":id", validateParams(z.object({ id: validAvatarItemId })), async (c) => {
+	.get(":id", validateParams(z.object({ id: validAvatarItemId })), async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
-			const { id } = c.req.param();
+			const { id } = c.req.param()
 			/**
 			 * Artemis category values
 			 * WEAR = 1
@@ -353,16 +353,16 @@ const routes = new Hono()
 				AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
 				`,
 				[userId, userId, id, version]
-			);
+			)
 			if (item.length === 0) {
 				throw new HTTPException(404, {
-					message: "Avatar item not found",
-				});
+					message: "Avatar item not found"
+				})
 			}
-			return c.json(item[0]);
+			return c.json(item[0])
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get avatar item", error);
+			throw rethrowWithMessage("Failed to get avatar item", error)
 		}
-	});
+	})
 
-export default routes;
+export default routes

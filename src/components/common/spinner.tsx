@@ -1,7 +1,7 @@
 interface SpinnerProps {
-	size?: number;
-	color?: string;
-	className?: string;
+	size?: number
+	color?: string
+	className?: string
 }
 
 const Spinner = ({ size = 20, color = "currentColor", className = "" }: SpinnerProps) => {
@@ -13,10 +13,10 @@ const Spinner = ({ size = 20, color = "currentColor", className = "" }: SpinnerP
 				height: size,
 				borderColor: color,
 				borderTopColor: "transparent",
-				animation: "spin 1s linear infinite",
+				animation: "spin 1s linear infinite"
 			}}
 		/>
-	);
-};
+	)
+}
 
-export default Spinner;
+export default Spinner

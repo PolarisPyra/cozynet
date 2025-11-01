@@ -5,12 +5,12 @@ import {
 	useMaimaiDxScoreFiltering,
 	useMaimaiDxSongFiltering,
 	useScoreFilters,
-	useSongFilters,
-} from "./filters";
-import { useMaimaiDxChartFilters } from "./use-filters";
-import { useMaimaiDxScores } from "./use-scores";
-import { useMaimaiDxSongs } from "./use-songs";
-import { useMaimaiDxVersion, useMaimaiDxVersions, useUpdateMaimaiDxVersion } from "./use-version";
+	useSongFilters
+} from "./filters"
+import { useMaimaiDxChartFilters } from "./use-filters"
+import { useMaimaiDxScores } from "./use-scores"
+import { useMaimaiDxSongs } from "./use-songs"
+import { useMaimaiDxVersion, useMaimaiDxVersions, useUpdateMaimaiDxVersion } from "./use-version"
 
 // Export new filter system
 export {
@@ -19,8 +19,8 @@ export {
 	useMaimaiDxScoreFiltering,
 	useMaimaiDxSongFiltering,
 	useScoreFilters,
-	useSongFilters,
-};
+	useSongFilters
+}
 
 // Export legacy hooks
 export {
@@ -29,5 +29,5 @@ export {
 	useUpdateMaimaiDxVersion,
 	useMaimaiDxScores,
 	useMaimaiDxSongs,
-	useMaimaiDxChartFilters,
-};
+	useMaimaiDxChartFilters
+}

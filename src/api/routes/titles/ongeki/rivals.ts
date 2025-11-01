@@ -1,24 +1,24 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 const OngekiRivalsRoutes = new Hono()
 	.post(
 		"add",
 		validateJson(
 			z.object({
-				rivalUserId: z.number().int().positive(),
+				rivalUserId: z.number().int().positive()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const userId = c.payload.userId;
-				const { rivalUserId } = await c.req.json();
+				const userId = c.payload.userId
+				const { rivalUserId } = await c.req.json()
 
 				const [results] = await db.execute<ResultSetHeader>(
 					`
@@ -26,13 +26,13 @@ const OngekiRivalsRoutes = new Hono()
 						VALUES (?, ?)
 					`,
 					[userId, rivalUserId]
-				);
+				)
 				if (results.affectedRows === 0) {
-					throw new HTTPException(500, { message: "Insert failed" });
+					throw new HTTPException(500, { message: "Insert failed" })
 				}
-				return c.json(results);
+				return c.json(results)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to add rival", error);
+				throw rethrowWithMessage("Failed to add rival", error)
 			}
 		}
 	)
@@ -41,13 +41,13 @@ const OngekiRivalsRoutes = new Hono()
 		"remove",
 		validateJson(
 			z.object({
-				rivalUserId: z.number().int().positive(),
+				rivalUserId: z.number().int().positive()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const userId = c.payload.userId;
-				const { rivalUserId } = await c.req.json();
+				const userId = c.payload.userId
+				const { rivalUserId } = await c.req.json()
 
 				const [results] = await db.execute<ResultSetHeader>(
 					`
@@ -55,20 +55,20 @@ const OngekiRivalsRoutes = new Hono()
          				WHERE user = ? AND rivalUserId = ?
 					`,
 					[userId, rivalUserId]
-				);
+				)
 				if (results.affectedRows === 0) {
-					throw new HTTPException(500, { message: "Delete failed" });
+					throw new HTTPException(500, { message: "Delete failed" })
 				}
-				return c.json(results);
+				return c.json(results)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to remove rival", error);
+				throw rethrowWithMessage("Failed to remove rival", error)
 			}
 		}
 	)
 
-	.get("all", async (c) => {
+	.get("all", async c => {
 		try {
-			const userId = c.payload.userId;
+			const userId = c.payload.userId
 
 			const [results] = await db.execute<({ rivalUserId: number } & RowDataPacket)[]>(
 				`
@@ -77,18 +77,18 @@ const OngekiRivalsRoutes = new Hono()
          			WHERE user = ?
 				`,
 				[userId]
-			);
+			)
 
-			return c.json(results.map((row) => row.rivalUserId));
+			return c.json(results.map(row => row.rivalUserId))
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get rivals", error);
+			throw rethrowWithMessage("Failed to get rivals", error)
 		}
 	})
 
-	.get("mutual", async (c) => {
+	.get("mutual", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.ongeki_version;
+			const { userId, versions } = c.payload
+			const version = versions.ongeki_version
 
 			const [results] = await db.execute<({ rivalId: number; isMutual: number } & RowDataPacket)[]>(
 				`
@@ -113,18 +113,18 @@ const OngekiRivalsRoutes = new Hono()
 						)
 				`,
 				[userId, version]
-			);
+			)
 
-			return c.json(results);
+			return c.json(results)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get mutual rivals", error);
+			throw rethrowWithMessage("Failed to get mutual rivals", error)
 		}
 	})
 
-	.get("userlookup", async (c) => {
+	.get("userlookup", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.ongeki_version;
+			const { userId, versions } = c.payload
+			const version = versions.ongeki_version
 
 			const [results] = await db.execute<({ id: number; username: string } & RowDataPacket)[]>(
 				`
@@ -136,18 +136,18 @@ const OngekiRivalsRoutes = new Hono()
          			AND user != ?
 				`,
 				[version, userId]
-			);
+			)
 
-			return c.json(results);
+			return c.json(results)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get Aime users", error);
+			throw rethrowWithMessage("Failed to get Aime users", error)
 		}
 	})
 
-	.get("count", async (c) => {
+	.get("count", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.ongeki_version;
+			const { userId, versions } = c.payload
+			const version = versions.ongeki_version
 
 			const [result] = await db.execute<({ rivalCount: number } & RowDataPacket)[]>(
 				`SELECT COUNT(*) AS rivalCount 
@@ -160,12 +160,12 @@ const OngekiRivalsRoutes = new Hono()
          			AND opd.version = ?
          	)`,
 				[userId, version]
-			);
+			)
 
-			return c.json(result[0].rivalCount);
+			return c.json(result[0].rivalCount)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get rival count", error);
+			throw rethrowWithMessage("Failed to get rival count", error)
 		}
-	});
+	})
 
-export { OngekiRivalsRoutes };
+export { OngekiRivalsRoutes }

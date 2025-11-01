@@ -5,10 +5,10 @@ export const enum ChunithmAvatarCategory {
 	SKIN = 4,
 	ITEM = 5,
 	FRONT = 6,
-	BACK = 7,
+	BACK = 7
 }
 
 export enum UserRole {
 	User = 1,
-	Admin = 2,
+	Admin = 2
 }

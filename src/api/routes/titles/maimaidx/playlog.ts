@@ -1,14 +1,14 @@
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
 
-import { db } from "@/api/db";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { Mai2Playlog } from "@/shared/types";
+import { db } from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { Mai2Playlog } from "@/shared/types"
 
-const MaimaiDXPlaylogRoute = new Hono().get("playlog", async (c) => {
+const MaimaiDXPlaylogRoute = new Hono().get("playlog", async c => {
 	try {
-		const { userId, versions } = c.payload;
-		const version = versions.maimaidx_version;
+		const { userId, versions } = c.payload
+		const version = versions.maimaidx_version
 
 		const [results] = await db.execute<(Mai2Playlog & RowDataPacket)[]>(
 			`WITH song_versions AS (
@@ -50,11 +50,11 @@ const MaimaiDXPlaylogRoute = new Hono().get("playlog", async (c) => {
                 AND pd.version = ?
             ORDER BY mp.userPlayDate DESC`,
 			[userId, version]
-		);
-		return c.json(results);
+		)
+		return c.json(results)
 	} catch (error) {
-		throw rethrowWithMessage("Failed to get playlog", error);
+		throw rethrowWithMessage("Failed to get playlog", error)
 	}
-});
+})
 
-export { MaimaiDXPlaylogRoute };
+export { MaimaiDXPlaylogRoute }

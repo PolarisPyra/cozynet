@@ -1,6 +1,6 @@
-import { LEVEL_CONFIGS } from "@/utils/level-filter";
+import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
-import type { SongFilter } from "../types/music-types";
+import type { SongFilter } from "../types/music-types"
 
 // ============================================================================
 // LEVEL FILTER
@@ -37,13 +37,13 @@ export const songLevelFilter: SongFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" },
+		{ label: "15+", value: "15+" }
 	],
 	predicate: (song, value) => {
-		if (!song.level || song.chartId === 5) return false;
-		return LEVEL_CONFIGS.CHUNITHM(song.level, value);
-	},
-};
+		if (!song.level || song.chartId === 5) return false
+		return LEVEL_CONFIGS.CHUNITHM(song.level, value)
+	}
+}
 // ============================================================================
 // GENRE FILTER
 // ============================================================================
@@ -62,13 +62,13 @@ export const songGenreFilter: SongFilter = {
 		{ label: "ゲキマイ", value: "ゲキマイ" },
 		{ label: "イロドリミドリ", value: "イロドリミドリ" },
 		{ label: "niconico", value: "niconico" },
-		{ label: "VARIETY", value: "VARIETY" },
+		{ label: "VARIETY", value: "VARIETY" }
 	],
 	predicate: (song, value) => {
-		if (value === "all") return true;
-		return song.genre === value;
-	},
-};
+		if (value === "all") return true
+		return song.genre === value
+	}
+}
 // ============================================================================
 // CHART TYPE FILTER
 // ============================================================================
@@ -86,13 +86,13 @@ export const songChartTypeFilter: SongFilter = {
 		{ label: "EXPERT", value: "2" },
 		{ label: "MASTER", value: "3" },
 		{ label: "ULTIMA", value: "4" },
-		{ label: "WORLDS END", value: "5" },
+		{ label: "WORLDS END", value: "5" }
 	],
 	predicate: (song, value) => {
-		if (value === "all") return true;
-		return song.chartId === parseInt(value);
-	},
-};
+		if (value === "all") return true
+		return song.chartId === parseInt(value)
+	}
+}
 
 // ============================================================================
 // EXPORT ALL FILTERS
@@ -101,4 +101,4 @@ export const songChartTypeFilter: SongFilter = {
 /**
  * Array of all available song filters
  */
-export const songFilters: SongFilter[] = [songLevelFilter, songGenreFilter, songChartTypeFilter];
+export const songFilters: SongFilter[] = [songLevelFilter, songGenreFilter, songChartTypeFilter]

@@ -1,64 +1,58 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from "react"
 
-import { toast } from "sonner";
+import { toast } from "sonner"
 
-import FavoriteCard from "@/components/chunithm/favorite-card";
-import Header from "@/components/common/header";
-import ResponsiveGrid from "@/components/common/responsive-grid";
-import Spinner from "@/components/common/spinner";
-import {
-	useAddFavorite,
-	useChunithmSongs,
-	useChunithmVersion,
-	useFavorites,
-	useRemoveFavorite,
-} from "@/hooks/chunithm";
-import { Body, Container } from "@/pages/layout/layout";
+import FavoriteCard from "@/components/chunithm/favorite-card"
+import Header from "@/components/common/header"
+import ResponsiveGrid from "@/components/common/responsive-grid"
+import Spinner from "@/components/common/spinner"
+import { useAddFavorite, useChunithmSongs, useChunithmVersion, useFavorites, useRemoveFavorite } from "@/hooks/chunithm"
+import { Body, Container } from "@/pages/layout/layout"
 
 const ChunithmFavorites = () => {
-	const version = useChunithmVersion();
-	const { data: songs = [], isLoading: isLoadingSongs } = useChunithmSongs();
-	const { data: favoriteSongIds = [], isLoading: isLoadingFavorites } = useFavorites();
-	const { mutate: addFavorite } = useAddFavorite();
-	const { mutate: removeFavorite } = useRemoveFavorite();
-	const [searchQuery, setSearchQuery] = useState("");
+	const version = useChunithmVersion()
+	const { data: songs = [], isLoading: isLoadingSongs } = useChunithmSongs()
+	const { data: favoriteSongIds = [], isLoading: isLoadingFavorites } = useFavorites()
+	const { mutate: addFavorite } = useAddFavorite()
+	const { mutate: removeFavorite } = useRemoveFavorite()
+	const [searchQuery, setSearchQuery] = useState("")
 
 	const filteredSongs = useMemo(() => {
-		const normalizedQuery = searchQuery.trim().toLowerCase();
+		const normalizedQuery = searchQuery.trim().toLowerCase()
 
 		return songs
 			.filter((song: any) => song.chartId === 3) // Only MASTER difficulty
 			.filter((song: any) => {
-				if (!normalizedQuery) return true;
-				return song.title?.toLowerCase().includes(normalizedQuery);
-			});
-	}, [songs, searchQuery]);
+				if (!normalizedQuery) return true
+				return song.title?.toLowerCase().includes(normalizedQuery)
+			})
+	}, [songs, searchQuery])
 
 	const searchItems = filteredSongs.map((song: any) => ({
 		id: song.songId,
-		title: song.title || "",
-	}));
+		title: song.title || ""
+	}))
 
 	const handleToggleFavorite = (songId: number) => {
-		const isFavorited = favoriteSongIds.some((fav) => fav.favId === songId);
+		const isFavorited = favoriteSongIds.some(fav => fav.favId === songId)
 
 		if (isFavorited) {
 			removeFavorite(songId, {
 				onSuccess: () => toast.success("Removed from favorites"),
-				onError: () => toast.error("Failed to remove from favorites"),
-			});
+				onError: () => toast.error("Failed to remove from favorites")
+			})
 		} else {
 			addFavorite(songId, {
 				onSuccess: () => toast.success("Added to favorites"),
-				onError: () => toast.error("Failed to add to favorites"),
-			});
+				onError: () => toast.error("Failed to add to favorites")
+			})
 		}
-	};
+	}
 
-	const isLoading = isLoadingSongs || isLoadingFavorites;
+	const isLoading = isLoadingSongs || isLoadingFavorites
 
-	if (isLoading) return <LoadingState />;
-	if (!version) return <NoVersionState />;
+	if (isLoading) return <LoadingState />
+	if (!version) return <NoVersionState />
 
 	return (
 		<Container>
@@ -70,20 +64,20 @@ const ChunithmFavorites = () => {
 					onSearchChange: setSearchQuery,
 					placeholder: "Search songs...",
 					emptyMessage: "No songs found.",
-					groupLabel: "Songs",
+					groupLabel: "Songs"
 				}}
 			/>
 			<Body>
 				<ResponsiveGrid
 					items={filteredSongs}
-					CardComponent={(props) => (
+					CardComponent={props => (
 						<FavoriteCard {...props} favoriteSongIds={favoriteSongIds} onToggleFavorite={handleToggleFavorite} />
 					)}
 				/>
 			</Body>
 		</Container>
-	);
-};
+	)
+}
 
 const LoadingState = () => (
 	<div className="relative flex-1 overflow-auto">
@@ -92,7 +86,7 @@ const LoadingState = () => (
 			<Spinner size={24} />
 		</div>
 	</div>
-);
+)
 
 const NoVersionState = () => (
 	<div className="relative flex-1 overflow-auto">
@@ -101,6 +95,6 @@ const NoVersionState = () => (
 			<p className="text-primary">Please set your Chunithm version in settings first</p>
 		</div>
 	</div>
-);
+)
 
-export default ChunithmFavorites;
+export default ChunithmFavorites

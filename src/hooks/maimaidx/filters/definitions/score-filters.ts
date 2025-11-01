@@ -1,7 +1,7 @@
-import type { FilterValues } from "@/shared/types";
-import { LEVEL_CONFIGS } from "@/utils/level-filter";
+import type { FilterValues } from "@/shared/types"
+import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
-import type { ScoreFilter } from "../types/music-types";
+import type { ScoreFilter } from "../types/music-types"
 
 // ============================================================================
 // LEVEL FILTER
@@ -38,13 +38,13 @@ export const scoreLevelFilter: ScoreFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" },
+		{ label: "15+", value: "15+" }
 	],
 	predicate: (score, value) => {
-		if (!score.difficulty) return false;
-		return LEVEL_CONFIGS.MAIMAI(score.difficulty, value);
-	},
-};
+		if (!score.difficulty) return false
+		return LEVEL_CONFIGS.MAIMAI(score.difficulty, value)
+	}
+}
 
 // ============================================================================
 // EXPORT ALL FILTERS
@@ -53,7 +53,7 @@ export const scoreLevelFilter: ScoreFilter = {
 /**
  * Array of all available score filters
  */
-export const scoreFilters: ScoreFilter[] = [scoreLevelFilter];
+export const scoreFilters: ScoreFilter[] = [scoreLevelFilter]
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -63,14 +63,14 @@ export const scoreFilters: ScoreFilter[] = [scoreLevelFilter];
  * Get default filter values for scores
  */
 export const getDefaultScoreFilterValues = (): FilterValues => {
-	const defaultValues: FilterValues = {};
-	scoreFilters.forEach((filter) => {
-		defaultValues[filter.identifier] = "all";
-	});
-	return defaultValues;
-};
+	const defaultValues: FilterValues = {}
+	scoreFilters.forEach(filter => {
+		defaultValues[filter.identifier] = "all"
+	})
+	return defaultValues
+}
 
 /**
  * Hook to get score filters
  */
-export const useScoreFilters = () => scoreFilters;
+export const useScoreFilters = () => scoreFilters

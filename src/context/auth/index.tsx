@@ -1,5 +1,5 @@
-import { AuthContext, AuthContextValue } from "./context";
-import { AuthProvider } from "./provider";
+import { AuthContext, AuthContextValue } from "./context"
+import { AuthProvider } from "./provider"
 
-export type { AuthContextValue };
-export { AuthContext, AuthProvider };
+export type { AuthContextValue }
+export { AuthContext, AuthProvider }

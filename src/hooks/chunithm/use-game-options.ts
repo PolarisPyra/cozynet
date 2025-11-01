@@ -1,36 +1,36 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { DB } from "@/shared/types";
-import { api } from "@/utils";
+import { DB } from "@/shared/types"
+import { api } from "@/utils"
 
 export function useGameOptions() {
 	return useQuery({
 		queryKey: ["chunithm", "game-options"],
 		queryFn: async () => {
-			const response = await api.chunithm.options.$get();
+			const response = await api.chunithm.options.$get()
 			if (!response.ok) {
-				throw new Error("Failed to fetch game options");
+				throw new Error("Failed to fetch game options")
 			}
-			return (await response.json()) as DB.ChuniProfileOption;
-		},
-	});
+			return (await response.json()) as DB.ChuniProfileOption
+		}
+	})
 }
 
 export function useUpdateGameOptions() {
-	const queryClient = useQueryClient();
+	const queryClient = useQueryClient()
 
 	return useMutation({
 		mutationFn: async (options: Record<string, number>) => {
 			const response = await api.chunithm.options.update.$post({
-				json: options,
-			});
+				json: options
+			})
 			if (!response.ok) {
-				throw new Error("Failed to update game options");
+				throw new Error("Failed to update game options")
 			}
-			return await response.json();
+			return await response.json()
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["chunithm", "game-options"] });
-		},
-	});
+			queryClient.invalidateQueries({ queryKey: ["chunithm", "game-options"] })
+		}
+	})
 }

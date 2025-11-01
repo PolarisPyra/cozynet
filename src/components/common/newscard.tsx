@@ -1,7 +1,7 @@
 interface NewsCardProps {
-	title: string;
-	date: string;
-	time: string;
+	title: string
+	date: string
+	time: string
 }
 
 const NewsCard = ({ title, date, time }: NewsCardProps) => {
@@ -18,7 +18,7 @@ const NewsCard = ({ title, date, time }: NewsCardProps) => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-export default NewsCard;
+export default NewsCard

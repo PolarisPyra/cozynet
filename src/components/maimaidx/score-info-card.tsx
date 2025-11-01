@@ -1,23 +1,23 @@
-import React from "react";
+import { useState } from "react"
 
-import { Calendar, Clock } from "lucide-react";
-import { DateTime } from "luxon";
+import { Calendar, Clock } from "lucide-react"
+import { DateTime } from "luxon"
 
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CDN } from "@/lib/constants";
-import { Mai2Playlog } from "@/shared/types";
-import { getMaimaiDxComboStatus, getMaimaiDxGrade, getMaimaiDxSyncStatus, maimaiDxBadgeColors } from "@/utils/helpers";
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { CDN } from "@/lib/constants"
+import { Mai2Playlog } from "@/shared/types"
+import { getMaimaiDxComboStatus, getMaimaiDxGrade, getMaimaiDxSyncStatus, maimaiDxBadgeColors } from "@/utils/helpers"
 
 interface AchievementBadgesProps {
-	comboStatus?: number;
-	syncStatus?: number;
-	isClear?: number;
+	comboStatus?: number
+	syncStatus?: number
+	isClear?: number
 }
 
 function AchievementBadges({ comboStatus, syncStatus }: AchievementBadgesProps) {
-	const comboStatusText = getMaimaiDxComboStatus(comboStatus);
-	const syncStatusText = getMaimaiDxSyncStatus(syncStatus);
+	const comboStatusText = getMaimaiDxComboStatus(comboStatus)
+	const syncStatusText = getMaimaiDxSyncStatus(syncStatus)
 
 	return (
 		<div className="flex items-center gap-1">
@@ -37,19 +37,19 @@ function AchievementBadges({ comboStatus, syncStatus }: AchievementBadgesProps) 
 				)}
 			</div>
 		</div>
-	);
+	)
 }
 
 export type MaimaiDxScoreInfoCardProps = {
-	score: Mai2Playlog;
-	levelColorBadge?: (chartId?: number | undefined) => string;
-	className?: string;
-};
+	score: Mai2Playlog
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+}
 
-const MaimaiDxScoreInfoCard: React.FC<MaimaiDxScoreInfoCardProps> = ({ score, className = "" }) => {
-	const [imageLoaded, setImageLoaded] = React.useState(false);
+export function MaimaiDxScoreInfoCard({ score, className = "" }: MaimaiDxScoreInfoCardProps) {
+	const [imageLoaded, setImageLoaded] = useState(false)
 
-	const grade = getMaimaiDxGrade(score.achievement ?? 0);
+	const grade = getMaimaiDxGrade(score.achievement ?? 0)
 
 	return (
 		<div
@@ -69,7 +69,9 @@ const MaimaiDxScoreInfoCard: React.FC<MaimaiDxScoreInfoCardProps> = ({ score, cl
 						/>
 					</div>
 					<div className="min-w-0 flex-1">
-						<div className="text-foreground mb-2 truncate text-base leading-tight font-bold">{score.title}</div>
+						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
+							{score.title}
+						</div>
 						<span
 							className={`inline-block rounded-sm px-2.5 py-1 text-xs font-bold ${maimaiDxBadgeColors(score.level ?? 0)}`}
 						>
@@ -80,18 +82,18 @@ const MaimaiDxScoreInfoCard: React.FC<MaimaiDxScoreInfoCardProps> = ({ score, cl
 
 				<div className="flex flex-shrink-0 flex-col items-end gap-1.5">
 					<div className="flex flex-col items-end">
-						<span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">Achievement</span>
+						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Achievement</span>
 						<div className="flex items-baseline gap-1.5">
-							<span className="text-foreground text-lg font-semibold tabular-nums">
+							<span className="text-foreground text-base font-medium tabular-nums">
 								{((score.achievement ?? 0) / 10000).toFixed(4)}%
 							</span>
-							<span className="text-foreground text-sm font-bold">{grade}</span>
+							<span className="text-foreground text-sm font-medium">{grade}</span>
 						</div>
 					</div>
 					{score.deluxscore !== null && score.deluxscore !== undefined && (
 						<div className="flex flex-col items-end">
-							<span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">DX Score</span>
-							<span className="text-foreground text-lg font-semibold tabular-nums">
+							<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">DX Score</span>
+							<span className="text-foreground text-base font-medium tabular-nums">
 								{(score.deluxscore ?? 0).toLocaleString()}
 							</span>
 						</div>
@@ -114,19 +116,22 @@ const MaimaiDxScoreInfoCard: React.FC<MaimaiDxScoreInfoCardProps> = ({ score, cl
 						<div className="flex items-center gap-1.5">
 							<Calendar className="h-3.5 w-3.5" strokeWidth={2} />
 							<span className="leading-none">
-								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toLocal().toLocaleString(DateTime.DATE_SHORT)}
+								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" })
+									.toLocal()
+									.toLocaleString(DateTime.DATE_SHORT)}
 							</span>
 						</div>
 						<div className="flex items-center gap-1.5">
 							<Clock className="h-3.5 w-3.5" strokeWidth={2} />
 							<span className="leading-none">
-								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toLocal().toLocaleString(DateTime.TIME_SIMPLE)}
+								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" })
+									.toLocal()
+									.toLocaleString(DateTime.TIME_SIMPLE)}
 							</span>
 						</div>
 					</div>
 				</>
 			)}
 		</div>
-	);
-};
-export default MaimaiDxScoreInfoCard;
+	)
+}

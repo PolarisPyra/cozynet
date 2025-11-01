@@ -8,28 +8,28 @@ import {
 	useChunithmScoreFiltering as useNewScoreFiltering,
 	useRatingFilters,
 	useScoreFilters,
-	useSongFilters,
-} from "./filters";
-import { useAddFavorite, useFavorites, useRemoveFavorite } from "./use-favorites";
-import { useGameOptions, useUpdateGameOptions } from "./use-game-options";
-import { useKamaitachiExport } from "./use-kamatachi";
-import { useLeaderboard } from "./use-leaderboard";
-import { useIsMobile } from "./use-mobile";
+	useSongFilters
+} from "./filters"
+import { useAddFavorite, useFavorites, useRemoveFavorite } from "./use-favorites"
+import { useGameOptions, useUpdateGameOptions } from "./use-game-options"
+import { useKamaitachiExport } from "./use-kamatachi"
+import { useLeaderboard } from "./use-leaderboard"
+import { useIsMobile } from "./use-mobile"
 import {
 	useHighestRating,
 	usePlayerRating,
 	useUserRatingBaseHotList,
 	useUserRatingBaseList,
 	useUserRatingBaseNewList,
-	useUserRatingBaseNextList,
-} from "./use-rating";
-import { useReiwaExport } from "./use-reiwa";
-import { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "./use-rivals";
-import { useChunithmScores } from "./use-scores";
-import { useChunithmSongs } from "./use-songs";
-import { useCreateTeam, useTeams, useUpdateTeam } from "./use-teams";
-import { useLimitedTickets, useLockSongs, useUnlimitedTickets, useUnlockAllSongs } from "./use-unlocks";
-import { useChunithmVersion, useChunithmVersions, useUpdateChunithmVersion } from "./use-version";
+	useUserRatingBaseNextList
+} from "./use-rating"
+import { useReiwaExport } from "./use-reiwa"
+import { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "./use-rivals"
+import { useChunithmScores } from "./use-scores"
+import { useChunithmSongs } from "./use-songs"
+import { useCreateTeam, useTeams, useUpdateTeam } from "./use-teams"
+import { useLimitedTickets, useLockSongs, useUnlimitedTickets, useUnlockAllSongs } from "./use-unlocks"
+import { useChunithmVersion, useChunithmVersions, useUpdateChunithmVersion } from "./use-version"
 
 export {
 	useAddFavorite,
@@ -72,7 +72,7 @@ export {
 	useUnlockAllSongs,
 	useChunithmVersion,
 	useChunithmVersions,
-	useUpdateChunithmVersion,
-};
+	useUpdateChunithmVersion
+}
 
-export type { ChunithmFilterValues };
+export type { ChunithmFilterValues }

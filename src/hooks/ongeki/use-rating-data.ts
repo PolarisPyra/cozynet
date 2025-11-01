@@ -7,82 +7,82 @@ import {
 	useUserRatingBaseHotList,
 	useUserRatingBaseList,
 	useUserRatingBaseNewList,
-	useUserRatingBaseNextList,
-} from "@/hooks/ongeki";
-import { useUserNewRatingBasePScoreList } from "@/hooks/ongeki/use-new-rating";
+	useUserRatingBaseNextList
+} from "@/hooks/ongeki"
+import { useUserNewRatingBasePScoreList } from "@/hooks/ongeki/use-new-rating"
 
 const useOngekiRatingData = (version: number, activeTab: string = "base") => {
-	const isRefreshOrAbove = version >= 8;
+	const isRefreshOrAbove = version >= 8
 
 	// Only fetch the rating endpoints based on version (not both old and new)
 	// Single endpoint returns both playerRating and highestRating
-	const { data: playerRating = [] } = usePlayerRating(!isRefreshOrAbove);
-	const { data: newPlayerRating = [] } = useNewPlayerRating(isRefreshOrAbove);
+	const { data: playerRating = [] } = usePlayerRating(!isRefreshOrAbove)
+	const { data: newPlayerRating = [] } = useNewPlayerRating(isRefreshOrAbove)
 
 	// Determine which queries to enable based on activeTab and version
-	const shouldFetchBase = activeTab === "base" && !isRefreshOrAbove;
-	const shouldFetchHot = activeTab === "current" && !isRefreshOrAbove;
-	const shouldFetchNew = activeTab === "recent";
-	const shouldFetchNext = activeTab === "next" && !isRefreshOrAbove;
-	const shouldFetchNewBase = activeTab === "base" && isRefreshOrAbove;
-	const shouldFetchNewNew = activeTab === "current" && isRefreshOrAbove;
-	const shouldFetchNewNext = activeTab === "next" && isRefreshOrAbove;
-	const shouldFetchPScore = activeTab === "pscore";
+	const shouldFetchBase = activeTab === "base" && !isRefreshOrAbove
+	const shouldFetchHot = activeTab === "current" && !isRefreshOrAbove
+	const shouldFetchNew = activeTab === "recent"
+	const shouldFetchNext = activeTab === "next" && !isRefreshOrAbove
+	const shouldFetchNewBase = activeTab === "base" && isRefreshOrAbove
+	const shouldFetchNewNew = activeTab === "current" && isRefreshOrAbove
+	const shouldFetchNewNext = activeTab === "next" && isRefreshOrAbove
+	const shouldFetchPScore = activeTab === "pscore"
 
 	// Only fetch data for active tab
-	const { data: baseSongs = [], isLoading: isLoadingBase } = useUserRatingBaseList(shouldFetchBase);
-	const { data: hotSongs = [], isLoading: isLoadingHot } = useUserRatingBaseHotList(shouldFetchHot);
-	const { data: newSongs = [], isLoading: isLoadingNew } = useUserRatingBaseNewList(shouldFetchNew);
-	const { data: nextSongs = [], isLoading: isLoadingNext } = useUserRatingBaseNextList(shouldFetchNext);
+	const { data: baseSongs = [], isLoading: isLoadingBase } = useUserRatingBaseList(shouldFetchBase)
+	const { data: hotSongs = [], isLoading: isLoadingHot } = useUserRatingBaseHotList(shouldFetchHot)
+	const { data: newSongs = [], isLoading: isLoadingNew } = useUserRatingBaseNewList(shouldFetchNew)
+	const { data: nextSongs = [], isLoading: isLoadingNext } = useUserRatingBaseNextList(shouldFetchNext)
 
-	const { data: newBaseSongs = [], isLoading: isLoadingNewBase } = useUserNewRatingBaseBestList(shouldFetchNewBase);
-	const { data: newNewSongs = [], isLoading: isLoadingNewNew } = useUserNewRatingBaseBestNewList(shouldFetchNewNew);
-	const { data: newNextSongs = [], isLoading: isLoadingNewNext } = useUserNewRatingBaseNextBestList(shouldFetchNewNext);
-	const { data: newPscoreSongs = [], isLoading: isLoadingPScore } = useUserNewRatingBasePScoreList(shouldFetchPScore);
+	const { data: newBaseSongs = [], isLoading: isLoadingNewBase } = useUserNewRatingBaseBestList(shouldFetchNewBase)
+	const { data: newNewSongs = [], isLoading: isLoadingNewNew } = useUserNewRatingBaseBestNewList(shouldFetchNewNew)
+	const { data: newNextSongs = [], isLoading: isLoadingNewNext } = useUserNewRatingBaseNextBestList(shouldFetchNewNext)
+	const { data: newPscoreSongs = [], isLoading: isLoadingPScore } = useUserNewRatingBasePScoreList(shouldFetchPScore)
 
 	const getActiveData = (tab: string) => {
 		switch (tab) {
 			case "base":
-				return isRefreshOrAbove ? newBaseSongs : baseSongs;
+				return isRefreshOrAbove ? newBaseSongs : baseSongs
 			case "current":
-				return isRefreshOrAbove ? newNewSongs : hotSongs;
+				return isRefreshOrAbove ? newNewSongs : hotSongs
 			case "recent":
-				return newSongs;
+				return newSongs
 			case "next":
-				return isRefreshOrAbove ? newNextSongs : nextSongs;
+				return isRefreshOrAbove ? newNextSongs : nextSongs
 			case "pscore":
-				return newPscoreSongs;
+				return newPscoreSongs
 			default:
-				return isRefreshOrAbove ? newBaseSongs : baseSongs;
+				return isRefreshOrAbove ? newBaseSongs : baseSongs
 		}
-	};
+	}
 
 	const getActiveLoading = (tab: string) => {
 		switch (tab) {
 			case "base":
-				return isRefreshOrAbove ? isLoadingNewBase : isLoadingBase;
+				return isRefreshOrAbove ? isLoadingNewBase : isLoadingBase
 			case "current":
-				return isRefreshOrAbove ? isLoadingNewNew : isLoadingHot;
+				return isRefreshOrAbove ? isLoadingNewNew : isLoadingHot
 			case "recent":
-				return isLoadingNew;
+				return isLoadingNew
 			case "next":
-				return isRefreshOrAbove ? isLoadingNewNext : isLoadingNext;
+				return isRefreshOrAbove ? isLoadingNewNext : isLoadingNext
 			case "pscore":
-				return isLoadingPScore;
+				return isLoadingPScore
 			default:
-				return isRefreshOrAbove ? isLoadingNewBase : isLoadingBase;
+				return isRefreshOrAbove ? isLoadingNewBase : isLoadingBase
 		}
-	};
+	}
 
 	const playerRatingValue = isRefreshOrAbove
 		? (newPlayerRating[0]?.newPlayerRating ?? 0) / 1000
-		: (playerRating[0]?.playerRating ?? 0) / 100;
+		: (playerRating[0]?.playerRating ?? 0) / 100
 
 	const highestRatingValue = isRefreshOrAbove
 		? (newPlayerRating[0]?.newHighestRating ?? 0) / 1000
-		: (playerRating[0]?.highestRating ?? 0) / 100;
+		: (playerRating[0]?.highestRating ?? 0) / 100
 
-	const ratingDecimals = isRefreshOrAbove ? 3 : 2;
+	const ratingDecimals = isRefreshOrAbove ? 3 : 2
 
 	return {
 		getActiveData,
@@ -90,8 +90,8 @@ const useOngekiRatingData = (version: number, activeTab: string = "base") => {
 		playerRatingValue,
 		highestRatingValue,
 		ratingDecimals,
-		isRefreshOrAbove,
-	};
-};
+		isRefreshOrAbove
+	}
+}
 
-export default useOngekiRatingData;
+export default useOngekiRatingData

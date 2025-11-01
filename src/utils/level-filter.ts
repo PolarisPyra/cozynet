@@ -1,51 +1,51 @@
 export const createLevelPredicate = (threshold: number, split: number) => {
 	const getLevelRange = (value: string): { min: number; max: number } | null => {
 		if (value === "all") {
-			return null;
+			return null
 		}
 
-		const baseLevel = parseInt(value, 10);
-		const isPlus = value.endsWith("+");
+		const baseLevel = parseInt(value, 10)
+		const isPlus = value.endsWith("+")
 
 		if (baseLevel < threshold) {
 			return {
 				min: baseLevel,
-				max: baseLevel + 1,
-			};
+				max: baseLevel + 1
+			}
 		}
 
 		if (!isPlus) {
 			return {
 				min: baseLevel,
-				max: baseLevel + split,
-			};
+				max: baseLevel + split
+			}
 		}
 
 		return {
 			min: baseLevel + split,
-			max: baseLevel + 1,
-		};
-	};
+			max: baseLevel + 1
+		}
+	}
 
 	return (level: number | null, value: string): boolean => {
 		if (value === "all") {
-			return true;
+			return true
 		}
 
 		if (!level) {
-			return false;
+			return false
 		}
 
-		const normalizedLevel = Math.round(level * 10) / 10;
+		const normalizedLevel = Math.round(level * 10) / 10
 
-		const range = getLevelRange(value);
+		const range = getLevelRange(value)
 		if (!range) {
-			return false;
+			return false
 		}
 
-		return normalizedLevel >= range.min && normalizedLevel < range.max;
-	};
-};
+		return normalizedLevel >= range.min && normalizedLevel < range.max
+	}
+}
 
 export const LEVEL_CONFIGS = {
 	CHUNITHM: createLevelPredicate(
@@ -53,5 +53,5 @@ export const LEVEL_CONFIGS = {
 		0.5 // split: "7" = 7.0-7.4, "7+" = 7.5-7.9
 	),
 	MAIMAI: createLevelPredicate(7, 0.6),
-	ONGEKI: createLevelPredicate(7, 0.7),
-} as const;
+	ONGEKI: createLevelPredicate(7, 0.7)
+} as const

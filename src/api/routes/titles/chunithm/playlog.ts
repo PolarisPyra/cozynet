@@ -1,13 +1,13 @@
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
 
-import { db } from "@/api/db";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { DB } from "@/shared/types";
+import { db } from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { DB } from "@/shared/types"
 
-const ChunithmScorePlaylog = new Hono().get("playlog", async (c) => {
+const ChunithmScorePlaylog = new Hono().get("playlog", async c => {
 	try {
-		const { userId } = c.payload;
+		const { userId } = c.payload
 
 		const [results] = await db.execute<(DB.ChuniScorePlaylog & RowDataPacket)[]>(
 			`WITH song_versions AS (
@@ -64,12 +64,12 @@ const ChunithmScorePlaylog = new Hono().get("playlog", async (c) => {
 				ul.userPlayDate DESC
 			`,
 			[userId]
-		);
+		)
 
-		return c.json(results);
+		return c.json(results)
 	} catch (error) {
-		throw rethrowWithMessage("Failed to get static music", error);
+		throw rethrowWithMessage("Failed to get static music", error)
 	}
-});
+})
 
-export { ChunithmScorePlaylog };
+export { ChunithmScorePlaylog }

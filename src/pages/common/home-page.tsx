@@ -1,17 +1,17 @@
-import { useMemo } from "react";
+import { useMemo } from "react"
 
-import { Bell, Calendar, Clock } from "lucide-react";
-import { DateTime } from "luxon";
+import { Bell, Calendar, Clock } from "lucide-react"
+import { DateTime } from "luxon"
 
-import Header from "@/components/common/header";
+import Header from "@/components/common/header"
 
 const ServerNews = () => {
 	const newsBulletin = useMemo(() => {
-		const utcDateString = `${env.BUILD_DATE_YEAR_MONTH_DAY} ${env.BUILD_TIME_12_HOUR}`;
-		const dt = DateTime.fromFormat(utcDateString, "yyyy-MM-dd h:mm a", { zone: "utc" }).toLocal();
+		const utcDateString = `${env.BUILD_DATE_YEAR_MONTH_DAY} ${env.BUILD_TIME_12_HOUR}`
+		const dt = DateTime.fromFormat(utcDateString, "yyyy-MM-dd h:mm a", { zone: "utc" }).toLocal()
 
-		const localDate = dt.toFormat("MMM dd, yyyy");
-		const localTime = dt.toFormat("h:mm a ZZZZ");
+		const localDate = dt.toFormat("MMM dd, yyyy")
+		const localTime = dt.toFormat("h:mm a ZZZZ")
 
 		return [
 			{
@@ -19,10 +19,10 @@ const ServerNews = () => {
 				date: localDate,
 				time: localTime,
 				description: "",
-				level: "info",
-			},
-		];
-	}, []);
+				level: "info"
+			}
+		]
+	}, [])
 
 	return (
 		<div className="relative flex-1 overflow-auto">
@@ -41,7 +41,7 @@ const ServerNews = () => {
 						</div>
 					) : (
 						<div className="space-y-4">
-							{newsBulletin.map((item) => (
+							{newsBulletin.map(item => (
 								<div key={item.id}>
 									<div className="flex items-start justify-between gap-4">
 										<div className="text-card-foreground flex flex-1 flex-col gap-3">
@@ -65,7 +65,7 @@ const ServerNews = () => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-export default ServerNews;
+export default ServerNews

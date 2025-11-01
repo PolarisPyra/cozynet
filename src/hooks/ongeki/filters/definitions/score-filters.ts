@@ -1,6 +1,6 @@
-import { LEVEL_CONFIGS } from "@/utils/level-filter";
+import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
-import type { ScoreFilter } from "../types/music-types";
+import type { ScoreFilter } from "../types/music-types"
 
 export const scoreLevelFilter: ScoreFilter = {
 	identifier: "level",
@@ -30,13 +30,13 @@ export const scoreLevelFilter: ScoreFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" },
+		{ label: "15+", value: "15+" }
 	],
 	predicate: (score, value) => {
-		if (!score.level) return false;
-		return LEVEL_CONFIGS.ONGEKI(score.level, value);
-	},
-};
+		if (!score.level) return false
+		return LEVEL_CONFIGS.ONGEKI(score.level, value)
+	}
+}
 
 export const scoreAchievementFilter: ScoreFilter = {
 	identifier: "achievement",
@@ -45,22 +45,22 @@ export const scoreAchievementFilter: ScoreFilter = {
 		{ label: "All", value: "all" },
 		{ label: "Full Bell", value: "fullbell" },
 		{ label: "Full Combo", value: "fullcombo" },
-		{ label: "All Break", value: "allbreake" },
+		{ label: "All Break", value: "allbreake" }
 	],
 	predicate: (score, value) => {
-		if (value === "all") return true;
+		if (value === "all") return true
 
 		switch (value) {
 			case "fullbell":
-				return score.isFullBell === 1;
+				return score.isFullBell === 1
 			case "fullcombo":
-				return score.isFullCombo === 1;
+				return score.isFullCombo === 1
 			case "allbreake":
-				return score.isAllBreak === 1;
+				return score.isAllBreak === 1
 			default:
-				return true;
+				return true
 		}
-	},
-};
+	}
+}
 
-export const scoreFilters: ScoreFilter[] = [scoreLevelFilter, scoreAchievementFilter];
+export const scoreFilters: ScoreFilter[] = [scoreLevelFilter, scoreAchievementFilter]

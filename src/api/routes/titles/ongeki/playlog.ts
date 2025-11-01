@@ -1,13 +1,13 @@
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
 
-import { db } from "@/api/db";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
 
-const OngekiProfilePlaylog = new Hono().get("playlog", async (c) => {
+const OngekiProfilePlaylog = new Hono().get("playlog", async c => {
 	try {
-		const { userId, versions } = c.payload;
-		const version = versions.ongeki_version;
+		const { userId, versions } = c.payload
+		const version = versions.ongeki_version
 
 		const [results] = await db.execute<RowDataPacket[]>(
 			`
@@ -54,11 +54,11 @@ const OngekiProfilePlaylog = new Hono().get("playlog", async (c) => {
                     csp.userPlayDate DESC;
                     `,
 			[version, userId, version]
-		);
-		return c.json(results);
+		)
+		return c.json(results)
 	} catch (error) {
-		throw rethrowWithMessage("Failed to fetch ongeki playlog", error);
+		throw rethrowWithMessage("Failed to fetch ongeki playlog", error)
 	}
-});
+})
 
-export { OngekiProfilePlaylog };
+export { OngekiProfilePlaylog }

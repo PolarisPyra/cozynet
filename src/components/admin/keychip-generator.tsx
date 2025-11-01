@@ -1,98 +1,98 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import { ChevronDown, Loader2, Shuffle } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronDown, Loader2, Shuffle } from "lucide-react"
+import { toast } from "sonner"
 
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { api } from "@/utils";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { api } from "@/utils"
 
-import { Button } from "../ui/button";
+import { Button } from "../ui/button"
 
-const KeychipGenerator = () => {
-	const [isLoading, setIsLoading] = useState(false);
-	const [openDropdown, setOpenDropdown] = useState(false);
+export function KeychipGenerator() {
+	const [isLoading, setIsLoading] = useState(false)
+	const [openDropdown, setOpenDropdown] = useState(false)
 	const [formData, setFormData] = useState({
 		arcade_nickname: "",
 		name: "",
 		game: "aime",
 		namcopcbid: "",
-		aimecard: "",
-	});
+		aimecard: ""
+	})
 
 	// Determine which ID field to show based on game type
-	const showNamcoPcbId = formData.game === "SDEW";
-	const hasSerialId = showNamcoPcbId ? !!formData.namcopcbid : !!formData.aimecard;
+	const showNamcoPcbId = formData.game === "SDEW"
+	const hasSerialId = showNamcoPcbId ? !!formData.namcopcbid : !!formData.aimecard
 
 	const gameOptions = [
 		{ value: "aime", label: "Sega (Aime card)" },
-		{ value: "SDEW", label: "SDEW (Namco PCB)" },
-	];
+		{ value: "SDEW", label: "SDEW (Namco PCB)" }
+	]
 
 	const handleChange = (e: { target: { name: string; value: string } }) => {
 		setFormData({
 			...formData,
-			[e.target.name]: e.target.value,
-		});
-	};
+			[e.target.name]: e.target.value
+		})
+	}
 
 	const handleGameChange = (value: string) => {
-		setFormData((data) => ({
+		setFormData(data => ({
 			...data,
 			game: value,
 			namcopcbid: "",
-			aimecard: "",
-		}));
-		setOpenDropdown(false);
-	};
+			aimecard: ""
+		}))
+		setOpenDropdown(false)
+	}
 
 	const generateRandomSerial = () => {
-		let uniqueNumbers = "";
+		let uniqueNumbers = ""
 		while (uniqueNumbers.length < 4) {
-			const digit = Math.floor(Math.random() * 10);
+			const digit = Math.floor(Math.random() * 10)
 			if (!uniqueNumbers.includes(digit.toString())) {
-				uniqueNumbers += digit;
+				uniqueNumbers += digit
 			}
 		}
-		const randomNumbers = Math.floor(1000 + Math.random() * 9000);
-		const randomSerial = `A69E01A${uniqueNumbers}${randomNumbers}`;
+		const randomNumbers = Math.floor(1000 + Math.random() * 9000)
+		const randomSerial = `A69E01A${uniqueNumbers}${randomNumbers}`
 
-		setFormData((data) => ({
+		setFormData(data => ({
 			...data,
-			[showNamcoPcbId ? "namcopcbid" : "aimecard"]: randomSerial,
-		}));
-	};
+			[showNamcoPcbId ? "namcopcbid" : "aimecard"]: randomSerial
+		}))
+	}
 
 	const handleSubmit = async (e: { preventDefault: () => void }) => {
-		e.preventDefault();
-		setIsLoading(true);
+		e.preventDefault()
+		setIsLoading(true)
 
 		try {
 			const response = await api.admin.keychip.generate.$post({
-				json: formData,
-			});
+				json: formData
+			})
 
 			if (response.ok) {
-				toast.success("Keychip generated successfully!");
-				setFormData((data) => ({
+				toast.success("Keychip generated successfully!")
+				setFormData(data => ({
 					...data,
 					arcade_nickname: "",
-					name: "",
-				}));
+					name: ""
+				}))
 			} else {
 				const errorMessage =
 					response.status === 403
 						? "You don't have permission to generate keychips"
-						: `Failed to generate keychip: ${response.status}`;
-				toast.error(errorMessage);
+						: `Failed to generate keychip: ${response.status}`
+				toast.error(errorMessage)
 			}
 		} catch (error) {
-			console.error("Error generating keychip:", error);
-			toast.error("An unexpected error occurred");
+			console.error("Error generating keychip:", error)
+			toast.error("An unexpected error occurred")
 		} finally {
-			setIsLoading(false);
+			setIsLoading(false)
 		}
-	};
+	}
 
 	return (
 		<div className="bg-card rounded-sm">
@@ -131,7 +131,7 @@ const KeychipGenerator = () => {
 						<PopoverTrigger asChild>
 							<Button variant="dropdown" type="button">
 								<span className="text-primary truncate">
-									{gameOptions.find((opt) => opt.value === formData.game)?.label || "Select Game Type"}
+									{gameOptions.find(opt => opt.value === formData.game)?.label || "Select Game Type"}
 								</span>
 								<ChevronDown className="opacity-50" />
 							</Button>
@@ -143,7 +143,7 @@ const KeychipGenerator = () => {
 								<CommandList>
 									<CommandEmpty>No game type found.</CommandEmpty>
 									<CommandGroup>
-										{gameOptions.map((option) => (
+										{gameOptions.map(option => (
 											<CommandItem
 												key={option.value}
 												value={option.value}
@@ -176,37 +176,35 @@ const KeychipGenerator = () => {
 					/>
 				</div>
 
-		<Button
-			variant="custom"
-			type="button"
-			onClick={generateRandomSerial}
-			disabled={isLoading}
-			className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-secondary p-3 font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
-			aria-busy={isLoading}
-		>
-			<Shuffle className="h-4 w-4" />
-			<span>Generate random serial</span>
-		</Button>
+				<Button
+					variant="custom"
+					type="button"
+					onClick={generateRandomSerial}
+					disabled={isLoading}
+					className="border-input bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground mt-4 flex w-full items-center justify-center gap-2 rounded-md border p-3 font-medium transition-colors disabled:cursor-not-allowed"
+					aria-busy={isLoading}
+				>
+					<Shuffle className="h-4 w-4" />
+					<span>Generate random serial</span>
+				</Button>
 
-		<Button
-			variant="custom"
-			type="submit"
-			disabled={isLoading || !hasSerialId}
-			className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
-			aria-busy={isLoading}
-		>
-			{isLoading ? (
-				<>
-					<Loader2 className="h-4 w-4 animate-spin" />
-					<span>Generating...</span>
-				</>
-			) : (
-				<span>Add new keychip</span>
-			)}
-		</Button>
+				<Button
+					variant="custom"
+					type="submit"
+					disabled={isLoading || !hasSerialId}
+					className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-transparent p-3 font-semibold transition-colors disabled:cursor-not-allowed"
+					aria-busy={isLoading}
+				>
+					{isLoading ? (
+						<>
+							<Loader2 className="h-4 w-4 animate-spin" />
+							<span>Generating...</span>
+						</>
+					) : (
+						<span>Add new keychip</span>
+					)}
+				</Button>
 			</form>
 		</div>
-	);
-};
-
-export default KeychipGenerator;
+	)
+}

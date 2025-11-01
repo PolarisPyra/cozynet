@@ -1,6 +1,6 @@
-import { LEVEL_CONFIGS } from "@/utils/level-filter";
+import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
-import type { SongFilter } from "../types/music-types";
+import type { SongFilter } from "../types/music-types"
 
 // ============================================================================
 // LEVEL FILTER
@@ -39,13 +39,13 @@ export const songLevelFilter: SongFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" },
+		{ label: "15+", value: "15+" }
 	],
 	predicate: (song, value) => {
-		if (!song.level) return false;
-		return LEVEL_CONFIGS.ONGEKI(song.level, value);
-	},
-};
+		if (!song.level) return false
+		return LEVEL_CONFIGS.ONGEKI(song.level, value)
+	}
+}
 // ============================================================================
 // GENRE FILTER
 // ============================================================================
@@ -63,13 +63,13 @@ export const songGenreFilter: SongFilter = {
 		{ label: "POPS＆ANIME", value: "POPS＆ANIME" },
 		{ label: "チュウマイ", value: "チュウマイ" },
 		{ label: "niconico", value: "niconico" },
-		{ label: "VARIETY", value: "VARIETY" },
+		{ label: "VARIETY", value: "VARIETY" }
 	],
 	predicate: (song, value) => {
-		if (value === "all") return true;
-		return song.genre === value;
-	},
-};
+		if (value === "all") return true
+		return song.genre === value
+	}
+}
 
 // ============================================================================
 // CHART TYPE FILTER
@@ -84,15 +84,15 @@ export const songChartTypeFilter: SongFilter = {
 	options: [
 		{ label: "All", value: "all" },
 		{ label: "Normal", value: "normal" },
-		{ label: "Lunatic", value: "lunatic" },
+		{ label: "Lunatic", value: "lunatic" }
 	],
 	predicate: (song, value) => {
-		if (value === "all") return true;
-		if (value === "normal") return song.chartId !== 10;
-		if (value === "lunatic") return song.chartId === 10;
-		return true;
-	},
-};
+		if (value === "all") return true
+		if (value === "normal") return song.chartId !== 10
+		if (value === "lunatic") return song.chartId === 10
+		return true
+	}
+}
 
 // ============================================================================
 // EXPORT ALL FILTERS
@@ -101,4 +101,4 @@ export const songChartTypeFilter: SongFilter = {
 /**
  * Array of all available song filters
  */
-export const songFilters: SongFilter[] = [songLevelFilter, songGenreFilter, songChartTypeFilter];
+export const songFilters: SongFilter[] = [songLevelFilter, songGenreFilter, songChartTypeFilter]

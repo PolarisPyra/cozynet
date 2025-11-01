@@ -1,31 +1,26 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
 
-import { Check, ChevronDown, Filter as FilterIcon } from "lucide-react";
+import { Check, ChevronDown, Filter as FilterIcon } from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 export interface FilterOption {
-	value: string;
-	label: string;
+	value: string
+	label: string
 }
 
 interface FilterProps {
-	filters: FilterOption[];
-	selectedFilter?: string;
-	onFilterChange: (value: string) => void;
-	className?: string;
-	placeholder?: string;
-	showIcon?: boolean;
-	size?: "sm" | "lg";
-	variant?: "default" | "outline" | "secondary";
-	label?: string;
+	filters: FilterOption[]
+	selectedFilter?: string
+	onFilterChange: (value: string) => void
+	className?: string
+	placeholder?: string
+	showIcon?: boolean
+	size?: "sm" | "lg"
+	variant?: "default" | "outline" | "secondary"
+	label?: string
 }
 
 export const Filter: React.FC<FilterProps> = ({
@@ -37,18 +32,18 @@ export const Filter: React.FC<FilterProps> = ({
 	showIcon = true,
 	size = "sm",
 	variant = "outline",
-	label,
+	label
 }) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState(false)
 
-	if (filters.length === 0) return null;
+	if (filters.length === 0) return null
 
-	const selectedFilterLabel = filters.find((f) => f.value === selectedFilter)?.label || placeholder;
+	const selectedFilterLabel = filters.find(f => f.value === selectedFilter)?.label || placeholder
 
 	const handleFilterChange = (value: string) => {
-		onFilterChange(value);
-		setIsOpen(false);
-	};
+		onFilterChange(value)
+		setIsOpen(false)
+	}
 
 	const filterButton = (
 		<Button
@@ -63,13 +58,13 @@ export const Filter: React.FC<FilterProps> = ({
 			<span className="hidden sm:inline">{selectedFilterLabel}</span>
 			<ChevronDown className="h-3 w-3 opacity-50" />
 		</Button>
-	);
+	)
 
 	const dropdown = (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 			<DropdownMenuTrigger asChild>{filterButton}</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-48">
-				{filters.map((filter) => (
+				{filters.map(filter => (
 					<DropdownMenuItem
 						key={filter.value}
 						onClick={() => handleFilterChange(filter.value)}
@@ -81,7 +76,7 @@ export const Filter: React.FC<FilterProps> = ({
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
+	)
 
 	if (label) {
 		return (
@@ -89,8 +84,8 @@ export const Filter: React.FC<FilterProps> = ({
 				<span className="text-muted-foreground text-sm font-medium">{label}</span>
 				{dropdown}
 			</div>
-		);
+		)
 	}
 
-	return dropdown;
-};
+	return dropdown
+}

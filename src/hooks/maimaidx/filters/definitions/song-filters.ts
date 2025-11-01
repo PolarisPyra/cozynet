@@ -1,7 +1,7 @@
-import type { FilterValues } from "@/shared/types";
-import { LEVEL_CONFIGS } from "@/utils/level-filter";
+import type { FilterValues } from "@/shared/types"
+import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
-import type { SongFilter } from "../types/music-types";
+import type { SongFilter } from "../types/music-types"
 
 // ============================================================================
 // LEVEL FILTER
@@ -38,13 +38,13 @@ export const songLevelFilter: SongFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" },
+		{ label: "15+", value: "15+" }
 	],
 	predicate: (song, value) => {
-		if (!song.difficulty) return false;
-		return LEVEL_CONFIGS.MAIMAI(song.difficulty, value);
-	},
-};
+		if (!song.difficulty) return false
+		return LEVEL_CONFIGS.MAIMAI(song.difficulty, value)
+	}
+}
 
 // ============================================================================
 // EXPORT ALL FILTERS
@@ -53,7 +53,7 @@ export const songLevelFilter: SongFilter = {
 /**
  * Array of all available song filters
  */
-export const songFilters: SongFilter[] = [songLevelFilter];
+export const songFilters: SongFilter[] = [songLevelFilter]
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -63,14 +63,14 @@ export const songFilters: SongFilter[] = [songLevelFilter];
  * Get default filter values for songs
  */
 export const getDefaultSongFilterValues = (): FilterValues => {
-	const defaultValues: FilterValues = {};
-	songFilters.forEach((filter) => {
-		defaultValues[filter.identifier] = "all";
-	});
-	return defaultValues;
-};
+	const defaultValues: FilterValues = {}
+	songFilters.forEach(filter => {
+		defaultValues[filter.identifier] = "all"
+	})
+	return defaultValues
+}
 
 /**
  * Hook to get song filters
  */
-export const useSongFilters = () => songFilters;
+export const useSongFilters = () => songFilters

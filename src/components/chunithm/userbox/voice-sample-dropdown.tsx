@@ -1,9 +1,9 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react"
 
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 // Voice sample mapping - can be customized per system voice
 const DEFAULT_VOICE_SAMPLES = {
@@ -48,31 +48,31 @@ const DEFAULT_VOICE_SAMPLES = {
 	"00038": "Voice Sample 15",
 	"00039": "Voice Sample 16",
 	"00040": "Voice Sample 17",
-	"00041": "Voice Sample 18",
-};
+	"00041": "Voice Sample 18"
+}
 
 interface VoiceSampleDropdownProps {
-	systemVoiceId: number;
-	className?: string;
+	systemVoiceId: number
+	className?: string
 }
 
 export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDropdownProps) {
-	const [isOpen, setIsOpen] = useState(false);
-	const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
-	const audioRef = useRef<HTMLAudioElement | null>(null);
+	const [isOpen, setIsOpen] = useState(false)
+	const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
+	const audioRef = useRef<HTMLAudioElement | null>(null)
 
 	// Format system voice ID for URL (pad with zeros to 4 digits)
 	const formattedVoiceId = useMemo(() => {
-		return systemVoiceId.toString().padStart(4, "0");
-	}, [systemVoiceId]);
+		return systemVoiceId.toString().padStart(4, "0")
+	}, [systemVoiceId])
 
 	// Generate audio URL for a sample
 	const getAudioUrl = useCallback(
 		(sampleId: string) => {
-			return `https://cozynet.b-cdn.net/client/assets/chunithm/systemvoices/systemvoice${formattedVoiceId}/${sampleId}_streaming.wav`;
+			return `https://cozynet.b-cdn.net/client/assets/chunithm/systemvoices/systemvoice${formattedVoiceId}/${sampleId}_streaming.wav`
 		},
 		[formattedVoiceId]
-	);
+	)
 
 	// Play audio sample
 	const playAudioSample = useCallback(
@@ -80,45 +80,45 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 			try {
 				// Stop any currently playing audio
 				if (audioRef.current) {
-					audioRef.current.pause();
-					audioRef.current = null;
+					audioRef.current.pause()
+					audioRef.current = null
 				}
 
-				setCurrentlyPlaying(sampleId);
+				setCurrentlyPlaying(sampleId)
 
-				const audioUrl = getAudioUrl(sampleId);
-				const audio = new Audio(audioUrl);
-				audioRef.current = audio;
+				const audioUrl = getAudioUrl(sampleId)
+				const audio = new Audio(audioUrl)
+				audioRef.current = audio
 
 				audio.onended = () => {
-					setCurrentlyPlaying(null);
-					audioRef.current = null;
-				};
+					setCurrentlyPlaying(null)
+					audioRef.current = null
+				}
 
 				audio.onerror = () => {
-					setCurrentlyPlaying(null);
-					audioRef.current = null;
-					console.warn(`Failed to load audio sample: ${sampleName} (${sampleId})`);
-				};
+					setCurrentlyPlaying(null)
+					audioRef.current = null
+					console.warn(`Failed to load audio sample: ${sampleName} (${sampleId})`)
+				}
 
-				await audio.play();
+				await audio.play()
 			} catch (error) {
-				setCurrentlyPlaying(null);
-				audioRef.current = null;
-				console.error(`Error playing audio sample: ${sampleName} (${sampleId})`, error);
+				setCurrentlyPlaying(null)
+				audioRef.current = null
+				console.error(`Error playing audio sample: ${sampleName} (${sampleId})`, error)
 			}
 		},
 		[getAudioUrl]
-	);
+	)
 
 	// Stop currently playing audio
 	const stopAudio = useCallback(() => {
 		if (audioRef.current) {
-			audioRef.current.pause();
-			audioRef.current = null;
+			audioRef.current.pause()
+			audioRef.current = null
 		}
-		setCurrentlyPlaying(null);
-	}, []);
+		setCurrentlyPlaying(null)
+	}, [])
 
 	// Popover handles outside clicks; we just control `isOpen` state
 
@@ -126,10 +126,10 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 	React.useEffect(() => {
 		return () => {
 			if (audioRef.current) {
-				audioRef.current.pause();
+				audioRef.current.pause()
 			}
-		};
-	}, []);
+		}
+	}, [])
 
 	return (
 		<div className={cn("relative", className)}>
@@ -161,10 +161,10 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 													<Button
 														variant="ghost"
 														size="sm"
-														className="h-6 w-6 p-0 text-red-500"
-														onClick={(e) => {
-															e.stopPropagation();
-															stopAudio();
+														className="text-destructive h-6 w-6 p-0"
+														onClick={e => {
+															e.stopPropagation()
+															stopAudio()
 														}}
 													>
 														⏹
@@ -173,10 +173,10 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 													<Button
 														variant="ghost"
 														size="sm"
-														className="h-6 w-6 p-0 text-gray-500 opacity-70 group-hover:opacity-100"
-														onClick={(e) => {
-															e.stopPropagation();
-															playAudioSample(sampleId, sampleName);
+														className="text-muted-foreground h-6 w-6 p-0 opacity-70 group-hover:opacity-100"
+														onClick={e => {
+															e.stopPropagation()
+															playAudioSample(sampleId, sampleName)
 														}}
 													>
 														▶
@@ -192,5 +192,5 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 				</PopoverContent>
 			</Popover>
 		</div>
-	);
+	)
 }

@@ -1,28 +1,28 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson, validateParams } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson, validateParams } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 interface SystemVoiceItem {
-	systemVoiceId: number;
-	label: string;
-	imagePath: string;
-	locked: boolean;
+	systemVoiceId: number
+	label: string
+	imagePath: string
+	locked: boolean
 }
 
 const SearchRequestSchema = z.object({
 	filter: z.object({
-		locked: z.boolean().nullable(),
-	}),
-});
+		locked: z.boolean().nullable()
+	})
+})
 
 const EquipRequestSchema = z.object({
-	systemVoiceId: z.number(),
-});
+	systemVoiceId: z.number()
+})
 
 async function getCurrentSystemVoice(userId: number, version: number): Promise<SystemVoiceItem | null> {
 	const [result] = await db.execute<(SystemVoiceItem & RowDataPacket)[]>(
@@ -45,41 +45,41 @@ async function getCurrentSystemVoice(userId: number, version: number): Promise<S
 		LIMIT 1
 		`,
 		[userId, userId, version, version]
-	);
+	)
 
-	return result.length > 0 ? result[0] : null;
+	return result.length > 0 ? result[0] : null
 }
 
 const routes = new Hono()
 	// Get current equipped systemvoice
-	.get("", async (c) => {
+	.get("", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
-			const result = await getCurrentSystemVoice(userId, version);
+			const result = await getCurrentSystemVoice(userId, version)
 			if (!result) {
 				// Return default system voice if none found
 				return c.json({
 					systemVoiceId: 1,
 					label: "Default",
 					imagePath: "CHU_UI_SystemVoice_000001",
-					locked: false,
-				});
+					locked: false
+				})
 			}
 
-			return c.json(result);
+			return c.json(result)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to fetch current systemvoice", error);
+			throw rethrowWithMessage("Failed to fetch current systemvoice", error)
 		}
 	})
 
 	// Equip systemvoice
-	.post("", validateJson(EquipRequestSchema), async (c) => {
+	.post("", validateJson(EquipRequestSchema), async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
-			const { systemVoiceId } = await c.req.json();
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
+			const { systemVoiceId } = await c.req.json()
 
 			// Check if user owns this systemvoice (itemKind 9 for system voices)
 			const [ownershipResult] = await db.execute<RowDataPacket[]>(
@@ -89,12 +89,12 @@ const routes = new Hono()
 				WHERE user = ? AND itemId = ? AND itemKind = 9
 				`,
 				[userId, systemVoiceId]
-			);
+			)
 
 			if (ownershipResult.length === 0) {
 				throw new HTTPException(403, {
-					message: "You don't own this systemvoice",
-				});
+					message: "You don't own this systemvoice"
+				})
 			}
 
 			// Update profile with new systemvoice
@@ -105,36 +105,36 @@ const routes = new Hono()
 				WHERE user = ? AND version = ?
 				`,
 				[systemVoiceId, userId, version]
-			);
+			)
 
 			if (result.affectedRows === 0) {
 				throw new HTTPException(404, {
-					message: "Profile not found",
-				});
+					message: "Profile not found"
+				})
 			}
 
 			// Return updated systemvoice
-			const updatedSystemVoice = await getCurrentSystemVoice(userId, version);
-			return c.json(updatedSystemVoice);
+			const updatedSystemVoice = await getCurrentSystemVoice(userId, version)
+			return c.json(updatedSystemVoice)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to equip systemvoice", error);
+			throw rethrowWithMessage("Failed to equip systemvoice", error)
 		}
 	})
 
 	// Search systemvoices
-	.post("search", validateJson(SearchRequestSchema), async (c) => {
+	.post("search", validateJson(SearchRequestSchema), async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
-			const { filter } = await c.req.json();
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
+			const { filter } = await c.req.json()
 
-			let additionalWhere = "";
-			const params: any[] = [userId, userId, version, userId, version];
+			let additionalWhere = ""
+			const params: any[] = [userId, userId, version, userId, version]
 
 			if (filter.locked === true) {
-				additionalWhere = " AND cii.itemId IS NULL";
+				additionalWhere = " AND cii.itemId IS NULL"
 			} else if (filter.locked === false) {
-				additionalWhere = " AND cii.itemId IS NOT NULL";
+				additionalWhere = " AND cii.itemId IS NOT NULL"
 			}
 
 			// Get total count
@@ -149,9 +149,9 @@ const routes = new Hono()
 			AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)${additionalWhere}
 			`,
 				[userId, userId, version]
-			);
+			)
 
-			const total = countResult.length > 0 ? countResult[0].total : 0;
+			const total = countResult.length > 0 ? countResult[0].total : 0
 
 			// Get paginated results
 			const [results] = await db.execute<
@@ -183,19 +183,19 @@ const routes = new Hono()
 				dssv.systemVoiceId DESC
 			`,
 				params
-			);
+			)
 
 			const items = results.map(({ sort_current, total_count, ...item }) => ({
 				...item,
-				locked: Boolean(item.locked),
-			}));
+				locked: Boolean(item.locked)
+			}))
 
 			return c.json({
 				items,
-				total,
-			});
+				total
+			})
 		} catch (error) {
-			throw rethrowWithMessage("Failed to search systemvoices", error);
+			throw rethrowWithMessage("Failed to search systemvoices", error)
 		}
 	})
 
@@ -206,16 +206,16 @@ const routes = new Hono()
 			z.object({
 				id: z
 					.string()
-					.transform((val) => parseInt(val))
-					.refine((val) => !isNaN(val), {
-						message: "Invalid systemvoice ID",
-					}),
+					.transform(val => parseInt(val))
+					.refine(val => !isNaN(val), {
+						message: "Invalid systemvoice ID"
+					})
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId } = c.payload;
-				const { id } = c.req.param();
+				const { userId } = c.payload
+				const { id } = c.req.param()
 
 				// Check if systemvoice exists
 				const [systemvoiceResult] = await db.execute<RowDataPacket[]>(
@@ -223,12 +223,12 @@ const routes = new Hono()
 				SELECT systemVoiceId FROM daphnis_static_system_voice WHERE systemVoiceId = ?
 				`,
 					[id]
-				);
+				)
 
 				if (systemvoiceResult.length === 0) {
 					throw new HTTPException(404, {
-						message: "Systemvoice not found",
-					});
+						message: "Systemvoice not found"
+					})
 				}
 
 				// Check if already owned
@@ -237,12 +237,12 @@ const routes = new Hono()
 				SELECT 1 FROM chuni_item_item WHERE user = ? AND itemId = ? AND itemKind = 9
 				`,
 					[userId, id]
-				);
+				)
 
 				if (ownershipResult.length > 0) {
 					throw new HTTPException(400, {
-						message: "You already own this systemvoice",
-					});
+						message: "You already own this systemvoice"
+					})
 				}
 
 				// Add to user's inventory (itemKind 9 for system voices)
@@ -252,13 +252,13 @@ const routes = new Hono()
 				VALUES (?, ?, 9, 1, 1)
 				`,
 					[userId, id]
-				);
+				)
 
-				return c.json({ message: "Systemvoice unlocked successfully" });
+				return c.json({ message: "Systemvoice unlocked successfully" })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to unlock systemvoice", error);
+				throw rethrowWithMessage("Failed to unlock systemvoice", error)
 			}
 		}
-	);
+	)
 
-export default routes;
+export default routes

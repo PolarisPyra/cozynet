@@ -1,13 +1,13 @@
-import RivalCard from "@/components/chunithm/rival-card";
-import Header from "@/components/common/header";
-import ResponsiveGrid from "@/components/common/responsive-grid";
-import Spinner from "@/components/common/spinner";
-import { useChunithmVersion } from "@/hooks/chunithm";
-import useRivalsManagement from "@/hooks/chunithm/use-rivals-management";
-import { Body, Container } from "@/pages/layout/layout";
+import RivalCard from "@/components/chunithm/rival-card"
+import Header from "@/components/common/header"
+import ResponsiveGrid from "@/components/common/responsive-grid"
+import Spinner from "@/components/common/spinner"
+import { useChunithmVersion } from "@/hooks/chunithm"
+import useRivalsManagement from "@/hooks/chunithm/use-rivals-management"
+import { Body, Container } from "@/pages/layout/layout"
 
 const ChunithmRivals = () => {
-	const version = useChunithmVersion();
+	const version = useChunithmVersion()
 	const {
 		rivalIds,
 		rivalCount,
@@ -17,16 +17,16 @@ const ChunithmRivals = () => {
 		setSearchQuery,
 		handleAddRival,
 		handleRemoveRival,
-		isLoading,
-	} = useRivalsManagement();
+		isLoading
+	} = useRivalsManagement()
 
-	const searchItems = users.map((user) => ({
+	const searchItems = users.map(user => ({
 		id: user.id,
-		title: user.username || "",
-	}));
+		title: user.username || ""
+	}))
 
-	if (isLoading) return <LoadingState />;
-	if (!version) return <NoVersionState />;
+	if (isLoading) return <LoadingState />
+	if (!version) return <NoVersionState />
 
 	return (
 		<Container>
@@ -38,13 +38,13 @@ const ChunithmRivals = () => {
 					onSearchChange: setSearchQuery,
 					placeholder: "Search users...",
 					emptyMessage: "No users found.",
-					groupLabel: "Users",
+					groupLabel: "Users"
 				}}
 			/>
 			<Body>
 				<ResponsiveGrid
 					items={filteredRivals}
-					CardComponent={(props) => (
+					CardComponent={props => (
 						<RivalCard
 							{...props}
 							rivalIds={rivalIds}
@@ -56,8 +56,8 @@ const ChunithmRivals = () => {
 				/>
 			</Body>
 		</Container>
-	);
-};
+	)
+}
 
 const LoadingState = () => (
 	<div className="relative flex-1 overflow-auto">
@@ -66,7 +66,7 @@ const LoadingState = () => (
 			<Spinner />
 		</div>
 	</div>
-);
+)
 
 const NoVersionState = () => (
 	<div className="relative flex-1 overflow-auto">
@@ -75,6 +75,6 @@ const NoVersionState = () => (
 			<p className="text-primary">Please set your Chunithm version in settings first</p>
 		</div>
 	</div>
-);
+)
 
-export default ChunithmRivals;
+export default ChunithmRivals

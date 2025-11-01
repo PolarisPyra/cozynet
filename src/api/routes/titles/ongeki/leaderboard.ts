@@ -1,14 +1,14 @@
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
 
-import { db } from "@/api/db";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { DB } from "@/shared/types";
+import { db } from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { DB } from "@/shared/types"
 
-const OngekiLeaderboardRoutes = new Hono().get("", async (c) => {
+const OngekiLeaderboardRoutes = new Hono().get("", async c => {
 	try {
-		const { versions } = c.payload;
-		const version = versions.ongeki_version;
+		const { versions } = c.payload
+		const version = versions.ongeki_version
 
 		const [results] = await db.execute<(DB.OngekiProfileData & RowDataPacket)[]>(
 			`
@@ -26,12 +26,12 @@ const OngekiLeaderboardRoutes = new Hono().get("", async (c) => {
           opd.playerRating DESC
 			`,
 			[version]
-		);
+		)
 
-		return c.json(results);
+		return c.json(results)
 	} catch (error) {
-		throw rethrowWithMessage("Failed to get leaderboard", error);
+		throw rethrowWithMessage("Failed to get leaderboard", error)
 	}
-});
+})
 
-export { OngekiLeaderboardRoutes };
+export { OngekiLeaderboardRoutes }

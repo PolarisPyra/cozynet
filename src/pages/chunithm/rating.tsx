@@ -1,18 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
-import RatingDisplay from "@/components/chunithm/rating-display";
-import ChunithmRatingInfoCard from "@/components/chunithm/rating-info-card";
-import Header from "@/components/common/header";
-import { MultiFilter } from "@/components/common/multi-filter";
-import ResponsiveGrid from "@/components/common/responsive-grid";
-import Spinner from "@/components/common/spinner";
-import { Card, CardContent } from "@/components/ui/card";
-import { useChunithmVersion } from "@/hooks/chunithm";
-import { getDefaultRatingFilterValues, useChunithmRatingFiltering, useRatingFilters } from "@/hooks/chunithm";
-import { getRatingFilters } from "@/hooks/chunithm/filters/definitions/rating-filters";
-import { Body, Container, FilterArea } from "@/pages/layout/layout";
-import type { FilterValues } from "@/shared/types";
-import { chunithmBadgeColors } from "@/utils/helpers";
+import RatingDisplay from "@/components/chunithm/rating-display"
+import ChunithmRatingInfoCard from "@/components/chunithm/rating-info-card"
+import Header from "@/components/common/header"
+import { MultiFilter } from "@/components/common/multi-filter"
+import ResponsiveGrid from "@/components/common/responsive-grid"
+import Spinner from "@/components/common/spinner"
+import { Card, CardContent } from "@/components/ui/card"
+import { useChunithmVersion } from "@/hooks/chunithm"
+import { getDefaultRatingFilterValues, useChunithmRatingFiltering, useRatingFilters } from "@/hooks/chunithm"
+import { getRatingFilters } from "@/hooks/chunithm/filters/definitions/rating-filters"
+import { Body, Container, FilterArea } from "@/pages/layout/layout"
+import type { FilterValues } from "@/shared/types"
+import { chunithmBadgeColors } from "@/utils/helpers"
 
 /**
  * CHUNITHM Rating System:
@@ -30,48 +30,48 @@ import { chunithmBadgeColors } from "@/utils/helpers";
  */
 
 const ChunithmRatingFrames = () => {
-	const [searchQuery, setSearchQuery] = useState("");
-	const version = useChunithmVersion();
-	const ratingFilters = useRatingFilters(version || 0);
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultRatingFilterValues(version || 0));
+	const [searchQuery, setSearchQuery] = useState("")
+	const version = useChunithmVersion()
+	const ratingFilters = useRatingFilters(version || 0)
+	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultRatingFilterValues(version || 0))
 
 	// Update filter values when version changes to ensure tab value is valid
 	useEffect(() => {
 		if (version) {
-			const defaults = getDefaultRatingFilterValues(version);
-			const currentFilters = getRatingFilters(version);
+			const defaults = getDefaultRatingFilterValues(version)
+			const currentFilters = getRatingFilters(version)
 			// Only update if current tab is not valid for new version
-			const currentTab = filterValues.tab;
+			const currentTab = filterValues.tab
 			const validTabs =
 				currentFilters
 					.find((f: { identifier: string }) => f.identifier === "tab")
-					?.options.map((o: { value: string }) => o.value) || [];
+					?.options.map((o: { value: string }) => o.value) || []
 			if (currentTab && !validTabs.includes(currentTab)) {
-				setFilterValues(defaults);
+				setFilterValues(defaults)
 			}
 		}
-	}, [version, filterValues.tab]);
+	}, [version, filterValues.tab])
 
 	const { filteredRatings, isLoading, playerRatingValue, highestRatingValue } = useChunithmRatingFiltering({
 		searchQuery,
-		filterValues,
-	});
+		filterValues
+	})
 
 	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues((prev) => ({ ...prev, [identifier]: value }));
-	};
+		setFilterValues(prev => ({ ...prev, [identifier]: value }))
+	}
 
 	const handleClearAll = () => {
-		setFilterValues(getDefaultRatingFilterValues(version || 0));
-	};
+		setFilterValues(getDefaultRatingFilterValues(version || 0))
+	}
 
-	const searchItems = filteredRatings.map((rating) => ({
+	const searchItems = filteredRatings.map(rating => ({
 		id: rating.idx,
-		title: rating.title || "",
-	}));
+		title: rating.title || ""
+	}))
 
-	if (isLoading) return <LoadingState />;
-	if (!version) return <NoVersionState />;
+	if (isLoading) return <LoadingState />
+	if (!version) return <NoVersionState />
 
 	return (
 		<Container>
@@ -83,7 +83,7 @@ const ChunithmRatingFrames = () => {
 					onSearchChange: setSearchQuery,
 					placeholder: "Search ratings...",
 					emptyMessage: "No ratings found.",
-					groupLabel: "Ratings",
+					groupLabel: "Ratings"
 				}}
 			/>
 			<Body>
@@ -115,8 +115,8 @@ const ChunithmRatingFrames = () => {
 				)}
 			</Body>
 		</Container>
-	);
-};
+	)
+}
 
 const LoadingState = () => (
 	<div className="flex-1">
@@ -125,7 +125,7 @@ const LoadingState = () => (
 			<Spinner />
 		</div>
 	</div>
-);
+)
 
 const NoVersionState = () => (
 	<div className="relative flex-1 overflow-auto">
@@ -134,6 +134,6 @@ const NoVersionState = () => (
 			<p className="text-primary">Please set your Chunithm version in settings first</p>
 		</div>
 	</div>
-);
+)
 
-export default ChunithmRatingFrames;
+export default ChunithmRatingFrames

@@ -1,17 +1,17 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson, validateParams } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson, validateParams } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 interface MapiconItem {
-	mapiconId: number;
-	imagePath: string;
-	label: string;
-	locked: boolean;
+	mapiconId: number
+	imagePath: string
+	label: string
+	locked: boolean
 }
 
 async function getCurrentMapicon(userId: number, version: number): Promise<MapiconItem[]> {
@@ -41,38 +41,38 @@ async function getCurrentMapicon(userId: number, version: number): Promise<Mapic
           AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
       `,
 		[userId, userId, userId, version]
-	);
-	return result;
+	)
+	return result
 }
 
 const routes = new Hono()
-	.get("", async (c) => {
+	.get("", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
-			const result = await getCurrentMapicon(userId, version);
+			const result = await getCurrentMapicon(userId, version)
 			// If no current mapicon, return null to indicate "no selection" instead of 404
 			if (result.length === 0) {
-				return c.json(null);
+				return c.json(null)
 			}
-			return c.json(result[0]);
+			return c.json(result[0])
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get current mapicon", error);
+			throw rethrowWithMessage("Failed to get current mapicon", error)
 		}
 	})
 	.post(
 		"",
 		validateJson(
 			z.object({
-				mapIconId: z.number().int().positive(),
+				mapIconId: z.number().int().positive()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
-				const { mapIconId } = await c.req.json();
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
+				const { mapIconId } = await c.req.json()
 
 				// Verify user owns the mapicon
 				const [ownership] = await db.execute<RowDataPacket[]>(
@@ -83,12 +83,12 @@ const routes = new Hono()
 					  AND itemKind = 8
 					`,
 					[userId, mapIconId]
-				);
+				)
 
 				if (ownership.length === 0) {
 					throw new HTTPException(400, {
-						message: "You don't own this mapicon",
-					});
+						message: "You don't own this mapicon"
+					})
 				}
 
 				// Update profile
@@ -100,11 +100,11 @@ const routes = new Hono()
 						  AND version = ?
 					`,
 					[mapIconId, userId, version]
-				);
+				)
 
-				return c.json({ success: true });
+				return c.json({ success: true })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to update mapicon", error);
+				throw rethrowWithMessage("Failed to update mapicon", error)
 			}
 		}
 	)
@@ -113,25 +113,25 @@ const routes = new Hono()
 		validateJson(
 			z.object({
 				filter: z.object({
-					locked: z.boolean().nullable(),
-				}),
+					locked: z.boolean().nullable()
+				})
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
 
-				const { filter } = await c.req.json();
-				const { locked } = filter;
+				const { filter } = await c.req.json()
+				const { locked } = filter
 
-				let whereClause = "WHERE dsm.version = ?";
-				const params = [version];
+				let whereClause = "WHERE dsm.version = ?"
+				const params = [version]
 
 				if (locked === true) {
-					whereClause += " AND cii.user IS NULL";
+					whereClause += " AND cii.user IS NULL"
 				} else if (locked === false) {
-					whereClause += " AND cii.user IS NOT NULL";
+					whereClause += " AND cii.user IS NOT NULL"
 				}
 
 				const query = `
@@ -166,29 +166,29 @@ const routes = new Hono()
 				ORDER BY 
 					locked DESC,
 					dsm.mapIconId DESC
-			`;
+			`
 
-				params.unshift(userId, userId, version, userId);
+				params.unshift(userId, userId, version, userId)
 
-				const [items] = await db.execute<(MapiconItem & { total_count: number } & RowDataPacket)[]>(query, params);
+				const [items] = await db.execute<(MapiconItem & { total_count: number } & RowDataPacket)[]>(query, params)
 
-				const totalCount = items.length > 0 ? items[0].total_count : 0;
+				const totalCount = items.length > 0 ? items[0].total_count : 0
 
 				return c.json({
 					items: items.map(({ total_count, ...item }) => item),
-					total: totalCount,
-				});
+					total: totalCount
+				})
 			} catch (error) {
-				throw rethrowWithMessage("Failed to search mapicons", error);
+				throw rethrowWithMessage("Failed to search mapicons", error)
 			}
 		}
 	)
-	.patch("unlock/:id", validateParams(z.object({ id: z.string().regex(/^\d+$/).transform(Number) })), async (c) => {
+	.patch("unlock/:id", validateParams(z.object({ id: z.string().regex(/^\d+$/).transform(Number) })), async c => {
 		try {
-			const { userId } = c.payload;
-			const { id } = c.req.param();
+			const { userId } = c.payload
+			const { id } = c.req.param()
 
-			console.log("Unlocking mapicon for user:", userId, "mapIconId:", id);
+			console.log("Unlocking mapicon for user:", userId, "mapIconId:", id)
 			// Add mapicon to user's inventory
 			await db.execute<ResultSetHeader>(
 				`
@@ -197,12 +197,12 @@ const routes = new Hono()
 					ON DUPLICATE KEY UPDATE user = user
 				`,
 				[userId, id]
-			);
+			)
 
-			return c.json({ success: true });
+			return c.json({ success: true })
 		} catch (error) {
-			throw rethrowWithMessage("Failed to unlock mapicon", error);
+			throw rethrowWithMessage("Failed to unlock mapicon", error)
 		}
-	});
+	})
 
-export default routes;
+export default routes

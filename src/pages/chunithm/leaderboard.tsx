@@ -1,37 +1,37 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import LeaderboardCard from "@/components/chunithm/leaderboard-card";
-import Header from "@/components/common/header";
-import ResponsiveGrid from "@/components/common/responsive-grid";
-import Spinner from "@/components/common/spinner";
-import { useChunithmVersion, useLeaderboard } from "@/hooks/chunithm";
-import { Body, Container } from "@/pages/layout/layout";
+import LeaderboardCard from "@/components/chunithm/leaderboard-card"
+import Header from "@/components/common/header"
+import ResponsiveGrid from "@/components/common/responsive-grid"
+import Spinner from "@/components/common/spinner"
+import { useChunithmVersion, useLeaderboard } from "@/hooks/chunithm"
+import { Body, Container } from "@/pages/layout/layout"
 
 const ChunithmLeaderboard = () => {
-	const version = useChunithmVersion();
-	const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useLeaderboard();
-	const [searchQuery, setSearchQuery] = useState("");
+	const version = useChunithmVersion()
+	const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useLeaderboard()
+	const [searchQuery, setSearchQuery] = useState("")
 
 	// Filter out players with null userName or playerRating and convert to the expected type
 	const validLeaderboard = leaderboard
-		.filter((player) => player.userName !== null && player.playerRating !== null)
-		.map((player) => ({
+		.filter(player => player.userName !== null && player.playerRating !== null)
+		.map(player => ({
 			userName: player.userName!,
 			playerRating: player.playerRating!,
-			rank: player.rank,
-		}));
+			rank: player.rank
+		}))
 
-	const filteredLeaderboard = validLeaderboard.filter((player) =>
+	const filteredLeaderboard = validLeaderboard.filter(player =>
 		player.userName?.toLowerCase().includes(searchQuery.toLowerCase())
-	);
+	)
 
-	const searchItems = validLeaderboard.map((player) => ({
+	const searchItems = validLeaderboard.map(player => ({
 		id: player.rank,
-		title: player.userName || "",
-	}));
+		title: player.userName || ""
+	}))
 
-	if (isLoadingLeaderboard) return <LoadingState />;
-	if (!version) return <NoVersionState />;
+	if (isLoadingLeaderboard) return <LoadingState />
+	if (!version) return <NoVersionState />
 
 	return (
 		<Container>
@@ -43,15 +43,15 @@ const ChunithmLeaderboard = () => {
 					onSearchChange: setSearchQuery,
 					placeholder: "Search players...",
 					emptyMessage: "No players found.",
-					groupLabel: "Players",
+					groupLabel: "Players"
 				}}
 			/>
 			<Body>
 				<ResponsiveGrid items={filteredLeaderboard} CardComponent={LeaderboardCard} />
 			</Body>
 		</Container>
-	);
-};
+	)
+}
 
 const LoadingState = () => (
 	<div className="relative flex-1 overflow-auto">
@@ -60,7 +60,7 @@ const LoadingState = () => (
 			<Spinner size={24} />
 		</div>
 	</div>
-);
+)
 
 const NoVersionState = () => (
 	<div className="relative flex-1 overflow-auto">
@@ -69,6 +69,6 @@ const NoVersionState = () => (
 			<p className="text-primary">Please set your Chunithm version in settings first</p>
 		</div>
 	</div>
-);
+)
 
-export default ChunithmLeaderboard;
+export default ChunithmLeaderboard
