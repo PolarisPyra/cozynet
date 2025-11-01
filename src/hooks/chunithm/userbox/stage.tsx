@@ -18,7 +18,7 @@ export function useCurrentStage() {
 			if (!response.ok) {
 				throw new Error("Failed to fetch current stage");
 			}
-			return (await response.json()) as StageItem;
+			return (await response.json()) as StageItem | null;
 		},
 	});
 }

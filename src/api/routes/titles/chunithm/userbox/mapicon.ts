@@ -52,10 +52,9 @@ const routes = new Hono()
 			const version = versions.chunithm_version;
 
 			const result = await getCurrentMapicon(userId, version);
+			// If no current mapicon, return null to indicate "no selection" instead of 404
 			if (result.length === 0) {
-				throw new HTTPException(404, {
-					message: "Current mapicon not found",
-				});
+				return c.json(null);
 			}
 			return c.json(result[0]);
 		} catch (error) {

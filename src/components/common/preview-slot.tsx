@@ -24,8 +24,6 @@ interface PreviewSlotProps<T extends BaseItem> {
 	onEquip?: (item: T) => void;
 	onUnlock?: (item: T) => void;
 	hasChanges: boolean;
-	scaledWidth: number;
-	scaledHeight: number;
 	className?: string;
 }
 
@@ -35,8 +33,6 @@ export const PreviewSlot = <T extends BaseItem>({
 	onEquip,
 	onUnlock,
 	hasChanges,
-	scaledWidth,
-	scaledHeight,
 	className,
 }: PreviewSlotProps<T>) => {
 	const handleAction = useCallback(() => {
@@ -58,10 +54,9 @@ export const PreviewSlot = <T extends BaseItem>({
 				<img
 					src={`${CDN}/${imageBasePath}/${item.imagePath}`}
 					alt={item.label}
-					className="mx-auto rounded-sm"
+					className="mx-auto max-w-full rounded-sm"
 					style={{
-						width: scaledWidth * 1.5,
-						height: scaledHeight * 1.5,
+						height: "auto",
 						objectFit: "contain",
 					}}
 				/>

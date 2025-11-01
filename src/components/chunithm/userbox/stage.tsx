@@ -29,6 +29,10 @@ const StageCustomization: React.FC = () => {
 		if (currentStage) {
 			setOriginalStageId(currentStage.stageId);
 			setSelectedStageId(currentStage.stageId);
+		} else {
+			// Reset when no stage is equipped
+			setOriginalStageId(null);
+			setSelectedStageId(null);
 		}
 	}, [currentStage]);
 
@@ -71,8 +75,10 @@ const StageCustomization: React.FC = () => {
 	}, [selectedStageId, originalStageId]);
 
 	const equippedItemIds = useMemo(() => {
-		const id = currentStage?.stageId ?? 0;
-		return new Set([id]);
+		if (!currentStage) {
+			return new Set<number>();
+		}
+		return new Set([currentStage.stageId]);
 	}, [currentStage]);
 
 	const isLoading = currentLoading || searchLoading;
@@ -161,16 +167,12 @@ const StageCustomization: React.FC = () => {
 					equippedItemIds={equippedItemIds}
 					selectedItemId={selectedStageId}
 					loading={isLoading}
-					itemHeight={100}
-					itemWidth={100}
 					imageBasePath="chunithm/stage"
 					onItemClick={handleSelect}
 					onEquip={handleEquip}
 					onUnlock={handleUnlock}
 					hasChanges={hasChanges}
 					customPreview={customPreview}
-					maxColumns={9}
-					minColumns={4}
 				/>
 			</div>
 		</div>

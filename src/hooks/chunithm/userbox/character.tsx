@@ -16,13 +16,9 @@ export function useCurrentCharacter() {
 		queryFn: async () => {
 			const response = await api.chunithm.userbox.character.$get();
 			if (!response.ok) {
-				// If 404, return null instead of throwing error (character is disabled)
-				if (response.status === 404) {
-					return null;
-				}
 				throw new Error("Failed to fetch current character");
 			}
-			return (await response.json()) as CharacterItem;
+			return (await response.json()) as CharacterItem | null;
 		},
 	});
 }

@@ -318,17 +318,12 @@ const TrophyCustomization: React.FC = () => {
 					equippedItemIds={equippedItemIds}
 					selectedItemId={selectedTrophyId}
 					loading={isLoading}
-					itemHeight={100}
-					itemWidth={100}
 					imageBasePath={imageBasePath}
 					onItemClick={handleItemClick}
 					onEquip={handleGridEquip}
 					onUnlock={handleUnlockClick}
-					layout="stacked"
 					customPreview={customPreview}
-					minColumns={4}
-					maxColumns={9}
-					hideImage={false}
+					useCompactImageSizing={true}
 				/>
 			</div>
 		</div>

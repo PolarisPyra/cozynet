@@ -29,6 +29,10 @@ const NameplateCustomization: React.FC = () => {
 		if (currentNameplate) {
 			setOriginalNameplateId(currentNameplate.nameplateId);
 			setSelectedNameplateId(currentNameplate.nameplateId);
+		} else {
+			// Reset when no nameplate is equipped
+			setOriginalNameplateId(null);
+			setSelectedNameplateId(null);
 		}
 	}, [currentNameplate]);
 
@@ -168,17 +172,12 @@ const NameplateCustomization: React.FC = () => {
 					equippedItemIds={equippedItemIds}
 					selectedItemId={selectedNameplateId}
 					loading={isLoading}
-					itemHeight={100}
-					itemWidth={100}
 					imageBasePath="chunithm/nameplate"
 					onItemClick={handleSelect}
 					onEquip={handleEquip}
 					onUnlock={handleUnlock}
 					hasChanges={hasChanges}
 					customPreview={customPreview}
-					layout="stacked"
-					maxColumns={9}
-					minColumns={4}
 				/>
 			</div>
 		</div>

@@ -168,16 +168,13 @@ const CharacterCustomization: React.FC = () => {
 					equippedItemIds={equippedItemIds}
 					selectedItemId={selectedCharacterId}
 					loading={isLoading}
-					itemHeight={100}
-					itemWidth={100}
 					imageBasePath="chunithm/characters"
 					onItemClick={handleSelect}
 					onEquip={handleEquip}
 					onUnlock={handleUnlock}
 					hasChanges={hasChanges}
 					customPreview={customPreview}
-					maxColumns={9}
-					minColumns={4}
+					useCompactImageSizing={true}
 				/>
 			</div>
 		</div>
