@@ -334,9 +334,9 @@ const Avatar = () => {
 										</div>
 
 										{/* Content area */}
-										<div className="flex min-h-0 flex-1 text-center">
+										<div className="flex min-h-0 min-w-0 flex-1 text-center">
 											{currentItem ? (
-												<div className="flex flex-1 flex-col">
+												<div className="flex min-w-0 flex-1 flex-col">
 													<div className="from-background/40 to-background/60 dark:from-background/10 dark:to-background/30 relative flex flex-1 items-center justify-center bg-gradient-to-b p-2">
 														<img
 															src={`${CDN}/chunithm/avatar/${currentItem.imagePath}`}
@@ -349,13 +349,13 @@ const Avatar = () => {
 															</div>
 														) : null}
 													</div>
-													<div className="bg-muted/30 dark:bg-muted/20 border-border/50 dark:border-border/30 border-t p-2">
+													<div className="bg-muted/30 dark:bg-muted/20 border-border/50 dark:border-border/30 border-t p-2 min-w-0">
 														<div
-															className="group flex items-center justify-center overflow-hidden text-center"
+															className="group flex items-center justify-center overflow-hidden text-center min-w-0"
 															style={{ height: 20, padding: "2px" }}
 														>
 															<div
-																className="text-foreground/90 dark:text-foreground/80 marquee-text w-full font-medium whitespace-nowrap"
+																className="text-foreground/90 dark:text-foreground/80 marquee-text w-full min-w-0 font-medium whitespace-nowrap"
 																style={{
 																	fontSize: "12px",
 																	lineHeight: "16px",
@@ -423,12 +423,6 @@ const Avatar = () => {
 					equippedItemIds={equippedItemIds}
 					onItemClick={handleItemClick}
 					imageBasePath="chunithm/avatar"
-					itemWidth={100}
-					itemHeight={100}
-					hidePreview={true}
-					layout="stacked"
-					minColumns={4}
-					maxColumns={9}
 				/>
 			</div>
 		</div>

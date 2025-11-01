@@ -79,11 +79,7 @@ const routes = new Hono()
 			const version = versions.chunithm_version;
 
 			const result = await getCurrentAvatarItems(userId, version);
-			if (result.length === 0) {
-				throw new HTTPException(404, {
-					message: "Current avatar not found",
-				});
-			}
+			// If no current avatar items, return empty array instead of 404
 			return c.json(result);
 		} catch (error) {
 			throw rethrowWithMessage("Failed to get current avatar", error);

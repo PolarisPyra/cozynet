@@ -156,17 +156,13 @@ const SystemvoiceCustomization: React.FC = () => {
 					equippedItemIds={equippedItemIds}
 					selectedItemId={selectedSystemvoiceId}
 					loading={isLoading}
-					layout="stacked"
-					itemHeight={100}
-					itemWidth={100}
 					imageBasePath="chunithm/system_voice_thumbnails"
 					onItemClick={handleSelect}
 					onEquip={handleEquip}
 					onUnlock={handleUnlock}
 					hasChanges={hasChanges}
 					customPreview={customPreview}
-					maxColumns={9}
-					minColumns={4}
+					useCompactImageSizing={true}
 				/>
 			</div>
 		</div>

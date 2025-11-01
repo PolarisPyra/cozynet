@@ -54,10 +54,9 @@ const routes = new Hono()
 			const version = versions.chunithm_version;
 
 			const result = await getCurrentStage(userId, version);
+			// If no current stage, return null to indicate "no selection" instead of 404
 			if (result.length === 0) {
-				throw new HTTPException(404, {
-					message: "Current stage not found",
-				});
+				return c.json(null);
 			}
 
 			return c.json(result[0]);

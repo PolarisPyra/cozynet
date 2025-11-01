@@ -25,13 +25,16 @@ const MapiconCustomization: React.FC = () => {
 	const { mutate: equipMapicon } = useEquipMapicon();
 	const { mutate: unlockMapicon } = useUnlockMapicon();
 
-	// Track the original mapicon when component mounts
 	useEffect(() => {
-		if (currentMapicon && originalMapiconId === null) {
+		if (currentMapicon) {
 			setOriginalMapiconId(currentMapicon.mapiconId);
 			setSelectedMapiconId(currentMapicon.mapiconId);
+		} else {
+			// Reset when no mapicon is equipped
+			setOriginalMapiconId(null);
+			setSelectedMapiconId(null);
 		}
-	}, [currentMapicon, originalMapiconId]);
+	}, [currentMapicon]);
 
 	const handleSelect = useCallback((item: MapiconItem) => {
 		setSelectedMapiconId(item.mapiconId);
@@ -68,7 +71,12 @@ const MapiconCustomization: React.FC = () => {
 		return selectedMapiconId !== originalMapiconId;
 	}, [selectedMapiconId, originalMapiconId]);
 
-	const equippedItemIds = originalMapiconId ? new Set([originalMapiconId]) : new Set<number>();
+	const equippedItemIds = useMemo(() => {
+		if (!currentMapicon) {
+			return new Set<number>();
+		}
+		return new Set([currentMapicon.mapiconId]);
+	}, [currentMapicon]);
 
 	// Filtered items based on search term
 	const filteredItems = useMemo(() => {
@@ -154,16 +162,13 @@ const MapiconCustomization: React.FC = () => {
 					equippedItemIds={equippedItemIds}
 					selectedItemId={selectedMapiconId}
 					loading={isLoading}
-					itemHeight={100}
-					itemWidth={100}
 					imageBasePath="chunithm/map_icon"
 					onItemClick={handleSelect}
 					onEquip={handleEquip}
 					onUnlock={handleUnlock}
 					hasChanges={hasChanges}
 					customPreview={customPreview}
-					maxColumns={9}
-					minColumns={4}
+					useCompactImageSizing={true}
 				/>
 			</div>
 		</div>

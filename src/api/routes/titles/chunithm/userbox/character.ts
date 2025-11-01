@@ -54,10 +54,9 @@ const routes = new Hono()
 			const version = versions.chunithm_version;
 
 			const result = await getCurrentCharacter(userId, version);
+			// If no current character, return null to indicate "no selection" instead of 404
 			if (result.length === 0) {
-				throw new HTTPException(404, {
-					message: "Current character not found",
-				});
+				return c.json(null);
 			}
 
 			return c.json(result[0]);
@@ -101,6 +100,9 @@ const routes = new Hono()
 
 				// Get updated character data
 				const result = await getCurrentCharacter(userId, version);
+				if (result.length === 0) {
+					return c.json(null);
+				}
 				return c.json(result[0]);
 			} catch (error) {
 				throw rethrowWithMessage("Failed to update character", error);

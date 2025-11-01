@@ -17,7 +17,7 @@ export function useCurrentMapicon() {
 			if (!response.ok) {
 				throw new Error("Failed to fetch current mapicon");
 			}
-			return (await response.json()) as MapiconItem;
+			return (await response.json()) as MapiconItem | null;
 		},
 	});
 }
