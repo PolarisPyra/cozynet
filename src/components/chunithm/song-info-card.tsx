@@ -8,18 +8,11 @@ import { CDN } from "@/lib/constants"
 import { StaticMusic } from "@/shared/types"
 import { getChunithmLogo } from "@/utils/version-logos"
 
-type CardProps = {
-	score: StaticMusic
-	levelColorBadge?: (chartId?: number | undefined) => string
-	className?: string
-	jacketArt?: string
-}
-
-export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jacketArt }) => {
+export const SongInfoCard = function({ score, levelColorBadge, jacketArt }: CardProps) {
 	const [imageLoaded, setImageLoaded] = React.useState(false)
 	const song = score
 
-	const worldsEnd = (level?: number | null, chartId?: number | null) => {
+	const worldsEnd = function(level?: number | null, chartId?: number | null) {
 		if (level == null) return "?"
 		if (chartId === 5) {
 			const stars = Math.floor((level + 1) / 2)
@@ -93,3 +86,10 @@ export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jack
 }
 
 export default SongInfoCard
+
+type CardProps = {
+	score: StaticMusic
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+	jacketArt?: string
+}

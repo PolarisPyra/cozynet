@@ -1,12 +1,6 @@
 import { ChunithmRatingColors } from "@/components/common/rating-colors"
 
-interface LeaderboardPlayer {
-	userName: string
-	playerRating: number
-	rank: number
-}
-
-const LeaderboardCard = ({ score }: { score: LeaderboardPlayer }) => {
+export const LeaderboardCard = function({ score }: { score: LeaderboardPlayer }) {
 	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
 
 	return (
@@ -26,3 +20,9 @@ const LeaderboardCard = ({ score }: { score: LeaderboardPlayer }) => {
 }
 
 export default LeaderboardCard
+
+interface LeaderboardPlayer {
+	userName: string
+	playerRating: number
+	rank: number
+}

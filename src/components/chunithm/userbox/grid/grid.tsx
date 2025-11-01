@@ -9,38 +9,7 @@ import { usePaginationKeyboard } from "@/hooks/use-pagination-keyboard"
 import { CDN } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
-// Types
-export interface BaseItem {
-	id?: number
-	avatarAccessoryId?: number
-	characterId?: number
-	trophyId?: number
-	nameplateId?: number
-	mapiconId?: number
-	stageId?: number
-	systemVoiceId?: number
-	imagePath: string
-	label: string
-	locked: boolean
-}
-
-export interface GridProps<T extends BaseItem> {
-	items: T[]
-	equippedItemIds?: Set<number>
-	selectedItemId?: number | null
-	loading?: boolean
-	imageBasePath: string
-	onItemClick?: (item: T) => void
-	onEquip?: (item: T) => void
-	onUnlock?: (item: T) => void
-	hasChanges?: boolean
-	customPreview?: (item: T | null) => React.ReactNode
-	className?: string
-	hideImage?: boolean
-}
-
-// Utility
-export const getItemId = (item: BaseItem): number => {
+export function getItemId(item: BaseItem): number {
 	return (
 		item.avatarAccessoryId ??
 		item.characterId ??
@@ -54,22 +23,14 @@ export const getItemId = (item: BaseItem): number => {
 	)
 }
 
-// Grid Item
-const GridItem = <T extends BaseItem>({
+function GridItem<T extends BaseItem>({
 	item,
 	isEquipped,
 	isSelected,
 	onClick,
 	imageBasePath,
 	hideImage
-}: {
-	item: T
-	isEquipped: boolean
-	isSelected: boolean
-	onClick?: (item: T) => void
-	imageBasePath: string
-	hideImage: boolean
-}) => {
+}: GridItemProps<T>) {
 	const imageUrl = `${CDN}/${imageBasePath}/${item.imagePath}`
 	const [loaded, setLoaded] = useState(false)
 
@@ -80,13 +41,13 @@ const GridItem = <T extends BaseItem>({
 	const isCharacter = item.characterId !== undefined
 	const isStage = item.stageId !== undefined
 
-	const getBorderClasses = () => {
+	function getBorderClasses() {
 		if (isSelected) return "border-primary bg-background/20"
 		if (isEquipped) return "border-primary/80 bg-background/20"
 		return "border-border bg-background/20 hover:border-primary/60 hover:bg-accent"
 	}
 
-	const getImageContainerClasses = () => {
+	function getImageContainerClasses() {
 		if (isNameplate) return "h-[40px] p-2 md:h-[45px] md:p-2.5 lg:h-[50px] lg:p-3"
 		if (isTrophy) return "h-[40px] p-2.5 md:h-[45px] md:p-3 lg:h-[50px] lg:p-3.5"
 		if (isCharacter) return "h-[120px] p-2 md:h-[140px] lg:h-[160px]"
@@ -152,10 +113,9 @@ const GridItem = <T extends BaseItem>({
 	)
 }
 
-const MemoizedGridItem = memo(GridItem) as typeof GridItem
+const MemoizedGridItem = memo(GridItem) as <T extends BaseItem>(props: GridItemProps<T>) => JSX.Element
 
-// Main Grid
-export const Grid = <T extends BaseItem>({
+export function Grid<T extends BaseItem>({
 	items,
 	equippedItemIds,
 	selectedItemId,
@@ -168,7 +128,7 @@ export const Grid = <T extends BaseItem>({
 	customPreview,
 	className,
 	hideImage = false
-}: GridProps<T>) => {
+}: GridProps<T>) {
 	const [page, setPage] = useState(1)
 	const pageSize = 36
 	const totalPages = Math.ceil(items.length / pageSize)
@@ -251,4 +211,42 @@ export const Grid = <T extends BaseItem>({
 			)}
 		</div>
 	)
+}
+
+export interface BaseItem {
+	id?: number
+	avatarAccessoryId?: number
+	characterId?: number
+	trophyId?: number
+	nameplateId?: number
+	mapiconId?: number
+	stageId?: number
+	systemVoiceId?: number
+	imagePath: string
+	label: string
+	locked: boolean
+}
+
+export interface GridProps<T extends BaseItem> {
+	items: T[]
+	equippedItemIds?: Set<number>
+	selectedItemId?: number | null
+	loading?: boolean
+	imageBasePath: string
+	onItemClick?: (item: T) => void
+	onEquip?: (item: T) => void
+	onUnlock?: (item: T) => void
+	hasChanges?: boolean
+	customPreview?: (item: T | null) => React.ReactNode
+	className?: string
+	hideImage?: boolean
+}
+
+interface GridItemProps<T extends BaseItem> {
+	item: T
+	isEquipped: boolean
+	isSelected: boolean
+	onClick?: (item: T) => void
+	imageBasePath: string
+	hideImage: boolean
 }

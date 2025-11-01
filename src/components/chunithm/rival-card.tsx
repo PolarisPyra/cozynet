@@ -1,14 +1,6 @@
 import { RivalInfoCard } from "@/components/common/rival-info-card"
 
-interface RivalCardProps {
-	score: any
-	rivalIds: number[]
-	rivalCount: number
-	onAddRival: (id: number) => void
-	onRemoveRival: (id: number) => void
-}
-
-const RivalCard = ({ score, rivalIds, rivalCount, onAddRival, onRemoveRival }: RivalCardProps) => {
+export const RivalCard = function({ score, rivalIds, rivalCount, onAddRival, onRemoveRival }: RivalCardProps) {
 	const isRival = rivalIds.includes(score.id)
 
 	return (
@@ -23,3 +15,11 @@ const RivalCard = ({ score, rivalIds, rivalCount, onAddRival, onRemoveRival }: R
 }
 
 export default RivalCard
+
+interface RivalCardProps {
+	score: any
+	rivalIds: number[]
+	rivalCount: number
+	onAddRival: (id: number) => void
+	onRemoveRival: (id: number) => void
+}

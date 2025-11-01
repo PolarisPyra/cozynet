@@ -40,3 +40,5 @@ dist-ssr
 /node_modules/*
 .prettier.config.js
 .prettierrc
+
+.cursor/*

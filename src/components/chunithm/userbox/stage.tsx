@@ -27,7 +27,7 @@ import { Grid } from "./grid/grid"
 export function StageCustomization() {
 	const [selectedStageId, setSelectedStageId] = useState<number | null>(null)
 	const [originalStageId, setOriginalStageId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState<string>("")
+	const [searchTerm, setSearchTerm] = useState("")
 
 	const { data: currentStage, isLoading: currentLoading } = useCurrentStage()
 	const { data: searchData, isLoading: searchLoading } = useSearchStages({ locked: null })
@@ -35,13 +35,13 @@ export function StageCustomization() {
 	const { mutate: unlockStage } = useUnlockStage()
 
 	useEffect(() => {
-		if (currentStage) {
-			setOriginalStageId(currentStage.stageId)
-			setSelectedStageId(currentStage.stageId)
+		if (!currentStage) {
+			setOriginalStageId(null)
+			setSelectedStageId(null)
 			return
 		}
-		setOriginalStageId(null)
-		setSelectedStageId(null)
+		setOriginalStageId(currentStage.stageId)
+		setSelectedStageId(currentStage.stageId)
 	}, [currentStage])
 
 	const handleSelect = useCallback((item: StageItem) => {
@@ -105,12 +105,7 @@ export function StageCustomization() {
 						width={240}
 						height={180}
 					/>
-					<UserboxEquipUnlockButton
-						item={item}
-						hasChanges={hasChanges}
-						onEquip={() => handleEquip(item)}
-						onUnlock={() => handleUnlock(item)}
-					/>
+					<UserboxEquipUnlockButton item={item} hasChanges={hasChanges} onEquip={() => handleEquip(item)} onUnlock={() => handleUnlock(item)} />
 				</UserboxPreviewWrapper>
 			)
 		},

@@ -30,7 +30,7 @@ export function TrophyCustomization() {
 	const version = useChunithmVersion()
 	const [selectedTrophyId, setSelectedTrophyId] = useState<number | null>(null)
 	const [selectedRareType, setSelectedRareType] = useState<TrophyRareType | null>(null)
-	const [searchTerm, setSearchTerm] = useState<string>("")
+	const [searchTerm, setSearchTerm] = useState("")
 
 	const { data: currentTrophies, isLoading: currentLoading, refetch: refetchCurrentTrophies } = useCurrentTrophies()
 	const { data: searchData, isLoading: searchLoading } = useSearchTrophies({
@@ -164,7 +164,7 @@ export function TrophyCustomization() {
 	}, [items, allItems, selectedRareType])
 
 	const TrophyRender = useCallback(
-		(trophyItem: TrophyItem, clickable: boolean = true) => {
+		(trophyItem: TrophyItem, clickable = true) => {
 			const shouldRenderLabelOnBackground = !!honorBackgrounds[trophyItem.trophyRareType]
 			const imagePath = trophyItem.imagePath || honorBackgrounds[trophyItem.trophyRareType]
 
@@ -215,7 +215,7 @@ export function TrophyCustomization() {
 					)}
 
 					<div className="my-2 flex flex-row gap-4">
-						{!selectedItem ? (
+						{!selectedItem && (
 							<>
 								<Button key="main" variant="custom" className="rounded-sm text-sm" disabled>
 									Main
@@ -227,11 +227,13 @@ export function TrophyCustomization() {
 									Sub 2
 								</Button>
 							</>
-						) : selectedItem.locked ? (
+						)}
+						{selectedItem?.locked && (
 							<Button onClick={() => handleUnlockClick(selectedItem)} variant="default" className="rounded-sm text-sm">
 								Unlock
 							</Button>
-						) : !!equippedTrophy?.slot ? (
+						)}
+						{selectedItem && !selectedItem.locked && !!equippedTrophy?.slot && (
 							<>
 								<Button key="main" variant="custom" className="rounded-sm text-sm" disabled>
 									Main
@@ -243,7 +245,8 @@ export function TrophyCustomization() {
 									Sub 2
 								</Button>
 							</>
-						) : (
+						)}
+						{selectedItem && !selectedItem.locked && !equippedTrophy?.slot && (
 							<>
 								<Button
 									key="main"
