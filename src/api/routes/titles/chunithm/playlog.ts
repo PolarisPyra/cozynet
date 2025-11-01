@@ -10,21 +10,7 @@ const ChunithmScorePlaylog = new Hono().get("playlog", async c => {
 		const { userId } = c.payload
 
 		const [results] = await db.execute<(DB.ChuniScorePlaylog & RowDataPacket)[]>(
-			`WITH song_versions AS (
-				SELECT songId, chartId, MIN(version) as version
-				FROM chuni_static_music
-				GROUP BY songId, chartId
-			),
-			user_logs AS (
-				SELECT 
-					id, maxCombo, isFullCombo, userPlayDate, playerRating, isAllJustice,
-					score, judgeHeaven, judgeGuilty, judgeJustice, judgeAttack, judgeCritical,
-					isClear, romVersion, skillId, isNewRecord, fullChainKind,
-					musicId, level
-				FROM chuni_score_playlog
-				WHERE user = ?
-			)
-			SELECT
+			`SELECT
 				ul.id,
 				ul.maxCombo,
 				ul.isFullCombo,
@@ -48,20 +34,34 @@ const ChunithmScorePlaylog = new Hono().get("playlog", async c => {
 				music.genre,
 				music.jacketPath,
 				music.artist,
-				song_versions.version as songVersion,
-				skills.name as skillName,
-				skills.categoryName
-			FROM
-				user_logs ul
-				INNER JOIN song_versions ON ul.musicId = song_versions.songId 
-					AND ul.level = song_versions.chartId
-				INNER JOIN chuni_static_music music ON ul.musicId = music.songId
-					AND ul.level = music.chartId
-					AND music.version = song_versions.version
-				LEFT JOIN daphnis_static_skill skills ON ul.skillId = skills.skillId
-					AND skills.version = song_versions.version
-			ORDER BY
-				ul.userPlayDate DESC
+				sv.version as songVersion,
+				ls.name as skillName,
+				ls.categoryName
+			FROM chuni_score_playlog ul
+			INNER JOIN (
+				SELECT songId, chartId, MIN(version) as version
+				FROM chuni_static_music
+				GROUP BY songId, chartId
+			) sv ON ul.musicId = sv.songId AND ul.level = sv.chartId
+			INNER JOIN chuni_static_music music 
+				ON ul.musicId = music.songId
+				AND ul.level = music.chartId
+				AND music.version = sv.version
+			LEFT JOIN (
+				SELECT skillId, name, categoryName
+				FROM (
+					SELECT 
+						skillId, 
+						name, 
+						categoryName,
+						ROW_NUMBER() OVER (PARTITION BY skillId ORDER BY version DESC) as rn
+					FROM daphnis_static_skill
+					WHERE skillId IS NOT NULL
+				) ranked
+				WHERE rn = 1
+			) ls ON ul.skillId = ls.skillId
+			WHERE ul.user = ?
+			ORDER BY ul.userPlayDate DESC
 			`,
 			[userId]
 		)
