@@ -147,7 +147,6 @@ export function CharacterCustomization() {
 					onUnlock={handleUnlock}
 					hasChanges={hasChanges}
 					customPreview={customPreview}
-					useCompactImageSizing={true}
 				/>
 			</UserboxContent>
 		</UserboxPageWrapper>
