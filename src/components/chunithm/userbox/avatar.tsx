@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
+import { Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { Grid } from "@/components/chunithm/userbox/grid/grid";
@@ -247,6 +248,42 @@ const Avatar = () => {
 		setHasChanges(false);
 	}, []);
 
+	const handleSaveSlot = useCallback(
+		async (slot: string) => {
+			const itemId = pendingItems[slot];
+			if (itemId === undefined) return; // No pending change for this slot
+
+			try {
+				// Check if item is locked (skip locked items)
+				if (itemId !== null) {
+					const item = allItemsQuery.data?.items?.find((i) => i.avatarAccessoryId === itemId);
+					if (item?.locked) {
+						toast.error(`Cannot equip locked item: ${item.label}`);
+						return;
+					}
+				}
+
+				// Save the individual slot
+				await equip(itemId || 0, slot); // Use 0 for unequipping
+
+				// Remove this slot from pending changes and update hasChanges
+				setPendingItems((prev) => {
+					const newPending = { ...prev };
+					delete newPending[slot];
+					const hasRemaining = Object.keys(newPending).length > 0;
+					setHasChanges(hasRemaining);
+					return newPending;
+				});
+
+				toast.success(`${slotLabels[slot as AvatarSlot]} slot saved successfully!`);
+			} catch (error) {
+				toast.error(`Failed to save ${slotLabels[slot as AvatarSlot]} slot`);
+				console.error("Failed to save slot:", error);
+			}
+		},
+		[pendingItems, allItemsQuery.data?.items, equip]
+	);
+
 	const handleUnlockItem = useCallback(
 		async (itemId: number, itemLabel: string) => {
 			try {
@@ -344,8 +381,8 @@ const Avatar = () => {
 															className="h-12 w-12 object-cover object-center sm:h-16 sm:w-16 md:h-20 md:w-20 lg:h-24 lg:w-24"
 														/>
 														{currentItem.locked ? (
-															<div className="absolute top-3 right-3 rounded-sm bg-black/70 px-1 text-xs text-white shadow-lg ring-2 ring-white/20 dark:bg-black/80">
-																🔒
+															<div className="absolute top-3 right-3 flex h-4 w-4 items-center justify-center rounded-sm bg-black/70 text-white shadow-lg ring-2 ring-white/20 dark:bg-black/80 md:h-5 md:w-5">
+																<Lock className="h-2.5 w-2.5 md:h-3 md:w-3" />
 															</div>
 														) : null}
 													</div>
@@ -367,26 +404,37 @@ const Avatar = () => {
 														</div>
 														<div className="flex flex-wrap justify-center gap-1">
 															{hasSlotChange ? (
+																<>
+																	<Button
+																		variant="outline"
+																		size="sm"
+																		onClick={() => handleEquipToSlot(slot, originalItem?.avatarAccessoryId || null)}
+																		className="cursor-pointer flex-1 sm:flex-none"
+																	>
+																		Revert
+																	</Button>
+																	<Button
+																		variant="default"
+																		size="sm"
+																		onClick={() => handleSaveSlot(slot)}
+																		disabled={currentItem?.locked}
+																		className="cursor-pointer flex-1 sm:flex-none"
+																	>
+																		Save
+																	</Button>
+																</>
+															) : null}
+															{currentItem.locked ? (
 																<Button
-																	variant="outline"
+																	variant="destructive"
 																	size="sm"
-																	onClick={() => handleEquipToSlot(slot, originalItem?.avatarAccessoryId || null)}
-																	className="cursor-pointer"
+																	onClick={() => handleUnlockItem(currentItem.avatarAccessoryId, currentItem.label)}
+																	className="cursor-pointer w-full sm:w-auto"
 																>
-																	Revert
+																	Unlock
 																</Button>
 															) : null}
 														</div>
-														{currentItem.locked ? (
-															<Button
-																variant="destructive"
-																size="sm"
-																onClick={() => handleUnlockItem(currentItem.avatarAccessoryId, currentItem.label)}
-																className="cursor-pointer"
-															>
-																Unlock
-															</Button>
-														) : null}
 													</div>
 												</div>
 											) : (

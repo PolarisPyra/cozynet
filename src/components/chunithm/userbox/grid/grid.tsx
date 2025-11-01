@@ -5,6 +5,7 @@ import { Check, Lock } from "lucide-react";
 import { Pagination } from "@/components/common/pagination";
 import { PreviewSlot } from "@/components/common/preview-slot";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePaginationKeyboard } from "@/hooks/use-pagination-keyboard";
 import { CDN } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -187,6 +188,7 @@ export const Grid = <T extends BaseItem>({
 }: GridProps<T>) => {
 	const [page, setPage] = useState(1);
 	const pageSize = 36;
+	const totalPages = Math.ceil(items.length / pageSize);
 
 	useEffect(() => setPage(1), [items.length]);
 
@@ -194,6 +196,9 @@ export const Grid = <T extends BaseItem>({
 		const start = (page - 1) * pageSize;
 		return items.slice(start, start + pageSize);
 	}, [items, page]);
+
+	// Keyboard shortcuts for pagination
+	usePaginationKeyboard(totalPages, setPage, items.length > pageSize);
 
 	const selectedItem = useMemo(
 		() => items.find((item) => getItemId(item) === selectedItemId) || null,
@@ -260,12 +265,7 @@ export const Grid = <T extends BaseItem>({
 			</div>
 
 			{items.length > pageSize && (
-				<Pagination
-					currentPage={page}
-					totalPages={Math.ceil(items.length / pageSize)}
-					onPageChange={setPage}
-					showKeyboardHints
-				/>
+				<Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} showKeyboardHints />
 			)}
 		</div>
 	);
