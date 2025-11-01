@@ -1,23 +1,23 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { DB } from "@/shared/types";
+import { db } from "@/api/db"
+import { validateJson } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { DB } from "@/shared/types"
 
 const ChunithmOptionsRoutes = new Hono()
-	.get("/", async (c) => {
+	.get("/", async c => {
 		try {
-			const userId = c.payload.userId;
-			if (!userId) throw new HTTPException(403);
+			const userId = c.payload.userId
+			if (!userId) throw new HTTPException(403)
 
 			const [rows] = await db.execute<(DB.ChuniProfileOption & RowDataPacket)[]>(
 				"SELECT * FROM chuni_profile_option WHERE user = ?",
 				[userId]
-			);
+			)
 
 			if (rows.length === 0) {
 				// Return default options if none exist
@@ -73,14 +73,14 @@ const ChunithmOptionsRoutes = new Hono()
 					notesThickness: 0,
 					fieldWallPosition: 0,
 					playTimingOffset: 0,
-					fieldWallPosition_120: 0,
-				};
-				return c.json(defaultOptions);
+					fieldWallPosition_120: 0
+				}
+				return c.json(defaultOptions)
 			}
 
-			return c.json(rows[0]);
+			return c.json(rows[0])
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get game options", error);
+			throw rethrowWithMessage("Failed to get game options", error)
 		}
 	})
 	.post(
@@ -116,20 +116,20 @@ const ChunithmOptionsRoutes = new Hono()
 				fieldColor: z.number().optional(),
 				fieldWallPosition: z.number().optional(),
 				fieldWallPosition_120: z.number().optional(),
-				bgInfo: z.number().optional(),
+				bgInfo: z.number().optional()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const userId = c.payload.userId;
-				if (!userId) throw new HTTPException(403);
+				const userId = c.payload.userId
+				if (!userId) throw new HTTPException(403)
 
-				const options = await c.req.json();
+				const options = await c.req.json()
 
 				// Check if user has existing options
 				const [existing] = await db.execute<RowDataPacket[]>("SELECT id FROM chuni_profile_option WHERE user = ?", [
-					userId,
-				]);
+					userId
+				])
 
 				if (existing.length > 0) {
 					// Update existing record with all fields
@@ -175,10 +175,10 @@ const ChunithmOptionsRoutes = new Hono()
 							options.fieldWallPosition ?? null,
 							options.fieldWallPosition_120 ?? null,
 							options.bgInfo ?? null,
-							userId,
+							userId
 						]
-					);
-					return c.json(result);
+					)
+					return c.json(result)
 				} else {
 					// Insert new record
 					const [result] = await db.execute<ResultSetHeader>(
@@ -223,15 +223,15 @@ const ChunithmOptionsRoutes = new Hono()
 							options.fieldColor ?? null,
 							options.fieldWallPosition ?? null,
 							options.fieldWallPosition_120 ?? null,
-							options.bgInfo ?? null,
+							options.bgInfo ?? null
 						]
-					);
-					return c.json(result);
+					)
+					return c.json(result)
 				}
 			} catch (error) {
-				throw rethrowWithMessage("Failed to update game options", error);
+				throw rethrowWithMessage("Failed to update game options", error)
 			}
 		}
-	);
+	)
 
-export { ChunithmOptionsRoutes };
+export { ChunithmOptionsRoutes }

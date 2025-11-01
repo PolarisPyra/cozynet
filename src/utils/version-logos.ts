@@ -1,4 +1,4 @@
-import { CDN } from "@/lib/constants";
+import { CDN } from "@/lib/constants"
 
 const CHUNITHM_LOGOS: Record<number, string> = {
 	[0]: `${CDN}/chunithm/logos/0.webp`, // chunithm
@@ -19,12 +19,12 @@ const CHUNITHM_LOGOS: Record<number, string> = {
 	[15]: `${CDN}/chunithm/logos/15.webp`, // Luminous
 	[16]: `${CDN}/chunithm/logos/16.webp`, // Luminous Plus
 	[17]: `${CDN}/chunithm/logos/17.webp`, // Verse
-	[18]: `${CDN}/chunithm/logos/18.webp`, // XVerse
-};
+	[18]: `${CDN}/chunithm/logos/18.webp` // XVerse
+}
 // ...existing code...
 export const getChunithmLogo = {
 	getLogo(version?: number | null): string | null {
-		if (version === null || version === undefined) return null;
-		return CHUNITHM_LOGOS[version] ?? null;
-	},
-};
+		if (version === null || version === undefined) return null
+		return CHUNITHM_LOGOS[version] ?? null
+	}
+}

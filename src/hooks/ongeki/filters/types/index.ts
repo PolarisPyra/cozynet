@@ -2,7 +2,7 @@
 // CARD FILTER TYPES
 // ============================================================================
 
-export type { OngekiCard, FilterValues, UseCardFilteringParams } from "./card-types";
+export type { OngekiCard, FilterValues, UseCardFilteringParams } from "./card-types"
 
 // ============================================================================
 // MUSIC FILTER TYPES
@@ -22,5 +22,5 @@ export type {
 	UseMusicFilteringParams,
 	isOngekiSong,
 	isOngekiRating,
-	isOngekiScore,
-} from "./music-types";
+	isOngekiScore
+} from "./music-types"

@@ -1,49 +1,49 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import Header from "@/components/common/header";
-import { MultiFilter } from "@/components/common/multi-filter";
-import ResponsiveGrid from "@/components/common/responsive-grid";
-import Spinner from "@/components/common/spinner";
-import OngekiScoreInfoCard from "@/components/ongeki/score-info-card";
+import Header from "@/components/common/header"
+import { MultiFilter } from "@/components/common/multi-filter"
+import ResponsiveGrid from "@/components/common/responsive-grid"
+import Spinner from "@/components/common/spinner"
+import { OngekiScoreInfoCard } from "@/components/ongeki/score-info-card"
 import {
 	type MusicFilterValues,
 	getDefaultScoreFilterValues,
 	useOngekiScoreFiltering,
 	useOngekiVersion,
-	useScoreFilters,
-} from "@/hooks/ongeki";
-import { Body, Container, FilterArea } from "@/pages/layout/layout";
-import { ongekiBadgeColors } from "@/utils/helpers";
+	useScoreFilters
+} from "@/hooks/ongeki"
+import { Body, Container, FilterArea } from "@/pages/layout/layout"
+import { ongekiBadgeColors } from "@/utils/helpers"
 
-const OngekiScorePage = () => {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [filterValues, setFilterValues] = useState<MusicFilterValues>(getDefaultScoreFilterValues());
+export function OngekiScorePage() {
+	const [searchQuery, setSearchQuery] = useState("")
+	const [filterValues, setFilterValues] = useState<MusicFilterValues>(getDefaultScoreFilterValues())
 
-	const version = useOngekiVersion();
-	const filters = useScoreFilters();
+	const version = useOngekiVersion()
+	const filters = useScoreFilters()
 	const { filteredScores, isLoading, isRefreshOrAbove } = useOngekiScoreFiltering({
 		searchQuery,
-		filterValues,
-	});
+		filterValues
+	})
 
 	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues((prev) => ({
+		setFilterValues(prev => ({
 			...prev,
-			[identifier]: value,
-		}));
-	};
+			[identifier]: value
+		}))
+	}
 
 	const handleClearAll = () => {
-		setFilterValues(getDefaultScoreFilterValues());
-	};
+		setFilterValues(getDefaultScoreFilterValues())
+	}
 
-	const searchItems = filteredScores.map((score) => ({
+	const searchItems = filteredScores.map(score => ({
 		id: score.id,
-		title: score.title || "",
-	}));
+		title: score.title || ""
+	}))
 
-	if (isLoading) return <LoadingState />;
-	if (!version) return <NoVersionState />;
+	if (isLoading) return <LoadingState />
+	if (!version) return <NoVersionState />
 
 	return (
 		<Container>
@@ -55,7 +55,7 @@ const OngekiScorePage = () => {
 					onSearchChange: setSearchQuery,
 					placeholder: "Search scores...",
 					emptyMessage: "No scores found.",
-					groupLabel: "Scores",
+					groupLabel: "Scores"
 				}}
 			/>
 			<Body>
@@ -78,25 +78,27 @@ const OngekiScorePage = () => {
 				/>
 			</Body>
 		</Container>
-	);
-};
+	)
+}
 
-const LoadingState = () => (
-	<Container>
-		<Header title="Scores" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<Spinner size={24} color="#ffffff" />
-		</div>
-	</Container>
-);
+function LoadingState() {
+	return (
+		<Container>
+			<Header title="Scores" />
+			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
+				<Spinner size={24} color="#ffffff" />
+			</div>
+		</Container>
+	)
+}
 
-const NoVersionState = () => (
-	<Container>
-		<Header title="Scores" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">Please set your Ongeki version in settings first</p>
-		</div>
-	</Container>
-);
-
-export default OngekiScorePage;
+function NoVersionState() {
+	return (
+		<Container>
+			<Header title="Scores" />
+			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
+				<p className="text-primary">Please set your Ongeki version in settings first</p>
+			</div>
+		</Container>
+	)
+}

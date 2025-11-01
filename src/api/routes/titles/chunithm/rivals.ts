@@ -1,11 +1,11 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 const RivalsRoutes = new Hono()
 
@@ -13,15 +13,15 @@ const RivalsRoutes = new Hono()
 		"add",
 		validateJson(
 			z.object({
-				favId: z.number().int().positive(),
+				favId: z.number().int().positive()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
 
-				const { favId } = await c.req.json();
+				const { favId } = await c.req.json()
 
 				const [results] = await db.execute<ResultSetHeader>(
 					`
@@ -29,14 +29,14 @@ const RivalsRoutes = new Hono()
        					VALUES (?, ?, ?, 2)
 					`,
 					[userId, version, favId]
-				);
+				)
 
 				if (results.affectedRows === 0) {
-					throw new HTTPException(500, { message: "Insert failed" });
+					throw new HTTPException(500, { message: "Insert failed" })
 				}
-				return c.json(results);
+				return c.json(results)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to add favorite", error);
+				throw rethrowWithMessage("Failed to add favorite", error)
 			}
 		}
 	)
@@ -45,15 +45,15 @@ const RivalsRoutes = new Hono()
 		"remove",
 		validateJson(
 			z.object({
-				favId: z.number().int().positive(),
+				favId: z.number().int().positive()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
 
-				const { favId } = await c.req.json();
+				const { favId } = await c.req.json()
 
 				const [results] = await db.execute<ResultSetHeader>(
 					`
@@ -64,22 +64,22 @@ const RivalsRoutes = new Hono()
 						  AND favKind = 2
 					`,
 					[userId, version, favId]
-				);
+				)
 
 				if (results.affectedRows === 0) {
-					throw new HTTPException(500, { message: "Delete failed" });
+					throw new HTTPException(500, { message: "Delete failed" })
 				}
-				return c.json(results);
+				return c.json(results)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to remove favorite", error);
+				throw rethrowWithMessage("Failed to remove favorite", error)
 			}
 		}
 	)
 
-	.get("all", async (c) => {
+	.get("all", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
 			const [results] = await db.execute<({ favId: number } & RowDataPacket)[]>(
 				`
@@ -90,18 +90,18 @@ const RivalsRoutes = new Hono()
 					  AND favKind = 2
 				`,
 				[userId, version]
-			);
+			)
 
-			return c.json(results.map((r) => r.favId));
+			return c.json(results.map(r => r.favId))
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get rivals", error);
+			throw rethrowWithMessage("Failed to get rivals", error)
 		}
 	})
 
-	.get("mutual", async (c) => {
+	.get("mutual", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
 			const [results] = await db.execute<({ rivalId: number; isMutual: number } & RowDataPacket)[]>(
 				`
@@ -130,18 +130,18 @@ const RivalsRoutes = new Hono()
 					  )
 				`,
 				[userId, version, version]
-			);
+			)
 
-			return c.json(results);
+			return c.json(results)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get mutual rivals", error);
+			throw rethrowWithMessage("Failed to get mutual rivals", error)
 		}
 	})
 
-	.get("userlookup", async (c) => {
+	.get("userlookup", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
 			const [results] = await db.execute<({ id: number; username: string } & RowDataPacket)[]>(
 				`
@@ -153,18 +153,18 @@ const RivalsRoutes = new Hono()
 					AND user != ?
 				`,
 				[version, userId]
-			);
+			)
 
-			return c.json(results);
+			return c.json(results)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get user lookup", error);
+			throw rethrowWithMessage("Failed to get user lookup", error)
 		}
 	})
 
-	.get("count", async (c) => {
+	.get("count", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
 			const [result] = await db.execute<({ rivalCount: number } & RowDataPacket)[]>(
 				`
@@ -181,12 +181,12 @@ const RivalsRoutes = new Hono()
 					  )
 				`,
 				[userId, version, version]
-			);
+			)
 
-			return c.json(result[0].rivalCount);
+			return c.json(result[0].rivalCount)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to count rivals", error);
+			throw rethrowWithMessage("Failed to count rivals", error)
 		}
-	});
+	})
 
-export { RivalsRoutes };
+export { RivalsRoutes }

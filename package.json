@@ -12,7 +12,7 @@
 		"typecheck": "tsc --noEmit",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
-		"format": "prettier --write \"**/*.{ts,tsx}\" --cache",
+		"format": "prettier --write \"src/**/*.{ts,tsx}\" --ignore-path .prettierignore-src --cache",
 		"test": "node -v"
 	},
 	"dependencies": {
@@ -91,18 +91,18 @@
 	},
 	"packageManager": "pnpm@10.18.0",
 	"prettier": {
-		"semi": true,
+		"semi": false,
 		"singleQuote": false,
 		"printWidth": 120,
-		"tabWidth": 1,
+		"tabWidth": 2,
 		"useTabs": true,
 		"quoteProps": "as-needed",
 		"jsxSingleQuote": false,
 		"bracketSpacing": true,
 		"bracketSameLine": false,
-		"arrowParens": "always",
+		"arrowParens": "avoid",
 		"endOfLine": "lf",
-		"trailingComma": "es5",
+		"trailingComma": "none",
 		"plugins": [
 			"@trivago/prettier-plugin-sort-imports",
 			"prettier-plugin-tailwindcss"

@@ -1,59 +1,59 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import { toast } from "sonner";
+import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button";
-import { useOngekiVersion, useUnlockAllItems, useUnlockSpecificItem } from "@/hooks/ongeki";
+import { Button } from "@/components/ui/button"
+import { useOngekiVersion, useUnlockAllItems, useUnlockSpecificItem } from "@/hooks/ongeki"
 
 const ItemManagement = () => {
-	const version = useOngekiVersion();
+	const version = useOngekiVersion()
 
-	const { mutate: unlockAllItems } = useUnlockAllItems();
-	const { mutate: unlockSpecificItem } = useUnlockSpecificItem();
+	const { mutate: unlockAllItems } = useUnlockAllItems()
+	const { mutate: unlockSpecificItem } = useUnlockSpecificItem()
 
 	const [isUnlocking, setIsUnlocking] = useState<{ [key: string]: boolean }>({
 		cards: false,
 		items: false,
-		specific: false,
-	});
+		specific: false
+	})
 
 	const handleUnlockAllItems = async () => {
-		if (!version) return;
+		if (!version) return
 
-		setIsUnlocking((prev) => ({ ...prev, items: true }));
+		setIsUnlocking(prev => ({ ...prev, items: true }))
 		try {
 			unlockAllItems(version, {
 				onSuccess: () => {
-					toast.success("Items unlocked successfully!");
+					toast.success("Items unlocked successfully!")
 				},
 				onError: () => {
-					toast.error("Failed to unlock Items");
-				},
-			});
+					toast.error("Failed to unlock Items")
+				}
+			})
 		} finally {
-			setIsUnlocking((prev) => ({ ...prev, items: false }));
+			setIsUnlocking(prev => ({ ...prev, items: false }))
 		}
-	};
+	}
 	const handleUnlockSpecificItem = async (itemKind: number) => {
-		if (!version) return;
+		if (!version) return
 
-		setIsUnlocking((prev) => ({ ...prev, specific: true }));
+		setIsUnlocking(prev => ({ ...prev, specific: true }))
 		try {
 			unlockSpecificItem(
 				{ itemKind, version: Number(version) },
 				{
 					onSuccess: () => {
-						toast.success("Items unlocked successfully!");
+						toast.success("Items unlocked successfully!")
 					},
 					onError: () => {
-						toast.error("Failed to unlock items");
-					},
+						toast.error("Failed to unlock items")
+					}
 				}
-			);
+			)
 		} finally {
-			setIsUnlocking((prev) => ({ ...prev, specific: false }));
+			setIsUnlocking(prev => ({ ...prev, specific: false }))
 		}
-	};
+	}
 
 	return (
 		<div className="bg-card rounded-sm p-4 md:p-6">
@@ -73,7 +73,7 @@ const ItemManagement = () => {
 				{isUnlocking.items ? "Unlocking..." : "Unlock all items"}
 			</Button>
 		</div>
-	);
-};
+	)
+}
 
-export default ItemManagement;
+export default ItemManagement

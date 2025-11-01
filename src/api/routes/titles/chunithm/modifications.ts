@@ -1,11 +1,11 @@
-import { Hono } from "hono";
-import type { ResultSetHeader } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import type { ResultSetHeader } from "mysql2"
+import { z } from "zod"
 
-import db from "@/api/db";
-import { validateJson } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { DaphnisUserOptionKey } from "@/shared/types";
+import db from "@/api/db"
+import { validateJson } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { DaphnisUserOptionKey } from "@/shared/types"
 
 const ChunithmModsRoutes = new Hono()
 
@@ -13,13 +13,13 @@ const ChunithmModsRoutes = new Hono()
 		"songs/unlock",
 		validateJson(
 			z.object({
-				value: z.number(),
+				value: z.number()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId } = c.payload;
-				const { value } = await c.req.json();
+				const { userId } = c.payload
+				const { value } = await c.req.json()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
@@ -28,19 +28,19 @@ const ChunithmModsRoutes = new Hono()
 		    		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.UnlockAllSongs}'
 				`,
 					[value, userId]
-				);
+				)
 
 				if (update.affectedRows === 0) {
 					await db.execute<ResultSetHeader>(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 						userId,
 						DaphnisUserOptionKey.UnlockAllSongs,
-						value,
-					]);
+						value
+					])
 				}
 
-				return c.json({ success: true });
+				return c.json({ success: true })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to add favorite", error);
+				throw rethrowWithMessage("Failed to add favorite", error)
 			}
 		}
 	)
@@ -49,13 +49,13 @@ const ChunithmModsRoutes = new Hono()
 		"songs/lock",
 		validateJson(
 			z.object({
-				value: z.number(),
+				value: z.number()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId } = c.payload;
-				const { value } = await c.req.json();
+				const { userId } = c.payload
+				const { value } = await c.req.json()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
@@ -64,19 +64,19 @@ const ChunithmModsRoutes = new Hono()
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.UnlockAllSongs}'
 				`,
 					[value, userId]
-				);
+				)
 
 				if (update.affectedRows === 0) {
 					await db.execute<ResultSetHeader>(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 						userId,
 						DaphnisUserOptionKey.UnlockAllSongs,
-						value,
-					]);
+						value
+					])
 				}
 
-				return c.json({ success: true });
+				return c.json({ success: true })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to add favorite", error);
+				throw rethrowWithMessage("Failed to add favorite", error)
 			}
 		}
 	)
@@ -85,13 +85,13 @@ const ChunithmModsRoutes = new Hono()
 		"tickets/unlimited",
 		validateJson(
 			z.object({
-				value: z.number(),
+				value: z.number()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId } = c.payload;
-				const { value } = await c.req.json();
+				const { userId } = c.payload
+				const { value } = await c.req.json()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
@@ -100,19 +100,19 @@ const ChunithmModsRoutes = new Hono()
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.MaxTickets}'
 				`,
 					[value, userId]
-				);
+				)
 
 				if (update.affectedRows === 0) {
 					await db.execute<ResultSetHeader>(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 						userId,
 						DaphnisUserOptionKey.MaxTickets,
-						value,
-					]);
+						value
+					])
 				}
 
-				return c.json({ success: true });
+				return c.json({ success: true })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to add favorite", error);
+				throw rethrowWithMessage("Failed to add favorite", error)
 			}
 		}
 	)
@@ -121,13 +121,13 @@ const ChunithmModsRoutes = new Hono()
 		"tickets/limited",
 		validateJson(
 			z.object({
-				value: z.number(),
+				value: z.number()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId } = c.payload;
-				const { value } = await c.req.json();
+				const { userId } = c.payload
+				const { value } = await c.req.json()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
@@ -136,20 +136,20 @@ const ChunithmModsRoutes = new Hono()
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.MaxTickets}'
 				`,
 					[value, userId]
-				);
+				)
 
 				if (update.affectedRows === 0) {
 					await db.execute<ResultSetHeader>(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 						userId,
 						DaphnisUserOptionKey.MaxTickets,
-						value,
-					]);
+						value
+					])
 				}
 
-				return c.json({ success: true });
+				return c.json({ success: true })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to add favorite", error);
+				throw rethrowWithMessage("Failed to add favorite", error)
 			}
 		}
-	);
-export { ChunithmModsRoutes };
+	)
+export { ChunithmModsRoutes }

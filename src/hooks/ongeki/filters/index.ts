@@ -3,10 +3,10 @@
 // ============================================================================
 
 // Types
-export * from "./types";
+export * from "./types"
 
 // Filter Definitions
-export * from "./definitions";
+export * from "./definitions"
 
 // Filtering Hooks
-export * from "./hooks";
+export * from "./hooks"

@@ -1,24 +1,24 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import { ChevronsUpDown } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronsUpDown } from "lucide-react"
+import { toast } from "sonner"
 
-import Spinner from "@/components/common/spinner";
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useArcades, useUpdateArcadeOwnership, useUsers } from "@/hooks/users/use-arcade";
+import Spinner from "@/components/common/spinner"
+import { Button } from "@/components/ui/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useArcades, useUpdateArcadeOwnership, useUsers } from "@/hooks/users/use-arcade"
 
 const ArcadeOwnership = () => {
-	const { data: arcades, isLoading: isLoadingArcades } = useArcades();
-	const { data: users, isLoading: isLoadingUsers } = useUsers();
+	const { data: arcades, isLoading: isLoadingArcades } = useArcades()
+	const { data: users, isLoading: isLoadingUsers } = useUsers()
 
-	const { mutate: updateArcade, isPending } = useUpdateArcadeOwnership();
+	const { mutate: updateArcade, isPending } = useUpdateArcadeOwnership()
 
-	const [selectedArcade, setSelectedArcade] = useState<string>("");
-	const [selectedUser, setSelectedUser] = useState<string>("");
-	const [openArcade, setOpenArcade] = useState(false);
-	const [openUser, setOpenUser] = useState(false);
+	const [selectedArcade, setSelectedArcade] = useState<string>("")
+	const [selectedUser, setSelectedUser] = useState<string>("")
+	const [openArcade, setOpenArcade] = useState(false)
+	const [openUser, setOpenUser] = useState(false)
 
 	const handleSubmit = () => {
 		if (selectedArcade && selectedUser) {
@@ -26,23 +26,23 @@ const ArcadeOwnership = () => {
 				{ arcade: parseInt(selectedArcade), user: parseInt(selectedUser) },
 				{
 					onSuccess: () => {
-						toast.success("Arcade Ownership updated");
+						toast.success("Arcade Ownership updated")
 					},
-					onError: (error) => {
-						toast.error("Failed to update ownership");
-						console.error("Error updating ownership:", error);
-					},
+					onError: error => {
+						toast.error("Failed to update ownership")
+						console.error("Error updating ownership:", error)
+					}
 				}
-			);
+			)
 		}
-	};
+	}
 
 	if (isLoadingArcades || isLoadingUsers) {
 		return (
-            <div>
-                <Spinner size={24} />
-            </div>
-		);
+			<div>
+				<Spinner size={24} />
+			</div>
+		)
 	}
 
 	return (
@@ -60,7 +60,7 @@ const ArcadeOwnership = () => {
 							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
 						>
 							{selectedArcade
-								? arcades?.find((a) => `${a.arcade}` === selectedArcade)?.name || `Arcade #${selectedArcade}`
+								? arcades?.find(a => `${a.arcade}` === selectedArcade)?.name || `Arcade #${selectedArcade}`
 								: "Select Arcade..."}
 							<ChevronsUpDown className="opacity-50" />
 						</Button>
@@ -71,14 +71,14 @@ const ArcadeOwnership = () => {
 							<CommandList>
 								<CommandEmpty>No arcade found.</CommandEmpty>
 								<CommandGroup>
-									{arcades?.map((arcade) => (
+									{arcades?.map(arcade => (
 										<CommandItem
 											key={arcade.arcade}
 											value={`${arcade.name} ${arcade.user}`}
 											className="w-full cursor-pointer justify-between"
 											onSelect={() => {
-												setSelectedArcade(`${arcade.arcade}`);
-												setOpenArcade(false);
+												setSelectedArcade(`${arcade.arcade}`)
+												setOpenArcade(false)
 											}}
 										>
 											<div>
@@ -106,7 +106,7 @@ const ArcadeOwnership = () => {
 							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
 						>
 							{selectedUser
-								? users?.find((u) => `${u.id}` === selectedUser)?.username || `User #${selectedUser}`
+								? users?.find(u => `${u.id}` === selectedUser)?.username || `User #${selectedUser}`
 								: "Select User..."}
 							<ChevronsUpDown className="opacity-50" />
 						</Button>
@@ -117,14 +117,14 @@ const ArcadeOwnership = () => {
 							<CommandList>
 								<CommandEmpty>No user found.</CommandEmpty>
 								<CommandGroup>
-									{users?.map((user) => (
+									{users?.map(user => (
 										<CommandItem
 											key={user.id}
 											value={`${user.username || `User #${user.id}`} ${user.access_code || ""}`}
 											className="w-full cursor-pointer justify-between"
 											onSelect={() => {
-												setSelectedUser(`${user.id}`);
-												setOpenUser(false);
+												setSelectedUser(`${user.id}`)
+												setOpenUser(false)
 											}}
 										>
 											<div>
@@ -141,24 +141,24 @@ const ArcadeOwnership = () => {
 				</Popover>
 			</div>
 
-		<Button
-			onClick={handleSubmit}
-			variant="custom"
-			disabled={isPending || !selectedArcade || !selectedUser}
-			className="w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
-			aria-busy={isPending}
-		>
-			{isPending ? (
-				<>
-					<Spinner size={16} className="mr-2" />
-					<span>Updating...</span>
-				</>
-			) : (
-				<span>Update</span>
-			)}
-		</Button>
+			<Button
+				onClick={handleSubmit}
+				variant="custom"
+				disabled={isPending || !selectedArcade || !selectedUser}
+				className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground w-full items-center justify-center gap-2 rounded-md border border-transparent p-3 font-semibold transition-colors disabled:cursor-not-allowed"
+				aria-busy={isPending}
+			>
+				{isPending ? (
+					<>
+						<Spinner size={16} className="mr-2" />
+						<span>Updating...</span>
+					</>
+				) : (
+					<span>Update</span>
+				)}
+			</Button>
 		</div>
-	);
-};
+	)
+}
 
-export default ArcadeOwnership;
+export default ArcadeOwnership

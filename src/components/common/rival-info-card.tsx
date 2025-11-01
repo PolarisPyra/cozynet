@@ -1,31 +1,31 @@
-import { Handshake, Skull, UserMinus, UserPlus } from "lucide-react";
+import { Handshake, Skull, UserMinus, UserPlus } from "lucide-react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 interface RivalUser {
-	id: number;
-	username: string;
-	isMutual: boolean;
+	id: number
+	username: string
+	isMutual: boolean
 }
 
 interface RivalInfoCardProps {
-	user: RivalUser;
-	isRival: boolean;
-	onAddRival: (id: number) => void;
-	onRemoveRival: (id: number) => void;
-	rivalCount: number;
+	user: RivalUser
+	isRival: boolean
+	onAddRival: (id: number) => void
+	onRemoveRival: (id: number) => void
+	rivalCount: number
 }
 
 export function RivalInfoCard({ user, isRival, onAddRival, onRemoveRival, rivalCount }: RivalInfoCardProps) {
 	const handleAction = () => {
 		if (isRival) {
-			onRemoveRival(user.id);
+			onRemoveRival(user.id)
 		} else {
-			onAddRival(user.id);
+			onAddRival(user.id)
 		}
-	};
+	}
 
 	return (
 		<div className="bg-card border-border flex flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -75,5 +75,5 @@ export function RivalInfoCard({ user, isRival, onAddRival, onRemoveRival, rivalC
 				</Button>
 			</div>
 		</div>
-	);
+	)
 }

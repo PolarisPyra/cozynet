@@ -1,18 +1,18 @@
-import { useMemo } from "react";
+import { useMemo } from "react"
 
-import { ChunithmStaticMusic } from "@/shared/types";
-import { DB } from "@/shared/types";
+import { ChunithmStaticMusic } from "@/shared/types"
+import { DB } from "@/shared/types"
 
 interface UseGroupedSongsParams {
-	songs: DB.ChuniStaticMusic[];
+	songs: DB.ChuniStaticMusic[]
 }
 
 const useGroupedSongs = ({ songs }: UseGroupedSongsParams): ChunithmStaticMusic[] => {
 	return useMemo(() => {
-		const songsMap = new Map<number, ChunithmStaticMusic>();
+		const songsMap = new Map<number, ChunithmStaticMusic>()
 
-		songs.forEach((song) => {
-			if (!song.level || !song.songId || !song.title) return;
+		songs.forEach(song => {
+			if (!song.level || !song.songId || !song.title) return
 
 			if (!songsMap.has(song.songId)) {
 				songsMap.set(song.songId, {
@@ -27,18 +27,18 @@ const useGroupedSongs = ({ songs }: UseGroupedSongsParams): ChunithmStaticMusic[
 					jacketPath: song.jacketPath,
 					worldsEndTag: song.worldsEndTag,
 					opt: song.opt,
-					charts: [],
-				});
+					charts: []
+				})
 			}
 
 			songsMap.get(song.songId)!.charts.push({
 				chartId: song.chartId ?? null,
-				level: song.level,
-			});
-		});
+				level: song.level
+			})
+		})
 
-		return Array.from(songsMap.values());
-	}, [songs]);
-};
+		return Array.from(songsMap.values())
+	}, [songs])
+}
 
-export default useGroupedSongs;
+export default useGroupedSongs

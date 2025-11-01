@@ -302,7 +302,7 @@ video {
 	--code-number: lab(48.96% 0 0);
 	--selection: lab(2.75381% 0 0);
 	--selection-foreground: lab(100% 0 0);
-	--radius: 0.3rem;
+	--radius: 0.5rem;
 }
 
 /*
@@ -342,8 +342,6 @@ video {
 	--code-number: lab(67.52% -0.0000298023 0);
 	--selection: lab(90.952% 0 -0.0000119209);
 	--selection-foreground: lab(7.78201% -0.0000149012 0);
-
-	/* Your custom variables */
 	--radius: 0.5rem;
 }
 

@@ -1,11 +1,11 @@
-import { toast } from "sonner";
+import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button";
-import { useLockSongs, useUnlockAllSongs } from "@/hooks/chunithm";
+import { Button } from "@/components/ui/button"
+import { useLockSongs, useUnlockAllSongs } from "@/hooks/chunithm"
 
 const SongManagement = () => {
-	const { mutate: unlockSongs, isPending: isUnlockingSongs } = useUnlockAllSongs();
-	const { mutate: lockSongs, isPending: isLockingSongs } = useLockSongs();
+	const { mutate: unlockSongs, isPending: isUnlockingSongs } = useUnlockAllSongs()
+	const { mutate: lockSongs, isPending: isLockingSongs } = useLockSongs()
 	return (
 		<div className="bg-card rounded-sm p-4 md:p-6">
 			<h2 className="text-primary mb-4 text-xl font-semibold">Manage Songs</h2>
@@ -14,12 +14,12 @@ const SongManagement = () => {
 					onClick={() => {
 						unlockSongs(undefined, {
 							onSuccess: () => {
-								toast.success("Songs unlocked successfully!");
+								toast.success("Songs unlocked successfully!")
 							},
 							onError: () => {
-								toast.error("Failed to unlock songs");
-							},
-						});
+								toast.error("Failed to unlock songs")
+							}
+						})
 					}}
 					variant="custom"
 					disabled={isUnlockingSongs}
@@ -30,12 +30,12 @@ const SongManagement = () => {
 					onClick={() => {
 						lockSongs(undefined, {
 							onSuccess: () => {
-								toast.success("Songs locked successfully!");
+								toast.success("Songs locked successfully!")
 							},
 							onError: () => {
-								toast.error("Failed to lock songs");
-							},
-						});
+								toast.error("Failed to lock songs")
+							}
+						})
 					}}
 					variant="custom"
 					disabled={isLockingSongs}
@@ -44,7 +44,7 @@ const SongManagement = () => {
 				</Button>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-export default SongManagement;
+export default SongManagement

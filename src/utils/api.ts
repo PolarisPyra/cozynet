@@ -1,5 +1,5 @@
-import { hc } from "hono/client";
+import { hc } from "hono/client"
 
-import { ApiRouteType } from "@/api/routes";
+import { ApiRouteType } from "@/api/routes"
 
-export const api = hc<ApiRouteType>("/api");
+export const api = hc<ApiRouteType>("/api")

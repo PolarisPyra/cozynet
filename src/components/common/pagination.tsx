@@ -1,13 +1,13 @@
-import React from "react";
+import React from "react"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 
 interface PaginationProps {
-	currentPage: number;
-	totalPages: number;
-	onPageChange: (page: number) => void;
-	showKeyboardHints?: boolean;
-	className?: string;
+	currentPage: number
+	totalPages: number
+	onPageChange: (page: number) => void
+	showKeyboardHints?: boolean
+	className?: string
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
@@ -15,9 +15,9 @@ export const Pagination: React.FC<PaginationProps> = ({
 	totalPages,
 	onPageChange,
 	showKeyboardHints = true,
-	className,
+	className
 }) => {
-	if (totalPages <= 1) return null;
+	if (totalPages <= 1) return null
 
 	return (
 		<div className={`flex flex-col items-center justify-between gap-4 pt-4 sm:flex-row ${className || ""}`}>
@@ -65,5 +65,5 @@ export const Pagination: React.FC<PaginationProps> = ({
 				)}
 			</div>
 		</div>
-	);
-};
+	)
+}

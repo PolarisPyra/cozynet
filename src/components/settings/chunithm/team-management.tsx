@@ -1,52 +1,52 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import { ChevronDown } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronDown } from "lucide-react"
+import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useCreateTeam, useTeams, useUpdateTeam } from "@/hooks/chunithm";
+import { Button } from "@/components/ui/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useCreateTeam, useTeams, useUpdateTeam } from "@/hooks/chunithm"
 
 const TeamManagement = () => {
-	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-	const [selectedTeam, setSelectedTeam] = useState<string>("Select Team");
-	const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
-	const [newTeamName, setNewTeamName] = useState("");
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+	const [selectedTeam, setSelectedTeam] = useState<string>("Select Team")
+	const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
+	const [newTeamName, setNewTeamName] = useState("")
 
-	const { data: teams } = useTeams();
-	const { mutate: updateTeamMutation, isPending: isUpdatingTeam } = useUpdateTeam();
-	const { mutate: createTeamMutation, isPending: isCreatingTeam } = useCreateTeam();
+	const { data: teams } = useTeams()
+	const { mutate: updateTeamMutation, isPending: isUpdatingTeam } = useUpdateTeam()
+	const { mutate: createTeamMutation, isPending: isCreatingTeam } = useCreateTeam()
 
 	const handleTeamSelect = (teamId: number, teamName: string) => {
-		setSelectedTeam(teamName);
-		setSelectedTeamId(teamId);
-		setIsDropdownOpen(false);
-	};
+		setSelectedTeam(teamName)
+		setSelectedTeamId(teamId)
+		setIsDropdownOpen(false)
+	}
 
 	const handleUpdateTeam = () => {
 		if (selectedTeamId === null) {
-			toast.error("Please select a team first");
-			return;
+			toast.error("Please select a team first")
+			return
 		}
 
 		updateTeamMutation(selectedTeamId, {
 			onSuccess: () => toast.success("Team updated successfully!"),
-			onError: () => toast.error("Failed to update team"),
-		});
-	};
+			onError: () => toast.error("Failed to update team")
+		})
+	}
 
 	const handleCreateTeam = () => {
 		if (!newTeamName.trim()) {
-			toast.error("Please enter a team name");
-			return;
+			toast.error("Please enter a team name")
+			return
 		}
 
 		createTeamMutation(newTeamName.trim(), {
 			onSuccess: () => toast.success("Team created successfully!"),
-			onError: () => toast.error("Failed to create team"),
-		});
-	};
+			onError: () => toast.error("Failed to create team")
+		})
+	}
 
 	return (
 		<div className="bg-card rounded-sm p-4 md:p-6">
@@ -72,16 +72,16 @@ const TeamManagement = () => {
 							<CommandList>
 								<CommandEmpty>No team found.</CommandEmpty>
 								<CommandGroup>
-									{teams?.map((team) => (
+									{teams?.map(team => (
 										<CommandItem
 											className="cursor-pointer"
 											key={team.id}
 											value={`${team.id}`}
 											onSelect={(val: string) => {
-												const id = Number(val);
-												const t = teams.find((x) => x.id === id);
+												const id = Number(val)
+												const t = teams.find(x => x.id === id)
 												if (t) {
-													handleTeamSelect(t.id, t.teamName);
+													handleTeamSelect(t.id, t.teamName)
 												}
 											}}
 										>
@@ -105,7 +105,7 @@ const TeamManagement = () => {
 					<input
 						type="text"
 						value={newTeamName}
-						onChange={(e) => setNewTeamName(e.target.value)}
+						onChange={e => setNewTeamName(e.target.value)}
 						placeholder="Enter team name"
 						className="bg-background text-foreground placeholder:text-muted-foreground border-input w-full rounded-sm border p-3"
 					/>
@@ -115,7 +115,7 @@ const TeamManagement = () => {
 				</Button>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-export default TeamManagement;
+export default TeamManagement

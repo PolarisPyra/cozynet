@@ -1,60 +1,60 @@
-import { parse } from "date-fns";
-import { fromZonedTime, toZonedTime } from "date-fns-tz";
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
+import { parse } from "date-fns"
+import { fromZonedTime, toZonedTime } from "date-fns-tz"
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
 
-import { db } from "@/api/db";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
 
-const TACHI_CLASSES = [undefined, "DAN_I", "DAN_II", "DAN_III", "DAN_IV", "DAN_V", "DAN_INFINITE"] as const;
-const TACHI_DIFFICULTIES = ["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"] as const;
+const TACHI_CLASSES = [undefined, "DAN_I", "DAN_II", "DAN_III", "DAN_IV", "DAN_V", "DAN_INFINITE"] as const
+const TACHI_DIFFICULTIES = ["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"] as const
 
-type BatchManualClearLamp = "CATASTROPHY" | "ABSOLUTE" | "BRAVE" | "HARD" | "CLEAR" | "FAILED";
-type BatchManualNoteLamp = "ALL JUSTICE CRITICAL" | "ALL JUSTICE" | "FULL COMBO" | "NONE";
+type BatchManualClearLamp = "CATASTROPHY" | "ABSOLUTE" | "BRAVE" | "HARD" | "CLEAR" | "FAILED"
+type BatchManualNoteLamp = "ALL JUSTICE CRITICAL" | "ALL JUSTICE" | "FULL COMBO" | "NONE"
 interface BatchManualScore {
-	identifier: string;
-	matchType: "inGameID";
-	score: number;
-	noteLamp: BatchManualNoteLamp;
-	clearLamp: BatchManualClearLamp;
-	difficulty: "BASIC" | "ADVANCED" | "EXPERT" | "MASTER" | "ULTIMA";
-	timeAchieved?: number;
+	identifier: string
+	matchType: "inGameID"
+	score: number
+	noteLamp: BatchManualNoteLamp
+	clearLamp: BatchManualClearLamp
+	difficulty: "BASIC" | "ADVANCED" | "EXPERT" | "MASTER" | "ULTIMA"
+	timeAchieved?: number
 	judgements?: {
-		jcrit: number;
-		justice: number;
-		attack: number;
-		miss: number;
-	};
+		jcrit: number
+		justice: number
+		attack: number
+		miss: number
+	}
 	optional?: {
-		maxCombo: number;
-	};
+		maxCombo: number
+	}
 }
 interface BatchManualImport {
 	meta: {
-		game: string;
-		playtype: string;
-		service: string;
-	};
-	scores: BatchManualScore[];
+		game: string
+		playtype: string
+		service: string
+	}
+	scores: BatchManualScore[]
 	classes?: {
-		dan?: string;
-		emblem?: string;
-	};
+		dan?: string
+		emblem?: string
+	}
 }
 
-const ChunithmKamaitachiRoutes = new Hono().get("export", async (c) => {
+const ChunithmKamaitachiRoutes = new Hono().get("export", async c => {
 	try {
-		const { userId, versions } = c.payload;
-		const version = versions.chunithm_version;
+		const { userId, versions } = c.payload
+		const version = versions.chunithm_version
 
 		const [profileResults] = await db.execute<RowDataPacket[]>(
 			`SELECT classEmblemBase, classEmblemMedal
        FROM chuni_profile_data
        WHERE user = ? AND version = ?`,
 			[userId, version]
-		);
+		)
 
-		const profile = profileResults.length > 0 ? profileResults[0] : null;
+		const profile = profileResults.length > 0 ? profileResults[0] : null
 
 		const [playlogResults] = await db.execute<RowDataPacket[]>(
 			`SELECT romVersion, userPlayDate, musicId, level, score, maxCombo,
@@ -65,20 +65,20 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async (c) => {
 			WHERE user = ?
 			GROUP BY p.id`,
 			[userId]
-		);
+		)
 
 		const tachiExport: BatchManualImport = {
 			meta: {
 				game: "chunithm",
 				playtype: "Single",
-				service: "Cozynet",
+				service: "Cozynet"
 			},
 			scores: [],
 			classes: {
 				dan: TACHI_CLASSES[profile?.classEmblemBase ?? 0],
-				emblem: TACHI_CLASSES[profile?.classEmblemMedal ?? 0],
-			},
-		};
+				emblem: TACHI_CLASSES[profile?.classEmblemMedal ?? 0]
+			}
+		}
 
 		for (const log of playlogResults) {
 			const {
@@ -96,8 +96,8 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async (c) => {
 				isAllJustice,
 				isFullCombo,
 				isClear,
-				skillCategoryId,
-			} = log;
+				skillCategoryId
+			} = log
 
 			if (
 				romVersion === null ||
@@ -109,40 +109,40 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async (c) => {
 				isFullCombo === null ||
 				isClear === null
 			) {
-				continue;
+				continue
 			}
 
 			// Filter out WORLD'S END scores
 			if (romVersion.startsWith("1.") && level === 4) {
-				continue;
+				continue
 			}
 
 			if (romVersion.startsWith("2.") && level === 5) {
-				continue;
+				continue
 			}
 
-			let noteLamp: BatchManualNoteLamp = "NONE";
-			let clearLamp: BatchManualClearLamp = "FAILED";
+			let noteLamp: BatchManualNoteLamp = "NONE"
+			let clearLamp: BatchManualClearLamp = "FAILED"
 
 			if (isAllJustice && score === 1_010_000) {
-				noteLamp = "ALL JUSTICE CRITICAL";
+				noteLamp = "ALL JUSTICE CRITICAL"
 			} else if (isAllJustice) {
-				noteLamp = "ALL JUSTICE";
+				noteLamp = "ALL JUSTICE"
 			} else if (isFullCombo) {
-				noteLamp = "FULL COMBO";
+				noteLamp = "FULL COMBO"
 			}
 
 			if (isClear) {
 				if (skillCategoryId === 10) {
-					clearLamp = "CATASTROPHY";
+					clearLamp = "CATASTROPHY"
 				} else if (skillCategoryId === 9) {
-					clearLamp = "ABSOLUTE";
+					clearLamp = "ABSOLUTE"
 				} else if (skillCategoryId === 16) {
-					clearLamp = "BRAVE";
+					clearLamp = "BRAVE"
 				} else if (skillCategoryId === 6 || skillCategoryId === 7 || skillCategoryId === 15) {
-					clearLamp = "HARD";
+					clearLamp = "HARD"
 				} else {
-					clearLamp = "CLEAR";
+					clearLamp = "CLEAR"
 				}
 			}
 
@@ -152,14 +152,14 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async (c) => {
 				clearLamp,
 				identifier: musicId.toString(),
 				matchType: "inGameID",
-				difficulty: TACHI_DIFFICULTIES[level],
-			};
+				difficulty: TACHI_DIFFICULTIES[level]
+			}
 
 			if (userPlayDate !== null) {
 				tachiScore.timeAchieved = fromZonedTime(
 					parse(userPlayDate, "yyyy-MM-dd HH:mm:ss", toZonedTime(new Date(), "Asia/Tokyo")),
 					"Asia/Tokyo"
-				).valueOf();
+				).valueOf()
 			}
 
 			if (judgeCritical !== null && judgeJustice !== null && judgeAttack !== null && judgeGuilty !== null) {
@@ -167,23 +167,23 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async (c) => {
 					jcrit: (judgeHeaven ?? 0) + judgeCritical,
 					justice: judgeJustice,
 					attack: judgeAttack,
-					miss: judgeGuilty,
-				};
+					miss: judgeGuilty
+				}
 			}
 
 			if (maxCombo !== null) {
 				tachiScore.optional = {
-					maxCombo,
-				};
+					maxCombo
+				}
 			}
 
-			tachiExport.scores.push(tachiScore);
+			tachiExport.scores.push(tachiScore)
 		}
 
-		return c.json({ success: true, data: tachiExport });
+		return c.json({ success: true, data: tachiExport })
 	} catch (error) {
-		throw rethrowWithMessage("Failed to export data", error);
+		throw rethrowWithMessage("Failed to export data", error)
 	}
-});
+})
 
-export { ChunithmKamaitachiRoutes };
+export { ChunithmKamaitachiRoutes }

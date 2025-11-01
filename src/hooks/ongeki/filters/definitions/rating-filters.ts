@@ -1,7 +1,7 @@
-import type { FilterValues } from "@/shared/types";
-import { LEVEL_CONFIGS } from "@/utils/level-filter";
+import type { FilterValues } from "@/shared/types"
+import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
-import type { RatingFilter } from "../types/music-types";
+import type { RatingFilter } from "../types/music-types"
 
 // ============================================================================
 // CATEGORY FILTER
@@ -12,7 +12,7 @@ import type { RatingFilter } from "../types/music-types";
  * Options change based on version: Version >= 8 gets "Top 50", "Current 10", "PScore"; below 8 gets "Top 30", "Recent 10", "Recent 15"
  */
 export const createRatingCategoryFilter = (version: number): RatingFilter => {
-	const isRefreshOrAbove = version >= 8;
+	const isRefreshOrAbove = version >= 8
 
 	return {
 		identifier: "category",
@@ -22,19 +22,19 @@ export const createRatingCategoryFilter = (version: number): RatingFilter => {
 					{ label: "Top 50", value: "base" },
 					{ label: "Current 10", value: "current" },
 					{ label: "PScore", value: "pscore" },
-					{ label: "Recommended", value: "next" },
+					{ label: "Recommended", value: "next" }
 				]
 			: [
 					{ label: "Top 30", value: "base" },
 					{ label: "Recent 10", value: "current" },
 					{ label: "Recent 15", value: "recent" },
-					{ label: "Recommended", value: "next" },
+					{ label: "Recommended", value: "next" }
 				],
 		predicate: (_rating, _value) => {
-			return true;
-		},
-	};
-};
+			return true
+		}
+	}
+}
 
 // ============================================================================
 // LEVEL FILTER
@@ -71,13 +71,13 @@ export const ratingLevelFilter: RatingFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" },
+		{ label: "15+", value: "15+" }
 	],
 	predicate: (rating, value) => {
-		if (!rating.level) return false;
-		return LEVEL_CONFIGS.ONGEKI(rating.level, value);
-	},
-};
+		if (!rating.level) return false
+		return LEVEL_CONFIGS.ONGEKI(rating.level, value)
+	}
+}
 
 // ============================================================================
 // ACHIEVEMENT FILTER
@@ -93,23 +93,23 @@ export const ratingAchievementFilter: RatingFilter = {
 		{ label: "All", value: "all" },
 		{ label: "Full Bell", value: "fullbell" },
 		{ label: "Full Combo", value: "fullcombo" },
-		{ label: "All Break", value: "allbreake" },
+		{ label: "All Break", value: "allbreake" }
 	],
 	predicate: (rating, value) => {
-		if (value === "all") return true;
+		if (value === "all") return true
 
 		switch (value) {
 			case "fullbell":
-				return rating.isFullBell === 1;
+				return rating.isFullBell === 1
 			case "fullcombo":
-				return rating.isFullCombo === 1;
+				return rating.isFullCombo === 1
 			case "allbreake":
-				return rating.isAllBreake === 1;
+				return rating.isAllBreake === 1
 			default:
-				return true;
+				return true
 		}
-	},
-};
+	}
+}
 
 // ============================================================================
 // EXPORT ALL FILTERS
@@ -123,26 +123,26 @@ export const ratingAchievementFilter: RatingFilter = {
  * Get all rating filters for a specific version
  */
 export const getRatingFilters = (version: number): RatingFilter[] => {
-	const categoryFilter = createRatingCategoryFilter(version);
-	return [categoryFilter, ratingLevelFilter, ratingAchievementFilter];
-};
+	const categoryFilter = createRatingCategoryFilter(version)
+	return [categoryFilter, ratingLevelFilter, ratingAchievementFilter]
+}
 
 /**
  * Get default filter values for ratings
  */
 export const getDefaultRatingFilterValues = (): FilterValues => {
-	const defaultValues: FilterValues = {};
+	const defaultValues: FilterValues = {}
 	// Use a default version to get the base filters for default values
-	const baseFilters = getRatingFilters(0);
-	baseFilters.forEach((filter) => {
-		defaultValues[filter.identifier] = filter.identifier === "category" ? "base" : "all";
-	});
-	return defaultValues;
-};
+	const baseFilters = getRatingFilters(0)
+	baseFilters.forEach(filter => {
+		defaultValues[filter.identifier] = filter.identifier === "category" ? "base" : "all"
+	})
+	return defaultValues
+}
 
 /**
  * Hook to get rating filters for current version
  */
 export const useRatingFilters = (version: number) => {
-	return getRatingFilters(version);
-};
+	return getRatingFilters(version)
+}

@@ -1,56 +1,56 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import Header from "@/components/common/header";
-import { MultiFilter } from "@/components/common/multi-filter";
-import ResponsiveGrid from "@/components/common/responsive-grid";
-import Spinner from "@/components/common/spinner";
-import OngekiRatingDisplay from "@/components/ongeki/rating-display";
-import OngekiRatingInfoCard from "@/components/ongeki/rating-info-card";
-import { Card, CardContent } from "@/components/ui/card";
+import Header from "@/components/common/header"
+import { MultiFilter } from "@/components/common/multi-filter"
+import ResponsiveGrid from "@/components/common/responsive-grid"
+import Spinner from "@/components/common/spinner"
+import { OngekiRatingDisplay } from "@/components/ongeki/rating-display"
+import { OngekiRatingInfoCard } from "@/components/ongeki/rating-info-card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
 	getDefaultRatingFilterValues,
 	useOngekiRatingFiltering,
 	useOngekiVersion,
-	useRatingFilters,
-} from "@/hooks/ongeki";
-import useOngekiRatingData from "@/hooks/ongeki/use-rating-data";
-import { Body, Container, FilterArea } from "@/pages/layout/layout";
-import type { FilterValues } from "@/shared/types";
-import { ongekiBadgeColors } from "@/utils/helpers";
+	useRatingFilters
+} from "@/hooks/ongeki"
+import useOngekiRatingData from "@/hooks/ongeki/use-rating-data"
+import { Body, Container, FilterArea } from "@/pages/layout/layout"
+import type { FilterValues } from "@/shared/types"
+import { ongekiBadgeColors } from "@/utils/helpers"
 
-const OngekiRatingFrames = () => {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultRatingFilterValues());
+export function OngekiRatingFrames() {
+	const [searchQuery, setSearchQuery] = useState("")
+	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultRatingFilterValues())
 
-	const version = useOngekiVersion();
-	const filters = useRatingFilters(version || 0);
-	const { playerRatingValue, highestRatingValue, ratingDecimals, isRefreshOrAbove } = useOngekiRatingData(version || 0);
+	const version = useOngekiVersion()
+	const filters = useRatingFilters(version || 0)
+	const { playerRatingValue, highestRatingValue, ratingDecimals, isRefreshOrAbove } = useOngekiRatingData(version || 0)
 
 	const { filteredRatings, isLoading } = useOngekiRatingFiltering({
 		searchQuery,
-		filterValues,
-	});
+		filterValues
+	})
 
 	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues((prev) => ({
+		setFilterValues(prev => ({
 			...prev,
-			[identifier]: value,
-		}));
-	};
+			[identifier]: value
+		}))
+	}
 
 	const handleClearAll = () => {
-		setFilterValues(getDefaultRatingFilterValues());
-	};
+		setFilterValues(getDefaultRatingFilterValues())
+	}
 
 	const searchItems = filteredRatings
 		.filter((rating): rating is typeof rating & { musicId: number } => rating.musicId !== null)
-		.map((rating) => ({
+		.map(rating => ({
 			id: rating.musicId,
-			title: rating.title || "",
-		}));
+			title: rating.title || ""
+		}))
 
-	if (isLoading) return <LoadingState />;
-	if (!version) return <NoVersionState />;
+	if (isLoading) return <LoadingState />
+	if (!version) return <NoVersionState />
 
 	return (
 		<Container>
@@ -62,7 +62,7 @@ const OngekiRatingFrames = () => {
 					onSearchChange: setSearchQuery,
 					placeholder: "Search ratings...",
 					emptyMessage: "No ratings found.",
-					groupLabel: "Ratings",
+					groupLabel: "Ratings"
 				}}
 			/>
 			<Body>
@@ -100,25 +100,27 @@ const OngekiRatingFrames = () => {
 				)}
 			</Body>
 		</Container>
-	);
-};
+	)
+}
 
-const LoadingState = () => (
-	<Container>
-		<Header title="Ongeki Rating" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<Spinner />
-		</div>
-	</Container>
-);
+function LoadingState() {
+	return (
+		<Container>
+			<Header title="Ongeki Rating" />
+			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
+				<Spinner />
+			</div>
+		</Container>
+	)
+}
 
-const NoVersionState = () => (
-	<Container>
-		<Header title="Ongeki Rating" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">Please set your Ongeki version in settings first</p>
-		</div>
-	</Container>
-);
-
-export default OngekiRatingFrames;
+function NoVersionState() {
+	return (
+		<Container>
+			<Header title="Ongeki Rating" />
+			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
+				<p className="text-primary">Please set your Ongeki version in settings first</p>
+			</div>
+		</Container>
+	)
+}

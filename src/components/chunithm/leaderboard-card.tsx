@@ -1,13 +1,13 @@
-import { ChunithmRatingColors } from "@/components/common/rating-colors";
+import { ChunithmRatingColors } from "@/components/common/rating-colors"
 
 interface LeaderboardPlayer {
-	userName: string;
-	playerRating: number;
-	rank: number;
+	userName: string
+	playerRating: number
+	rank: number
 }
 
 const LeaderboardCard = ({ score }: { score: LeaderboardPlayer }) => {
-	const ratingValue = score.playerRating ? score.playerRating / 100 : 0;
+	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
 
 	return (
 		<div className="bg-card flex items-center justify-between rounded-sm border p-4">
@@ -22,7 +22,7 @@ const LeaderboardCard = ({ score }: { score: LeaderboardPlayer }) => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-export default LeaderboardCard;
+export default LeaderboardCard

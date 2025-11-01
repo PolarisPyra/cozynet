@@ -1,68 +1,68 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { api } from "@/utils";
+import { api } from "@/utils"
 
 interface Team {
-  id: number;
-  teamName: string;
+	id: number
+	teamName: string
 }
 
 export function useTeams() {
-  return useQuery({
-    queryKey: ["teams"],
-    queryFn: async () => {
-      const response = await api.chunithm.teams.teams.$get();
+	return useQuery({
+		queryKey: ["teams"],
+		queryFn: async () => {
+			const response = await api.chunithm.teams.teams.$get()
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch teams");
-      }
+			if (!response.ok) {
+				throw new Error("Failed to fetch teams")
+			}
 
-      const data = await response.json();
-      return data as Team[];
-    },
-  });
+			const data = await response.json()
+			return data as Team[]
+		}
+	})
 }
 
 export function useUpdateTeam() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: async (teamId: number) => {
-      const response = await api.chunithm.teams.updateteam.$post({
-        json: { teamId },
-      });
+	return useMutation({
+		mutationFn: async (teamId: number) => {
+			const response = await api.chunithm.teams.updateteam.$post({
+				json: { teamId }
+			})
 
-      if (!response.ok) {
-        throw new Error("Failed to update team");
-      }
+			if (!response.ok) {
+				throw new Error("Failed to update team")
+			}
 
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
-    },
-  });
+			return await response.json()
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["teams"] })
+		}
+	})
 }
 
 export function useCreateTeam() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: async (teamName: string) => {
-      const response = await api.chunithm.teams.addteam.$post({
-        json: {
-          teamName,
-        },
-      });
+	return useMutation({
+		mutationFn: async (teamName: string) => {
+			const response = await api.chunithm.teams.addteam.$post({
+				json: {
+					teamName
+				}
+			})
 
-      if (!response.ok) {
-        throw new Error("Failed to add team");
-      }
-      return await response.json();
-    },
+			if (!response.ok) {
+				throw new Error("Failed to add team")
+			}
+			return await response.json()
+		},
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
-    },
-  });
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["teams"] })
+		}
+	})
 }

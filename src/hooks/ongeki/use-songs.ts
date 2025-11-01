@@ -1,18 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query"
 
-import { api } from "@/utils";
+import { api } from "@/utils"
 
 export function useOngekiSongs() {
-  return useQuery({
-    queryKey: ["ongeki", "songs"],
-    queryFn: async () => {
-      const response = await api.ongeki.static.music.$get();
+	return useQuery({
+		queryKey: ["ongeki", "songs"],
+		queryFn: async () => {
+			const response = await api.ongeki.static.music.$get()
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch songs");
-      }
+			if (!response.ok) {
+				throw new Error("Failed to fetch songs")
+			}
 
-      return await response.json();
-    },
-  });
+			return await response.json()
+		}
+	})
 }

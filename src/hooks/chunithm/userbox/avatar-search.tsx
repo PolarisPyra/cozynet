@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { api } from "@/utils";
+import { api } from "@/utils"
 
 export enum AvatarSlot {
 	ALL = "all",
@@ -9,7 +9,7 @@ export enum AvatarSlot {
 	HEAD = "head",
 	ITEM = "item",
 	SKIN = "skin",
-	WEAR = "wear",
+	WEAR = "wear"
 }
 
 export function useSearchAvatarItems(filters: { slot: string[]; locked: boolean | null }) {
@@ -20,61 +20,61 @@ export function useSearchAvatarItems(filters: { slot: string[]; locked: boolean 
 				json: {
 					filter: {
 						slot: filters.slot as any,
-						locked: filters.locked,
-					},
-				},
-			});
+						locked: filters.locked
+					}
+				}
+			})
 
 			if (!response.ok) {
-				throw new Error("Failed to search avatar items");
+				throw new Error("Failed to search avatar items")
 			}
 
-			return await response.json();
-		},
-	});
+			return await response.json()
+		}
+	})
 }
 
 export function useEquipAvatarItem() {
-	const queryClient = useQueryClient();
+	const queryClient = useQueryClient()
 
 	return useMutation({
 		mutationFn: async ({ itemId, slot }: { itemId: number; slot: string }) => {
 			const response = await api.chunithm.userbox.avatar.$post({
 				json: {
-					[slot]: itemId,
-				},
-			});
+					[slot]: itemId
+				}
+			})
 
 			if (!response.ok) {
-				throw new Error("Failed to equip avatar item");
+				throw new Error("Failed to equip avatar item")
 			}
 
-			return await response.json();
+			return await response.json()
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["userbox", "avatar"] });
-		},
-	});
+			queryClient.invalidateQueries({ queryKey: ["userbox", "avatar"] })
+		}
+	})
 }
 
 export function useUnlockAvatarItem() {
-	const queryClient = useQueryClient();
+	const queryClient = useQueryClient()
 
 	return useMutation({
 		mutationFn: async (itemId: number) => {
 			const response = await api.chunithm.userbox.avatar.unlock[":id"].$patch({
-				param: { id: itemId.toString() },
-			});
+				param: { id: itemId.toString() }
+			})
 
 			if (!response.ok) {
-				throw new Error("Failed to unlock avatar item");
+				throw new Error("Failed to unlock avatar item")
 			}
 
-			return await response.json();
+			return await response.json()
 		},
 		onSuccess: () => {
 			// Invalidate search queries to update the item's locked status
-			queryClient.invalidateQueries({ queryKey: ["userbox", "avatar", "search"] });
-		},
-	});
+			queryClient.invalidateQueries({ queryKey: ["userbox", "avatar", "search"] })
+		}
+	})
 }

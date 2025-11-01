@@ -1,14 +1,14 @@
-import { Hono } from "hono";
-import type { RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import type { RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 interface CardCountResult {
-	cards: number;
-	level: number;
+	cards: number
+	level: number
 }
 
 const OngekiModsRoutes = new Hono()
@@ -16,16 +16,16 @@ const OngekiModsRoutes = new Hono()
 		"unlockcards",
 		validateJson(
 			z.object({
-				version: z.number().min(1),
+				version: z.number().min(1)
 			})
 		),
-		async (c) => {
-			const conn = await db.getConnection();
+		async c => {
+			const conn = await db.getConnection()
 			try {
-				await conn.beginTransaction();
+				await conn.beginTransaction()
 
-				const userId = c.payload.userId;
-				const { version } = await c.req.json();
+				const userId = c.payload.userId
+				const { version } = await c.req.json()
 
 				await conn.execute(
 					`
@@ -46,7 +46,7 @@ const OngekiModsRoutes = new Hono()
 							created = GREATEST("2021-01-01 00:00:00.0", created)
 				`,
 					[userId, version]
-				);
+				)
 
 				await conn.execute(
 					`
@@ -59,7 +59,7 @@ const OngekiModsRoutes = new Hono()
 						WHERE uc.user = ? AND sc.rarity = 0
 					`,
 					[userId]
-				);
+				)
 
 				const [result] = await conn.execute<(CardCountResult & RowDataPacket)[]>(
 					`
@@ -69,17 +69,17 @@ const OngekiModsRoutes = new Hono()
 					GROUP BY level
 				`,
 					[userId]
-				);
+				)
 
-				await conn.commit();
+				await conn.commit()
 
 				// Return the card count result as JSON, but with a success status code
-				return c.json({ result });
+				return c.json({ result })
 			} catch (error) {
-				await conn.rollback();
-				throw rethrowWithMessage("Failed to unlock Ongeki cards", error);
+				await conn.rollback()
+				throw rethrowWithMessage("Failed to unlock Ongeki cards", error)
 			} finally {
-				conn.release();
+				conn.release()
 			}
 		}
 	)
@@ -89,13 +89,13 @@ const OngekiModsRoutes = new Hono()
 		validateJson(
 			z.object({
 				itemKind: z.number(),
-				version: z.number(),
+				version: z.number()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const userId = c.payload.userId;
-				const { itemKind, version } = await c.req.json();
+				const userId = c.payload.userId
+				const { itemKind, version } = await c.req.json()
 
 				await db.execute(
 					`
@@ -107,21 +107,21 @@ const OngekiModsRoutes = new Hono()
 					WHERE version = ? AND itemKind = ?
 				`,
 					[userId, version, itemKind]
-				);
+				)
 
-				return new Response();
+				return new Response()
 			} catch (error) {
-				throw rethrowWithMessage("Failed to unlock specific Ongeki item", error);
+				throw rethrowWithMessage("Failed to unlock specific Ongeki item", error)
 			}
 		}
 	)
 
-	.post("unlockallitems", async (c) => {
+	.post("unlockallitems", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.ongeki_version;
+			const { userId, versions } = c.payload
+			const version = versions.ongeki_version
 
-			const itemKinds = [2, 3, 17, 19];
+			const itemKinds = [2, 3, 17, 19]
 			for (const itemKind of itemKinds) {
 				await db.execute(
 					`
@@ -133,12 +133,12 @@ const OngekiModsRoutes = new Hono()
 						WHERE version = ? AND itemKind = ?
 				`,
 					[userId, version, itemKind]
-				);
+				)
 			}
-			return new Response();
+			return new Response()
 		} catch (error) {
-			throw rethrowWithMessage("Failed to unlock all Ongeki items", error);
+			throw rethrowWithMessage("Failed to unlock all Ongeki items", error)
 		}
-	});
+	})
 
-export { OngekiModsRoutes };
+export { OngekiModsRoutes }

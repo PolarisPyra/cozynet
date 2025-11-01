@@ -3,63 +3,63 @@ import {
 	useUserRatingBaseHotList,
 	useUserRatingBaseList,
 	useUserRatingBaseNewList,
-	useUserRatingBaseNextList,
-} from "@/hooks/chunithm";
+	useUserRatingBaseNextList
+} from "@/hooks/chunithm"
 
 const useRatingData = (activeTab: string = "base") => {
 	// Fetch player rating and highest rating from single endpoint
-	const { data: ratingData = [] } = usePlayerRating(true);
+	const { data: ratingData = [] } = usePlayerRating(true)
 
 	// Only fetch data for active tab
-	const shouldFetchBase = activeTab === "base";
-	const shouldFetchHot = activeTab === "recent";
-	const shouldFetchNew = activeTab === "new";
-	const shouldFetchNext = activeTab === "potential";
+	const shouldFetchBase = activeTab === "base"
+	const shouldFetchHot = activeTab === "recent"
+	const shouldFetchNew = activeTab === "new"
+	const shouldFetchNext = activeTab === "potential"
 
-	const { data: baseSongs = [], isLoading: isLoadingBase } = useUserRatingBaseList(shouldFetchBase);
-	const { data: hotSongs = [], isLoading: isLoadingHot } = useUserRatingBaseHotList(shouldFetchHot);
-	const { data: newSongs = [], isLoading: isLoadingNew } = useUserRatingBaseNewList(shouldFetchNew);
-	const { data: nextSongs = [], isLoading: isLoadingNext } = useUserRatingBaseNextList(shouldFetchNext);
+	const { data: baseSongs = [], isLoading: isLoadingBase } = useUserRatingBaseList(shouldFetchBase)
+	const { data: hotSongs = [], isLoading: isLoadingHot } = useUserRatingBaseHotList(shouldFetchHot)
+	const { data: newSongs = [], isLoading: isLoadingNew } = useUserRatingBaseNewList(shouldFetchNew)
+	const { data: nextSongs = [], isLoading: isLoadingNext } = useUserRatingBaseNextList(shouldFetchNext)
 
 	const getActiveData = (tab: string) => {
 		switch (tab) {
 			case "base":
-				return baseSongs;
+				return baseSongs
 			case "new":
-				return newSongs;
+				return newSongs
 			case "recent":
-				return hotSongs;
+				return hotSongs
 			case "potential":
-				return nextSongs;
+				return nextSongs
 			default:
-				return baseSongs;
+				return baseSongs
 		}
-	};
+	}
 
 	const getActiveLoading = (tab: string) => {
 		switch (tab) {
 			case "base":
-				return isLoadingBase;
+				return isLoadingBase
 			case "new":
-				return isLoadingNew;
+				return isLoadingNew
 			case "recent":
-				return isLoadingHot;
+				return isLoadingHot
 			case "potential":
-				return isLoadingNext;
+				return isLoadingNext
 			default:
-				return isLoadingBase;
+				return isLoadingBase
 		}
-	};
+	}
 
-	const playerRatingValue = (ratingData[0]?.playerRating ?? 0) / 100;
-	const highestRatingValue = (ratingData[0]?.highestRating ?? 0) / 100;
+	const playerRatingValue = (ratingData[0]?.playerRating ?? 0) / 100
+	const highestRatingValue = (ratingData[0]?.highestRating ?? 0) / 100
 
 	return {
 		getActiveData,
 		getActiveLoading,
 		playerRatingValue,
-		highestRatingValue,
-	};
-};
+		highestRatingValue
+	}
+}
 
-export default useRatingData;
+export default useRatingData

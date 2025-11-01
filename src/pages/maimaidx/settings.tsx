@@ -1,13 +1,7 @@
-import React from "react";
+import Header from "@/components/common/header"
+import { MaimaiDxVersionManager } from "@/components/settings/maimaidx/version-management"
 
-import Header from "@/components/common/header";
-import MaimaiDxVersionManager from "@/components/settings/maimaidx/version-management";
-
-interface GameSettingsProps {
-	onUpdate?: () => void;
-}
-
-const MaimaiDxSettings: React.FC<GameSettingsProps> = () => {
+export function MaimaiDxSettings() {
 	return (
 		<div className="relative flex-1 overflow-auto">
 			<Header title={"Maimai DX Settings"} />
@@ -15,7 +9,5 @@ const MaimaiDxSettings: React.FC<GameSettingsProps> = () => {
 				<MaimaiDxVersionManager />
 			</div>
 		</div>
-	);
-};
-
-export default MaimaiDxSettings;
+	)
+}

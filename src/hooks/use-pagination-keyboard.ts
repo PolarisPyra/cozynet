@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect } from "react"
 
 /**
  * Custom hook for pagination keyboard shortcuts.
@@ -14,7 +14,7 @@ export function usePaginationKeyboard(
 	enabled = true
 ) {
 	useEffect(() => {
-		if (!enabled || totalPages <= 1) return;
+		if (!enabled || totalPages <= 1) return
 
 		function handleKeyDown(event: KeyboardEvent) {
 			// Only handle arrow keys when not in an input/textarea/select
@@ -24,19 +24,19 @@ export function usePaginationKeyboard(
 				event.target instanceof HTMLSelectElement ||
 				(event.target as HTMLElement).isContentEditable
 			) {
-				return;
+				return
 			}
 
 			if (event.key === "ArrowLeft") {
-				event.preventDefault();
-				onPageChange((prev: number) => Math.max(1, prev - 1));
+				event.preventDefault()
+				onPageChange((prev: number) => Math.max(1, prev - 1))
 			} else if (event.key === "ArrowRight") {
-				event.preventDefault();
-				onPageChange((prev: number) => Math.min(totalPages, prev + 1));
+				event.preventDefault()
+				onPageChange((prev: number) => Math.min(totalPages, prev + 1))
 			}
 		}
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [totalPages, onPageChange, enabled]);
+		window.addEventListener("keydown", handleKeyDown)
+		return () => window.removeEventListener("keydown", handleKeyDown)
+	}, [totalPages, onPageChange, enabled])
 }

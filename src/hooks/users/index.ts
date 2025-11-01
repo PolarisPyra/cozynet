@@ -4,12 +4,12 @@ import {
 	useUpdateArcadeLocation,
 	useUpdateArcadeName,
 	useUpdateArcadeOwnership,
-	useUsers,
-} from "./use-arcade";
-import { useCurrentUser } from "./use-current-user";
-import { useUpdateAimecard } from "./use-update-aimecard";
-import { useUpdateUserRole } from "./use-update-user-role";
-import { useUserRoles } from "./use-user-roles";
+	useUsers
+} from "./use-arcade"
+import { useCurrentUser } from "./use-current-user"
+import { useUpdateAimecard } from "./use-update-aimecard"
+import { useUpdateUserRole } from "./use-update-user-role"
+import { useUserRoles } from "./use-user-roles"
 
 export {
 	useCurrentUser,
@@ -21,5 +21,5 @@ export {
 	useUpdateArcadeLocation,
 	useUpdateArcadeName,
 	useUpdateUserRole,
-	useUserRoles,
-};
+	useUserRoles
+}

@@ -1,31 +1,31 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
 
-import { toast } from "sonner";
+import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button";
-import { useUpdateName } from "@/hooks/chunithm/use-update-name";
+import { Button } from "@/components/ui/button"
+import { useUpdateName } from "@/hooks/chunithm/use-update-name"
 
 const UpdateUsernameBox = () => {
-	const [userName, setUserName] = useState("");
-	const { mutate: updateUsername, isPending } = useUpdateName();
+	const [userName, setUserName] = useState("")
+	const { mutate: updateUsername, isPending } = useUpdateName()
 
 	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
+		e.preventDefault()
 		if (!userName.trim()) {
-			toast.error("Username cannot be empty");
-			return;
+			toast.error("Username cannot be empty")
+			return
 		}
 		updateUsername(
 			{ userName },
 			{
 				onSuccess: () => {
-					toast.success("Username updated!");
-					setUserName("");
+					toast.success("Username updated!")
+					setUserName("")
 				},
-				onError: () => toast.error("Failed to update username."),
+				onError: () => toast.error("Failed to update username.")
 			}
-		);
-	};
+		)
+	}
 
 	return (
 		<div className="bg-card rounded-sm p-6">
@@ -40,7 +40,7 @@ const UpdateUsernameBox = () => {
 						id="username"
 						type="text"
 						value={userName}
-						onChange={(e) => setUserName(e.target.value)}
+						onChange={e => setUserName(e.target.value)}
 						className="bg-background text-foreground border-input w-full rounded border p-2"
 						placeholder="Enter new username"
 						required
@@ -52,7 +52,7 @@ const UpdateUsernameBox = () => {
 				</Button>
 			</form>
 		</div>
-	);
-};
+	)
+}
 
-export default UpdateUsernameBox;
+export default UpdateUsernameBox

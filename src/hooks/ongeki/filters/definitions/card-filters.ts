@@ -1,20 +1,20 @@
-import ongekiSkills from "../ongekiSkill.json";
-import type { CardFilter } from "../types/card-types";
+import ongekiSkills from "../ongekiSkill.json"
+import type { CardFilter } from "../types/card-types"
 
 type SkillData = {
-	id: number;
-	name: string;
-	category: string;
-	info: string;
-};
+	id: number
+	name: string
+	category: string
+	info: string
+}
 
-const skills = ongekiSkills as SkillData[];
+const skills = ongekiSkills as SkillData[]
 
-const skillIdToCategoryMap = new Map<number, string>();
+const skillIdToCategoryMap = new Map<number, string>()
 
-skills.forEach((skill) => {
-	skillIdToCategoryMap.set(skill.id, skill.category);
-});
+skills.forEach(skill => {
+	skillIdToCategoryMap.set(skill.id, skill.category)
+})
 
 export const rarityFilter: CardFilter = {
 	identifier: "rarity",
@@ -25,15 +25,15 @@ export const rarityFilter: CardFilter = {
 		{ label: "SR+", value: "12" },
 		{ label: "SR", value: "2" },
 		{ label: "R", value: "1" },
-		{ label: "N", value: "0" },
+		{ label: "N", value: "0" }
 	],
 	isRequired: true,
 	predicate: (card, value) => {
-		if (value === "all") return true;
-		const rarityValue = parseInt(value);
-		return card.rarity === rarityValue;
-	},
-};
+		if (value === "all") return true
+		const rarityValue = parseInt(value)
+		return card.rarity === rarityValue
+	}
+}
 
 export const attributeFilter: CardFilter = {
 	identifier: "attribute",
@@ -42,13 +42,13 @@ export const attributeFilter: CardFilter = {
 		{ label: "All", value: "all" },
 		{ label: "Fire", value: "Fire" },
 		{ label: "Aqua", value: "Aqua" },
-		{ label: "Leaf", value: "Leaf" },
+		{ label: "Leaf", value: "Leaf" }
 	],
 	predicate: (card, value) => {
-		if (value === "all") return true;
-		return card.attribute === value;
-	},
-};
+		if (value === "all") return true
+		return card.attribute === value
+	}
+}
 
 export const acquisitionFilter: CardFilter = {
 	identifier: "acquisition",
@@ -56,15 +56,15 @@ export const acquisitionFilter: CardFilter = {
 	options: [
 		{ label: "All", value: "all" },
 		{ label: "Acquired", value: "acquired" },
-		{ label: "Not Acquired", value: "not_acquired" },
+		{ label: "Not Acquired", value: "not_acquired" }
 	],
 	predicate: (card, value) => {
-		if (value === "all") return true;
-		if (value === "acquired") return card.isAcquired === 1;
-		if (value === "not_acquired") return card.isAcquired === 0;
-		return true;
-	},
-};
+		if (value === "all") return true
+		if (value === "acquired") return card.isAcquired === 1
+		if (value === "not_acquired") return card.isAcquired === 0
+		return true
+	}
+}
 
 export const levelFilter: CardFilter = {
 	identifier: "level",
@@ -75,28 +75,28 @@ export const levelFilter: CardFilter = {
 		{ label: "Level 1-10", value: "1-10" },
 		{ label: "Level 11-20", value: "11-20" },
 		{ label: "Level 21-30", value: "21-30" },
-		{ label: "Level 31+", value: "31+" },
+		{ label: "Level 31+", value: "31+" }
 	],
 	predicate: (card, value) => {
-		if (value === "all") return true;
-		if (!card.level) return false;
+		if (value === "all") return true
+		if (!card.level) return false
 
 		switch (value) {
 			case "max":
-				return card.level === card.maxLevel;
+				return card.level === card.maxLevel
 			case "1-10":
-				return card.level >= 1 && card.level <= 10;
+				return card.level >= 1 && card.level <= 10
 			case "11-20":
-				return card.level >= 11 && card.level <= 20;
+				return card.level >= 11 && card.level <= 20
 			case "21-30":
-				return card.level >= 21 && card.level <= 30;
+				return card.level >= 21 && card.level <= 30
 			case "31+":
-				return card.level >= 31;
+				return card.level >= 31
 			default:
-				return true;
+				return true
 		}
-	},
-};
+	}
+}
 export const skillIdFilter: CardFilter = {
 	identifier: "skillId",
 	label: "Skill Category",
@@ -109,19 +109,19 @@ export const skillIdFilter: CardFilter = {
 		{ label: "Danger Guard", value: "DangerGuard" },
 		{ label: "Guard", value: "Guard" },
 		{ label: "None", value: "None" },
-		{ label: "Support", value: "Support" },
+		{ label: "Support", value: "Support" }
 	],
 	predicate: (card, value) => {
-		if (value === "all") return true;
+		if (value === "all") return true
 
-		const cardSkillId = card.skillId;
+		const cardSkillId = card.skillId
 		if (cardSkillId === null || cardSkillId === undefined) {
-			return value === "None";
+			return value === "None"
 		}
 
-		const skillCategory = skillIdToCategoryMap.get(cardSkillId);
-		return skillCategory === value;
-	},
-};
+		const skillCategory = skillIdToCategoryMap.get(cardSkillId)
+		return skillCategory === value
+	}
+}
 
-export const cardFilters: CardFilter[] = [rarityFilter, attributeFilter, acquisitionFilter, levelFilter, skillIdFilter];
+export const cardFilters: CardFilter[] = [rarityFilter, attributeFilter, acquisitionFilter, levelFilter, skillIdFilter]

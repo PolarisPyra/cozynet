@@ -1,48 +1,48 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import Header from "@/components/common/header";
-import { OngekiRatingColors } from "@/components/common/rating-colors";
-import ResponsiveGrid from "@/components/common/responsive-grid";
-import Spinner from "@/components/common/spinner";
-import { useLeaderboard, useOngekiVersion } from "@/hooks/ongeki";
-import { Body, Container } from "@/pages/layout/layout";
+import Header from "@/components/common/header"
+import { OngekiRatingColors } from "@/components/common/rating-colors"
+import ResponsiveGrid from "@/components/common/responsive-grid"
+import Spinner from "@/components/common/spinner"
+import { useLeaderboard, useOngekiVersion } from "@/hooks/ongeki"
+import { Body, Container } from "@/pages/layout/layout"
 
 interface LeaderboardPlayer {
-	userName: string;
-	playerRating: number;
-	newPlayerRating: number | null;
-	rank: number;
+	userName: string
+	playerRating: number
+	newPlayerRating: number | null
+	rank: number
 }
 
-const OngekiLeaderboard = () => {
-	const [searchQuery, setSearchQuery] = useState("");
+export function OngekiLeaderboard() {
+	const [searchQuery, setSearchQuery] = useState("")
 
-	const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useLeaderboard();
-	const version = useOngekiVersion();
-	const isRefreshOrAbove = Number(version) >= 8;
+	const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useLeaderboard()
+	const version = useOngekiVersion()
+	const isRefreshOrAbove = Number(version) >= 8
 
 	// Filter out players with null userName or playerRating and convert to the expected type
 	const validLeaderboard = leaderboard
-		.filter((player) => player.userName !== null && player.playerRating !== null)
-		.map((player) => ({
+		.filter(player => player.userName !== null && player.playerRating !== null)
+		.map(player => ({
 			userName: player.userName!,
 			playerRating: player.playerRating!,
 			newPlayerRating: player.newPlayerRating,
-			rank: player.rank,
-		}));
+			rank: player.rank
+		}))
 
-	const filteredLeaderboard = validLeaderboard.filter((player) =>
+	const filteredLeaderboard = validLeaderboard.filter(player =>
 		player.userName?.toLowerCase().includes(searchQuery.toLowerCase())
-	);
+	)
 
-	const searchItems = validLeaderboard.map((player) => ({
+	const searchItems = validLeaderboard.map(player => ({
 		id: player.rank,
-		title: player.userName || "",
-	}));
+		title: player.userName || ""
+	}))
 
 	const LeaderboardCard = ({ score }: { score: LeaderboardPlayer }) => {
 		const ratingValue =
-			isRefreshOrAbove && score.newPlayerRating !== null ? score.newPlayerRating / 1000 : score.playerRating / 100;
+			isRefreshOrAbove && score.newPlayerRating !== null ? score.newPlayerRating / 1000 : score.playerRating / 100
 
 		return (
 			<div className="bg-card flex items-center justify-between rounded-sm border p-4 transition-colors">
@@ -52,13 +52,17 @@ const OngekiLeaderboard = () => {
 						<div className="text-foreground font-medium">{score.userName}</div>
 						<div className="flex items-center gap-2">
 							<span className="text-muted-foreground text-sm">Rating:</span>
-							<OngekiRatingColors rating={ratingValue} decimals={isRefreshOrAbove ? 3 : 2} isRefresh={isRefreshOrAbove} />
+							<OngekiRatingColors
+								rating={ratingValue}
+								decimals={isRefreshOrAbove ? 3 : 2}
+								isRefresh={isRefreshOrAbove}
+							/>
 						</div>
 					</div>
 				</div>
 			</div>
-		);
-	};
+		)
+	}
 
 	if (isLoadingLeaderboard) {
 		return (
@@ -68,7 +72,7 @@ const OngekiLeaderboard = () => {
 					<Spinner />
 				</div>
 			</Container>
-		);
+		)
 	}
 
 	return (
@@ -81,7 +85,7 @@ const OngekiLeaderboard = () => {
 					onSearchChange: setSearchQuery,
 					placeholder: "Search players...",
 					emptyMessage: "No players found.",
-					groupLabel: "Players",
+					groupLabel: "Players"
 				}}
 			/>
 			{version ? (
@@ -94,7 +98,5 @@ const OngekiLeaderboard = () => {
 				</div>
 			)}
 		</Container>
-	);
-};
-
-export default OngekiLeaderboard;
+	)
+}

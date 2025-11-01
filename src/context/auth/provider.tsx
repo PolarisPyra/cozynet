@@ -1,124 +1,124 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"
 
-import { User } from "@/types";
-import { api } from "@/utils";
+import { User } from "@/types"
+import { api } from "@/utils"
 
-import { AuthContext } from "./context";
+import { AuthContext } from "./context"
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [user, setUser] = useState<User | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState("");
-	const navigate = useNavigate();
+	const [user, setUser] = useState<User | null>(null)
+	const [isLoading, setIsLoading] = useState(true)
+	const [error, setError] = useState("")
+	const navigate = useNavigate()
 
 	useEffect(() => {
-		const controller = new AbortController();
-		const { signal } = controller;
+		const controller = new AbortController()
+		const { signal } = controller
 
-		(async () => {
+		;(async () => {
 			try {
-				const res = await api.users.verify.$post({ signal });
+				const res = await api.users.verify.$post({ signal })
 				if (!res.ok) {
-					throw new Error("Invalid token");
+					throw new Error("Invalid token")
 				}
 
-				const user = await res.json();
-				setUser(user);
+				const user = await res.json()
+				setUser(user)
 			} catch (err) {
-				setUser(null);
-				setError(err instanceof Error ? err.message : "Authentication failed");
+				setUser(null)
+				setError(err instanceof Error ? err.message : "Authentication failed")
 			} finally {
-				setIsLoading(false);
+				setIsLoading(false)
 			}
-		})();
+		})()
 
 		return () => {
-			controller.abort();
-		};
-	}, []);
+			controller.abort()
+		}
+	}, [])
 
 	const login = useCallback(async (username: string, password: string): Promise<void> => {
-		setIsLoading(true);
-		setError("");
+		setIsLoading(true)
+		setError("")
 
 		try {
 			const res = await api.login.$post({
-				json: { username, password },
-			});
+				json: { username, password }
+			})
 			if (!res.ok) {
-				let errorMessage = "Invalid credentials";
+				let errorMessage = "Invalid credentials"
 				try {
-					const errorData = (await res.json()) as { error?: string };
+					const errorData = (await res.json()) as { error?: string }
 					if (errorData?.error) {
-						errorMessage = errorData.error;
+						errorMessage = errorData.error
 					}
 				} catch {
 					// If JSON parsing fails, use default message
 				}
-				throw new Error(errorMessage);
+				throw new Error(errorMessage)
 			}
 
-			const user = await res.json();
-			setUser(user);
-			navigate("/home");
+			const user = await res.json()
+			setUser(user)
+			navigate("/home")
 		} catch (err) {
-			setError(`Login failed: ${err instanceof Error ? err.message : "An unexpected error occurred"}`);
-			throw err;
+			setError(`Login failed: ${err instanceof Error ? err.message : "An unexpected error occurred"}`)
+			throw err
 		} finally {
-			setIsLoading(false);
+			setIsLoading(false)
 		}
-	}, []);
+	}, [])
 
 	const signup = useCallback(async (username: string, password: string, accessCode: string) => {
-		setIsLoading(true);
-		setError("");
+		setIsLoading(true)
+		setError("")
 
 		try {
 			const res = await api.signup.$post({
-				json: { username, password, accessCode },
-			});
+				json: { username, password, accessCode }
+			})
 
 			if (!res.ok) {
-				let errorMessage = "Signup failed";
+				let errorMessage = "Signup failed"
 				try {
-					const errorData = (await res.json()) as { error?: string };
+					const errorData = (await res.json()) as { error?: string }
 					if (errorData?.error) {
-						errorMessage = errorData.error;
+						errorMessage = errorData.error
 					}
 				} catch {
 					// If JSON parsing fails, use default message
 				}
-				throw new Error(errorMessage);
+				throw new Error(errorMessage)
 			}
 
-			const user = await res.json();
-			setUser(user);
-			navigate("/home");
+			const user = await res.json()
+			setUser(user)
+			navigate("/home")
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "An unexpected error occurred");
-			throw err;
+			setError(err instanceof Error ? err.message : "An unexpected error occurred")
+			throw err
 		} finally {
-			setIsLoading(false);
+			setIsLoading(false)
 		}
-	}, []);
+	}, [])
 
 	const logout = useCallback(async () => {
-		setIsLoading(true);
+		setIsLoading(true)
 		try {
-			const response = await api.logout.$post();
+			const response = await api.logout.$post()
 			if (response.ok) {
-				setUser(null);
-				navigate("");
+				setUser(null)
+				navigate("")
 			}
 		} catch (err) {
-			console.error("Logout error:", err);
-			setError(err instanceof Error ? err.message : "Logout failed");
+			console.error("Logout error:", err)
+			setError(err instanceof Error ? err.message : "Logout failed")
 		} finally {
-			setIsLoading(false);
+			setIsLoading(false)
 		}
-	}, []);
+	}, [])
 
 	const value = useMemo(
 		() => ({
@@ -128,10 +128,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			error,
 			login,
 			logout,
-			signup,
+			signup
 		}),
 		[user, isLoading, error]
-	);
+	)
 
-	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}

@@ -1,72 +1,72 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react"
 
-import { ChevronsUpDown, CircleAlertIcon } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronsUpDown, CircleAlertIcon } from "lucide-react"
+import { toast } from "sonner"
 
-import Spinner from "@/components/common/spinner";
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useCurrentArcade, useUpdateArcadeName } from "@/hooks/users";
+import Spinner from "@/components/common/spinner"
+import { Button } from "@/components/ui/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useCurrentArcade, useUpdateArcadeName } from "@/hooks/users"
 
 type Arcade = {
-	id: number;
-	name?: string;
-	serial: string;
-	arcade?: number;
-	nickname?: string;
-};
+	id: number
+	name?: string
+	serial: string
+	arcade?: number
+	nickname?: string
+}
 
 const ArcadeName = () => {
-	const { data: currentArcade, isLoading } = useCurrentArcade();
-	const { mutate: updateArcadeName, isPending } = useUpdateArcadeName();
+	const { data: currentArcade, isLoading } = useCurrentArcade()
+	const { mutate: updateArcadeName, isPending } = useUpdateArcadeName()
 
-	const [selectedArcadeIndex, setSelectedArcadeIndex] = useState<number | null>(null);
-	const [openArcade, setOpenArcade] = useState(false);
-	const [name, setName] = useState("");
-	const [nickname, setNickname] = useState("");
+	const [selectedArcadeIndex, setSelectedArcadeIndex] = useState<number | null>(null)
+	const [openArcade, setOpenArcade] = useState(false)
+	const [name, setName] = useState("")
+	const [nickname, setNickname] = useState("")
 
-	const selectedArcade = selectedArcadeIndex !== null ? (currentArcade?.[selectedArcadeIndex] as Arcade) : null;
+	const selectedArcade = selectedArcadeIndex !== null ? (currentArcade?.[selectedArcadeIndex] as Arcade) : null
 
 	useEffect(() => {
-		setName("");
-		setNickname("");
-	}, [selectedArcadeIndex, isLoading]);
+		setName("")
+		setNickname("")
+	}, [selectedArcadeIndex, isLoading])
 
 	const canSubmit = useMemo(() => {
-		const n = name.trim();
-		const nn = nickname.trim();
-		return !!selectedArcade && (n.length > 0 || nn.length > 0);
-	}, [selectedArcade, name, nickname]);
+		const n = name.trim()
+		const nn = nickname.trim()
+		return !!selectedArcade && (n.length > 0 || nn.length > 0)
+	}, [selectedArcade, name, nickname])
 
 	const handleSubmit = () => {
-		if (!selectedArcade) return;
+		if (!selectedArcade) return
 
 		const payload: { arcade: number; name?: string; nickname?: string } = {
-			arcade: selectedArcade.id,
-		};
+			arcade: selectedArcade.id
+		}
 
-		const trimmedName = name.trim();
-		const trimmedNickname = nickname.trim();
+		const trimmedName = name.trim()
+		const trimmedNickname = nickname.trim()
 
-		if (trimmedName) payload.name = trimmedName;
-		if (trimmedNickname) payload.nickname = trimmedNickname;
+		if (trimmedName) payload.name = trimmedName
+		if (trimmedNickname) payload.nickname = trimmedNickname
 
-		if (!payload.name && !payload.nickname) return;
+		if (!payload.name && !payload.nickname) return
 
 		updateArcadeName(payload, {
 			onSuccess: () => {
-				toast.success("Arcade name updated successfully");
-				setName("");
-				setNickname("");
+				toast.success("Arcade name updated successfully")
+				setName("")
+				setNickname("")
 			},
-			onError: (err) => {
-				console.error(err);
-				toast.error("Failed to update arcade name");
-			},
-		});
-	};
+			onError: err => {
+				console.error(err)
+				toast.error("Failed to update arcade name")
+			}
+		})
+	}
 
 	return (
 		<div className="bg-card">
@@ -100,7 +100,9 @@ const ArcadeName = () => {
 									@PolarisPyra
 								</span>{" "}
 								or{" "}
-								<span className="bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-xs font-medium">@azui.573</span>{" "}
+								<span className="bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-xs font-medium">
+									@azui.573
+								</span>{" "}
 								to get your assigned arcade back.
 							</p>
 						</div>
@@ -112,15 +114,15 @@ const ArcadeName = () => {
 						<label className="text-foreground block pb-2 text-sm font-medium">Select Arcade</label>
 						<Popover open={openArcade} onOpenChange={setOpenArcade}>
 							<PopoverTrigger asChild>
-						<Button
-							variant="outline"
-							role="combobox"
-							aria-expanded={openArcade}
-							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
-						>
-							{selectedArcade ? selectedArcade.name : "Choose an arcade"}
-							<ChevronsUpDown className="opacity-50" />
-						</Button>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={openArcade}
+									className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+								>
+									{selectedArcade ? selectedArcade.name : "Choose an arcade"}
+									<ChevronsUpDown className="opacity-50" />
+								</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80 p-0">
 								<Command>
@@ -134,8 +136,8 @@ const ArcadeName = () => {
 													value={`${arcade.name} ${arcade.serial} ${arcade.nickname ?? ""}`}
 													className="w-full cursor-pointer justify-between"
 													onSelect={() => {
-														setSelectedArcadeIndex(index);
-														setOpenArcade(false);
+														setSelectedArcadeIndex(index)
+														setOpenArcade(false)
 													}}
 												>
 													<div>
@@ -157,7 +159,7 @@ const ArcadeName = () => {
 							<label className="text-foreground mb-2 block text-sm font-medium">New Name</label>
 							<Input
 								value={name}
-								onChange={(e) => setName(e.target.value)}
+								onChange={e => setName(e.target.value)}
 								placeholder={selectedArcade?.name ?? "Enter new name"}
 								maxLength={255}
 								className="w-full"
@@ -169,7 +171,7 @@ const ArcadeName = () => {
 							<label className="text-foreground mb-2 block text-sm font-medium">New Nickname</label>
 							<Input
 								value={nickname}
-								onChange={(e) => setNickname(e.target.value)}
+								onChange={e => setNickname(e.target.value)}
 								placeholder={selectedArcade?.nickname ?? "Enter new nickname"}
 								maxLength={255}
 								className="w-full"
@@ -178,28 +180,28 @@ const ArcadeName = () => {
 						</div>
 					</div>
 
-				<div className="pt-4">
-					<Button
-						variant="custom"
-						onClick={handleSubmit}
-						disabled={!canSubmit || isPending}
-						className="w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
-						aria-busy={isPending}
-					>
-						{isPending ? (
-							<>
-								<Spinner size={16} className="mr-2" />
-								<span>Updating Name...</span>
-							</>
-						) : (
-							<span>Update</span>
-						)}
-					</Button>
-				</div>
+					<div className="pt-4">
+						<Button
+							variant="custom"
+							onClick={handleSubmit}
+							disabled={!canSubmit || isPending}
+							className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground w-full items-center justify-center gap-2 rounded-md border border-transparent p-3 font-semibold transition-colors disabled:cursor-not-allowed"
+							aria-busy={isPending}
+						>
+							{isPending ? (
+								<>
+									<Spinner size={16} className="mr-2" />
+									<span>Updating Name...</span>
+								</>
+							) : (
+								<span>Update</span>
+							)}
+						</Button>
+					</div>
 				</div>
 			)}
 		</div>
-	);
-};
+	)
+}
 
-export default ArcadeName;
+export default ArcadeName

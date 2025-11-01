@@ -1,81 +1,81 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from "react"
 
-import { ChevronsUpDown, CircleAlert } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronsUpDown, CircleAlert } from "lucide-react"
+import { toast } from "sonner"
 
-import Spinner from "@/components/common/spinner";
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useCurrentArcade, useUpdateArcadeLocation } from "@/hooks/users";
-import localeData from "@/utils/locale.json";
+import Spinner from "@/components/common/spinner"
+import { Button } from "@/components/ui/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useCurrentArcade, useUpdateArcadeLocation } from "@/hooks/users"
+import localeData from "@/utils/locale.json"
 
 type State = {
-	state: string;
-	regionId: number;
-};
+	state: string
+	regionId: number
+}
 
-type Country = string;
+type Country = string
 
 const getUniqueCountries = (): Country[] => {
-	const uniqueCountries = new Set<string>();
+	const uniqueCountries = new Set<string>()
 	for (const region of localeData.region0) {
-		const country = region[0] as string;
-		if (country) uniqueCountries.add(country);
+		const country = region[0] as string
+		if (country) uniqueCountries.add(country)
 	}
-	return Array.from(uniqueCountries).sort();
-};
+	return Array.from(uniqueCountries).sort()
+}
 
 const getStatesForCountry = (country: string | null): State[] => {
-	if (!country) return [];
-	const result: State[] = [];
+	if (!country) return []
+	const result: State[] = []
 	for (const region of localeData.region0) {
-		const regionCountry = region[0] as string;
+		const regionCountry = region[0] as string
 		if (regionCountry === country) {
-			result.push({ state: region[2] as string, regionId: region[1] as number });
+			result.push({ state: region[2] as string, regionId: region[1] as number })
 		}
 	}
-	return result.sort((a, b) => a.state.localeCompare(b.state));
-};
+	return result.sort((a, b) => a.state.localeCompare(b.state))
+}
 
 const ArcadeLocation = () => {
-	const { data: currentArcade, isLoading } = useCurrentArcade();
-	const { mutate: updateArcadeLocation, isPending } = useUpdateArcadeLocation();
+	const { data: currentArcade, isLoading } = useCurrentArcade()
+	const { mutate: updateArcadeLocation, isPending } = useUpdateArcadeLocation()
 
-	const [selectedArcadeIndex, setSelectedArcadeIndex] = useState<number | null>(null);
-	const [openArcade, setOpenArcade] = useState(false);
-	const [openCountry, setOpenCountry] = useState(false);
-	const [openState, setOpenState] = useState(false);
-	const [selectedCountry, setSelectedCountry] = useState<string>("");
-	const [selectedState, setSelectedState] = useState<string>("");
+	const [selectedArcadeIndex, setSelectedArcadeIndex] = useState<number | null>(null)
+	const [openArcade, setOpenArcade] = useState(false)
+	const [openCountry, setOpenCountry] = useState(false)
+	const [openState, setOpenState] = useState(false)
+	const [selectedCountry, setSelectedCountry] = useState<string>("")
+	const [selectedState, setSelectedState] = useState<string>("")
 
-	const countries = useMemo(() => getUniqueCountries(), []);
-	const states = useMemo(() => getStatesForCountry(selectedCountry || null), [selectedCountry]);
+	const countries = useMemo(() => getUniqueCountries(), [])
+	const states = useMemo(() => getStatesForCountry(selectedCountry || null), [selectedCountry])
 
-	const selectedArcade = selectedArcadeIndex !== null ? currentArcade?.[selectedArcadeIndex] : null;
+	const selectedArcade = selectedArcadeIndex !== null ? currentArcade?.[selectedArcadeIndex] : null
 
 	const handleSubmit = () => {
-		if (!selectedCountry || !selectedState || !selectedArcade) return;
+		if (!selectedCountry || !selectedState || !selectedArcade) return
 
-		const selectedStateObj = states.find((state) => state.state === selectedState);
-		if (!selectedStateObj) return;
+		const selectedStateObj = states.find(state => state.state === selectedState)
+		if (!selectedStateObj) return
 
 		updateArcadeLocation(
 			{
 				arcade: selectedArcade.id,
 				country: selectedCountry,
 				state: selectedStateObj.state,
-				regionId: selectedStateObj.regionId,
+				regionId: selectedStateObj.regionId
 			},
 			{
 				onSuccess: () => toast.success("Arcade location updated successfully!"),
-				onError: (error) => {
-					console.error("Failed to update arcade location:", error);
-					toast.error("Failed to update arcade location");
-				},
+				onError: error => {
+					console.error("Failed to update arcade location:", error)
+					toast.error("Failed to update arcade location")
+				}
 			}
-		);
-	};
+		)
+	}
 
 	const isFormValid =
 		selectedArcade &&
@@ -84,7 +84,7 @@ const ArcadeLocation = () => {
 		!isPending &&
 		!isLoading &&
 		currentArcade &&
-		currentArcade.length > 0;
+		currentArcade.length > 0
 
 	return (
 		<div className="bg-card">
@@ -118,7 +118,9 @@ const ArcadeLocation = () => {
 									@PolarisPyra
 								</span>{" "}
 								or{" "}
-								<span className="bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-xs font-medium">@azui.573</span>{" "}
+								<span className="bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-xs font-medium">
+									@azui.573
+								</span>{" "}
 								to get your assigned arcade back.
 							</p>
 						</div>
@@ -131,15 +133,15 @@ const ArcadeLocation = () => {
 						<label className="text-primary block pb-2 text-sm font-medium">Select Arcade</label>
 						<Popover open={openArcade} onOpenChange={setOpenArcade}>
 							<PopoverTrigger asChild>
-						<Button
-							variant="outline"
-							role="combobox"
-							aria-expanded={openArcade}
-							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
-						>
-							{selectedArcade ? selectedArcade.name : "Choose an arcade"}
-							<ChevronsUpDown className="flex-shrink-0 opacity-50" />
-						</Button>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={openArcade}
+									className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+								>
+									{selectedArcade ? selectedArcade.name : "Choose an arcade"}
+									<ChevronsUpDown className="flex-shrink-0 opacity-50" />
+								</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80 rounded-sm p-0">
 								<Command className="w-full">
@@ -154,8 +156,8 @@ const ArcadeLocation = () => {
 													value={`${arcade.name} ${arcade.serial}`}
 													className="w-full cursor-pointer justify-between"
 													onSelect={() => {
-														setSelectedArcadeIndex(index);
-														setOpenArcade(false);
+														setSelectedArcadeIndex(index)
+														setOpenArcade(false)
 													}}
 												>
 													<div>
@@ -177,16 +179,16 @@ const ArcadeLocation = () => {
 						<label className="text-primary block pb-2 text-sm font-medium">Country</label>
 						<Popover open={openCountry} onOpenChange={setOpenCountry}>
 							<PopoverTrigger asChild>
-						<Button
-							variant="outline"
-							role="combobox"
-							aria-expanded={openCountry}
-							disabled={!selectedArcade}
-							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
-						>
-							{selectedCountry || "Select Country"}
-							<ChevronsUpDown className="flex-shrink-0 opacity-50" />
-						</Button>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={openCountry}
+									disabled={!selectedArcade}
+									className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+								>
+									{selectedCountry || "Select Country"}
+									<ChevronsUpDown className="flex-shrink-0 opacity-50" />
+								</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80 rounded-sm p-0">
 								<Command className="w-full">
@@ -194,14 +196,14 @@ const ArcadeLocation = () => {
 									<CommandList>
 										<CommandEmpty>No country found.</CommandEmpty>
 										<CommandGroup>
-											{countries.map((country) => (
+											{countries.map(country => (
 												<CommandItem
 													key={country}
 													value={country}
 													onSelect={(val: string) => {
-														setSelectedCountry(val);
-														setSelectedState("");
-														setOpenCountry(false);
+														setSelectedCountry(val)
+														setSelectedState("")
+														setOpenCountry(false)
 													}}
 													className="w-full cursor-pointer justify-between"
 												>
@@ -222,16 +224,16 @@ const ArcadeLocation = () => {
 						<label className="text-primary block pb-2 text-sm font-medium">State / Region</label>
 						<Popover open={openState} onOpenChange={setOpenState}>
 							<PopoverTrigger asChild>
-						<Button
-							variant="outline"
-							role="combobox"
-							aria-expanded={openState}
-							disabled={!selectedCountry}
-							className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
-						>
-							{selectedState || "Select State / Region"}
-							<ChevronsUpDown className="opacity-50" />
-						</Button>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={openState}
+									disabled={!selectedCountry}
+									className={`inline-flex w-80 items-center justify-between gap-2 hover:cursor-pointer`}
+								>
+									{selectedState || "Select State / Region"}
+									<ChevronsUpDown className="opacity-50" />
+								</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80 p-0">
 								<Command>
@@ -239,14 +241,14 @@ const ArcadeLocation = () => {
 									<CommandList>
 										<CommandEmpty>No state found.</CommandEmpty>
 										<CommandGroup>
-											{states.map((state) => (
+											{states.map(state => (
 												<CommandItem
 													key={state.regionId}
 													value={state.state}
 													className="w-full cursor-pointer justify-between"
 													onSelect={(val: string) => {
-														setSelectedState(val);
-														setOpenState(false);
+														setSelectedState(val)
+														setOpenState(false)
 													}}
 												>
 													<div className="flex items-center justify-between">
@@ -267,23 +269,23 @@ const ArcadeLocation = () => {
 							variant="custom"
 							onClick={handleSubmit}
 							disabled={!isFormValid}
-							className="w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary p-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground"
+							className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground w-full items-center justify-center gap-2 rounded-md border border-transparent p-3 font-semibold transition-colors disabled:cursor-not-allowed"
 							aria-busy={isPending}
 						>
-						{isPending ? (
-							<>
-								<Spinner size={16} className="mr-2" />
-								<span>Updating Location...</span>
-							</>
-						) : (
-							<span>Update</span>
-						)}
+							{isPending ? (
+								<>
+									<Spinner size={16} className="mr-2" />
+									<span>Updating Location...</span>
+								</>
+							) : (
+								<span>Update</span>
+							)}
 						</Button>
 					</div>
 				</div>
 			)}
 		</div>
-	);
-};
+	)
+}
 
-export default ArcadeLocation;
+export default ArcadeLocation

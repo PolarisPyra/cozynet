@@ -1,31 +1,31 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState } from "react"
 
-import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile"
+import { Link } from "react-router-dom"
+import { toast } from "sonner"
 
-import Spinner from "@/components/common/spinner";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/auth";
-import { turnstile } from "@/lib/constants";
+import Spinner from "@/components/common/spinner"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/auth"
+import { turnstile } from "@/lib/constants"
 
 export const LoginContent = () => {
-	const { login, isLoading } = useAuth();
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
-	const [canSubmit, setCanSubmit] = useState(!turnstile);
-	const refTurnstile = useRef<TurnstileInstance>(null);
+	const { login, isLoading } = useAuth()
+	const [username, setUsername] = useState("")
+	const [password, setPassword] = useState("")
+	const [canSubmit, setCanSubmit] = useState(!turnstile)
+	const refTurnstile = useRef<TurnstileInstance>(null)
 
 	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
+		e.preventDefault()
 		try {
-			refTurnstile.current?.reset();
-			await login(username, password);
+			refTurnstile.current?.reset()
+			await login(username, password)
 		} catch (err: any) {
-			const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
-			toast.error(errorMessage);
+			const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred"
+			toast.error(errorMessage)
 		}
-	};
+	}
 
 	return (
 		<div className="bg-card border-border mx-4 w-full max-w-md rounded-sm border p-8 shadow-sm">
@@ -42,7 +42,7 @@ export const LoginContent = () => {
 						placeholder="Username"
 						autoComplete="username"
 						value={username}
-						onChange={(e) => setUsername(e.target.value)}
+						onChange={e => setUsername(e.target.value)}
 						disabled={isLoading}
 					/>
 				</div>
@@ -57,7 +57,7 @@ export const LoginContent = () => {
 						placeholder="••••••••"
 						autoComplete="current-password"
 						value={password}
-						onChange={(e) => setPassword(e.target.value)}
+						onChange={e => setPassword(e.target.value)}
 						disabled={isLoading}
 					/>
 				</div>
@@ -78,5 +78,5 @@ export const LoginContent = () => {
 				</Link>
 			</form>
 		</div>
-	);
-};
+	)
+}

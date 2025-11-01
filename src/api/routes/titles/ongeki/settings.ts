@@ -1,65 +1,65 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson } from "@/api/middleware/validator";
-import { signAndSetCookie } from "@/api/utils/cookie";
-import { rethrowWithMessage } from "@/api/utils/error";
-import { getUserGameVersions } from "@/api/utils/versions";
-import { DB, DaphnisUserOptionKey } from "@/shared/types";
+import { db } from "@/api/db"
+import { validateJson } from "@/api/middleware/validator"
+import { signAndSetCookie } from "@/api/utils/cookie"
+import { rethrowWithMessage } from "@/api/utils/error"
+import { getUserGameVersions } from "@/api/utils/versions"
+import { DB, DaphnisUserOptionKey } from "@/shared/types"
 
 interface VersionResponse {
-	version: string;
+	version: string
 }
 
 interface VersionsResponse {
-	versions: number[];
+	versions: number[]
 }
 
 interface VersionResult {
-	value: string;
+	value: string
 }
 
 interface VersionEntry {
-	version: number;
+	version: number
 }
 
 const OngekiSettingsRoutes = new Hono()
 
 	.get("get", async (c): Promise<Response> => {
 		try {
-			const userId = c.payload.userId;
+			const userId = c.payload.userId
 
 			const [results] = await db.execute<(VersionResult & RowDataPacket)[]>(
 				`SELECT value 
        FROM daphnis_user_option 
        WHERE user = ? AND \`key\` = 'ongeki_version'`,
 				[userId]
-			);
+			)
 
 			return c.json({
-				version: results[0]?.value ?? "No version",
-			} as VersionResponse);
+				version: results[0]?.value ?? "No version"
+			} as VersionResponse)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get Ongeki version", error);
+			throw rethrowWithMessage("Failed to get Ongeki version", error)
 		}
 	})
 	.post(
 		"update",
 		validateJson(
 			z.object({
-				version: z.number().min(1),
+				version: z.number().min(1)
 			})
 		),
-		async (c) => {
-			const conn = await db.getConnection();
+		async c => {
+			const conn = await db.getConnection()
 			try {
-				await conn.beginTransaction();
+				await conn.beginTransaction()
 
-				const { userId, aimeCardId } = c.payload;
-				const { version } = await c.req.json();
+				const { userId, aimeCardId } = c.payload
+				const { version } = await c.req.json()
 
 				// console.log("UserId:", userId);
 				// console.log("AimeCardId:", aimeCardId, "Type:", typeof aimeCardId);
@@ -71,43 +71,43 @@ const OngekiSettingsRoutes = new Hono()
         WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.OngekiVersion}'
         `,
 					[version, userId]
-				);
+				)
 				if (result.affectedRows === 0) {
-					throw rethrowWithMessage("Nothing to be updated", 500);
+					throw rethrowWithMessage("Nothing to be updated", 500)
 				}
 
 				// Gotta update the cookie now that the version has changed
 				const [users] = await conn.execute<(DB.AimeUser & RowDataPacket)[]>("SELECT * FROM aime_user WHERE id = ?", [
-					userId,
-				]);
-				const user = users[0];
+					userId
+				])
+				const user = users[0]
 				// console.log("User:", user);
 				// console.log("AimeCardId:", aimeCardId);
 				const [cards] = await conn.execute<(DB.AimeCard & RowDataPacket)[]>(
 					"SELECT * FROM aime_card WHERE access_code = ?",
 					[aimeCardId]
-				);
-				const card = cards[0];
+				)
+				const card = cards[0]
 				// console.log("Card:", card);
 				if (!user || !card) {
-					throw new HTTPException(404);
+					throw new HTTPException(404)
 				}
-				const versions = await getUserGameVersions(userId, conn);
-				const cookieResult = await signAndSetCookie(c, user, card, versions);
+				const versions = await getUserGameVersions(userId, conn)
+				const cookieResult = await signAndSetCookie(c, user, card, versions)
 
-				await conn.commit();
-				return c.json(cookieResult);
+				await conn.commit()
+				return c.json(cookieResult)
 			} catch (error) {
-				await conn.rollback();
-				throw rethrowWithMessage("Failed to update settings", error);
+				await conn.rollback()
+				throw rethrowWithMessage("Failed to update settings", error)
 			} finally {
-				conn.release();
+				conn.release()
 			}
 		}
 	)
 	.get("versions", async (c): Promise<Response> => {
 		try {
-			const userId = c.payload.userId;
+			const userId = c.payload.userId
 
 			const [versions] = await db.execute<(VersionEntry & RowDataPacket)[]>(
 				`SELECT DISTINCT version 
@@ -115,14 +115,14 @@ const OngekiSettingsRoutes = new Hono()
        WHERE user = ? 
        ORDER BY version DESC`,
 				[userId]
-			);
+			)
 
 			return c.json({
-				versions: versions.map((v) => v.version),
-			} as VersionsResponse);
+				versions: versions.map(v => v.version)
+			} as VersionsResponse)
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get Ongeki versions", error);
+			throw rethrowWithMessage("Failed to get Ongeki versions", error)
 		}
-	});
+	})
 
-export { OngekiSettingsRoutes };
+export { OngekiSettingsRoutes }

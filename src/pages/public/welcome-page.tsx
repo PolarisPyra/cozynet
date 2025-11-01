@@ -1,8 +1,8 @@
-import { Link, Navigate, Outlet } from "react-router-dom";
+import { Link, Navigate, Outlet } from "react-router-dom"
 
 // BgGame removed
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/auth";
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/auth"
 
 export const WelcomeContent = () => (
 	<div className="bg-card mx-4 w-full max-w-md rounded-sm p-8">
@@ -21,10 +21,10 @@ export const WelcomeContent = () => (
 		</div>
 		<p className="text-primary mt-6 text-center text-sm">Join our community today!</p>
 	</div>
-);
+)
 
 const WelcomePage = () => {
-	const { user } = useAuth();
+	const { user } = useAuth()
 
 	return user ? (
 		<Navigate to="/home" />
@@ -34,7 +34,7 @@ const WelcomePage = () => {
 				<Outlet />
 			</div>
 		</>
-	);
-};
+	)
+}
 
-export default WelcomePage;
+export default WelcomePage

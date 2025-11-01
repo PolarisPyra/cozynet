@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 
 import {
 	BoomBox,
@@ -12,9 +12,9 @@ import {
 	Pencil,
 	RectangleVertical,
 	Swords,
-	Trophy,
-} from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+	Trophy
+} from "lucide-react"
+import { Link, useLocation } from "react-router-dom"
 
 import {
 	Sidebar,
@@ -27,95 +27,95 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSub,
-	SidebarSeparator,
-} from "@/components/ui/sidebar";
-import { useAuth } from "@/hooks/auth";
-import { cn } from "@/lib/utils";
+	SidebarSeparator
+} from "@/components/ui/sidebar"
+import { useAuth } from "@/hooks/auth"
+import { cn } from "@/lib/utils"
 
-import { NavUser } from "./nav-user";
+import { NavUser } from "./nav-user"
 
 type MenuItem = {
-	name: string;
-	href?: string;
-	icon?: React.ElementType;
-	subnav?: MenuItem[];
-};
+	name: string
+	href?: string
+	icon?: React.ElementType
+	subnav?: MenuItem[]
+}
 
 const chunithmSubnav: MenuItem[] = [
 	{
 		name: "Scores",
 		href: "/chunithm/scores",
-		icon: NotepadText,
+		icon: NotepadText
 	},
 	{
 		name: "Userbox",
 		href: "/chunithm/userbox",
-		icon: Pencil,
+		icon: Pencil
 	},
 	{
 		name: "Favorites",
 		href: "/chunithm/favorites",
-		icon: HeartIcon,
+		icon: HeartIcon
 	},
 	{ name: "Rivals", href: "/chunithm/rivals", icon: Swords },
 	{
 		name: "Leaderboard",
 		href: "/chunithm/leaderboard",
-		icon: Trophy,
+		icon: Trophy
 	},
 	{
 		name: "All Songs",
 		href: "/chunithm/allsongs",
-		icon: BoomBox,
+		icon: BoomBox
 	},
 	{
 		name: "Rating Frame",
 		href: "/chunithm/rating",
-		icon: List,
-	},
-];
+		icon: List
+	}
+]
 
 const ongekiSubnav: MenuItem[] = [
 	{
 		name: "Scores",
 		href: "/ongeki/scores",
-		icon: NotepadText,
+		icon: NotepadText
 	},
 	{ name: "Rivals", href: "/ongeki/rivals", icon: Swords },
 	{
 		name: "Leaderboard",
 		href: "/ongeki/leaderboard",
-		icon: Trophy,
+		icon: Trophy
 	},
 	{
 		name: "All Songs",
 		href: "/ongeki/allsongs",
-		icon: BoomBox,
+		icon: BoomBox
 	},
 	{
 		name: "Rating Frame",
 		href: "/ongeki/rating",
-		icon: List,
+		icon: List
 	},
 	{
 		name: "Cards",
 		href: "/ongeki/cards",
-		icon: RectangleVertical,
-	},
-];
+		icon: RectangleVertical
+	}
+]
 
 const maimaiSubNav: MenuItem[] = [
 	{
 		name: "Scores",
 		href: "/maimaidx/scores",
-		icon: NotepadText,
+		icon: NotepadText
 	},
 	{
 		name: "All Songs",
 		href: "/maimaidx/allsongs",
-		icon: BoomBox,
-	},
-];
+		icon: BoomBox
+	}
+]
 
 const sidebarItems: MenuItem[] = [
 	{ name: "Home", icon: HomeIcon, href: "/home" },
@@ -125,79 +125,79 @@ const sidebarItems: MenuItem[] = [
 			{
 				name: "Chunithm",
 				icon: Folder,
-				subnav: chunithmSubnav,
+				subnav: chunithmSubnav
 			},
 			{
 				name: "Ongeki",
 				icon: Folder,
-				subnav: ongekiSubnav,
+				subnav: ongekiSubnav
 			},
 			{
 				name: "Maimai DX",
 				icon: Folder,
-				subnav: maimaiSubNav,
-			},
-		],
-	},
-];
+				subnav: maimaiSubNav
+			}
+		]
+	}
+]
 
 export function SidebarComponent() {
 	const [openCategories, setOpenCategories] = React.useState<Record<string, boolean>>(() => {
-		const saved = localStorage.getItem("sidebar-open-categories");
-		return saved ? JSON.parse(saved) : { SEGA: true };
-	});
+		const saved = localStorage.getItem("sidebar-open-categories")
+		return saved ? JSON.parse(saved) : { SEGA: true }
+	})
 	const [openSubCategories, setOpenSubCategories] = React.useState<Record<string, boolean>>(() => {
-		const saved = localStorage.getItem("sidebar-open-subcategories");
-		return saved ? JSON.parse(saved) : { Chunithm: true, Ongeki: true, "Maimai DX": true };
-	});
-	const { user } = useAuth();
-	const location = useLocation();
+		const saved = localStorage.getItem("sidebar-open-subcategories")
+		return saved ? JSON.parse(saved) : { Chunithm: true, Ongeki: true, "Maimai DX": true }
+	})
+	const { user } = useAuth()
+	const location = useLocation()
 
 	// Save to localStorage whenever state changes
 	React.useEffect(() => {
-		localStorage.setItem("sidebar-open-categories", JSON.stringify(openCategories));
-	}, [openCategories]);
+		localStorage.setItem("sidebar-open-categories", JSON.stringify(openCategories))
+	}, [openCategories])
 
 	React.useEffect(() => {
-		localStorage.setItem("sidebar-open-subcategories", JSON.stringify(openSubCategories));
-	}, [openSubCategories]);
+		localStorage.setItem("sidebar-open-subcategories", JSON.stringify(openSubCategories))
+	}, [openSubCategories])
 
 	const toggleCategory = (categoryName: string) => {
-		setOpenCategories((prev) => ({
+		setOpenCategories(prev => ({
 			...prev,
-			[categoryName]: !prev[categoryName],
-		}));
-	};
+			[categoryName]: !prev[categoryName]
+		}))
+	}
 
 	const toggleSubCategory = (categoryName: string) => {
-		setOpenSubCategories((prev) => ({
+		setOpenSubCategories(prev => ({
 			...prev,
-			[categoryName]: !prev[categoryName],
-		}));
-	};
+			[categoryName]: !prev[categoryName]
+		}))
+	}
 
-	if (!user) return null;
+	if (!user) return null
 
 	const userData = {
 		username: user.username,
 		aimeCardId: user.aimeCardId || "",
-		avatar: "",
-	};
+		avatar: ""
+	}
 
 	const isActiveRoute = (href?: string) => {
-		if (!href) return false;
-		return location.pathname === href;
-	};
+		if (!href) return false
+		return location.pathname === href
+	}
 
 	const renderMenuItem = (item: MenuItem, isNestedSubmenuItem = false) => {
-		const isActive = item.href ? isActiveRoute(item.href) : false;
-		const isOpen = isNestedSubmenuItem ? (openSubCategories[item.name] ?? false) : (openCategories[item.name] ?? false);
-		const hasSubnav = item.subnav && item.subnav.length > 0;
+		const isActive = item.href ? isActiveRoute(item.href) : false
+		const isOpen = isNestedSubmenuItem ? (openSubCategories[item.name] ?? false) : (openCategories[item.name] ?? false)
+		const hasSubnav = item.subnav && item.subnav.length > 0
 
 		// Use FolderOpen when expanded, Folder otherwise for subcategory folders
-		let IconComponent = item.icon;
+		let IconComponent = item.icon
 		if (hasSubnav && !item.href && item.icon === Folder) {
-			IconComponent = isOpen ? FolderOpen : Folder;
+			IconComponent = isOpen ? FolderOpen : Folder
 		}
 
 		if (item.href) {
@@ -220,7 +220,7 @@ export function SidebarComponent() {
 						<span className="flex-1 truncate">{item.name}</span>
 					</Link>
 				</SidebarMenuButton>
-			);
+			)
 		} else {
 			return (
 				<>
@@ -230,11 +230,11 @@ export function SidebarComponent() {
 							"hover:bg-sidebar-accent focus:bg-sidebar-accent cursor-pointer focus:outline-none"
 						)}
 						onClick={(e: React.MouseEvent) => {
-							e.stopPropagation();
+							e.stopPropagation()
 							if (isNestedSubmenuItem) {
-								toggleSubCategory(item.name);
+								toggleSubCategory(item.name)
 							} else {
-								toggleCategory(item.name);
+								toggleCategory(item.name)
 							}
 						}}
 					>
@@ -250,9 +250,9 @@ export function SidebarComponent() {
 						)}
 					</SidebarMenuButton>
 				</>
-			);
+			)
 		}
-	};
+	}
 
 	return (
 		<Sidebar className="bg-background text-sidebar-foreground border-r">
@@ -299,5 +299,5 @@ export function SidebarComponent() {
 				<NavUser user={userData} />
 			</SidebarFooter>
 		</Sidebar>
-	);
+	)
 }

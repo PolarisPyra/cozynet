@@ -1,53 +1,53 @@
-import React, { memo, useRef } from "react";
+import React, { memo, useRef } from "react"
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { CDN } from "@/lib/constants";
-import type { DB } from "@/shared/types";
+import { Skeleton } from "@/components/ui/skeleton"
+import { CDN } from "@/lib/constants"
+import type { DB } from "@/shared/types"
 
 export interface CardItemProps {
-	item: DB.OngekiUserCard & DB.OngekiStaticCards;
+	item: DB.OngekiUserCard & DB.OngekiStaticCards
 }
 
 const CardItemBase = ({ item }: CardItemProps) => {
-	const imageUrl = item.imagePath ? `${CDN}/ongeki/card/${item.imagePath}` : null;
-	const cardRef = useRef<HTMLDivElement>(null);
-	const boundsRef = useRef<DOMRect | null>(null);
-	const rafIdRef = useRef<number | null>(null);
+	const imageUrl = item.imagePath ? `${CDN}/ongeki/card/${item.imagePath}` : null
+	const cardRef = useRef<HTMLDivElement>(null)
+	const boundsRef = useRef<DOMRect | null>(null)
+	const rafIdRef = useRef<number | null>(null)
 
 	const handleMouseEnter = () => {
-		const el = cardRef.current;
-		if (!el) return;
-		boundsRef.current = el.getBoundingClientRect();
-	};
+		const el = cardRef.current
+		if (!el) return
+		boundsRef.current = el.getBoundingClientRect()
+	}
 
 	const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-		const el = cardRef.current;
-		if (!el) return;
-		if (rafIdRef.current !== null) return;
+		const el = cardRef.current
+		if (!el) return
+		if (rafIdRef.current !== null) return
 		rafIdRef.current = window.requestAnimationFrame(() => {
-			rafIdRef.current = null;
-			const rect = boundsRef.current ?? el.getBoundingClientRect();
-			boundsRef.current = rect;
-			const x = e.clientX - rect.left;
-			const y = e.clientY - rect.top;
-			const cx = rect.width / 2;
-			const cy = rect.height / 2;
-			const rotateX = ((cy - y) / cy) * 18;
-			const rotateY = ((x - cx) / cx) * 18;
-			el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-		});
-	};
+			rafIdRef.current = null
+			const rect = boundsRef.current ?? el.getBoundingClientRect()
+			boundsRef.current = rect
+			const x = e.clientX - rect.left
+			const y = e.clientY - rect.top
+			const cx = rect.width / 2
+			const cy = rect.height / 2
+			const rotateX = ((cy - y) / cy) * 18
+			const rotateY = ((x - cx) / cx) * 18
+			el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
+		})
+	}
 
 	const handleMouseLeave = () => {
-		const el = cardRef.current;
-		if (!el) return;
+		const el = cardRef.current
+		if (!el) return
 		if (rafIdRef.current !== null) {
-			cancelAnimationFrame(rafIdRef.current);
-			rafIdRef.current = null;
+			cancelAnimationFrame(rafIdRef.current)
+			rafIdRef.current = null
 		}
-		el.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg)";
-		boundsRef.current = null;
-	};
+		el.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg)"
+		boundsRef.current = null
+	}
 
 	return (
 		<div className="w-full">
@@ -78,15 +78,14 @@ const CardItemBase = ({ item }: CardItemProps) => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
 const areItemsEqual = (prev: CardItemProps, next: CardItemProps) => {
-	const a = prev.item;
-	const b = next.item;
-	return a.id === b.id && a.imagePath === b.imagePath && a.name === b.name && a.level === b.level;
-};
+	const a = prev.item
+	const b = next.item
+	return a.id === b.id && a.imagePath === b.imagePath && a.name === b.name && a.level === b.level
+}
 
-export const CardItem = memo(CardItemBase, areItemsEqual);
-CardItem.displayName = "CardItem";
-export default CardItem;
+export const CardItem = memo(CardItemBase, areItemsEqual)
+CardItem.displayName = "CardItem"

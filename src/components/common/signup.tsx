@@ -1,70 +1,70 @@
-import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useRef, useState } from "react"
 
-import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
-import { z } from "zod";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile"
+import { Link } from "react-router-dom"
+import { toast } from "sonner"
+import { z } from "zod"
 
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/auth";
-import { turnstile } from "@/lib/constants";
-import { signupSchema } from "@/shared/validation/auth";
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/auth"
+import { turnstile } from "@/lib/constants"
+import { signupSchema } from "@/shared/validation/auth"
 
-type FormData = z.infer<typeof signupSchema>;
-type FormErrors = Partial<Record<keyof FormData, string[]>>;
+type FormData = z.infer<typeof signupSchema>
+type FormErrors = Partial<Record<keyof FormData, string[]>>
 
-const SignUpContent = () => {
-	const { signup, isLoading } = useAuth();
+export function SignUpContent() {
+	const { signup, isLoading } = useAuth()
 	const [formData, setFormData] = useState<FormData>({
 		username: "",
 		password: "",
-		accessCode: "",
-	});
-	const [errors, setErrors] = useState<FormErrors>({});
-	const [canSubmit, setCanSubmit] = useState(false);
-	const refTurnstile = useRef<TurnstileInstance>(null);
+		accessCode: ""
+	})
+	const [errors, setErrors] = useState<FormErrors>({})
+	const [canSubmit, setCanSubmit] = useState(false)
+	const refTurnstile = useRef<TurnstileInstance>(null)
 
 	const validateForm = (data: FormData): FormErrors => {
 		try {
-			signupSchema.parse(data);
-			return {};
+			signupSchema.parse(data)
+			return {}
 		} catch (error) {
 			if (error instanceof z.ZodError) {
-				return error.flatten().fieldErrors;
+				return error.flatten().fieldErrors
 			}
-			return {};
+			return {}
 		}
-	};
+	}
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
+		e.preventDefault()
 
-		const newErrors = validateForm(formData);
-		setErrors(newErrors);
+		const newErrors = validateForm(formData)
+		setErrors(newErrors)
 
 		if (Object.keys(newErrors).length === 0) {
 			// Form is valid, proceed with submission
 			try {
-				refTurnstile.current?.reset();
-				await signup(formData.username, formData.password, formData.accessCode);
-				toast.success("Account created successfully!");
+				refTurnstile.current?.reset()
+				await signup(formData.username, formData.password, formData.accessCode)
+				toast.success("Account created successfully!")
 			} catch (err) {
-				const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
-				toast.error(errorMessage);
+				const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred"
+				toast.error(errorMessage)
 			}
 		}
-	};
+	}
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target;
-		const updatedFormData = { ...formData, [name]: value };
-		setFormData(updatedFormData);
+		const { name, value } = e.target
+		const updatedFormData = { ...formData, [name]: value }
+		setFormData(updatedFormData)
 		// Validate form on each change
-		const newErrors = validateForm(updatedFormData);
-		setErrors(newErrors);
-	};
+		const newErrors = validateForm(updatedFormData)
+		setErrors(newErrors)
+	}
 
-	const isAccessCodeValid = /^\d{20}$/.test(formData.accessCode.trim());
+	const isAccessCodeValid = /^\d{20}$/.test(formData.accessCode.trim())
 
 	return (
 		<div className="bg-card border-border mx-4 w-full max-w-md rounded-sm border p-8 shadow-sm">
@@ -131,7 +131,9 @@ const SignUpContent = () => {
 
 				<Button
 					type="submit"
-					disabled={!canSubmit || isLoading || !formData.username.trim() || !formData.password.trim() || !isAccessCodeValid}
+					disabled={
+						!canSubmit || isLoading || !formData.username.trim() || !formData.password.trim() || !isAccessCodeValid
+					}
 					variant="custom"
 					className="block w-full transform text-center transition duration-300 hover:scale-105 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
 				>
@@ -145,7 +147,5 @@ const SignUpContent = () => {
 				</Link>
 			</p>
 		</div>
-	);
-};
-
-export default SignUpContent;
+	)
+}

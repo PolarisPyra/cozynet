@@ -1,18 +1,18 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson, validateParams } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson, validateParams } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 interface NameplateItem {
-	nameplateId: number;
-	imagePath: string;
-	label: string;
-	locked: boolean;
-	equipped?: boolean;
+	nameplateId: number
+	imagePath: string
+	label: string
+	locked: boolean
+	equipped?: boolean
 }
 
 async function getCurrentNameplate(userId: number, version: number): Promise<NameplateItem[]> {
@@ -44,51 +44,51 @@ async function getCurrentNameplate(userId: number, version: number): Promise<Nam
             AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
         `,
 		[version, userId, userId, userId, version]
-	);
-	return result;
+	)
+	return result
 }
 
 const routes = new Hono()
-	.get("", async (c) => {
+	.get("", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
-			const result = await getCurrentNameplate(userId, version);
+			const result = await getCurrentNameplate(userId, version)
 			// If no current nameplate, return null to indicate "no selection" instead of 404
 			if (result.length === 0) {
-				return c.json(null);
+				return c.json(null)
 			}
 
-			return c.json(result[0]);
+			return c.json(result[0])
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get current nameplate", error);
+			throw rethrowWithMessage("Failed to get current nameplate", error)
 		}
 	})
 	.post(
 		"",
 		validateJson(
 			z.object({
-				nameplateId: z.number().int().positive(),
+				nameplateId: z.number().int().positive()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
-				const { nameplateId } = await c.req.json();
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
+				const { nameplateId } = await c.req.json()
 
 				// Verify user owns the nameplate
 				const [ownership] = await db.execute<RowDataPacket[]>(
 					`SELECT 1 FROM chuni_item_item 
                     WHERE user = ? AND itemId = ? AND itemKind = 1`,
 					[userId, nameplateId]
-				);
+				)
 
 				if (ownership.length === 0) {
 					throw new HTTPException(400, {
-						message: "You don't own this nameplate",
-					});
+						message: "You don't own this nameplate"
+					})
 				}
 
 				// Update profile
@@ -97,13 +97,13 @@ const routes = new Hono()
                     SET nameplateId = ?
                     WHERE user = ? AND version = ?`,
 					[nameplateId, userId, version]
-				);
+				)
 
 				// Get updated nameplate data
-				const result = await getCurrentNameplate(userId, version);
-				return c.json(result[0]);
+				const result = await getCurrentNameplate(userId, version)
+				return c.json(result[0])
 			} catch (error) {
-				throw rethrowWithMessage("Failed to update nameplate", error);
+				throw rethrowWithMessage("Failed to update nameplate", error)
 			}
 		}
 	)
@@ -112,24 +112,24 @@ const routes = new Hono()
 		validateJson(
 			z.object({
 				filter: z.object({
-					locked: z.boolean().nullable(),
-				}),
+					locked: z.boolean().nullable()
+				})
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
-				const { filter } = await c.req.json();
-				const { locked } = filter;
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
+				const { filter } = await c.req.json()
+				const { locked } = filter
 
-				let whereClause = "WHERE dsn.version = ?";
-				const params = [version];
+				let whereClause = "WHERE dsn.version = ?"
+				const params = [version]
 
 				if (locked === true) {
-					whereClause += " AND cii.user IS NULL";
+					whereClause += " AND cii.user IS NULL"
 				} else if (locked === false) {
-					whereClause += " AND cii.user IS NOT NULL";
+					whereClause += " AND cii.user IS NOT NULL"
 				}
 
 				const query = `
@@ -166,30 +166,30 @@ const routes = new Hono()
                 ORDER BY 
                     locked DESC,
                     dsn.nameplateId DESC
-                `;
+                `
 
-				params.unshift(userId, version, userId, userId, version, userId);
-				const [items] = await db.execute<(NameplateItem & { total_count: number } & RowDataPacket)[]>(query, params);
-				const totalCount = items.length > 0 ? items[0].total_count : 0;
+				params.unshift(userId, version, userId, userId, version, userId)
+				const [items] = await db.execute<(NameplateItem & { total_count: number } & RowDataPacket)[]>(query, params)
+				const totalCount = items.length > 0 ? items[0].total_count : 0
 
 				const result = {
 					items: items.map(({ total_count, ...item }) => item),
-					total: totalCount,
-				};
+					total: totalCount
+				}
 
-				return c.json(result);
+				return c.json(result)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to search nameplates", error);
+				throw rethrowWithMessage("Failed to search nameplates", error)
 			}
 		}
 	)
 	.patch(
 		"unlock/:nameplateId",
 		validateParams(z.object({ nameplateId: z.string().regex(/^\d+$/).transform(Number) })),
-		async (c) => {
+		async c => {
 			try {
-				const { userId } = c.payload;
-				const { nameplateId } = c.req.param();
+				const { userId } = c.payload
+				const { nameplateId } = c.req.param()
 
 				// Add nameplate to user's inventory
 				await db.execute<ResultSetHeader>(
@@ -197,13 +197,13 @@ const routes = new Hono()
                     (user, itemId, itemKind, stock, isValid)
                     VALUES (?, ?, 1, 1, 1)`,
 					[userId, nameplateId]
-				);
+				)
 
-				return c.json({ success: true });
+				return c.json({ success: true })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to unlock nameplate", error);
+				throw rethrowWithMessage("Failed to unlock nameplate", error)
 			}
 		}
-	);
+	)
 
-export default routes;
+export default routes

@@ -1,32 +1,32 @@
-import React from "react";
+import React from "react"
 
-import { DateTime } from "luxon";
+import { DateTime } from "luxon"
 
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CDN } from "@/lib/constants";
-import { ChunithmPlaylog } from "@/shared/types";
-import { getChunithmGrade } from "@/utils/helpers";
-import { getChunithmLogo } from "@/utils/version-logos";
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { CDN } from "@/lib/constants"
+import { ChunithmPlaylog } from "@/shared/types"
+import { getChunithmGrade } from "@/utils/helpers"
+import { getChunithmLogo } from "@/utils/version-logos"
 
-import { ChunithmRatingColors } from "../common/rating-colors";
+import { ChunithmRatingColors } from "../common/rating-colors"
 
 interface AchievementBadgesProps {
-	isFullCombo: number;
-	isAllJustice: number;
-	isClear: number;
-	fullChainKind: number;
-	score: number;
-	skillId?: number;
+	isFullCombo: number
+	isAllJustice: number
+	isClear: number
+	fullChainKind: number
+	score: number
+	skillId?: number
 }
 
 const clearBadges: Record<number, string> = {
 	103003: "hard",
 	103005: "brave",
 	103006: "absolute",
-	103007: "catastrophy",
-};
+	103007: "catastrophy"
+}
 
 function AchievementBadges({
 	isFullCombo,
@@ -34,10 +34,10 @@ function AchievementBadges({
 	isClear,
 	fullChainKind,
 	score,
-	skillId,
+	skillId
 }: AchievementBadgesProps) {
 	// Use skill badge if skillId matches, otherwise default to "clear" if isClear = 1
-	const clearBadge = (skillId && clearBadges[skillId]) || "clear";
+	const clearBadge = (skillId && clearBadges[skillId]) || "clear"
 
 	return (
 		<div className="flex items-center gap-1">
@@ -95,29 +95,29 @@ function AchievementBadges({
 				)}
 			</div>
 		</div>
-	);
+	)
 }
 
 export type ChunithmScoreInfoCardProps = {
-	score: ChunithmPlaylog;
-	levelColorBadge?: (chartId?: number | undefined) => string;
-	className?: string;
-};
+	score: ChunithmPlaylog
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+}
 
 const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, levelColorBadge, className = "" }) => {
-	const [imageLoaded, setImageLoaded] = React.useState(false);
+	const [imageLoaded, setImageLoaded] = React.useState(false)
 	const worldsEnd = (level?: number | null, chartId?: number | null) => {
-		if (level == null) return "?";
+		if (level == null) return "?"
 		if (chartId === 5) {
-			const stars = Math.floor((level + 1) / 2);
-			return "⭐".repeat(stars > 0 ? stars : 1);
+			const stars = Math.floor((level + 1) / 2)
+			return "⭐".repeat(stars > 0 ? stars : 1)
 		}
-		return Number.isFinite(level) ? level.toFixed(1) : "?";
-	};
+		return Number.isFinite(level) ? level.toFixed(1) : "?"
+	}
 
-	const appearedLogo = getChunithmLogo.getLogo(score.songVersion);
-	const scoreVersionLogo = getChunithmLogo.getLogo(score.version);
-	const ratingValue = score.playerRating ? score.playerRating / 100 : 0;
+	const appearedLogo = getChunithmLogo.getLogo(score.songVersion)
+	const scoreVersionLogo = getChunithmLogo.getLogo(score.version)
+	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
 
 	return (
 		<div
@@ -137,7 +137,9 @@ const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, le
 						/>
 					</div>
 					<div className="min-w-0 flex-1">
-						<div className="text-foreground mb-2 truncate text-base leading-tight font-bold">{score.title}</div>
+						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
+							{score.title}
+						</div>
 						<span
 							className={`inline-block rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
 								levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : "text-primary-foreground bg-primary"
@@ -150,12 +152,12 @@ const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, le
 
 				<div className="flex flex-shrink-0 flex-col items-end gap-2">
 					<div className="flex flex-col items-end">
-						<span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">Score</span>
+						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Score</span>
 						<div className="flex items-baseline gap-1.5">
-							<span className="text-foreground text-lg font-semibold tabular-nums">
+							<span className="text-foreground text-base font-medium tabular-nums">
 								{score.score?.toLocaleString() ?? "-"}
 							</span>
-							<span className="text-foreground text-sm font-bold">{getChunithmGrade(score.score ?? 0)}</span>
+							<span className="text-foreground text-sm font-medium">{getChunithmGrade(score.score ?? 0)}</span>
 						</div>
 						{score.skillName && (
 							<Badge
@@ -167,7 +169,7 @@ const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, le
 						)}
 					</div>
 					<div className="flex flex-col items-end">
-						<span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
+						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
 						<div className="mt-0.5">
 							{ratingValue > 0 ? (
 								<ChunithmRatingColors rating={ratingValue} />
@@ -196,10 +198,14 @@ const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, le
 					{score.userPlayDate ? (
 						<>
 							<Badge variant="secondary" className="h-6 rounded-sm">
-								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toLocal().toLocaleString(DateTime.DATE_SHORT)}
+								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" })
+									.toLocal()
+									.toLocaleString(DateTime.DATE_SHORT)}
 							</Badge>
 							<Badge variant="secondary" className="h-6 rounded-sm">
-								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toLocal().toLocaleString(DateTime.TIME_SIMPLE)}
+								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" })
+									.toLocal()
+									.toLocaleString(DateTime.TIME_SIMPLE)}
 							</Badge>
 						</>
 					) : (
@@ -225,7 +231,7 @@ const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, le
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-export default ChunithmScoreInfoCard;
+export default ChunithmScoreInfoCard

@@ -1,19 +1,19 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson, validateParams } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson, validateParams } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 interface TrophyItem {
-	trophyId: number;
-	label: string;
-	imagePath: string;
-	locked: boolean;
-	slot: "main" | "sub1" | "sub2";
-	trophyRareType: number;
+	trophyId: number
+	label: string
+	imagePath: string
+	locked: boolean
+	slot: "main" | "sub1" | "sub2"
+	trophyRareType: number
 }
 
 const defaultTrophy = {
@@ -22,14 +22,14 @@ const defaultTrophy = {
 	imagePath: null,
 	locked: false,
 	slot: "main",
-	trophyRareType: 9,
-};
+	trophyRareType: 9
+}
 
 const routes = new Hono()
-	.get("", async (c) => {
+	.get("", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
 			const [result] = await db.execute<RowDataPacket[]>(
 				`
@@ -58,15 +58,15 @@ const routes = new Hono()
 				  AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
                 `,
 				[userId, userId, version, version]
-			);
+			)
 
 			return c.json([
-				result.find((r) => r.slot === "main") ?? { ...defaultTrophy, slot: "main" },
-				result.find((r) => r.slot === "sub1") ?? { ...defaultTrophy, slot: "sub1" },
-				result.find((r) => r.slot === "sub2") ?? { ...defaultTrophy, slot: "sub2" },
-			]);
+				result.find(r => r.slot === "main") ?? { ...defaultTrophy, slot: "main" },
+				result.find(r => r.slot === "sub1") ?? { ...defaultTrophy, slot: "sub1" },
+				result.find(r => r.slot === "sub2") ?? { ...defaultTrophy, slot: "sub2" }
+			])
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get current trophy", error);
+			throw rethrowWithMessage("Failed to get current trophy", error)
 		}
 	})
 
@@ -75,14 +75,14 @@ const routes = new Hono()
 		validateJson(
 			z.object({
 				trophyId: z.number().int().min(0),
-				slot: z.enum(["main", "sub1", "sub2"]),
+				slot: z.enum(["main", "sub1", "sub2"])
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
-				const { trophyId, slot } = await c.req.json();
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
+				const { trophyId, slot } = await c.req.json()
 
 				// Check if user owns this trophy (trophy ID 0 is always owned - means no trophy)
 				if (trophyId !== 0) {
@@ -92,25 +92,25 @@ const routes = new Hono()
                         WHERE user = ? AND itemId = ? AND itemKind = 3
                     `,
 						[userId, trophyId]
-					);
+					)
 
 					if (ownership.length === 0) {
 						throw new HTTPException(400, {
-							message: "You don't own this trophy",
-						});
+							message: "You don't own this trophy"
+						})
 					}
 				}
 
-				let equipColumn = "trophyId";
+				let equipColumn = "trophyId"
 				switch (slot) {
 					case "sub1":
-						equipColumn = "trophyIdSub1";
-						break;
+						equipColumn = "trophyIdSub1"
+						break
 					case "sub2":
-						equipColumn = "trophyIdSub2";
-						break;
+						equipColumn = "trophyIdSub2"
+						break
 					default:
-						break;
+						break
 				}
 				// Update profile
 				await db.execute<ResultSetHeader>(
@@ -126,11 +126,11 @@ const routes = new Hono()
                     WHERE user = ? AND version = ?
                 `,
 					[trophyId, trophyId, userId, version]
-				);
+				)
 
-				return c.json({ success: true });
+				return c.json({ success: true })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to update trophy", error);
+				throw rethrowWithMessage("Failed to update trophy", error)
 			}
 		}
 	)
@@ -141,30 +141,30 @@ const routes = new Hono()
 			z.object({
 				filter: z.object({
 					locked: z.boolean().nullable(),
-					rareType: z.number().nullable(),
-				}),
+					rareType: z.number().nullable()
+				})
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
 
-				const { filter } = await c.req.json();
-				const { locked, rareType } = filter;
+				const { filter } = await c.req.json()
+				const { locked, rareType } = filter
 
-				let additionalWhere = "";
-				const params = [userId, userId, version, userId, version];
+				let additionalWhere = ""
+				const params = [userId, userId, version, userId, version]
 
 				if (locked === true) {
-					additionalWhere = " AND cii.user IS NULL AND dst.trophyId != 0";
+					additionalWhere = " AND cii.user IS NULL AND dst.trophyId != 0"
 				} else if (locked === false) {
-					additionalWhere = " AND (cii.user IS NOT NULL OR dst.trophyId = 0)";
+					additionalWhere = " AND (cii.user IS NOT NULL OR dst.trophyId = 0)"
 				}
 
 				if (rareType !== null) {
-					additionalWhere += " AND dst.rareType = ?";
-					params.push(rareType);
+					additionalWhere += " AND dst.rareType = ?"
+					params.push(rareType)
 				}
 
 				const query = `
@@ -199,40 +199,40 @@ const routes = new Hono()
                     ORDER BY 
                         locked ASC,
                         dst.trophyId DESC
-                `;
+                `
 				//TODO: FIX RENDER BUG WITH THE FIRST GRID ITEM HAVING A YELLOW BORDER EVEN THO ITS NOT SELECTED AS A TROPHY
 				//IF I REMOVE equipped DESC, (it only happens on page load / refresh)
 
-				const [items] = await db.execute<(TrophyItem & { total_count: number } & RowDataPacket)[]>(query, params);
+				const [items] = await db.execute<(TrophyItem & { total_count: number } & RowDataPacket)[]>(query, params)
 
-				const totalCount = items.length > 0 ? items[0].total_count : 0;
+				const totalCount = items.length > 0 ? items[0].total_count : 0
 
 				return c.json({
 					items: items.map(({ total_count, ...item }) => item),
-					total: totalCount,
-				});
+					total: totalCount
+				})
 			} catch (error) {
-				throw rethrowWithMessage("Failed to search trophies", error);
+				throw rethrowWithMessage("Failed to search trophies", error)
 			}
 		}
 	)
 
-	.patch("unlock/:id", validateParams(z.object({ id: z.string().regex(/^\d+$/).transform(Number) })), async (c) => {
+	.patch("unlock/:id", validateParams(z.object({ id: z.string().regex(/^\d+$/).transform(Number) })), async c => {
 		try {
-			const { userId } = c.payload;
-			const { id } = c.req.param();
+			const { userId } = c.payload
+			const { id } = c.req.param()
 
 			// Add trophy to user's inventory
 			await db.execute<ResultSetHeader>(
 				`INSERT IGNORE INTO chuni_item_item (user, itemId, itemKind, stock, isValid)
                 VALUES (?, ?, 3, 1, 1)`,
 				[userId, id]
-			);
+			)
 
-			return c.json({ success: true });
+			return c.json({ success: true })
 		} catch (error) {
-			throw rethrowWithMessage("Failed to unlock trophy", error);
+			throw rethrowWithMessage("Failed to unlock trophy", error)
 		}
-	});
+	})
 
-export default routes;
+export default routes

@@ -1,17 +1,17 @@
-import { Menu } from "lucide-react";
+import { Menu } from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
-import { Search, type SearchProps } from "./search";
-import { ModeToggle } from "./theme-switcher";
+import { Search, type SearchProps } from "./search"
+import { ModeToggle } from "./theme-switcher"
 
 type HeaderProps = {
-	title: string;
-	searchProps?: Omit<SearchProps, "open" | "onOpenChange">;
-};
+	title: string
+	searchProps?: Omit<SearchProps, "open" | "onOpenChange">
+}
 
 const Header = ({ title, searchProps }: HeaderProps) => {
 	return (
@@ -30,7 +30,9 @@ const Header = ({ title, searchProps }: HeaderProps) => {
 								<span className="sr-only">Toggle sidebar</span>
 							</SidebarTrigger>
 						</Button>
-						<CardTitle className="hidden truncate border-none text-xl font-semibold sm:block sm:text-2xl">{title}</CardTitle>
+						<CardTitle className="hidden truncate border-none text-xl font-semibold sm:block sm:text-2xl">
+							{title}
+						</CardTitle>
 					</div>
 					<div className="flex flex-1 flex-shrink-0 items-center justify-end gap-2 sm:flex-initial">
 						{searchProps && (
@@ -44,7 +46,7 @@ const Header = ({ title, searchProps }: HeaderProps) => {
 				</CardHeader>
 			</Card>
 		</div>
-	);
-};
+	)
+}
 
-export default Header;
+export default Header

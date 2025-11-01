@@ -8,5 +8,5 @@ export type {
 	SongFilter,
 	ChunithmFilterValues,
 	UseChunithmFilteringParams,
-	isChunithmRating,
-} from "./music-types";
+	isChunithmRating
+} from "./music-types"

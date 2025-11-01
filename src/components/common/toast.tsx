@@ -1,28 +1,28 @@
-import React, { useEffect } from "react";
+import React, { useEffect } from "react"
 
 // lightweight CSS-based toast animation to avoid framer-motion
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react"
 
 interface ToastProps {
-	message: string;
-	type: "success" | "error";
-	onClose: () => void;
-	duration?: number;
+	message: string
+	type: "success" | "error"
+	onClose: () => void
+	duration?: number
 }
 
 export const Toast = ({ message, type, onClose, duration = 3000 }: ToastProps) => {
-	const [visible, setVisible] = React.useState(true);
+	const [visible, setVisible] = React.useState(true)
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			setVisible(false);
+			setVisible(false)
 			// allow CSS animation to finish before calling onClose
-			setTimeout(onClose, 300);
-		}, duration);
-		return () => clearTimeout(timer);
-	}, [onClose, duration]);
+			setTimeout(onClose, 300)
+		}, duration)
+		return () => clearTimeout(timer)
+	}, [onClose, duration])
 
-	if (!visible) return null;
+	if (!visible) return null
 
 	return (
 		<div className="animate-toast-fade fixed right-4 bottom-4 z-50">
@@ -41,5 +41,5 @@ export const Toast = ({ message, type, onClose, duration = 3000 }: ToastProps) =
 				<span className="text-sm font-medium text-gray-100">{message}</span>
 			</div>
 		</div>
-	);
-};
+	)
+}

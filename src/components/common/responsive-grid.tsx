@@ -1,36 +1,36 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react"
 
-import Spinner from "@/components/common/spinner";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import Spinner from "@/components/common/spinner"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export type ResponsiveGridProps<T> = {
-	items: T[];
-	loading?: boolean;
-	levelColorBadge?: (chartId?: number | undefined) => string;
-	itemsPerPage?: number;
-	className?: string;
-	mobileColumns?: number;
-	tabletColumns?: number;
-	desktopColumns?: number;
-	largeDesktopColumns?: number;
-	gap?: number;
-	jacketArt?: string;
-	isVerseOrAbove?: boolean;
-	isRefreshOrAbove?: boolean;
-	isPotential?: boolean;
-	isRecommend?: boolean;
+	items: T[]
+	loading?: boolean
+	levelColorBadge?: (chartId?: number | undefined) => string
+	itemsPerPage?: number
+	className?: string
+	mobileColumns?: number
+	tabletColumns?: number
+	desktopColumns?: number
+	largeDesktopColumns?: number
+	gap?: number
+	jacketArt?: string
+	isVerseOrAbove?: boolean
+	isRefreshOrAbove?: boolean
+	isPotential?: boolean
+	isRecommend?: boolean
 	CardComponent: React.FC<{
-		score: T;
-		imageBasePath?: string;
-		levelColorBadge?: (chartId?: number | undefined) => string;
-		jacketArt?: string;
-		isVerseOrAbove?: boolean;
-		isRefreshOrAbove?: boolean;
-		isPotential?: boolean;
-		isRecommend?: boolean;
-	}>;
-};
+		score: T
+		imageBasePath?: string
+		levelColorBadge?: (chartId?: number | undefined) => string
+		jacketArt?: string
+		isVerseOrAbove?: boolean
+		isRefreshOrAbove?: boolean
+		isPotential?: boolean
+		isRecommend?: boolean
+	}>
+}
 
 function ResponsiveGrid<T>({
 	CardComponent,
@@ -44,22 +44,22 @@ function ResponsiveGrid<T>({
 	isVerseOrAbove,
 	isRefreshOrAbove,
 	isPotential,
-	isRecommend,
+	isRecommend
 }: ResponsiveGridProps<T>) {
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useState(1)
 
-	const safeItemsPerPage = Math.max(1, Math.floor(itemsPerPage || 20));
-	const totalPages = Math.max(1, Math.ceil((items?.length || 0) / safeItemsPerPage));
+	const safeItemsPerPage = Math.max(1, Math.floor(itemsPerPage || 20))
+	const totalPages = Math.max(1, Math.ceil((items?.length || 0) / safeItemsPerPage))
 
 	// Reset to page 1 when items array changes substantially (like filtering)
 	React.useEffect(() => {
-		setPage(1);
-	}, [items.length]);
+		setPage(1)
+	}, [items.length])
 
 	const paged = useMemo(() => {
-		const start = (page - 1) * safeItemsPerPage;
-		return (items || []).slice(start, start + safeItemsPerPage);
-	}, [items, page, safeItemsPerPage]);
+		const start = (page - 1) * safeItemsPerPage
+		return (items || []).slice(start, start + safeItemsPerPage)
+	}, [items, page, safeItemsPerPage])
 
 	React.useEffect(() => {
 		function handleKeyDown(event: KeyboardEvent) {
@@ -70,34 +70,34 @@ function ResponsiveGrid<T>({
 				event.target instanceof HTMLSelectElement ||
 				(event.target as HTMLElement).isContentEditable
 			) {
-				return;
+				return
 			}
 
 			if (event.key === "ArrowLeft") {
-				event.preventDefault();
-				setPage((p) => Math.max(1, p - 1));
+				event.preventDefault()
+				setPage(p => Math.max(1, p - 1))
 			} else if (event.key === "ArrowRight") {
-				event.preventDefault();
-				setPage((p) => Math.min(totalPages, p + 1));
+				event.preventDefault()
+				setPage(p => Math.min(totalPages, p + 1))
 			}
 		}
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [totalPages]);
+		window.addEventListener("keydown", handleKeyDown)
+		return () => window.removeEventListener("keydown", handleKeyDown)
+	}, [totalPages])
 
 	if (loading) {
 		return (
 			<div className="flex h-full w-full items-center justify-center">
 				<Spinner />
 			</div>
-		);
+		)
 	}
 
-	const gridColsClass = `grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4`;
+	const gridColsClass = `grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4`
 
 	// Generate responsive gap classes
-	const gapClass = `gap-${Math.max(2, gap / 4)} sm:gap-${Math.max(3, gap / 4)} md:gap-${Math.max(4, gap / 4)}`;
+	const gapClass = `gap-${Math.max(2, gap / 4)} sm:gap-${Math.max(3, gap / 4)} md:gap-${Math.max(4, gap / 4)}`
 
 	return (
 		<div className={className}>
@@ -130,7 +130,7 @@ function ResponsiveGrid<T>({
 								variant="secondary"
 								size="sm"
 								className="bg-card border-border hover:bg-muted min-w-[80px] cursor-pointer border transition-none"
-								onClick={() => setPage((p) => Math.max(1, p - 1))}
+								onClick={() => setPage(p => Math.max(1, p - 1))}
 								disabled={page === 1}
 							>
 								Previous
@@ -139,7 +139,7 @@ function ResponsiveGrid<T>({
 								variant="secondary"
 								size="sm"
 								className="bg-card border-border hover:bg-muted min-w-[80px] cursor-pointer border transition-none"
-								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+								onClick={() => setPage(p => Math.min(totalPages, p + 1))}
 								disabled={page === totalPages}
 							>
 								Next
@@ -159,10 +159,10 @@ function ResponsiveGrid<T>({
 				</div>
 			)}
 		</div>
-	);
+	)
 }
 
-export default ResponsiveGrid;
+export default ResponsiveGrid
 
 function CommandMenuKbd({ className, ...props }: React.ComponentProps<"kbd">) {
 	return (
@@ -173,5 +173,5 @@ function CommandMenuKbd({ className, ...props }: React.ComponentProps<"kbd">) {
 			)}
 			{...props}
 		/>
-	);
+	)
 }

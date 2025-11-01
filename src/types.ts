@@ -1,2 +1,1 @@
-export type { UserMeta as User } from "@/api/types/jwt";
-
+export type { UserMeta as User } from "@/api/types/jwt"

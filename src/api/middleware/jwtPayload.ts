@@ -1,11 +1,11 @@
-import { MiddlewareHandler } from "hono";
+import { MiddlewareHandler } from "hono"
 
-import { UserMeta } from "../types/jwt";
+import { UserMeta } from "../types/jwt"
 
 declare module "hono" {
-  interface Context {
-    payload: UserMeta;
-  }
+	interface Context {
+		payload: UserMeta
+	}
 }
 
 /**
@@ -13,8 +13,8 @@ declare module "hono" {
  *  instead of having to access it through a string key everywhere.
  */
 export const jwtPayloadMiddleware = (): MiddlewareHandler => {
-  return async (c, next) => {
-    c.payload = JSON.parse(c.get("jwtPayload").user) as UserMeta;
-    await next();
-  };
-};
+	return async (c, next) => {
+		c.payload = JSON.parse(c.get("jwtPayload").user) as UserMeta
+		await next()
+	}
+}

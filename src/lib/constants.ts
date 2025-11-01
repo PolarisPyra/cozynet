@@ -1,7 +1,7 @@
-import { TrophyRareType } from "./enums";
+import { TrophyRareType } from "./enums"
 
-export const CDN = env.CDN_URL;
-export const turnstile = env.CFTurnstileKey;
+export const CDN = env.CDN_URL
+export const turnstile = env.CFTurnstileKey
 
 export const honorBackgrounds: Record<TrophyRareType, string> = {
 	[TrophyRareType.Normal]: `honor_bg_normal.webp`,
@@ -24,5 +24,5 @@ export const honorBackgrounds: Record<TrophyRareType, string> = {
 	[TrophyRareType.Lamp2]: ``,
 	[TrophyRareType.Lamp3]: ``,
 	[TrophyRareType.Kop]: ``,
-	[TrophyRareType.Kop2]: ``,
-};
+	[TrophyRareType.Kop2]: ``
+}

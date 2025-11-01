@@ -1,18 +1,18 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { z } from "zod";
+import { Hono } from "hono"
+import { HTTPException } from "hono/http-exception"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { db } from "@/api/db";
-import { validateJson, validateParams } from "@/api/middleware/validator";
-import { rethrowWithMessage } from "@/api/utils/error";
+import { db } from "@/api/db"
+import { validateJson, validateParams } from "@/api/middleware/validator"
+import { rethrowWithMessage } from "@/api/utils/error"
 
 interface CharacterItem {
-	characterId: number;
-	imagePath: string;
-	label: string;
-	locked: boolean;
-	equipped?: boolean;
+	characterId: number
+	imagePath: string
+	label: string
+	locked: boolean
+	equipped?: boolean
 }
 
 async function getCurrentCharacter(userId: number, version: number): Promise<CharacterItem[]> {
@@ -43,51 +43,51 @@ async function getCurrentCharacter(userId: number, version: number): Promise<Cha
             AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
         `,
 		[version, userId, userId, userId, version]
-	);
-	return result;
+	)
+	return result
 }
 
 const routes = new Hono()
-	.get("", async (c) => {
+	.get("", async c => {
 		try {
-			const { userId, versions } = c.payload;
-			const version = versions.chunithm_version;
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
-			const result = await getCurrentCharacter(userId, version);
+			const result = await getCurrentCharacter(userId, version)
 			// If no current character, return null to indicate "no selection" instead of 404
 			if (result.length === 0) {
-				return c.json(null);
+				return c.json(null)
 			}
 
-			return c.json(result[0]);
+			return c.json(result[0])
 		} catch (error) {
-			throw rethrowWithMessage("Failed to get current character", error);
+			throw rethrowWithMessage("Failed to get current character", error)
 		}
 	})
 	.post(
 		"",
 		validateJson(
 			z.object({
-				characterId: z.number().int().positive(),
+				characterId: z.number().int().positive()
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
-				const { characterId } = await c.req.json();
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
+				const { characterId } = await c.req.json()
 
 				// Verify user owns the character
 				const [ownership] = await db.execute<RowDataPacket[]>(
 					`SELECT 1 FROM chuni_item_character
                     WHERE user = ? AND characterId = ?`,
 					[userId, characterId]
-				);
+				)
 
 				if (ownership.length === 0) {
 					throw new HTTPException(400, {
-						message: "You don't own this character",
-					});
+						message: "You don't own this character"
+					})
 				}
 
 				// Update profile
@@ -96,16 +96,16 @@ const routes = new Hono()
                     SET characterId = ?
                     WHERE user = ? AND version = ?`,
 					[characterId, userId, version]
-				);
+				)
 
 				// Get updated character data
-				const result = await getCurrentCharacter(userId, version);
+				const result = await getCurrentCharacter(userId, version)
 				if (result.length === 0) {
-					return c.json(null);
+					return c.json(null)
 				}
-				return c.json(result[0]);
+				return c.json(result[0])
 			} catch (error) {
-				throw rethrowWithMessage("Failed to update character", error);
+				throw rethrowWithMessage("Failed to update character", error)
 			}
 		}
 	)
@@ -114,24 +114,24 @@ const routes = new Hono()
 		validateJson(
 			z.object({
 				filter: z.object({
-					locked: z.boolean().nullable(),
-				}),
+					locked: z.boolean().nullable()
+				})
 			})
 		),
-		async (c) => {
+		async c => {
 			try {
-				const { userId, versions } = c.payload;
-				const version = versions.chunithm_version;
-				const { filter } = await c.req.json();
-				const { locked } = filter;
+				const { userId, versions } = c.payload
+				const version = versions.chunithm_version
+				const { filter } = await c.req.json()
+				const { locked } = filter
 
-				let whereClause = "WHERE dsn.version = ?";
-				const params = [version];
+				let whereClause = "WHERE dsn.version = ?"
+				const params = [version]
 
 				if (locked === true) {
-					whereClause += " AND cic.user IS NULL";
+					whereClause += " AND cic.user IS NULL"
 				} else if (locked === false) {
-					whereClause += " AND cic.user IS NOT NULL";
+					whereClause += " AND cic.user IS NOT NULL"
 				}
 
 				const query = `
@@ -167,30 +167,30 @@ const routes = new Hono()
                 ORDER BY 
                     locked DESC,
                     dsn.characterId DESC
-                `;
+                `
 
-				params.unshift(userId, version, userId, userId, version, userId);
-				const [items] = await db.execute<(CharacterItem & { total_count: number } & RowDataPacket)[]>(query, params);
-				const totalCount = items.length > 0 ? items[0].total_count : 0;
+				params.unshift(userId, version, userId, userId, version, userId)
+				const [items] = await db.execute<(CharacterItem & { total_count: number } & RowDataPacket)[]>(query, params)
+				const totalCount = items.length > 0 ? items[0].total_count : 0
 
 				const result = {
 					items: items.map(({ total_count, ...item }) => item),
-					total: totalCount,
-				};
+					total: totalCount
+				}
 
-				return c.json(result);
+				return c.json(result)
 			} catch (error) {
-				throw rethrowWithMessage("Failed to search characters", error);
+				throw rethrowWithMessage("Failed to search characters", error)
 			}
 		}
 	)
 	.patch(
 		"unlock/:characterId",
 		validateParams(z.object({ characterId: z.string().regex(/^\d+$/).transform(Number) })),
-		async (c) => {
+		async c => {
 			try {
-				const { userId } = c.payload;
-				const { characterId } = c.req.param();
+				const { userId } = c.payload
+				const { characterId } = c.req.param()
 
 				// Add character to user's inventory
 				await db.execute<ResultSetHeader>(
@@ -198,13 +198,13 @@ const routes = new Hono()
                     (user, characterId, level, isValid, assignIllust)
                     VALUES (?, ?, 1, 1, ?)`,
 					[userId, characterId, characterId]
-				);
+				)
 
-				return c.json({ success: true });
+				return c.json({ success: true })
 			} catch (error) {
-				throw rethrowWithMessage("Failed to unlock character", error);
+				throw rethrowWithMessage("Failed to unlock character", error)
 			}
 		}
-	);
+	)
 
-export default routes;
+export default routes

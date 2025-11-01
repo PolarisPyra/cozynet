@@ -1,25 +1,25 @@
-import React from "react";
+import { useState } from "react"
 
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CDN } from "@/lib/constants";
-import { StaticMusic } from "@/shared/types";
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { CDN } from "@/lib/constants"
+import { StaticMusic } from "@/shared/types"
 
 type CardProps = {
-	score: StaticMusic;
-	levelColorBadge?: (chartId?: number | undefined) => string;
-	className?: string;
-	jacketArt?: string;
-};
+	score: StaticMusic
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+	jacketArt?: string
+}
 
-export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jacketArt }) => {
-	const [imageLoaded, setImageLoaded] = React.useState(false);
-	const song = score;
+export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
+	const [imageLoaded, setImageLoaded] = useState(false)
+	const song = score
 
 	const formatLevel = (c: { chartId?: number | null; level?: number | null }) => {
-		if (c.level == null) return "?";
-		return Number.isFinite(c.level) ? c.level.toFixed(1) : "?";
-	};
+		if (c.level == null) return "?"
+		return Number.isFinite(c.level) ? c.level.toFixed(1) : "?"
+	}
 
 	return (
 		<div
@@ -39,8 +39,10 @@ export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jack
 					/>
 				</div>
 				<div className="max-w-[180px] min-w-0 flex-1 md:max-w-[360px] lg:max-w-[160px] xl:max-w-[240px]">
-					<div className="text-primary truncate font-bold">{song.title ?? ""}</div>
-					<div className="text-primary truncate text-sm">{song.artist ?? "Unknown"}</div>
+					<div className="text-primary text-xs font-bold whitespace-nowrap sm:text-sm md:text-base">
+						{song.title ?? ""}
+					</div>
+					<div className="text-primary text-[10px] sm:text-xs">{song.artist ?? "Unknown"}</div>
 					<div className="text-primary text-sm">{song.genre ?? "N/A"}</div>
 				</div>
 			</div>
@@ -58,7 +60,5 @@ export const SongInfoCard: React.FC<CardProps> = ({ score, levelColorBadge, jack
 				))}
 			</div>
 		</div>
-	);
-};
-
-export default SongInfoCard;
+	)
+}

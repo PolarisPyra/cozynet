@@ -1,6 +1,6 @@
-import { LEVEL_CONFIGS } from "@/utils/level-filter";
+import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
-import type { ChunithmFilterValues, RatingFilter } from "../types/music-types";
+import type { ChunithmFilterValues, RatingFilter } from "../types/music-types"
 
 // ============================================================================
 // LEVEL FILTER
@@ -37,13 +37,13 @@ export const ratingLevelFilter: RatingFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" },
+		{ label: "15+", value: "15+" }
 	],
 	predicate: (rating, value) => {
-		if (!rating.level || rating.chartId === 5) return false;
-		return LEVEL_CONFIGS.CHUNITHM(rating.level, value);
-	},
-};
+		if (!rating.level || rating.chartId === 5) return false
+		return LEVEL_CONFIGS.CHUNITHM(rating.level, value)
+	}
+}
 
 // ============================================================================
 // ACHIEVEMENT FILTER
@@ -59,23 +59,23 @@ export const ratingAchievementFilter: RatingFilter = {
 		{ label: "All", value: "all" },
 		{ label: "Full Combo", value: "fullcombo" },
 		{ label: "All Justice", value: "alljustice" },
-		{ label: "Full Chain", value: "fullchain" },
+		{ label: "Full Chain", value: "fullchain" }
 	],
 	predicate: (rating, value) => {
-		if (value === "all") return true;
+		if (value === "all") return true
 
 		switch (value) {
 			case "fullcombo":
-				return rating.isFullCombo === 1;
+				return rating.isFullCombo === 1
 			case "alljustice":
-				return rating.isAllJustice === 1;
+				return rating.isAllJustice === 1
 			case "fullchain":
-				return rating.fullChain === 1;
+				return rating.fullChain === 1
 			default:
-				return true;
+				return true
 		}
-	},
-};
+	}
+}
 
 // ============================================================================
 // TAB FILTER
@@ -86,7 +86,7 @@ export const ratingAchievementFilter: RatingFilter = {
  * Options change based on version: Version >= 17 gets "New 20", below 17 gets "Recent 10"
  */
 export const createRatingTabFilter = (version: number): RatingFilter => {
-	const isVerseOrAbove = version >= 17;
+	const isVerseOrAbove = version >= 17
 
 	return {
 		identifier: "tab",
@@ -95,20 +95,20 @@ export const createRatingTabFilter = (version: number): RatingFilter => {
 			? [
 					{ label: "New 20", value: "new" },
 					{ label: "Best 30", value: "base" },
-					{ label: "Potential", value: "potential" },
+					{ label: "Potential", value: "potential" }
 				]
 			: [
 					{ label: "Best 30", value: "base" },
 					{ label: "Recent 10", value: "recent" },
-					{ label: "Potential", value: "potential" },
+					{ label: "Potential", value: "potential" }
 				],
 		predicate: (_rating, _value) => {
 			// This filter is handled by the activeTab state in the component
 			// The predicate always returns true as the actual filtering is done by the rating data hook
-			return true;
-		},
-	};
-};
+			return true
+		}
+	}
+}
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -118,28 +118,28 @@ export const createRatingTabFilter = (version: number): RatingFilter => {
  * Get all rating filters for a specific version
  */
 export const getRatingFilters = (version: number): RatingFilter[] => {
-	const tabFilter = createRatingTabFilter(version);
-	return [tabFilter, ratingLevelFilter, ratingAchievementFilter];
-};
+	const tabFilter = createRatingTabFilter(version)
+	return [tabFilter, ratingLevelFilter, ratingAchievementFilter]
+}
 
 /**
  * Get default filter values for ratings
  * @param version - The game version to get appropriate defaults for
  */
 export const getDefaultRatingFilterValues = (version: number = 0): ChunithmFilterValues => {
-	const defaultValues: ChunithmFilterValues = {};
-	const filters = getRatingFilters(version);
-	filters.forEach((filter) => {
+	const defaultValues: ChunithmFilterValues = {}
+	const filters = getRatingFilters(version)
+	filters.forEach(filter => {
 		// Use the first option as the default for each filter
-		const firstOptionValue = filter.options?.[0]?.value;
-		defaultValues[filter.identifier] = firstOptionValue || "all";
-	});
-	return defaultValues;
-};
+		const firstOptionValue = filter.options?.[0]?.value
+		defaultValues[filter.identifier] = firstOptionValue || "all"
+	})
+	return defaultValues
+}
 
 /**
  * Hook to get rating filters for current version
  */
 export const useRatingFilters = (version: number) => {
-	return getRatingFilters(version);
-};
+	return getRatingFilters(version)
+}

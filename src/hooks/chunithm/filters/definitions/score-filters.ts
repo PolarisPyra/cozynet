@@ -1,7 +1,7 @@
-import type { FilterValues } from "@/shared/types";
-import { LEVEL_CONFIGS } from "@/utils/level-filter";
+import type { FilterValues } from "@/shared/types"
+import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
-import type { ScoreFilter } from "../types/music-types";
+import type { ScoreFilter } from "../types/music-types"
 
 // ============================================================================
 // LEVEL FILTER
@@ -38,13 +38,13 @@ export const scoreLevelFilter: ScoreFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" },
+		{ label: "15+", value: "15+" }
 	],
 	predicate: (score, value) => {
-		if (!score.level || score.chartId === 5) return false;
-		return LEVEL_CONFIGS.CHUNITHM(score.level, value);
-	},
-};
+		if (!score.level || score.chartId === 5) return false
+		return LEVEL_CONFIGS.CHUNITHM(score.level, value)
+	}
+}
 // ============================================================================
 // ACHIEVEMENT FILTER
 // ============================================================================
@@ -59,23 +59,23 @@ export const scoreAchievementFilter: ScoreFilter = {
 		{ label: "All", value: "all" },
 		{ label: "Full Combo", value: "fullcombo" },
 		{ label: "All Justice", value: "alljustice" },
-		{ label: "Full Chain", value: "fullchain" },
+		{ label: "Full Chain", value: "fullchain" }
 	],
 	predicate: (score, value) => {
-		if (value === "all") return true;
+		if (value === "all") return true
 
 		switch (value) {
 			case "fullcombo":
-				return score.isFullCombo === 1;
+				return score.isFullCombo === 1
 			case "alljustice":
-				return score.isAllJustice === 1;
+				return score.isAllJustice === 1
 			case "fullchain":
-				return score.fullChainKind === 1;
+				return score.fullChainKind === 1
 			default:
-				return true;
+				return true
 		}
-	},
-};
+	}
+}
 
 // ============================================================================
 // VERSION FILTER
@@ -89,13 +89,13 @@ export const scoreVersionFilter: ScoreFilter = {
 	label: "Version",
 	options: [
 		{ label: "Current", value: "current" },
-		{ label: "All", value: "all" },
+		{ label: "All", value: "all" }
 	],
 	predicate: (_score, _value) => {
 		// This will be handled in the hook with access to user's current version
-		return true;
-	},
-};
+		return true
+	}
+}
 
 // ============================================================================
 // EXPORT ALL FILTERS
@@ -104,7 +104,7 @@ export const scoreVersionFilter: ScoreFilter = {
 /**
  * Array of all available score filters
  */
-export const scoreFilters: ScoreFilter[] = [scoreLevelFilter, scoreAchievementFilter, scoreVersionFilter];
+export const scoreFilters: ScoreFilter[] = [scoreLevelFilter, scoreAchievementFilter, scoreVersionFilter]
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -114,20 +114,20 @@ export const scoreFilters: ScoreFilter[] = [scoreLevelFilter, scoreAchievementFi
  * Get default filter values for scores
  */
 export const getDefaultScoreFilterValues = (): FilterValues => {
-	const defaultValues: FilterValues = {};
-	scoreFilters.forEach((filter) => {
+	const defaultValues: FilterValues = {}
+	scoreFilters.forEach(filter => {
 		if (filter.identifier === "version") {
-			defaultValues[filter.identifier] = "current";
+			defaultValues[filter.identifier] = "current"
 		} else {
-			defaultValues[filter.identifier] = "all";
+			defaultValues[filter.identifier] = "all"
 		}
-	});
-	return defaultValues;
-};
+	})
+	return defaultValues
+}
 
 /**
  * Hook to get score filters
  */
 export const useScoreFilters = () => {
-	return scoreFilters;
-};
+	return scoreFilters
+}
