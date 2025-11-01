@@ -1,11 +1,6 @@
 import { ChunithmRatingColors } from "@/components/common/rating-colors"
 
-interface RatingDisplayProps {
-	playerRating: number
-	highestRating: number
-}
-
-const RatingDisplay = ({ playerRating, highestRating }: RatingDisplayProps) => {
+export const RatingDisplay = function({ playerRating, highestRating }: RatingDisplayProps) {
 	return (
 		<div className="flex flex-col gap-1">
 			<div className="flex flex-col">
@@ -31,3 +26,8 @@ const RatingDisplay = ({ playerRating, highestRating }: RatingDisplayProps) => {
 }
 
 export default RatingDisplay
+
+interface RatingDisplayProps {
+	playerRating: number
+	highestRating: number
+}

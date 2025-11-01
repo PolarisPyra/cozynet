@@ -27,7 +27,7 @@ import { Grid } from "./grid/grid"
 export function CharacterCustomization() {
 	const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null)
 	const [originalCharacterId, setOriginalCharacterId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState<string>("")
+	const [searchTerm, setSearchTerm] = useState("")
 
 	const { data: currentCharacter, isLoading: currentLoading } = useCurrentCharacter()
 	const { data: searchData, isLoading: searchLoading } = useSearchCharacters({ locked: null })
@@ -35,13 +35,13 @@ export function CharacterCustomization() {
 	const { mutate: unlockCharacter } = useUnlockCharacter()
 
 	useEffect(() => {
-		if (currentCharacter) {
-			setOriginalCharacterId(currentCharacter.characterId)
-			setSelectedCharacterId(currentCharacter.characterId)
+		if (!currentCharacter) {
+			setOriginalCharacterId(null)
+			setSelectedCharacterId(null)
 			return
 		}
-		setOriginalCharacterId(null)
-		setSelectedCharacterId(null)
+		setOriginalCharacterId(currentCharacter.characterId)
+		setSelectedCharacterId(currentCharacter.characterId)
 	}, [currentCharacter])
 
 	const handleSelect = useCallback((item: CharacterItem) => {
@@ -109,12 +109,7 @@ export function CharacterCustomization() {
 						width={280}
 						height={360}
 					/>
-					<UserboxEquipUnlockButton
-						item={item}
-						hasChanges={hasChanges}
-						onEquip={() => handleEquip(item)}
-						onUnlock={() => handleUnlock(item)}
-					/>
+					<UserboxEquipUnlockButton item={item} hasChanges={hasChanges} onEquip={() => handleEquip(item)} onUnlock={() => handleUnlock(item)} />
 				</UserboxPreviewWrapper>
 			)
 		},

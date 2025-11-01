@@ -19,14 +19,6 @@ import { cn } from "@/lib/utils"
 
 type ItemType = "avatar" | "character" | "trophy" | "nameplate" | "mapicon" | "stage" | "systemvoice"
 
-type UserboxSearchCommandProps<T extends BaseItem> = DialogProps & {
-	items?: T[]
-	searchQuery?: string
-	onSearchChange?: (value: string) => void
-	onItemSelect?: (item: T) => void
-	itemType?: ItemType
-}
-
 const itemTypeLabels: Record<ItemType, { singular: string; plural: string }> = {
 	avatar: { singular: "Avatar Item", plural: "Avatar Items" },
 	character: { singular: "Character", plural: "Characters" },
@@ -68,6 +60,14 @@ const trophyRareTypeLabels: Record<TrophyRareType, string> = {
 	[TrophyRareType.Lamp3]: "Lamp++",
 	[TrophyRareType.Kop]: "KOP",
 	[TrophyRareType.Kop2]: "KOP+"
+}
+
+type UserboxSearchCommandProps<T extends BaseItem> = DialogProps & {
+	items?: T[]
+	searchQuery?: string
+	onSearchChange?: (value: string) => void
+	onItemSelect?: (item: T) => void
+	itemType?: ItemType
 }
 
 const UserboxSearchCommand = <T extends BaseItem>({

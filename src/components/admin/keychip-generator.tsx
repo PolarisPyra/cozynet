@@ -9,7 +9,12 @@ import { api } from "@/utils"
 
 import { Button } from "../ui/button"
 
-export function KeychipGenerator() {
+const gameOptions = [
+	{ value: "aime", label: "Sega (Aime card)" },
+	{ value: "SDEW", label: "SDEW (Namco PCB)" }
+]
+
+export const KeychipGenerator = function () {
 	const [isLoading, setIsLoading] = useState(false)
 	const [openDropdown, setOpenDropdown] = useState(false)
 	const [formData, setFormData] = useState({
@@ -20,23 +25,17 @@ export function KeychipGenerator() {
 		aimecard: ""
 	})
 
-	// Determine which ID field to show based on game type
 	const showNamcoPcbId = formData.game === "SDEW"
 	const hasSerialId = showNamcoPcbId ? !!formData.namcopcbid : !!formData.aimecard
 
-	const gameOptions = [
-		{ value: "aime", label: "Sega (Aime card)" },
-		{ value: "SDEW", label: "SDEW (Namco PCB)" }
-	]
-
-	const handleChange = (e: { target: { name: string; value: string } }) => {
+	const handleChange = function (e: { target: { name: string; value: string } }) {
 		setFormData({
 			...formData,
 			[e.target.name]: e.target.value
 		})
 	}
 
-	const handleGameChange = (value: string) => {
+	const handleGameChange = function (value: string) {
 		setFormData(data => ({
 			...data,
 			game: value,
@@ -46,13 +45,11 @@ export function KeychipGenerator() {
 		setOpenDropdown(false)
 	}
 
-	const generateRandomSerial = () => {
+	const generateRandomSerial = function () {
 		let uniqueNumbers = ""
 		while (uniqueNumbers.length < 4) {
 			const digit = Math.floor(Math.random() * 10)
-			if (!uniqueNumbers.includes(digit.toString())) {
-				uniqueNumbers += digit
-			}
+			if (!uniqueNumbers.includes(digit.toString())) uniqueNumbers += digit
 		}
 		const randomNumbers = Math.floor(1000 + Math.random() * 9000)
 		const randomSerial = `A69E01A${uniqueNumbers}${randomNumbers}`
@@ -63,7 +60,7 @@ export function KeychipGenerator() {
 		}))
 	}
 
-	const handleSubmit = async (e: { preventDefault: () => void }) => {
+	const handleSubmit = async function (e: { preventDefault: () => void }) {
 		e.preventDefault()
 		setIsLoading(true)
 
@@ -72,20 +69,21 @@ export function KeychipGenerator() {
 				json: formData
 			})
 
-			if (response.ok) {
-				toast.success("Keychip generated successfully!")
-				setFormData(data => ({
-					...data,
-					arcade_nickname: "",
-					name: ""
-				}))
-			} else {
+			if (!response.ok) {
 				const errorMessage =
 					response.status === 403
 						? "You don't have permission to generate keychips"
 						: `Failed to generate keychip: ${response.status}`
 				toast.error(errorMessage)
+				return
 			}
+
+			toast.success("Keychip generated successfully!")
+			setFormData(data => ({
+				...data,
+				arcade_nickname: "",
+				name: ""
+			}))
 		} catch (error) {
 			console.error("Error generating keychip:", error)
 			toast.error("An unexpected error occurred")

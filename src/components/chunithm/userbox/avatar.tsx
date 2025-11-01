@@ -27,54 +27,81 @@ const slotLabels: Record<AvatarSlot, string> = {
 	[AvatarSlot.WEAR]: "Wear"
 }
 
-// Available slots including ALL
-const availableSlots = Object.values(AvatarSlot)
+function getImageUrl(imagePath?: string) {
+	if (!imagePath) return ""
+	return `${CDN}/chunithm/avatar/${imagePath}`
+}
+
+function getInitialImages() {
+	return {
+		back: "",
+		wear: "",
+		skin: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_01400001.webp`,
+		handL: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_LeftHand.webp`,
+		handR: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_RightHand.webp`,
+		head: "",
+		item: "",
+		face: "",
+		faceStatic: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_Face.webp`,
+		skinfootL: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_01400001.webp`,
+		skinfootR: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_01400001.webp`
+	}
+}
+
+function buildAvatarImages(previewAvatarItems: Array<{ slot: string; imagePath?: string }>) {
+	const initialImages = getInitialImages()
+	const findItemBySlot = (slot: string) => previewAvatarItems.find(item => item.slot === slot)
+
+	return {
+		...initialImages,
+		back: getImageUrl(findItemBySlot("back")?.imagePath) || initialImages.back,
+		wear: getImageUrl(findItemBySlot("wear")?.imagePath) || initialImages.wear,
+		head: getImageUrl(findItemBySlot("head")?.imagePath) || initialImages.head,
+		item: getImageUrl(findItemBySlot("item")?.imagePath) || initialImages.item,
+		face: getImageUrl(findItemBySlot("face")?.imagePath) || initialImages.face
+	}
+}
 
 export function Avatar() {
 	const { items: equippedItems, render, equip } = useAvatar()
 	const unlockMutation = useUnlockAvatarItem()
 
-	// Current filter states
 	const [selectedSlot, setSelectedSlot] = useState<AvatarSlot>(AvatarSlot.ALL)
-	const [searchTerm, setSearchTerm] = useState<string>("")
-
-	// Pending changes - track what items are "equipped" but not saved yet
+	const [searchTerm, setSearchTerm] = useState("")
 	const [pendingItems, setPendingItems] = useState<Record<string, number | null>>({})
 	const [hasChanges, setHasChanges] = useState(false)
 
-	// Search query based on current filters
+	const availableSlots = Object.values(AvatarSlot)
+	const slotsWithoutAll = availableSlots.filter(s => s !== AvatarSlot.ALL)
+
 	const searchQuery = useSearchAvatarItems({
-		slot: selectedSlot === AvatarSlot.ALL ? availableSlots.filter(s => s !== AvatarSlot.ALL) : [selectedSlot],
+		slot: selectedSlot === AvatarSlot.ALL ? slotsWithoutAll : [selectedSlot],
 		locked: null
 	})
 
-	// Search query for all items (used for avatar rendering and equipped item management)
 	const allItemsQuery = useSearchAvatarItems({
-		slot: availableSlots.filter(s => s !== AvatarSlot.ALL),
+		slot: slotsWithoutAll,
 		locked: null
 	})
 
-	// Filter options for slots
-	const slotFilters = useMemo(() => {
-		return availableSlots.map(slot => ({
-			value: slot,
-			label: slotLabels[slot]
-		}))
-	}, [])
+	const slotFilters = useMemo(
+		() =>
+			availableSlots.map(slot => ({
+				value: slot,
+				label: slotLabels[slot]
+			})),
+		[]
+	)
 
-	// Filtered items based on selected slot and search term
 	const filteredItems = useMemo(() => {
 		if (!searchQuery.data?.items) return []
 
-		let items = searchQuery.data.items
+		if (!searchTerm) return searchQuery.data.items
 
-		// Apply search term filter
-		if (searchTerm) {
-			items = items.filter(item => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
-		}
+		const lowerSearchTerm = searchTerm.toLowerCase()
+		return searchQuery.data.items.filter(item => item.label.toLowerCase().includes(lowerSearchTerm))
+	}, [searchQuery.data?.items, searchTerm])
 
-		return items
-	}, [searchQuery.data?.items, searchTerm]) // Get current item for each slot (pending changes take priority)
 	const getCurrentItem = useCallback(
 		(slot: string) => {
 			if (pendingItems[slot] !== undefined) {
@@ -86,93 +113,99 @@ export function Avatar() {
 		[pendingItems, equippedItems, allItemsQuery.data?.items]
 	)
 
-	// Create preview avatar items by merging equipped items with pending changes
 	const previewAvatarItems = useMemo(() => {
 		const baseItems = [...equippedItems]
 		const slotsWithPending = Object.keys(pendingItems)
 
-		// Remove items from slots that have pending changes
 		const filteredItems = baseItems.filter(item => !slotsWithPending.includes(item.slot))
 
-		// Add pending items
 		Object.entries(pendingItems).forEach(([, itemId]) => {
-			if (itemId !== null && itemId !== undefined) {
-				const item = allItemsQuery.data?.items?.find(i => i.avatarAccessoryId === itemId)
-				if (item) {
-					filteredItems.push(item)
-				}
-			}
+			if (itemId === null || itemId === undefined) return
+			const item = allItemsQuery.data?.items?.find(i => i.avatarAccessoryId === itemId)
+			if (item) filteredItems.push(item)
 		})
 
 		return filteredItems
 	}, [equippedItems, pendingItems, allItemsQuery.data?.items])
 
-	// Get equipped item IDs for highlighting (including pending changes)
-	const equippedItemIds = useMemo(() => {
-		return new Set(previewAvatarItems.map(item => item.avatarAccessoryId))
-	}, [previewAvatarItems])
+	const equippedItemIds = useMemo(
+		() => new Set(previewAvatarItems.map(item => item.avatarAccessoryId)),
+		[previewAvatarItems]
+	)
 
-	// Create a preview render using the preview items
 	const previewRender = useMemo(() => {
 		if (!hasChanges) return render
 
-		// Use the same logic as the useAvatar hook but with preview items
-		const initialImages = {
-			back: "",
-			wear: "",
-			skin: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_01400001.webp`,
-			handL: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_LeftHand.webp`,
-			handR: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_RightHand.webp`,
-			head: "",
-			item: "",
-			face: "",
-			faceStatic: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_Face.webp`,
-			skinfootL: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_01400001.webp`,
-			skinfootR: `${CDN}/chunithm/avatarStatic/CHU_UI_Avatar_Tex_01400001.webp`
-		}
-
-		const avatarImages = {
-			...initialImages,
-			back: previewAvatarItems.find(item => item.slot === "back")?.imagePath
-				? `${CDN}/chunithm/avatar/${previewAvatarItems.find(item => item.slot === "back")?.imagePath}`
-				: initialImages.back,
-			wear: previewAvatarItems.find(item => item.slot === "wear")?.imagePath
-				? `${CDN}/chunithm/avatar/${previewAvatarItems.find(item => item.slot === "wear")?.imagePath}`
-				: initialImages.wear,
-			head: previewAvatarItems.find(item => item.slot === "head")?.imagePath
-				? `${CDN}/chunithm/avatar/${previewAvatarItems.find(item => item.slot === "head")?.imagePath}`
-				: initialImages.head,
-			item: previewAvatarItems.find(item => item.slot === "item")?.imagePath
-				? `${CDN}/chunithm/avatar/${previewAvatarItems.find(item => item.slot === "item")?.imagePath}`
-				: initialImages.item,
-			face: previewAvatarItems.find(item => item.slot === "face")?.imagePath
-				? `${CDN}/chunithm/avatar/${previewAvatarItems.find(item => item.slot === "face")?.imagePath}`
-				: initialImages.face
-		}
-
-		const maybeImg = (path?: string) => (path && path.trim() && !path.endsWith("/") ? <img src={path} /> : null)
+		const avatarImages = buildAvatarImages(previewAvatarItems)
 
 		return (
 			<div className="relative flex items-center justify-center">
 				<div className="avatar_base relative">
-					<div className="avatar_back">{maybeImg(avatarImages.back)}</div>
-					<div className="avatar_wear">{maybeImg(avatarImages.wear)}</div>
-					<div className="avatar_skin">{maybeImg(avatarImages.skin)}</div>
-					<div className="avatar_hand_l">{maybeImg(avatarImages.handL)}</div>
-					<div className="avatar_hand_r">{maybeImg(avatarImages.handR)}</div>
-					<div className="avatar_head">{maybeImg(avatarImages.head)}</div>
-					<div className="avatar_face_static">{maybeImg(avatarImages.faceStatic)}</div>
-					<div className="avatar_face">{maybeImg(avatarImages.face)}</div>
-					<div className="avatar_item_l">{maybeImg(avatarImages.item)}</div>
-					<div className="avatar_item_r">{maybeImg(avatarImages.item)}</div>
-					<div className="avatar_skinfoot_l">{maybeImg(avatarImages.skinfootL)}</div>
-					<div className="avatar_skinfoot_r">{maybeImg(avatarImages.skinfootR)}</div>
+					{avatarImages.back && (
+						<div className="avatar_back">
+							<img src={avatarImages.back} alt="" />
+						</div>
+					)}
+					{avatarImages.wear && (
+						<div className="avatar_wear">
+							<img src={avatarImages.wear} alt="" />
+						</div>
+					)}
+					{avatarImages.skin && (
+						<div className="avatar_skin">
+							<img src={avatarImages.skin} alt="" />
+						</div>
+					)}
+					{avatarImages.handL && (
+						<div className="avatar_hand_l">
+							<img src={avatarImages.handL} alt="" />
+						</div>
+					)}
+					{avatarImages.handR && (
+						<div className="avatar_hand_r">
+							<img src={avatarImages.handR} alt="" />
+						</div>
+					)}
+					{avatarImages.head && (
+						<div className="avatar_head">
+							<img src={avatarImages.head} alt="" />
+						</div>
+					)}
+					{avatarImages.faceStatic && (
+						<div className="avatar_face_static">
+							<img src={avatarImages.faceStatic} alt="" />
+						</div>
+					)}
+					{avatarImages.face && (
+						<div className="avatar_face">
+							<img src={avatarImages.face} alt="" />
+						</div>
+					)}
+					{avatarImages.item && (
+						<>
+							<div className="avatar_item_l">
+								<img src={avatarImages.item} alt="" />
+							</div>
+							<div className="avatar_item_r">
+								<img src={avatarImages.item} alt="" />
+							</div>
+						</>
+					)}
+					{avatarImages.skinfootL && (
+						<div className="avatar_skinfoot_l">
+							<img src={avatarImages.skinfootL} alt="" />
+						</div>
+					)}
+					{avatarImages.skinfootR && (
+						<div className="avatar_skinfoot_r">
+							<img src={avatarImages.skinfootR} alt="" />
+						</div>
+					)}
 				</div>
 			</div>
 		)
 	}, [hasChanges, render, previewAvatarItems])
 
-	// Check if there are any locked items in pending changes
 	const hasLockedPendingItems = useMemo(() => {
 		return Object.values(pendingItems).some(itemId => {
 			if (itemId === null || itemId === undefined) return false
@@ -186,22 +219,6 @@ export function Avatar() {
 			const originalItem = equippedItems.find(item => item.slot === slot)
 			const originalItemId = originalItem?.avatarAccessoryId || null
 
-			if (itemId === originalItemId) {
-				// If we're setting it back to the original, remove from pending changes
-				setPendingItems(prev => {
-					const newPending = { ...prev }
-					delete newPending[slot]
-					return newPending
-				})
-			} else {
-				// Otherwise, add to pending changes
-				setPendingItems(prev => ({
-					...prev,
-					[slot]: itemId
-				}))
-			}
-
-			// Update hasChanges based on whether there are any pending changes
 			setPendingItems(prev => {
 				const newPending =
 					itemId === originalItemId
@@ -218,8 +235,7 @@ export function Avatar() {
 	)
 
 	const handleItemClick = useCallback(
-		(item: any) => {
-			// Directly equip the item to its slot when clicked
+		(item: { slot: string; avatarAccessoryId: number }) => {
 			handleEquipToSlot(item.slot, item.avatarAccessoryId)
 		},
 		[handleEquipToSlot]
@@ -227,17 +243,14 @@ export function Avatar() {
 
 	const handleSaveChanges = useCallback(async () => {
 		try {
-			// Only save non-locked items
 			const validChanges = Object.entries(pendingItems).filter(([_, itemId]) => {
-				if (itemId === null || itemId === undefined) return true // Allow unequipping
+				if (itemId === null || itemId === undefined) return true
 				const item = allItemsQuery.data?.items?.find(i => i.avatarAccessoryId === itemId)
 				return !item?.locked
 			})
 
 			for (const [slot, itemId] of validChanges) {
-				if (itemId !== undefined) {
-					await equip(itemId || 0, slot) // Use 0 for unequipping
-				}
+				if (itemId !== undefined) await equip(itemId || 0, slot)
 			}
 
 			setPendingItems({})
@@ -257,10 +270,9 @@ export function Avatar() {
 	const handleSaveSlot = useCallback(
 		async (slot: string) => {
 			const itemId = pendingItems[slot]
-			if (itemId === undefined) return // No pending change for this slot
+			if (itemId === undefined) return
 
 			try {
-				// Check if item is locked (skip locked items)
 				if (itemId !== null) {
 					const item = allItemsQuery.data?.items?.find(i => i.avatarAccessoryId === itemId)
 					if (item?.locked) {
@@ -269,15 +281,12 @@ export function Avatar() {
 					}
 				}
 
-				// Save the individual slot
-				await equip(itemId || 0, slot) // Use 0 for unequipping
+				await equip(itemId || 0, slot)
 
-				// Remove this slot from pending changes and update hasChanges
 				setPendingItems(prev => {
 					const newPending = { ...prev }
 					delete newPending[slot]
-					const hasRemaining = Object.keys(newPending).length > 0
-					setHasChanges(hasRemaining)
+					setHasChanges(Object.keys(newPending).length > 0)
 					return newPending
 				})
 
@@ -321,14 +330,11 @@ export function Avatar() {
 				<Filter filters={slotFilters} selectedFilter={selectedSlot} onFilterChange={handleFilterChange} />
 			</UserboxSearchBar>
 
-			{/* Top Section: Avatar and Equipped Items - Responsive layout */}
 			<div className="flex flex-col px-2 py-3 sm:p-4">
-				{/* Avatar Preview */}
 				<div className="mb-3 flex w-full items-center justify-center sm:mb-4">
 					{hasChanges ? previewRender : render}
 				</div>
 
-				{/* Equipped Items */}
 				<div className="flex w-full flex-col items-center">
 					<div className="mb-3 flex w-full flex-row gap-2 sm:mb-4">
 						<Button
@@ -358,6 +364,7 @@ export function Avatar() {
 								const isPending =
 									pendingItems[slot] !== undefined && pendingItems[slot] !== originalItem?.avatarAccessoryId
 								const hasSlotChange = currentItem?.avatarAccessoryId !== originalItem?.avatarAccessoryId
+
 								return (
 									<div
 										key={slot}
@@ -365,14 +372,12 @@ export function Avatar() {
 											isPending ? "border-primary" : "border-border"
 										}`}
 									>
-										{/* Header with slot title */}
 										<div className="bg-background/30 border-b p-2">
 											<div className="text-foreground/90 dark:text-foreground/80 text-center text-sm font-medium">
 												{slotLabels[slot]}
 											</div>
 										</div>
 
-										{/* Content area */}
 										<div className="flex min-h-0 min-w-0 flex-1 text-center">
 											{currentItem ? (
 												<div className="flex min-w-0 flex-1 flex-col">
@@ -444,7 +449,7 @@ export function Avatar() {
 													<div className="bg-background/30 flex flex-1 items-center justify-center border-2 border-dashed p-4 text-center text-xs">
 														No item equipped
 													</div>
-													{originalItem ? (
+													{originalItem && (
 														<div className="bg-background/30 border-t p-2">
 															<Button
 																variant="outline"
@@ -455,7 +460,7 @@ export function Avatar() {
 																Revert
 															</Button>
 														</div>
-													) : null}
+													)}
 												</div>
 											)}
 										</div>
@@ -466,7 +471,6 @@ export function Avatar() {
 				</div>
 			</div>
 
-			{/* Items Grid - Takes remaining page */}
 			<UserboxContent>
 				<Grid
 					items={filteredItems}

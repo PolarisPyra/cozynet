@@ -12,15 +12,6 @@ import { getChunithmLogo } from "@/utils/version-logos"
 
 import { ChunithmRatingColors } from "../common/rating-colors"
 
-interface AchievementBadgesProps {
-	isFullCombo: number
-	isAllJustice: number
-	score: number
-	isClear: number
-	fullChainKind: number
-	skillId?: number
-}
-
 const clearBadges: Record<number, string> = {
 	103003: "hard",
 	103005: "brave",
@@ -28,7 +19,7 @@ const clearBadges: Record<number, string> = {
 	103007: "catastrophy"
 }
 
-function AchievementBadges({
+const AchievementBadges = function({
 	isFullCombo,
 	isAllJustice,
 	score,
@@ -36,7 +27,6 @@ function AchievementBadges({
 	fullChainKind,
 	skillId
 }: AchievementBadgesProps) {
-	// Use skill badge if skillId matches, otherwise default to "clear" if isClear = 1
 	const clearBadge = (skillId && clearBadges[skillId]) || "clear"
 
 	return (
@@ -97,25 +87,19 @@ function AchievementBadges({
 		</div>
 	)
 }
-export type ChunithmRatingInfoCardProps = {
-	score: ChunithmRating
-	levelColorBadge?: (chartId?: number | undefined) => string
-	className?: string
-	isPotential?: boolean
-}
 
-const ChunithmRatingInfoCard: React.FC<ChunithmRatingInfoCardProps> = ({
+export const ChunithmRatingInfoCard = function({
 	score,
 	levelColorBadge,
 	className = "",
 	isPotential = false
-}) => {
+}: ChunithmRatingInfoCardProps) {
 	const [imageLoaded, setImageLoaded] = React.useState(false)
 	const rating = score
 	const calculatedRating = ChunitmRating(rating.level ?? 0, rating.score ?? 0) / 100
 	const logoUrl = getChunithmLogo.getLogo(rating.version)
 
-	const formatLevel = (level?: number | null, chartId?: number | null) => {
+	const formatLevel = function(level?: number | null, chartId?: number | null) {
 		if (level == null) return "?"
 		const lvl = chartId === 5 ? (level + 1) / 2 : level
 		return Number.isFinite(lvl) ? lvl.toFixed(1) : "?"
@@ -223,3 +207,19 @@ const ChunithmRatingInfoCard: React.FC<ChunithmRatingInfoCardProps> = ({
 }
 
 export default ChunithmRatingInfoCard
+
+interface AchievementBadgesProps {
+	isFullCombo: number
+	isAllJustice: number
+	score: number
+	isClear: number
+	fullChainKind: number
+	skillId?: number
+}
+
+export type ChunithmRatingInfoCardProps = {
+	score: ChunithmRating
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+	isPotential?: boolean
+}

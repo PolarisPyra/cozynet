@@ -5,8 +5,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
-// Voice sample mapping - can be customized per system voice
-const DEFAULT_VOICE_SAMPLES = {
+const DEFAULT_VOICE_SAMPLES: Record<string, string> = {
 	"00000": "Full Combo",
 	"00001": "All Justice",
 	"00002": "1000 Chain",
@@ -51,22 +50,13 @@ const DEFAULT_VOICE_SAMPLES = {
 	"00041": "Voice Sample 18"
 }
 
-interface VoiceSampleDropdownProps {
-	systemVoiceId: number
-	className?: string
-}
-
 export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false)
 	const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
 	const audioRef = useRef<HTMLAudioElement | null>(null)
 
-	// Format system voice ID for URL (pad with zeros to 4 digits)
-	const formattedVoiceId = useMemo(() => {
-		return systemVoiceId.toString().padStart(4, "0")
-	}, [systemVoiceId])
+	const formattedVoiceId = useMemo(() => systemVoiceId.toString().padStart(4, "0"), [systemVoiceId])
 
-	// Generate audio URL for a sample
 	const getAudioUrl = useCallback(
 		(sampleId: string) => {
 			return `https://cozynet.b-cdn.net/client/assets/chunithm/systemvoices/systemvoice${formattedVoiceId}/${sampleId}_streaming.wav`
@@ -74,11 +64,9 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 		[formattedVoiceId]
 	)
 
-	// Play audio sample
 	const playAudioSample = useCallback(
 		async (sampleId: string, sampleName: string) => {
 			try {
-				// Stop any currently playing audio
 				if (audioRef.current) {
 					audioRef.current.pause()
 					audioRef.current = null
@@ -111,7 +99,6 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 		[getAudioUrl]
 	)
 
-	// Stop currently playing audio
 	const stopAudio = useCallback(() => {
 		if (audioRef.current) {
 			audioRef.current.pause()
@@ -120,14 +107,9 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 		setCurrentlyPlaying(null)
 	}, [])
 
-	// Popover handles outside clicks; we just control `isOpen` state
-
-	// Clean up audio on unmount
 	React.useEffect(() => {
 		return () => {
-			if (audioRef.current) {
-				audioRef.current.pause()
-			}
+			if (audioRef.current) audioRef.current.pause()
 		}
 	}, [])
 
@@ -193,4 +175,9 @@ export function VoiceSampleDropdown({ systemVoiceId, className }: VoiceSampleDro
 			</Popover>
 		</div>
 	)
+}
+
+interface VoiceSampleDropdownProps {
+	systemVoiceId: number
+	className?: string
 }

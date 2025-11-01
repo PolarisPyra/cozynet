@@ -28,7 +28,7 @@ import { VoiceSampleDropdown } from "./voice-sample-dropdown"
 export function SystemvoiceCustomization() {
 	const [selectedSystemvoiceId, setSelectedSystemvoiceId] = useState<number | null>(null)
 	const [originalSystemvoiceId, setOriginalSystemvoiceId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState<string>("")
+	const [searchTerm, setSearchTerm] = useState("")
 
 	const { data: currentSystemvoice } = useCurrentSystemvoice()
 	const { data: searchData, isLoading } = useSearchSystemvoices({ locked: null })

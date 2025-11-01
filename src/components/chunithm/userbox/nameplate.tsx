@@ -26,7 +26,7 @@ import { Grid } from "./grid/grid"
 export function NameplateCustomization() {
 	const [selectedNameplateId, setSelectedNameplateId] = useState<number | null>(null)
 	const [originalNameplateId, setOriginalNameplateId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState<string>("")
+	const [searchTerm, setSearchTerm] = useState("")
 
 	const { data: currentNameplate, isLoading: currentLoading } = useCurrentNameplate()
 	const { data: searchData, isLoading: searchLoading } = useSearchNameplates({ locked: null })
@@ -34,13 +34,13 @@ export function NameplateCustomization() {
 	const { mutate: unlockNameplate } = useUnlockNameplate()
 
 	useEffect(() => {
-		if (currentNameplate) {
-			setOriginalNameplateId(currentNameplate.nameplateId)
-			setSelectedNameplateId(currentNameplate.nameplateId)
+		if (!currentNameplate) {
+			setOriginalNameplateId(null)
+			setSelectedNameplateId(null)
 			return
 		}
-		setOriginalNameplateId(null)
-		setSelectedNameplateId(null)
+		setOriginalNameplateId(currentNameplate.nameplateId)
+		setSelectedNameplateId(currentNameplate.nameplateId)
 	}, [currentNameplate])
 
 	const handleSelect = useCallback((item: NameplateItem) => {
@@ -127,12 +127,7 @@ export function NameplateCustomization() {
 								}}
 							/>
 						)}
-						<Button
-							onClick={handleAction}
-							disabled={!hasChanges}
-							variant="custom"
-							className="w-full rounded-sm sm:w-auto"
-						>
+						<Button onClick={handleAction} disabled={!hasChanges} variant="custom" className="w-full rounded-sm sm:w-auto">
 							{selectedItem.locked ? "Unlock" : "Equip"}
 						</Button>
 					</div>

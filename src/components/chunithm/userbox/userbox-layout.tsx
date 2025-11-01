@@ -9,9 +9,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useChunithmVersion } from "@/hooks/chunithm"
 import { cn } from "@/lib/utils"
 
-interface UserboxSearchBarProps {
-	children: ReactNode
-}
+const TABS = [
+	{ id: "avatar", label: "Avatar", path: "/chunithm/userbox/avatar" },
+	{ id: "nameplate", label: "Nameplate", path: "/chunithm/userbox/nameplate" },
+	{ id: "trophy", label: "Trophy", path: "/chunithm/userbox/trophy" },
+	{ id: "systemvoice", label: "System Voice", path: "/chunithm/userbox/systemvoice" },
+	{ id: "mapicon", label: "Map Icon", path: "/chunithm/userbox/mapicon" },
+	{ id: "character", label: "Character", path: "/chunithm/userbox/character" },
+	{ id: "stage", label: "Stage", path: "/chunithm/userbox/stage" }
+] as const
 
 export function UserboxSearchBar({ children }: UserboxSearchBarProps) {
 	return (
@@ -23,19 +29,8 @@ export function UserboxSearchBar({ children }: UserboxSearchBarProps) {
 	)
 }
 
-interface UserboxContentProps {
-	children: ReactNode
-	className?: string
-}
-
 export function UserboxContent({ children, className }: UserboxContentProps) {
 	return <div className={cn("px-2 pb-2 sm:p-4", className)}>{children}</div>
-}
-
-interface UserboxPreviewWrapperProps {
-	children?: ReactNode
-	title?: string
-	description?: string
 }
 
 export function UserboxPreviewWrapper({ children, title, description }: UserboxPreviewWrapperProps) {
@@ -48,37 +43,16 @@ export function UserboxPreviewWrapper({ children, title, description }: UserboxP
 	)
 }
 
-interface UserboxPreviewEmptyProps {
-	title: string
-	description?: string
-}
-
 export function UserboxPreviewEmpty({ title, description }: UserboxPreviewEmptyProps) {
 	return <UserboxPreviewWrapper title={title} description={description} />
-}
-
-interface UserboxPageWrapperProps {
-	children: ReactNode
 }
 
 export function UserboxPageWrapper({ children }: UserboxPageWrapperProps) {
 	return <div className="flex h-full w-full flex-col">{children}</div>
 }
 
-interface UserboxSearchCommandWrapperProps {
-	children: ReactNode
-}
-
 export function UserboxSearchCommandWrapper({ children }: UserboxSearchCommandWrapperProps) {
 	return <div className="flex-1">{children}</div>
-}
-
-interface UserboxPreviewImageProps {
-	src: string
-	alt: string
-	width: number
-	height: number
-	className?: string
 }
 
 export function UserboxPreviewImage({ src, alt, width, height, className }: UserboxPreviewImageProps) {
@@ -92,14 +66,6 @@ export function UserboxPreviewImage({ src, alt, width, height, className }: User
 			/>
 		</div>
 	)
-}
-
-interface UserboxEquipUnlockButtonProps {
-	item: { locked: boolean }
-	hasChanges: boolean
-	onEquip: () => void
-	onUnlock: () => void
-	className?: string
 }
 
 export function UserboxEquipUnlockButton({
@@ -119,11 +85,6 @@ export function UserboxEquipUnlockButton({
 			{item.locked ? "Unlock" : "Equip"}
 		</Button>
 	)
-}
-
-interface TabNavigationProps {
-	currentTab: (typeof TABS)[number]
-	onTabSelect: (tab: (typeof TABS)[number]) => void
 }
 
 function TabNavigation({ currentTab, onTabSelect }: TabNavigationProps) {
@@ -186,9 +147,7 @@ export function UserboxLayout() {
 	const handleTabSelect = (tab: (typeof TABS)[number]) => navigate(tab.path)
 
 	useEffect(() => {
-		if (location.pathname === "/chunithm/userbox") {
-			navigate("/chunithm/userbox/avatar", { replace: true })
-		}
+		if (location.pathname === "/chunithm/userbox") navigate("/chunithm/userbox/avatar", { replace: true })
 	}, [location.pathname, navigate])
 
 	if (!version) {
@@ -219,12 +178,51 @@ export function UserboxLayout() {
 	)
 }
 
-const TABS = [
-	{ id: "avatar", label: "Avatar", path: "/chunithm/userbox/avatar" },
-	{ id: "nameplate", label: "Nameplate", path: "/chunithm/userbox/nameplate" },
-	{ id: "trophy", label: "Trophy", path: "/chunithm/userbox/trophy" },
-	{ id: "systemvoice", label: "System Voice", path: "/chunithm/userbox/systemvoice" },
-	{ id: "mapicon", label: "Map Icon", path: "/chunithm/userbox/mapicon" },
-	{ id: "character", label: "Character", path: "/chunithm/userbox/character" },
-	{ id: "stage", label: "Stage", path: "/chunithm/userbox/stage" }
-] as const
+interface UserboxSearchBarProps {
+	children: ReactNode
+}
+
+interface UserboxContentProps {
+	children: ReactNode
+	className?: string
+}
+
+interface UserboxPreviewWrapperProps {
+	children?: ReactNode
+	title?: string
+	description?: string
+}
+
+interface UserboxPreviewEmptyProps {
+	title: string
+	description?: string
+}
+
+interface UserboxPageWrapperProps {
+	children: ReactNode
+}
+
+interface UserboxSearchCommandWrapperProps {
+	children: ReactNode
+}
+
+interface UserboxPreviewImageProps {
+	src: string
+	alt: string
+	width: number
+	height: number
+	className?: string
+}
+
+interface UserboxEquipUnlockButtonProps {
+	item: { locked: boolean }
+	hasChanges: boolean
+	onEquip: () => void
+	onUnlock: () => void
+	className?: string
+}
+
+interface TabNavigationProps {
+	currentTab: (typeof TABS)[number]
+	onTabSelect: (tab: (typeof TABS)[number]) => void
+}

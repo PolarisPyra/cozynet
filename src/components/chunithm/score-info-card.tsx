@@ -12,15 +12,6 @@ import { getChunithmLogo } from "@/utils/version-logos"
 
 import { ChunithmRatingColors } from "../common/rating-colors"
 
-interface AchievementBadgesProps {
-	isFullCombo: number
-	isAllJustice: number
-	isClear: number
-	fullChainKind: number
-	score: number
-	skillId?: number
-}
-
 const clearBadges: Record<number, string> = {
 	103003: "hard",
 	103005: "brave",
@@ -28,7 +19,7 @@ const clearBadges: Record<number, string> = {
 	103007: "catastrophy"
 }
 
-function AchievementBadges({
+const AchievementBadges = function({
 	isFullCombo,
 	isAllJustice,
 	isClear,
@@ -36,7 +27,6 @@ function AchievementBadges({
 	score,
 	skillId
 }: AchievementBadgesProps) {
-	// Use skill badge if skillId matches, otherwise default to "clear" if isClear = 1
 	const clearBadge = (skillId && clearBadges[skillId]) || "clear"
 
 	return (
@@ -98,15 +88,10 @@ function AchievementBadges({
 	)
 }
 
-export type ChunithmScoreInfoCardProps = {
-	score: ChunithmPlaylog
-	levelColorBadge?: (chartId?: number | undefined) => string
-	className?: string
-}
-
-const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, levelColorBadge, className = "" }) => {
+export const ChunithmScoreInfoCard = function({ score, levelColorBadge, className = "" }: ChunithmScoreInfoCardProps) {
 	const [imageLoaded, setImageLoaded] = React.useState(false)
-	const worldsEnd = (level?: number | null, chartId?: number | null) => {
+
+	const worldsEnd = function(level?: number | null, chartId?: number | null) {
 		if (level == null) return "?"
 		if (chartId === 5) {
 			const stars = Math.floor((level + 1) / 2)
@@ -239,3 +224,18 @@ const ChunithmScoreInfoCard: React.FC<ChunithmScoreInfoCardProps> = ({ score, le
 }
 
 export default ChunithmScoreInfoCard
+
+interface AchievementBadgesProps {
+	isFullCombo: number
+	isAllJustice: number
+	isClear: number
+	fullChainKind: number
+	score: number
+	skillId?: number
+}
+
+export type ChunithmScoreInfoCardProps = {
+	score: ChunithmPlaylog
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+}

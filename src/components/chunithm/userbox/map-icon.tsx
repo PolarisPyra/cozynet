@@ -27,7 +27,7 @@ import { Grid } from "./grid/grid"
 export function MapiconCustomization() {
 	const [selectedMapiconId, setSelectedMapiconId] = useState<number | null>(null)
 	const [originalMapiconId, setOriginalMapiconId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState<string>("")
+	const [searchTerm, setSearchTerm] = useState("")
 
 	const { data: currentMapicon } = useCurrentMapicon()
 	const { data: searchData, isLoading } = useSearchMapicons({ locked: null })
@@ -35,13 +35,13 @@ export function MapiconCustomization() {
 	const { mutate: unlockMapicon } = useUnlockMapicon()
 
 	useEffect(() => {
-		if (currentMapicon) {
-			setOriginalMapiconId(currentMapicon.mapiconId)
-			setSelectedMapiconId(currentMapicon.mapiconId)
+		if (!currentMapicon) {
+			setOriginalMapiconId(null)
+			setSelectedMapiconId(null)
 			return
 		}
-		setOriginalMapiconId(null)
-		setSelectedMapiconId(null)
+		setOriginalMapiconId(currentMapicon.mapiconId)
+		setSelectedMapiconId(currentMapicon.mapiconId)
 	}, [currentMapicon])
 
 	const handleSelect = useCallback((item: MapiconItem) => {
@@ -101,12 +101,7 @@ export function MapiconCustomization() {
 						width={240}
 						height={240}
 					/>
-					<UserboxEquipUnlockButton
-						item={item}
-						hasChanges={hasChanges}
-						onEquip={() => handleEquip(item)}
-						onUnlock={() => handleUnlock(item)}
-					/>
+					<UserboxEquipUnlockButton item={item} hasChanges={hasChanges} onEquip={() => handleEquip(item)} onUnlock={() => handleUnlock(item)} />
 				</UserboxPreviewWrapper>
 			)
 		},
