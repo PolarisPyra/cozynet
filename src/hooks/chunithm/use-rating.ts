@@ -99,21 +99,3 @@ export const usePlayerRating = (enabled = true) => {
 		enabled
 	})
 }
-
-/**
- * Fetches and returns the player's highest achieved rating.
- */
-export const useHighestRating = (enabled = true) => {
-	return useQuery({
-		queryKey: ["highestRating"],
-		queryFn: async () => {
-			const response = await api.chunithm.rating.highestRating.$get()
-			if (!response.ok) {
-				throw new Error("Failed to fetch nameplates")
-			}
-
-			return await response.json()
-		},
-		enabled
-	})
-}
