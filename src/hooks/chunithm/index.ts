@@ -17,7 +17,6 @@ import { useLeaderboard } from "./use-leaderboard"
 import { useIsMobile } from "./use-mobile"
 import { usePossession } from "./use-possession"
 import {
-	useHighestRating,
 	usePlayerRating,
 	useUserRatingBaseHotList,
 	useUserRatingBaseList,
@@ -52,7 +51,6 @@ export {
 	useLeaderboard,
 	usePossession,
 	useIsMobile,
-	useHighestRating,
 	usePlayerRating,
 	useUserRatingBaseHotList,
 	useUserRatingBaseList,
