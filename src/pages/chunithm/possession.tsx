@@ -1,7 +1,7 @@
 import { formatDistanceToNow, parseISO } from "date-fns"
 
+import { ChunithmRatingColors } from "@/components/chunithm/rating-colors"
 import Header from "@/components/common/header"
-import { ChunithmRatingColors } from "@/components/common/rating-colors"
 import Spinner from "@/components/common/spinner"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"

@@ -10,7 +10,7 @@ import { ChunithmRating } from "@/shared/types"
 import { ChunitmRating, getChunithmGrade } from "@/utils/helpers"
 import { getChunithmLogo } from "@/utils/version-logos"
 
-import { ChunithmRatingColors } from "../common/rating-colors"
+import { ChunithmRatingColors } from "./rating-colors"
 
 const clearBadges: Record<number, string> = {
 	103003: "hard",
@@ -19,7 +19,7 @@ const clearBadges: Record<number, string> = {
 	103007: "catastrophy"
 }
 
-const AchievementBadges = function({
+const AchievementBadges = function ({
 	isFullCombo,
 	isAllJustice,
 	score,
@@ -88,7 +88,7 @@ const AchievementBadges = function({
 	)
 }
 
-export const ChunithmRatingInfoCard = function({
+export const ChunithmRatingInfoCard = function ({
 	score,
 	levelColorBadge,
 	className = "",
@@ -99,7 +99,7 @@ export const ChunithmRatingInfoCard = function({
 	const calculatedRating = ChunitmRating(rating.level ?? 0, rating.score ?? 0) / 100
 	const logoUrl = getChunithmLogo.getLogo(rating.version)
 
-	const formatLevel = function(level?: number | null, chartId?: number | null) {
+	const formatLevel = function (level?: number | null, chartId?: number | null) {
 		if (level == null) return "?"
 		const lvl = chartId === 5 ? (level + 1) / 2 : level
 		return Number.isFinite(lvl) ? lvl.toFixed(1) : "?"

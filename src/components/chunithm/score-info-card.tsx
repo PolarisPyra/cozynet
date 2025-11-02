@@ -11,7 +11,7 @@ import { ChunithmPlaylog } from "@/shared/types"
 import { getChunithmGrade } from "@/utils/helpers"
 import { getChunithmLogo } from "@/utils/version-logos"
 
-import { ChunithmRatingColors } from "../common/rating-colors"
+import { ChunithmRatingColors } from "./rating-colors"
 
 const clearBadges: Record<number, string> = {
 	103003: "hard",

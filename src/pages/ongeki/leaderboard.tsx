@@ -1,9 +1,9 @@
 import { useState } from "react"
 
 import Header from "@/components/common/header"
-import { OngekiRatingColors } from "@/components/common/rating-colors"
 import ResponsiveGrid from "@/components/common/responsive-grid"
 import Spinner from "@/components/common/spinner"
+import { OngekiRatingColors } from "@/components/ongeki/rating-colors"
 import { useLeaderboard, useOngekiVersion } from "@/hooks/ongeki"
 import { Body, Container } from "@/pages/layout/layout"
 
@@ -52,11 +52,7 @@ export function OngekiLeaderboard() {
 						<div className="text-foreground font-medium">{score.userName}</div>
 						<div className="flex items-center gap-2">
 							<span className="text-muted-foreground text-sm">Rating:</span>
-							<OngekiRatingColors
-								rating={ratingValue}
-								version={version}
-								decimals={isRefreshOrAbove ? 3 : 2}
-							/>
+							<OngekiRatingColors rating={ratingValue} version={version} decimals={isRefreshOrAbove ? 3 : 2} />
 						</div>
 					</div>
 				</div>

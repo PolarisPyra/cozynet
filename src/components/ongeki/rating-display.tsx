@@ -1,5 +1,6 @@
-import { OngekiRatingColors } from "@/components/common/rating-colors"
 import { useOngekiVersion } from "@/hooks/ongeki"
+
+import { OngekiRatingColors } from "./rating-colors"
 
 interface OngekiRatingDisplayProps {
 	playerRating: number
@@ -7,11 +8,7 @@ interface OngekiRatingDisplayProps {
 	ratingDecimals: number
 }
 
-export function OngekiRatingDisplay({
-	playerRating,
-	highestRating,
-	ratingDecimals
-}: OngekiRatingDisplayProps) {
+export function OngekiRatingDisplay({ playerRating, highestRating, ratingDecimals }: OngekiRatingDisplayProps) {
 	const version = useOngekiVersion()
 
 	return (
