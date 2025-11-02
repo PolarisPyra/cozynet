@@ -64,7 +64,7 @@ const ChunithmPossession = () => {
 								</span>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">PlayerRating</span>
+								<span className="text-muted-foreground text-base font-medium">Player Rating</span>
 								{playerRating > 0 && version ? (
 									<ChunithmRatingColors rating={playerRating} version={version} />
 								) : (

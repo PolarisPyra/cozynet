@@ -87,11 +87,6 @@ const ChunithmRatingFrames = () => {
 				}}
 			/>
 			<Body>
-				<Card className="rounded-sm">
-					<CardContent className="px-4 py-2">
-						<RatingDisplay playerRating={playerRatingValue} highestRating={highestRatingValue} />
-					</CardContent>
-				</Card>
 				<FilterArea>
 					<div className="flex justify-start">
 						<MultiFilter
