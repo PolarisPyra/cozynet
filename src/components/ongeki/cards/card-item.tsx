@@ -1,53 +1,106 @@
-import React, { memo, useRef } from "react"
+import { memo, useMemo, useRef } from "react"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { CDN } from "@/lib/constants"
 import type { DB } from "@/shared/types"
 
+import { getCanvasStyles, getCardStyles, useCardEffects } from "./card-effects"
+
+const SSR_RARITY = 3
+
 export interface CardItemProps {
 	item: DB.OngekiUserCard & DB.OngekiStaticCards
 }
 
+interface CardImageProps {
+	imageUrl: string | null
+	alt: string
+}
+
+const CardImage = ({ imageUrl, alt }: CardImageProps) => {
+	const imageStyles = useMemo(
+		() => ({
+			imageRendering: "auto" as const,
+			WebkitBackfaceVisibility: "hidden" as const,
+			backfaceVisibility: "hidden" as const,
+			transform: "translateZ(0)",
+			willChange: "transform" as const
+		}),
+		[]
+	)
+
+	if (!imageUrl) {
+		return <Skeleton className="h-full w-full" />
+	}
+
+	return (
+		<img
+			src={imageUrl}
+			alt={alt}
+			loading="lazy"
+			decoding="async"
+			className="h-full w-full object-cover"
+			style={imageStyles}
+		/>
+	)
+}
+
+interface CardOverlayProps {
+	name: string | null
+	level: number | null
+}
+
+const CardOverlay = ({ name, level }: CardOverlayProps) => {
+	return (
+		<>
+			{level && (
+				<div className="absolute top-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+					Lv. {level}
+				</div>
+			)}
+			<div className="absolute right-0 bottom-0 left-0 bg-black/80 px-2 py-1">
+				<div className="text-center text-xs text-white">
+					<div className="truncate leading-tight font-semibold">{name || "Unknown"}</div>
+				</div>
+			</div>
+		</>
+	)
+}
+
+interface HolographicCanvasProps {
+	enabled: boolean
+	canvasRef: React.RefObject<HTMLCanvasElement | null>
+}
+
+const HolographicCanvas = ({ enabled, canvasRef }: HolographicCanvasProps) => {
+	const canvasStyles = useMemo(() => getCanvasStyles(), [])
+
+	if (!enabled) return null
+
+	return (
+		<canvas
+			ref={canvasRef}
+			className="pointer-events-none absolute inset-0 h-full w-full rounded-md transition-opacity duration-300"
+			style={canvasStyles}
+		/>
+	)
+}
+
 const CardItemBase = ({ item }: CardItemProps) => {
-	const imageUrl = item.imagePath ? `${CDN}/ongeki/card/${item.imagePath}` : null
 	const cardRef = useRef<HTMLDivElement>(null)
-	const boundsRef = useRef<DOMRect | null>(null)
-	const rafIdRef = useRef<number | null>(null)
+	const canvasRef = useRef<HTMLCanvasElement>(null)
 
-	const handleMouseEnter = () => {
-		const el = cardRef.current
-		if (!el) return
-		boundsRef.current = el.getBoundingClientRect()
-	}
+	const isSSR = item.rarity === SSR_RARITY
 
-	const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-		const el = cardRef.current
-		if (!el) return
-		if (rafIdRef.current !== null) return
-		rafIdRef.current = window.requestAnimationFrame(() => {
-			rafIdRef.current = null
-			const rect = boundsRef.current ?? el.getBoundingClientRect()
-			boundsRef.current = rect
-			const x = e.clientX - rect.left
-			const y = e.clientY - rect.top
-			const cx = rect.width / 2
-			const cy = rect.height / 2
-			const rotateX = ((cy - y) / cy) * 18
-			const rotateY = ((x - cx) / cx) * 18
-			el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
-		})
-	}
+	const imageUrl = useMemo(() => (item.imagePath ? `${CDN}/ongeki/card/${item.imagePath}` : null), [item.imagePath])
 
-	const handleMouseLeave = () => {
-		const el = cardRef.current
-		if (!el) return
-		if (rafIdRef.current !== null) {
-			cancelAnimationFrame(rafIdRef.current)
-			rafIdRef.current = null
-		}
-		el.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg)"
-		boundsRef.current = null
-	}
+	const { handleMouseEnter, handleMouseMove, handleMouseLeave } = useCardEffects({
+		enabled: isSSR,
+		cardRef,
+		canvasRef
+	})
+
+	const cardStyles = useMemo(() => getCardStyles(), [])
 
 	return (
 		<div className="w-full">
@@ -56,35 +109,28 @@ const CardItemBase = ({ item }: CardItemProps) => {
 				onMouseEnter={handleMouseEnter}
 				onMouseMove={handleMouseMove}
 				onMouseLeave={handleMouseLeave}
-				className="relative aspect-[3/4] origin-center overflow-hidden rounded-md bg-black shadow-md transition-transform duration-150 ease-out will-change-transform [perspective:1200px] [transform-style:preserve-3d] hover:shadow-xl"
+				className="bg-background/30 relative aspect-[3/4] origin-center overflow-hidden rounded-md transition-all duration-150 ease-out will-change-transform"
+				style={cardStyles}
 			>
-				{imageUrl ? (
-					<img
-						src={imageUrl}
-						alt={item.name || "Card"}
-						loading="lazy"
-						decoding="async"
-						className="h-full w-full object-cover"
-					/>
-				) : (
-					<Skeleton className="h-full w-full" />
-				)}
-
-				<div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2">
-					<div className="text-center text-xs text-white">
-						<div className="truncate leading-tight font-semibold">{item.name || "Unknown"}</div>
-						{item.level && <div className="mt-0.5 text-[10px] text-white/80">Lv. {item.level}</div>}
-					</div>
-				</div>
+				<CardImage imageUrl={imageUrl} alt={item.name || "Card"} />
+				<HolographicCanvas enabled={isSSR} canvasRef={canvasRef} />
+				<CardOverlay name={item.name} level={item.level} />
 			</div>
 		</div>
 	)
 }
 
 const areItemsEqual = (prev: CardItemProps, next: CardItemProps) => {
-	const a = prev.item
-	const b = next.item
-	return a.id === b.id && a.imagePath === b.imagePath && a.name === b.name && a.level === b.level
+	const prevItem = prev.item
+	const nextItem = next.item
+
+	return (
+		prevItem.id === nextItem.id &&
+		prevItem.imagePath === nextItem.imagePath &&
+		prevItem.name === nextItem.name &&
+		prevItem.level === nextItem.level &&
+		prevItem.rarity === nextItem.rarity
+	)
 }
 
 export const CardItem = memo(CardItemBase, areItemsEqual)
