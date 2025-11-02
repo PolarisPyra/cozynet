@@ -24,7 +24,7 @@ export function OngekiRatingFrames() {
 
 	const version = useOngekiVersion()
 	const filters = useRatingFilters(version || 0)
-	const { playerRatingValue, highestRatingValue, ratingDecimals, isRefreshOrAbove } = useOngekiRatingData(version || 0)
+	const { playerRatingValue, highestRatingValue, ratingDecimals } = useOngekiRatingData(version || 0)
 
 	const { filteredRatings, isLoading } = useOngekiRatingFiltering({
 		searchQuery,
@@ -72,7 +72,6 @@ export function OngekiRatingFrames() {
 							playerRating={playerRatingValue}
 							highestRating={highestRatingValue}
 							ratingDecimals={ratingDecimals}
-							isRefreshOrAbove={isRefreshOrAbove}
 						/>
 					</CardContent>
 				</Card>
@@ -93,7 +92,7 @@ export function OngekiRatingFrames() {
 						items={filteredRatings}
 						loading={isLoading}
 						levelColorBadge={ongekiBadgeColors}
-						isRefreshOrAbove={isRefreshOrAbove}
+						ongekiVersion={version}
 						CardComponent={OngekiRatingInfoCard}
 						isRecommend={filterValues.category === "next"}
 					/>

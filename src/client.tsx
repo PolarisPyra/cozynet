@@ -42,6 +42,7 @@ const Account = React.lazy(() => import("./pages/account/account"))
 const ChunithmAllSongs = React.lazy(() => import("./pages/chunithm/allsongs"))
 const ChunithmFavorites = React.lazy(() => import("./pages/chunithm/favorites"))
 const ChunithmLeaderboard = React.lazy(() => import("./pages/chunithm/leaderboard"))
+const ChunithmPossession = React.lazy(() => import("./pages/chunithm/possession"))
 const ChunithmRatingBaseList = React.lazy(() => import("./pages/chunithm/rating"))
 const ChunithmRivals = React.lazy(() => import("./pages/chunithm/rivals"))
 const ChunithmScorePage = React.lazy(() => import("./pages/chunithm/scores"))
@@ -96,6 +97,7 @@ const app = (
 									<Route path="/chunithm/allsongs" element={<ChunithmAllSongs />} />
 									<Route path="/chunithm/rivals" element={<ChunithmRivals />} />
 									<Route path="/chunithm/rating" element={<ChunithmRatingBaseList />} />
+									<Route path="/chunithm/possession" element={<ChunithmPossession />} />
 
 									<Route path="/ongeki/settings" element={<OngekiSettingsPage />} />
 									<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />

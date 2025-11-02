@@ -16,19 +16,19 @@ export type ResponsiveGridProps<T> = {
 	largeDesktopColumns?: number
 	gap?: number
 	jacketArt?: string
-	isVerseOrAbove?: boolean
-	isRefreshOrAbove?: boolean
+	chunithmVersion?: number
 	isPotential?: boolean
 	isRecommend?: boolean
+	ongekiVersion?: number
 	CardComponent: React.FC<{
 		score: T
 		imageBasePath?: string
 		levelColorBadge?: (chartId?: number | undefined) => string
 		jacketArt?: string
-		isVerseOrAbove?: boolean
-		isRefreshOrAbove?: boolean
+		chunithmVersion?: number
 		isPotential?: boolean
 		isRecommend?: boolean
+		ongekiVersion?: number
 	}>
 }
 
@@ -41,10 +41,10 @@ function ResponsiveGrid<T>({
 	className,
 	gap = 16,
 	jacketArt,
-	isVerseOrAbove,
-	isRefreshOrAbove,
+	chunithmVersion,
 	isPotential,
-	isRecommend
+	isRecommend,
+	ongekiVersion
 }: ResponsiveGridProps<T>) {
 	const [page, setPage] = useState(1)
 
@@ -108,10 +108,10 @@ function ResponsiveGrid<T>({
 							score={s}
 							levelColorBadge={levelColorBadge}
 							jacketArt={jacketArt}
-							isVerseOrAbove={isVerseOrAbove}
-							isRefreshOrAbove={isRefreshOrAbove}
+							chunithmVersion={chunithmVersion}
 							isPotential={isPotential}
 							isRecommend={isRecommend}
+							ongekiVersion={ongekiVersion}
 						/>
 					</div>
 				))}

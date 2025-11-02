@@ -5,6 +5,7 @@ import { ChunithmKamaitachiRoutes } from "./kamaitachi"
 import { ChunithmLeaderboardRoutes } from "./leaderboard"
 import { ChunithmModsRoutes } from "./modifications"
 import { ChunithmOptionsRoutes } from "./options"
+import { ChunithmPossessionRoutes } from "./possession"
 import { ChunithmScorePlaylog } from "./playlog"
 import { UserRatingFramesRoutes } from "./rating"
 import { ChunithmReiwaRoutes } from "./reiwa"
@@ -27,6 +28,7 @@ export const AllChunithmRoutes = new Hono()
 	.route("cozynet", ChunithmSettingsRoutes)
 	.route("options", ChunithmOptionsRoutes)
 	.route("mods", ChunithmModsRoutes)
+	.route("possession", ChunithmPossessionRoutes)
 	.route("teams", ChunithmTeamsRoutes)
 	.route("userbox", UserBoxRoutes)
 	.route("username", UsernameRoutes)

@@ -92,15 +92,17 @@ export type OngekiRatingInfoCardProps = {
 	score: OngekiRating
 	levelColorBadge?: (chartId?: number | undefined) => string
 	className?: string
-	isRefreshOrAbove?: boolean
 	isRecommend?: boolean
+	ongekiVersion?: number
 }
 
 export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 	const [imageLoaded, setImageLoaded] = useState(false)
-	const { score, levelColorBadge, className = "", isRefreshOrAbove, isRecommend = false } = props
+	const { score, levelColorBadge, className = "", isRecommend = false, ongekiVersion } = props
 	const rating = score
-	const calculatedRating = isRefreshOrAbove
+	const version = ongekiVersion ?? 0
+	const isRefresh = version >= 8
+	const calculatedRating = isRefresh
 		? OngekiGekForceRating(
 				rating.level ?? 0,
 				rating.techScoreMax ?? 0,
@@ -178,8 +180,8 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 						<div className="mt-0.5">
 							<OngekiRatingColors
 								rating={calculatedRating}
-								decimals={isRefreshOrAbove ? 3 : 2}
-								isRefresh={isRefreshOrAbove}
+								version={rating.version}
+								decimals={isRefresh ? 3 : 2}
 							/>
 						</div>
 					</div>

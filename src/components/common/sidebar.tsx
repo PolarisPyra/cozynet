@@ -1,6 +1,7 @@
 import React from "react"
 
 import {
+	BarChart3,
 	BoomBox,
 	ChevronRight,
 	Folder,
@@ -72,6 +73,11 @@ const chunithmSubnav: MenuItem[] = [
 		name: "Rating Frame",
 		href: "/chunithm/rating",
 		icon: List
+	},
+	{
+		name: "Possession",
+		href: "/chunithm/possession",
+		icon: BarChart3
 	}
 ]
 

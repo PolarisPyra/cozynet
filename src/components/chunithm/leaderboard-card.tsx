@@ -1,6 +1,8 @@
 import { ChunithmRatingColors } from "@/components/common/rating-colors"
+import { useChunithmVersion } from "@/hooks/chunithm"
 
 export const LeaderboardCard = function({ score }: { score: LeaderboardPlayer }) {
+	const version = useChunithmVersion()
 	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
 
 	return (
@@ -11,7 +13,11 @@ export const LeaderboardCard = function({ score }: { score: LeaderboardPlayer })
 					<div className="text-foreground mb-1 text-base font-bold">{score.userName}</div>
 					<div className="flex items-center gap-2">
 						<span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">Rating:</span>
-						<ChunithmRatingColors rating={ratingValue} />
+						{ratingValue > 0 && version ? (
+							<ChunithmRatingColors rating={ratingValue} version={version} />
+						) : (
+							<span className="text-foreground text-sm font-medium">-</span>
+						)}
 					</div>
 				</div>
 			</div>

@@ -1,33 +1,34 @@
 import { OngekiRatingColors } from "@/components/common/rating-colors"
+import { useOngekiVersion } from "@/hooks/ongeki"
 
 interface OngekiRatingDisplayProps {
 	playerRating: number
 	highestRating: number
 	ratingDecimals: number
-	isRefreshOrAbove?: boolean
 }
 
 export function OngekiRatingDisplay({
 	playerRating,
 	highestRating,
-	ratingDecimals,
-	isRefreshOrAbove
+	ratingDecimals
 }: OngekiRatingDisplayProps) {
+	const version = useOngekiVersion()
+
 	return (
 		<div className="flex flex-col gap-1">
 			<div className="flex flex-col">
 				<div className="flex items-center gap-2">
 					<span className="font-bold">Player Rating:</span>
-					{playerRating > 0 ? (
-						<OngekiRatingColors rating={playerRating} decimals={ratingDecimals} isRefresh={isRefreshOrAbove} />
+					{playerRating > 0 && version ? (
+						<OngekiRatingColors rating={playerRating} version={version} decimals={ratingDecimals} />
 					) : (
 						<span className="font-bold">Loading...</span>
 					)}
 				</div>
 				<div className="flex items-center gap-2">
 					<span className="font-bold">Highest Rating:</span>
-					{highestRating > 0 ? (
-						<OngekiRatingColors rating={highestRating} decimals={ratingDecimals} isRefresh={isRefreshOrAbove} />
+					{highestRating > 0 && version ? (
+						<OngekiRatingColors rating={highestRating} version={version} decimals={ratingDecimals} />
 					) : (
 						<span className="font-bold">Loading...</span>
 					)}

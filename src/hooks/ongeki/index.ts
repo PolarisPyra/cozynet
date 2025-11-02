@@ -34,6 +34,7 @@ import {
 	useUserRatingBaseNextList
 } from "./use-rating"
 import { useReiwaExport, useReiwaRefreshExport } from "./use-reiwa"
+import { useOngekiRatingColor } from "./use-rating-colors"
 import { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "./use-rivals"
 import { useOngekiScores } from "./use-scores"
 import { useOngekiSongs } from "./use-songs"
@@ -80,7 +81,8 @@ export {
 	useUserNewRatingBaseBestNewList,
 	useUserNewRatingBaseNextBestList,
 	useNewPlayerRating,
-	useNewHighestRating
+	useNewHighestRating,
+	useOngekiRatingColor
 }
 
 export type { FilterValues, MusicFilterValues }

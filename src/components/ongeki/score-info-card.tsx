@@ -97,18 +97,21 @@ function AchievementBadges({ isFullCombo, isAllBreak, isFullBell, techScore }: A
 
 export type OngekiScoreInfoCardProps = {
 	score: OngekiPlaylog
-	isRefreshOrAbove?: boolean
 	levelColorBadge?: (chartId?: number | undefined) => string
 	className?: string
+	ongekiVersion: number
 }
 
 export function OngekiScoreInfoCard({
 	score,
-	isRefreshOrAbove,
 	levelColorBadge,
-	className = ""
+	className = "",
+	ongekiVersion
 }: OngekiScoreInfoCardProps) {
 	const [imageLoaded, setImageLoaded] = useState(false)
+
+	const version = ongekiVersion
+	const isRefresh = version >= 8
 
 	const formatLevel = (level?: number | null) => {
 		if (level == null) return "?"
@@ -117,11 +120,11 @@ export function OngekiScoreInfoCard({
 
 	const calculatedRating =
 		score.playerRating && score.playerRating > 0
-			? isRefreshOrAbove
+			? isRefresh
 				? score.playerRating / 1000
 				: score.playerRating / 100
 			: score.techScore != null && score.level != null
-				? isRefreshOrAbove
+				? isRefresh
 					? OngekiGekForceRating(
 							score.level,
 							score.techScore,
@@ -163,41 +166,31 @@ export function OngekiScoreInfoCard({
 						</div>
 					</div>
 
-					<div className="flex flex-shrink-0 flex-col items-end gap-1.5">
+					<div className="flex flex-shrink-0 flex-col items-end gap-2">
 						<div className="flex flex-col items-end">
-							<span className="text-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
-								Tech Score
-							</span>
+							<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Tech Score</span>
 							{score.techScore != null ? (
 								score.techScore >= 1010000 ? (
 									<div className="flex flex-col items-end gap-0.5">
-										<span className="text-foreground text-base font-medium whitespace-nowrap tabular-nums">
-											1,010,000
-										</span>
-										<span className="text-muted-foreground text-xs font-medium whitespace-nowrap tabular-nums">
+										<span className="text-foreground text-base font-medium tabular-nums">1,010,000</span>
+										<span className="text-muted-foreground text-xs font-medium tabular-nums">
 											(AB+: +{(score.techScore - 1010000).toLocaleString()})
 										</span>
 									</div>
 								) : (
-									<span className="text-foreground text-base font-medium whitespace-nowrap tabular-nums">
+									<span className="text-foreground text-base font-medium tabular-nums">
 										{score.techScore.toLocaleString()}
 									</span>
 								)
 							) : (
-								<span className="text-foreground text-base font-medium whitespace-nowrap tabular-nums">-</span>
+								<span className="text-foreground text-base font-medium tabular-nums">-</span>
 							)}
 						</div>
 						<div className="flex flex-col items-end">
-							<span className="text-foreground text-[10px] font-medium tracking-wide whitespace-nowrap uppercase">
-								Player Rating
-							</span>
+							<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
 							<div className="mt-0.5">
 								{calculatedRating !== null ? (
-									<OngekiRatingColors
-										rating={calculatedRating}
-										decimals={isRefreshOrAbove ? 3 : 2}
-										isRefresh={isRefreshOrAbove}
-									/>
+									<OngekiRatingColors rating={calculatedRating} version={version} decimals={isRefresh ? 3 : 2} />
 								) : (
 									<span className="text-foreground text-sm font-medium">-</span>
 								)}
