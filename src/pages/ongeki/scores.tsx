@@ -21,7 +21,7 @@ export function OngekiScorePage() {
 
 	const version = useOngekiVersion()
 	const filters = useScoreFilters()
-	const { filteredScores, isLoading, isRefreshOrAbove } = useOngekiScoreFiltering({
+	const { filteredScores, isLoading } = useOngekiScoreFiltering({
 		searchQuery,
 		filterValues
 	})
@@ -72,7 +72,7 @@ export function OngekiScorePage() {
 				<ResponsiveGrid
 					items={filteredScores}
 					loading={isLoading}
-					isRefreshOrAbove={isRefreshOrAbove}
+					ongekiVersion={version}
 					levelColorBadge={ongekiBadgeColors}
 					CardComponent={OngekiScoreInfoCard}
 				/>

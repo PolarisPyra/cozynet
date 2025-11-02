@@ -150,7 +150,7 @@ export const ChunithmRatingInfoCard = function({
 					<div className="flex flex-col items-end">
 						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Rating</span>
 						<div className="mt-0.5">
-							<ChunithmRatingColors rating={calculatedRating} />
+							<ChunithmRatingColors rating={calculatedRating} version={rating.version} />
 						</div>
 					</div>
 				</div>

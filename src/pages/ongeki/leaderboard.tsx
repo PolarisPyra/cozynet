@@ -54,8 +54,8 @@ export function OngekiLeaderboard() {
 							<span className="text-muted-foreground text-sm">Rating:</span>
 							<OngekiRatingColors
 								rating={ratingValue}
+								version={version}
 								decimals={isRefreshOrAbove ? 3 : 2}
-								isRefresh={isRefreshOrAbove}
 							/>
 						</div>
 					</div>

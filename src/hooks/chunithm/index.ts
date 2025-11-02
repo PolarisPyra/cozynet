@@ -15,6 +15,7 @@ import { useGameOptions, useUpdateGameOptions } from "./use-game-options"
 import { useKamaitachiExport } from "./use-kamatachi"
 import { useLeaderboard } from "./use-leaderboard"
 import { useIsMobile } from "./use-mobile"
+import { usePossession } from "./use-possession"
 import {
 	useHighestRating,
 	usePlayerRating,
@@ -23,6 +24,7 @@ import {
 	useUserRatingBaseNewList,
 	useUserRatingBaseNextList
 } from "./use-rating"
+import { useChunithmRatingColor } from "./use-rating-colors"
 import { useReiwaExport } from "./use-reiwa"
 import { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "./use-rivals"
 import { useChunithmScores } from "./use-scores"
@@ -48,6 +50,7 @@ export {
 	useUpdateGameOptions,
 	useKamaitachiExport,
 	useLeaderboard,
+	usePossession,
 	useIsMobile,
 	useHighestRating,
 	usePlayerRating,
@@ -72,7 +75,8 @@ export {
 	useUnlockAllSongs,
 	useChunithmVersion,
 	useChunithmVersions,
-	useUpdateChunithmVersion
+	useUpdateChunithmVersion,
+	useChunithmRatingColor
 }
 
 export type { ChunithmFilterValues }

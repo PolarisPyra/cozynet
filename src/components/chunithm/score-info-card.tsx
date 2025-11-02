@@ -5,6 +5,7 @@ import { DateTime } from "luxon"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useChunithmVersion } from "@/hooks/chunithm"
 import { CDN } from "@/lib/constants"
 import { ChunithmPlaylog } from "@/shared/types"
 import { getChunithmGrade } from "@/utils/helpers"
@@ -19,7 +20,7 @@ const clearBadges: Record<number, string> = {
 	103007: "catastrophy"
 }
 
-const AchievementBadges = function({
+const AchievementBadges = function ({
 	isFullCombo,
 	isAllJustice,
 	isClear,
@@ -88,10 +89,11 @@ const AchievementBadges = function({
 	)
 }
 
-export const ChunithmScoreInfoCard = function({ score, levelColorBadge, className = "" }: ChunithmScoreInfoCardProps) {
+export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, className = "" }: ChunithmScoreInfoCardProps) {
 	const [imageLoaded, setImageLoaded] = React.useState(false)
+	const version = useChunithmVersion()
 
-	const worldsEnd = function(level?: number | null, chartId?: number | null) {
+	const worldsEnd = function (level?: number | null, chartId?: number | null) {
 		if (level == null) return "?"
 		if (chartId === 5) {
 			const stars = Math.floor((level + 1) / 2)
@@ -160,8 +162,8 @@ export const ChunithmScoreInfoCard = function({ score, levelColorBadge, classNam
 					<div className="flex flex-col items-end">
 						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
 						<div className="mt-0.5">
-							{ratingValue > 0 ? (
-								<ChunithmRatingColors rating={ratingValue} />
+							{ratingValue > 0 && version ? (
+								<ChunithmRatingColors rating={ratingValue} version={version} />
 							) : (
 								<span className="text-foreground text-sm font-medium">-</span>
 							)}
