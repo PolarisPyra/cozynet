@@ -1,6 +1,7 @@
 import { memo, useMemo, useRef } from "react"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { CDN } from "@/lib/constants"
 import type { DB } from "@/shared/types"
 
@@ -89,6 +90,7 @@ const HolographicCanvas = ({ enabled, canvasRef }: HolographicCanvasProps) => {
 const CardItemBase = ({ item }: CardItemProps) => {
 	const cardRef = useRef<HTMLDivElement>(null)
 	const canvasRef = useRef<HTMLCanvasElement>(null)
+	const isMobile = useIsMobile()
 
 	const isSSR = item.rarity === SSR_RARITY
 
@@ -106,14 +108,14 @@ const CardItemBase = ({ item }: CardItemProps) => {
 		<div className="w-full">
 			<div
 				ref={cardRef}
-				onMouseEnter={handleMouseEnter}
-				onMouseMove={handleMouseMove}
-				onMouseLeave={handleMouseLeave}
+				onMouseEnter={isMobile ? undefined : handleMouseEnter}
+				onMouseMove={isMobile ? undefined : handleMouseMove}
+				onMouseLeave={isMobile ? undefined : handleMouseLeave}
 				className="bg-background/30 relative aspect-[3/4] origin-center overflow-hidden rounded-md transition-all duration-150 ease-out will-change-transform"
 				style={cardStyles}
 			>
 				<CardImage imageUrl={imageUrl} alt={item.name || "Card"} />
-				<HolographicCanvas enabled={isSSR} canvasRef={canvasRef} />
+				<HolographicCanvas enabled={isSSR && !isMobile} canvasRef={canvasRef} />
 				<CardOverlay name={item.name} level={item.level} />
 			</div>
 		</div>

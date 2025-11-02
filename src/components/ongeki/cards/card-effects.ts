@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef } from "react"
 
+import { useIsMobile } from "@/hooks/use-mobile"
+
 // Animation constants
 const ROTATION_SPEED = 0.1
 const SPARKLE_SPEED = 0.4
@@ -121,6 +123,7 @@ interface UseCardEffectsOptions {
 }
 
 export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOptions) => {
+	const isMobile = useIsMobile()
 	const boundsRef = useRef<DOMRect | null>(null)
 	const rotationFrameRef = useRef<number | null>(null)
 	const animationFrameRef = useRef<number | null>(null)
@@ -128,6 +131,8 @@ export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOp
 
 	const handleMouseEnter = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
+			if (isMobile) return
+			
 			const el = cardRef.current
 			const canvas = canvasRef.current
 			if (!el) return
@@ -140,11 +145,13 @@ export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOp
 
 			e.currentTarget.style.boxShadow = SHADOW_HOVER
 		},
-		[cardRef, canvasRef]
+		[cardRef, canvasRef, isMobile]
 	)
 
 	const handleMouseMove = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
+			if (isMobile) return
+			
 			const el = cardRef.current
 			if (!el || rotationFrameRef.current !== null) return
 
@@ -164,11 +171,13 @@ export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOp
 				el.style.transform = `perspective(${PERSPECTIVE}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
 			})
 		},
-		[cardRef]
+		[cardRef, isMobile]
 	)
 
 	const handleMouseLeave = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
+			if (isMobile) return
+			
 			const el = cardRef.current
 			const canvas = canvasRef.current
 			if (!el) return
@@ -187,11 +196,11 @@ export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOp
 
 			e.currentTarget.style.boxShadow = SHADOW_DEFAULT
 		},
-		[cardRef, canvasRef]
+		[cardRef, canvasRef, isMobile]
 	)
 
 	useEffect(() => {
-		if (!enabled || !canvasRef.current) return
+		if (!enabled || !canvasRef.current || isMobile) return
 
 		const canvas = canvasRef.current
 		const ctx = canvas.getContext("2d", { alpha: true })
@@ -235,7 +244,7 @@ export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOp
 				animationFrameRef.current = null
 			}
 		}
-	}, [enabled, canvasRef])
+	}, [enabled, canvasRef, isMobile])
 
 	return {
 		handleMouseEnter,
