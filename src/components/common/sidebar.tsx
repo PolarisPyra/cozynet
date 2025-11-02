@@ -107,6 +107,11 @@ const ongekiSubnav: MenuItem[] = [
 		name: "Cards",
 		href: "/ongeki/cards",
 		icon: RectangleVertical
+	},
+	{
+		name: "Possession",
+		href: "/ongeki/possession",
+		icon: BarChart3
 	}
 ]
 

@@ -1,21 +1,28 @@
 import { formatDistanceToNow, parseISO } from "date-fns"
 
-import { ChunithmRatingColors } from "@/components/chunithm/rating-colors"
+import { OngekiRatingColors } from "@/components/ongeki/rating-colors"
 import Header from "@/components/common/header"
 import Spinner from "@/components/common/spinner"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"
-import { useChunithmRatingColor, useChunithmVersion, usePossession } from "@/hooks/chunithm"
+import { useOngekiRatingColor, useOngekiVersion, usePossession } from "@/hooks/ongeki"
 import { Body, Container } from "@/pages/layout/layout"
-import { getChunithmLogo } from "@/utils/version-logos"
 
-const ChunithmPossession = () => {
+const OngekiPossession = () => {
 	const { user } = useAuth()
-	const version = useChunithmVersion()
+	const version = useOngekiVersion()
 	const { data: possessionData, isLoading } = usePossession()
 
-	const playerRating = possessionData?.playerRating ? possessionData.playerRating / 100 : 0
-	const ratingColor = useChunithmRatingColor(playerRating)
+	const isRefreshOrAbove = version >= 8
+	const playerRating = isRefreshOrAbove
+		? possessionData?.newPlayerRating
+			? possessionData.newPlayerRating / 1000
+			: 0
+		: possessionData?.playerRating
+			? possessionData.playerRating / 100
+			: 0
+
+	const ratingColor = useOngekiRatingColor(playerRating)
 
 	if (isLoading) return <LoadingState />
 	if (!possessionData) return <NoDataState />
@@ -30,30 +37,13 @@ const ChunithmPossession = () => {
 		}
 	}
 
-	const danToRoman = (dan: number | null) => {
-		if (dan === null || dan === 0) return null
-		const romans = ["", "I", "II", "III", "IV", "V", "INFINITE"]
-		return dan < romans.length ? romans[dan] : dan.toString()
-	}
-
 	return (
 		<Container>
-			<Header title={`${possessionData.userName || user?.username || "Player"}'s CHUNITHM Profile`} />
+			<Header title={`${possessionData.userName || user?.username || "Player"}'s ONGEKI Profile`} />
 			<Body>
 				<div className="w-full">
 					<div className="bg-card border-border rounded-md border p-4 shadow-sm">
-						<div className="mb-4 flex items-center justify-between">
-							<h2 className="text-foreground text-xl font-bold">Player Stats</h2>
-							{version && getChunithmLogo.getLogo(version) && (
-								<Badge variant="secondary" className="h-6 rounded-sm p-1">
-									<img
-										src={getChunithmLogo.getLogo(version)!}
-										alt="Version Logo"
-										className="max-h-5 w-auto object-contain"
-									/>
-								</Badge>
-							)}
-						</div>
+						<h2 className="text-foreground mb-4 text-xl font-bold">Player Stats</h2>
 						<div className="space-y-3">
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Color</span>
@@ -64,21 +54,9 @@ const ChunithmPossession = () => {
 								)}
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Dan</span>
-								<span className="text-foreground text-base font-semibold">
-									{danToRoman(possessionData.classEmblemMedal) || "None"}
-								</span>
-							</div>
-							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Emblem</span>
-								<span className="text-foreground text-base font-semibold">
-									{danToRoman(possessionData.classEmblemBase) || "None"}
-								</span>
-							</div>
-							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Player Rating</span>
 								{playerRating > 0 && version ? (
-									<ChunithmRatingColors rating={playerRating} version={version} />
+									<OngekiRatingColors rating={playerRating} version={version} decimals={isRefreshOrAbove ? 3 : 2} />
 								) : (
 									<span className="text-foreground text-base font-semibold">-</span>
 								)}
@@ -121,4 +99,5 @@ const NoDataState = () => (
 	</div>
 )
 
-export default ChunithmPossession
+export default OngekiPossession
+

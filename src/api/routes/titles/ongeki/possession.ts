@@ -5,17 +5,17 @@ import { db } from "@/api/db"
 import { rethrowWithMessage } from "@/api/utils/error"
 import { DB } from "@/shared/types"
 
-const ChunithmPossessionRoutes = new Hono().get("", async c => {
+const OngekiPossessionRoutes = new Hono().get("", async c => {
 	try {
 		const { userId, versions } = c.payload
-		const version = versions.chunithm_version
+		const version = versions.ongeki_version
 
-		const [results] = await db.execute<(DB.ChuniProfileData & RowDataPacket)[]>(
+		const [results] = await db.execute<(DB.OngekiProfileData & RowDataPacket)[]>(
 			`
 				SELECT 
-					cpd.*
-				FROM chuni_profile_data cpd
-				WHERE cpd.user = ? AND cpd.version = ?
+					opd.*
+				FROM ongeki_profile_data opd
+				WHERE opd.user = ? AND opd.version = ?
 			`,
 			[userId, version]
 		)
@@ -26,4 +26,4 @@ const ChunithmPossessionRoutes = new Hono().get("", async c => {
 	}
 })
 
-export { ChunithmPossessionRoutes }
+export { OngekiPossessionRoutes }
