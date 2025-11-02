@@ -53,6 +53,7 @@ interface B45ExportData {
  */
 export const useReiwaExport = () => {
 	const version = useOngekiVersion()
+	const isRefreshOrAbove = version ? Number(version) >= 8 : false
 
 	return useQuery<B45ExportData>({
 		queryKey: ["ongeki", "reiwa", "export", version],
@@ -65,6 +66,90 @@ export const useReiwaExport = () => {
 
 			return response.json() as Promise<B45ExportData>
 		},
-		enabled: !!version
+		enabled: !!version && !isRefreshOrAbove
+	})
+}
+
+interface RefreshExportData {
+	honor: string
+	name: string
+	rating: number
+	updatedAt: string
+	best: Array<{
+		id: number
+		title: string
+		artist: string
+		const: number
+		diff: string
+		score: number
+		rank: string
+		update: number
+		lamps: {
+			is_fullbell: boolean
+			is_allbreak: boolean
+			is_fullcombo: boolean
+		}
+		rating: number
+		is_unknown: boolean
+	}>
+	new: Array<{
+		id: number
+		title: string
+		artist: string
+		const: number
+		diff: string
+		score: number
+		rank: string
+		update: number
+		lamps: {
+			is_fullbell: boolean
+			is_allbreak: boolean
+			is_fullcombo: boolean
+		}
+		rating: number
+		is_unknown: boolean
+	}>
+	pscore: Array<{
+		id: number
+		title: string
+		artist: string
+		const: number
+		diff: string
+		score: number
+		rank: string
+		update: number
+		lamps: {
+			is_fullbell: boolean
+			is_allbreak: boolean
+			is_fullcombo: boolean
+		}
+		rating: number
+		p_score: number
+		p_star: number
+		p_rating: number
+		is_unknown: boolean
+	}>
+}
+
+/**
+ * Hook to fetch Ongeki Re:Fresh Reiwa export data
+ * @returns Query result with Re:Fresh Reiwa export data
+ */
+export const useReiwaRefreshExport = () => {
+	const version = useOngekiVersion()
+	const isRefreshOrAbove = version ? Number(version) >= 8 : false
+
+	return useQuery<RefreshExportData>({
+		queryKey: ["ongeki", "reiwa", "exportRefresh", version],
+		queryFn: async () => {
+			const response = await api.ongeki.reiwa.exportRefresh.$get()
+
+			if (!response.ok) {
+				throw new Error()
+			}
+
+			return response.json() as Promise<RefreshExportData>
+		},
+		enabled: !!version && isRefreshOrAbove
 	})
 }
