@@ -33,7 +33,7 @@ import {
 	useUserRatingBaseNewList,
 	useUserRatingBaseNextList
 } from "./use-rating"
-import { useReiwaExport } from "./use-reiwa"
+import { useReiwaExport, useReiwaRefreshExport } from "./use-reiwa"
 import { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "./use-rivals"
 import { useOngekiScores } from "./use-scores"
 import { useOngekiSongs } from "./use-songs"
@@ -56,6 +56,7 @@ export {
 	getDefaultScoreFilterValues,
 	useLeaderboard,
 	useReiwaExport,
+	useReiwaRefreshExport,
 	useAddRival,
 	useRemoveRival,
 	useRivalCount,
