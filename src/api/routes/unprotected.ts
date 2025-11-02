@@ -17,6 +17,9 @@ import { getUserGameVersions } from "../utils/versions"
  */
 
 const UnprotectedRoutes = new Hono()
+	.get("/health", c => {
+		return c.json({ status: "ok" })
+	})
 	.post("/login", validateJson(loginSchema), async c => {
 		const { username, password } = await c.req.json()
 
