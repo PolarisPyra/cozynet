@@ -1,19 +1,11 @@
 import { useMemo } from "react"
 
-import {
-	getChunithmColorBackground,
-	getChunithmColorBadgeColor,
-	getChunithmColorName,
-	getChunithmRatingStyle,
-	getChunithmTier
-} from "@/components/common/rating-colors"
+import { getChunithmColorName, getChunithmRatingStyle, getChunithmTier } from "@/components/chunithm/rating-colors"
 
 import { useChunithmVersion } from "./use-version"
 
 export interface ChunithmRatingColor {
 	colorName: string
-	backgroundStyle: React.CSSProperties
-	badgeColor: string
 	textStyle: React.CSSProperties
 	tier: number
 }
@@ -41,8 +33,6 @@ export const useChunithmRatingColor = function (rating: number, version?: number
 
 		return {
 			colorName: getChunithmColorName(rating, effectiveVersion),
-			backgroundStyle: getChunithmColorBackground(rating, effectiveVersion),
-			badgeColor: getChunithmColorBadgeColor(rating, effectiveVersion),
 			textStyle: getChunithmRatingStyle(rating, effectiveVersion),
 			tier: getChunithmTier(rating, effectiveVersion)
 		}

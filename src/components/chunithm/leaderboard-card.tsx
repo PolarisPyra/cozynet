@@ -1,7 +1,8 @@
-import { ChunithmRatingColors } from "@/components/common/rating-colors"
 import { useChunithmVersion } from "@/hooks/chunithm"
 
-export const LeaderboardCard = function({ score }: { score: LeaderboardPlayer }) {
+import { ChunithmRatingColors } from "./rating-colors"
+
+export const LeaderboardCard = function ({ score }: { score: LeaderboardPlayer }) {
 	const version = useChunithmVersion()
 	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
 

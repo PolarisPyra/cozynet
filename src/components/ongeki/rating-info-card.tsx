@@ -9,7 +9,7 @@ import { CDN } from "@/lib/constants"
 import { OngekiRating } from "@/shared/types"
 import { OngekiGekForceRating, OngekiRating as OngekiRatingCalc, getOngekiGrade } from "@/utils/helpers"
 
-import { OngekiRatingColors } from "../common/rating-colors"
+import { OngekiRatingColors } from "./rating-colors"
 
 interface PlatinumStarsProps {
 	count: number
@@ -178,11 +178,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 							Rating
 						</span>
 						<div className="mt-0.5">
-							<OngekiRatingColors
-								rating={calculatedRating}
-								version={rating.version}
-								decimals={isRefresh ? 3 : 2}
-							/>
+							<OngekiRatingColors rating={calculatedRating} version={rating.version} decimals={isRefresh ? 3 : 2} />
 						</div>
 					</div>
 				</div>

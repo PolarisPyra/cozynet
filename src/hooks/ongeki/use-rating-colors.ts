@@ -1,19 +1,11 @@
 import { useMemo } from "react"
 
-import {
-	getOngekiColorBackground,
-	getOngekiColorBadgeColor,
-	getOngekiColorName,
-	getOngekiRatingStyle,
-	getOngekiTier
-} from "@/components/common/rating-colors"
+import { getOngekiColorName, getOngekiRatingStyle, getOngekiTier } from "@/components/ongeki/rating-colors"
 
 import { useOngekiVersion } from "./use-version"
 
 export interface OngekiRatingColor {
 	colorName: string
-	backgroundStyle: React.CSSProperties
-	badgeColor: string
 	textStyle: React.CSSProperties
 	tier: number
 }
@@ -41,8 +33,6 @@ export const useOngekiRatingColor = function (rating: number, version?: number):
 
 		return {
 			colorName: getOngekiColorName(rating, effectiveVersion),
-			backgroundStyle: getOngekiColorBackground(rating, effectiveVersion),
-			badgeColor: getOngekiColorBadgeColor(rating, effectiveVersion),
 			textStyle: getOngekiRatingStyle(rating, effectiveVersion),
 			tier: getOngekiTier(rating, effectiveVersion)
 		}

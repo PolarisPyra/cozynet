@@ -1,5 +1,6 @@
-import { ChunithmRatingColors } from "@/components/common/rating-colors"
 import { useChunithmVersion } from "@/hooks/chunithm"
+
+import { ChunithmRatingColors } from "./rating-colors"
 
 export const RatingDisplay = function ({ playerRating, highestRating }: RatingDisplayProps) {
 	const version = useChunithmVersion()

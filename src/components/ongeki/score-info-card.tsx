@@ -9,7 +9,7 @@ import { CDN } from "@/lib/constants"
 import { OngekiPlaylog } from "@/shared/types"
 import { OngekiGekForceRating, OngekiRating as OngekiRatingCalc, getOngekiGrade } from "@/utils/helpers"
 
-import { OngekiRatingColors } from "../common/rating-colors"
+import { OngekiRatingColors } from "./rating-colors"
 
 interface PlatinumStarsProps {
 	count: number
