@@ -3,7 +3,7 @@ import type { RowDataPacket } from "mysql2"
 
 import { db } from "@/api/db"
 import { rethrowWithMessage } from "@/api/utils/error"
-import { OngekiRating, getDifficultyFromOngekiChart, getOngekiGrade } from "@/utils/helpers"
+import { OngekiGekForceRating, OngekiRating, getDifficultyFromOngekiChart, getOngekiGrade } from "@/utils/helpers"
 
 interface OngekiSongResult {
 	musicId: number
@@ -155,6 +155,9 @@ const OngekiReiwaRoutes = new Hono()
                 r.difficultId,
                 r.version,
                 r.type,
+                b.isFullBell,
+                b.isFullCombo,
+                b.isAllBreake,
                 m.title,
                 m.artist,
                 m.level,
@@ -385,7 +388,13 @@ const OngekiReiwaRoutes = new Hono()
 				.filter((song: OngekiRefreshSongResult) => song.musicId !== 0)
 				.map((song: OngekiRefreshSongResult) => {
 					const cc = Number(song.level.toFixed(1))
-					const rating = OngekiRating(cc, song.techScoreMax)
+					const rating = OngekiGekForceRating(
+						song.level,
+						song.techScoreMax,
+						song.isFullCombo ?? 0,
+						song.isAllBreake ?? 0,
+						song.isFullBell ?? 0
+					)
 					return {
 						id: song.musicId,
 						title: song.title,
@@ -400,7 +409,7 @@ const OngekiReiwaRoutes = new Hono()
 							is_allbreak: Boolean(song.isAllBreake),
 							is_fullcombo: Boolean(song.isFullCombo)
 						},
-						rating: Number((rating / 100).toFixed(3)),
+						rating: Number((rating / 1000).toFixed(3)),
 						is_unknown: false
 					}
 				})
@@ -409,7 +418,13 @@ const OngekiReiwaRoutes = new Hono()
 				.filter((song: OngekiRefreshSongResult) => song.musicId !== 0)
 				.map((song: OngekiRefreshSongResult) => {
 					const cc = Number(song.level.toFixed(1))
-					const rating = OngekiRating(cc, song.techScoreMax)
+					const rating = OngekiGekForceRating(
+						song.level,
+						song.techScoreMax,
+						song.isFullCombo ?? 0,
+						song.isAllBreake ?? 0,
+						song.isFullBell ?? 0
+					)
 					return {
 						id: song.musicId,
 						title: song.title,
@@ -424,7 +439,7 @@ const OngekiReiwaRoutes = new Hono()
 							is_allbreak: Boolean(song.isAllBreake),
 							is_fullcombo: Boolean(song.isFullCombo)
 						},
-						rating: Number((rating / 100).toFixed(3)),
+						rating: Number((rating / 1000).toFixed(3)),
 						is_unknown: false
 					}
 				})
@@ -433,7 +448,13 @@ const OngekiReiwaRoutes = new Hono()
 				.filter((song: OngekiRefreshSongResult) => song.musicId !== 0)
 				.map((song: OngekiRefreshSongResult) => {
 					const cc = Number(song.level.toFixed(1))
-					const rating = OngekiRating(cc, song.techScoreMax)
+					const rating = OngekiGekForceRating(
+						song.level,
+						song.techScoreMax,
+						song.isFullCombo ?? 0,
+						song.isAllBreake ?? 0,
+						song.isFullBell ?? 0
+					)
 					const pRating = getPRating(cc, song.platinumScoreStar ?? null)
 					return {
 						id: song.musicId,
@@ -449,7 +470,7 @@ const OngekiReiwaRoutes = new Hono()
 							is_allbreak: Boolean(song.isAllBreake),
 							is_fullcombo: Boolean(song.isFullCombo)
 						},
-						rating: Number((rating / 100).toFixed(3)),
+						rating: Number((rating / 1000).toFixed(3)),
 						p_score: song.platinumScoreMax ?? 0,
 						p_star: song.platinumScoreStar ?? 0,
 						p_rating: Number(pRating.toFixed(3)),
