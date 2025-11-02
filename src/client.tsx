@@ -47,6 +47,7 @@ const ChunithmRatingBaseList = React.lazy(() => import("./pages/chunithm/rating"
 const ChunithmRivals = React.lazy(() => import("./pages/chunithm/rivals"))
 const ChunithmScorePage = React.lazy(() => import("./pages/chunithm/scores"))
 const ChunithmSettingsPage = React.lazy(() => import("./pages/chunithm/settings"))
+const OngekiPossession = React.lazy(() => import("./pages/ongeki/possession"))
 
 const queryClient = new QueryClient()
 
@@ -107,6 +108,7 @@ const app = (
 									<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
 									<Route path="/ongeki/rivals" element={<OngekiRivals />} />
 									<Route path="/ongeki/cards" element={<CardManagement />} />
+									<Route path="/ongeki/possession" element={<OngekiPossession />} />
 									<Route path="/maimaidx/scores" element={<MaimaiDxScorePage />} />
 									<Route path="/maimaidx/settings" element={<MaimaiDxSettings />} />
 									<Route path="/maimaidx/allsongs" element={<MaimaiDxAllSongs />} />

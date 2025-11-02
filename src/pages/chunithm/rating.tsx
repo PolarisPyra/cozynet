@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react"
 
-import RatingDisplay from "@/components/chunithm/rating-display"
 import ChunithmRatingInfoCard from "@/components/chunithm/rating-info-card"
 import Header from "@/components/common/header"
 import { MultiFilter } from "@/components/common/multi-filter"
 import ResponsiveGrid from "@/components/common/responsive-grid"
 import Spinner from "@/components/common/spinner"
-import { Card, CardContent } from "@/components/ui/card"
 import { useChunithmVersion } from "@/hooks/chunithm"
 import { getDefaultRatingFilterValues, useChunithmRatingFiltering, useRatingFilters } from "@/hooks/chunithm"
 import { getRatingFilters } from "@/hooks/chunithm/filters/definitions/rating-filters"
@@ -52,7 +50,7 @@ const ChunithmRatingFrames = () => {
 		}
 	}, [version, filterValues.tab])
 
-	const { filteredRatings, isLoading, playerRatingValue, highestRatingValue } = useChunithmRatingFiltering({
+	const { filteredRatings, isLoading } = useChunithmRatingFiltering({
 		searchQuery,
 		filterValues
 	})
