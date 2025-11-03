@@ -460,8 +460,8 @@ export const formatSqlDateToLocalParts = (sqlDate: string | null | undefined): {
 	try {
 		const dt = DateTime.fromSQL(sqlDate, { zone: "Asia/Tokyo" }).toLocal()
 		return {
-			date: dt.toLocaleString(DateTime.DATE_SHORT),
-			time: dt.toLocaleString(DateTime.TIME_SIMPLE)
+			date: dt.toFormat("MM/dd/yyyy"),
+			time: dt.toFormat("h:mm a")
 		}
 	} catch {
 		return { date: "—", time: "—" }
@@ -477,8 +477,8 @@ export const formatIsoDateToLocalParts = (isoDate: string | null | undefined): {
 	try {
 		const dt = DateTime.fromISO(isoDate.replace("Z", ""), { zone: "Asia/Tokyo" }).toLocal()
 		return {
-			date: dt.toLocaleString(DateTime.DATE_SHORT),
-			time: dt.toLocaleString(DateTime.TIME_SIMPLE)
+			date: dt.toFormat("MM/dd/yyyy"),
+			time: dt.toFormat("h:mm a")
 		}
 	} catch {
 		return { date: "—", time: "—" }
