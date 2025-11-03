@@ -1,3 +1,4 @@
+import OngekiPossessionChart from "@/components/ongeki/possession-chart"
 import Header from "@/components/common/header"
 import Spinner from "@/components/common/spinner"
 import { OngekiRatingColors } from "@/components/ongeki/rating-colors"
@@ -88,6 +89,9 @@ const OngekiPossession = () => {
 								</div>
 							</div>
 						</div>
+					</div>
+					<div className="mt-6">
+						<OngekiPossessionChart />
 					</div>
 				</div>
 			</Body>

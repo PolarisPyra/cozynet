@@ -1,3 +1,4 @@
+import ChunithmPossessionChart from "@/components/chunithm/possession-chart"
 import { ChunithmRatingColors } from "@/components/chunithm/rating-colors"
 import Header from "@/components/common/header"
 import Spinner from "@/components/common/spinner"
@@ -31,7 +32,7 @@ const ChunithmPossession = () => {
 		<Container>
 			<Header title={`${possessionData.userName || user?.username || "Player"}'s CHUNITHM Profile`} />
 			<Body>
-				<div className="w-full">
+				<div className="mx-auto w-full max-w-6xl">
 					<div className="bg-card border-border rounded-md border p-4 shadow-sm">
 						<div className="mb-4 flex items-center justify-between">
 							<h2 className="text-foreground text-xl font-bold">Player Stats</h2>
@@ -110,6 +111,9 @@ const ChunithmPossession = () => {
 								</Badge>
 							</div>
 						</div>
+					</div>
+					<div className="mt-6">
+						<ChunithmPossessionChart />
 					</div>
 				</div>
 			</Body>
