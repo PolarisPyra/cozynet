@@ -153,7 +153,7 @@ const OngekiPossessionChart = () => {
 
 	return (
 		<div className="bg-card border-border rounded-md border p-2 shadow-sm">
-			<h3 className="text-foreground mb-3 text-lg font-semibold">Songs Cleared by Level</h3>
+			<h3 className="text-primary mb-3 text-lg font-semibold">Songs Cleared by Level</h3>
 			<div className="w-full">
 				<VictoryChart
 					theme={VictoryTheme.material}
@@ -166,26 +166,22 @@ const OngekiPossessionChart = () => {
 						dependentAxis
 						tickValues={tickValues}
 						label="Number of Songs"
-						gridComponent={<line stroke="hsl(var(--border))" strokeWidth={0.5} strokeDasharray="4,4" />}
 						style={{
 							axis: { stroke: "hsl(var(--muted-foreground))", strokeWidth: 2 },
 							ticks: { stroke: "hsl(var(--muted-foreground))", size: 5 },
-							tickLabels: { fill: "hsl(var(--primary))", fontSize: 11, padding: 5 },
-							axisLabel: { fill: "hsl(var(--primary))", fontSize: 12, padding: 50 },
-							grid: { stroke: "hsl(var(--border))", strokeWidth: 0.5, strokeDasharray: "4,4" }
+							tickLabels: { fill: "var(--primary)", fontSize: 11, padding: 5 },
+							axisLabel: { fill: "var(--primary)", fontSize: 12, padding: 50 }
 						}}
 					/>
 					<VictoryAxis
 						tickValues={xTickValues}
 						tickFormat={(x: string) => x}
 						label="Level"
-						gridComponent={<line stroke="hsl(var(--border))" strokeWidth={0.5} strokeDasharray="4,4" />}
 						style={{
 							axis: { stroke: "hsl(var(--muted-foreground))", strokeWidth: 1.5 },
 							ticks: { stroke: "hsl(var(--muted-foreground))", size: 4 },
-							tickLabels: { fill: "hsl(var(--primary))", fontSize: 10, angle: -45, textAnchor: "end", padding: 8 },
-							axisLabel: { fill: "hsl(var(--primary))", fontSize: 11, padding: 50 },
-							grid: { stroke: "hsl(var(--border))", strokeWidth: 0.5, strokeDasharray: "4,4" }
+							tickLabels: { fill: "var(--primary)", fontSize: 10, angle: -45, textAnchor: "end", padding: 8 },
+							axisLabel: { fill: "var(--primary)", fontSize: 11, padding: 50 }
 						}}
 					/>
 					<VictoryBar
