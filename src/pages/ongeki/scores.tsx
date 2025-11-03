@@ -13,7 +13,7 @@ import {
 	useScoreFilters
 } from "@/hooks/ongeki"
 import { Body, Container, FilterArea } from "@/pages/layout/layout"
-import { ongekiBadgeColors } from "@/utils/helpers"
+import { ongekiBadgeColors } from "@/utils/ongeki"
 
 export function OngekiScorePage() {
 	const [searchQuery, setSearchQuery] = useState("")

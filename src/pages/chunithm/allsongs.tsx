@@ -15,7 +15,7 @@ import {
 } from "@/hooks/chunithm"
 import useGroupedSongs from "@/hooks/chunithm/use-grouped-songs"
 import { Body, Container, FilterArea } from "@/pages/layout/layout"
-import { chunithmBadgeColors } from "@/utils/helpers"
+import { chunithmBadgeColors } from "@/utils/chunithm"
 
 const ChunithmAllSongs = () => {
 	const [searchParams, setSearchParams] = useSearchParams()

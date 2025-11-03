@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CDN } from "@/lib/constants"
 import { Mai2Playlog } from "@/shared/types"
-import { getMaimaiDxComboStatus, getMaimaiDxGrade, getMaimaiDxSyncStatus, maimaiDxBadgeColors } from "@/utils/helpers"
+import { getMaimaiDxComboStatus, getMaimaiDxGrade, getMaimaiDxSyncStatus, maimaiDxBadgeColors } from "@/utils/maimai"
 
 interface AchievementBadgesProps {
 	comboStatus?: number

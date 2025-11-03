@@ -12,7 +12,7 @@ import {
 	useScoreFilters
 } from "@/hooks/chunithm"
 import { Body, Container, FilterArea } from "@/pages/layout/layout"
-import { chunithmBadgeColors } from "@/utils/helpers"
+import { chunithmBadgeColors } from "@/utils/chunithm"
 
 const ChunithmScorePage = () => {
 	const [searchQuery, setSearchQuery] = useState("")

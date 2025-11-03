@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useChunithmVersion } from "@/hooks/chunithm"
 import { CDN } from "@/lib/constants"
 import { ChunithmPlaylog } from "@/shared/types"
-import { formatSqlDateToLocalParts, getChunithmGrade } from "@/utils/helpers"
+import { formatSqlDateToLocalParts, getChunithmGrade } from "@/utils/chunithm"
 import { getChunithmLogo } from "@/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"
@@ -235,3 +235,5 @@ export type ChunithmScoreInfoCardProps = {
 	levelColorBadge?: (chartId?: number | undefined) => string
 	className?: string
 }
+
+export { formatSqlDateToLocalParts, getChunithmGrade } from "@/utils/chunithm"
