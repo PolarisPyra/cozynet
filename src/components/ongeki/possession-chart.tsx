@@ -2,7 +2,7 @@ import { useMemo } from "react"
 
 import { VictoryAxis, VictoryBar, VictoryChart, VictoryTheme, VictoryTooltip } from "victory"
 
-import { useOngekiScores } from "@/hooks/ongeki"
+import { usePossessionPlaylog } from "@/hooks/ongeki"
 import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
 // Level labels matching the filter options (includes 5+ and 6+ which Chunithm doesn't have)
@@ -66,7 +66,7 @@ const CHART_COLORS = [
 ]
 
 const OngekiPossessionChart = () => {
-	const { data: scores = [], isLoading } = useOngekiScores()
+	const { data: scores = [], isLoading } = usePossessionPlaylog()
 
 	const chartData = useMemo(() => {
 		if (!scores || scores.length === 0) return []
@@ -94,8 +94,8 @@ const OngekiPossessionChart = () => {
 						levelMap.set(label, new Set())
 					}
 
-					// Track unique songs by musicId + level combination
-					const uniqueKey = `${score.musicId}-${score.level}`
+					// Track unique songs by musicId + chartId combination (same song can have multiple charts)
+					const uniqueKey = `${score.musicId}-${score.chartId}`
 					levelMap.get(label)!.add(uniqueKey)
 					break
 				}

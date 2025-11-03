@@ -13,25 +13,26 @@ const OngekiPossession = () => {
 	const version = useOngekiVersion()
 	const { data: possessionData, isLoading } = usePossession()
 
+	const profile = possessionData?.profile
 	const isRefreshOrAbove = version >= 8
 	const playerRating = isRefreshOrAbove
-		? possessionData?.newPlayerRating
-			? possessionData.newPlayerRating / 1000
+		? profile?.newPlayerRating
+			? profile.newPlayerRating / 1000
 			: 0
-		: possessionData?.playerRating
-			? possessionData.playerRating / 100
+		: profile?.playerRating
+			? profile.playerRating / 100
 			: 0
 
 	const ratingColor = useOngekiRatingColor(playerRating)
 
 	if (isLoading) return <LoadingState />
-	if (!possessionData) return <NoDataState />
+	if (!profile) return <NoDataState />
 
 	const formatDateParts = (dateString: string | null) => formatSqlDateToLocalParts(dateString ?? undefined)
 
 	return (
 		<Container>
-			<Header title={`${possessionData.userName || user?.username || "Player"}'s ONGEKI Profile`} />
+			<Header title={`${profile.userName || user?.username || "Player"}'s ONGEKI Profile`} />
 			<Body>
 				<div className="w-full">
 					<div className="bg-card border-border rounded-md border p-4 shadow-sm">
@@ -56,7 +57,7 @@ const OngekiPossession = () => {
 								<span className="text-muted-foreground text-base font-medium">First Play</span>
 								<div className="flex items-center gap-2">
 									{(() => {
-										const fp = formatDateParts(possessionData.firstPlayDate)
+										const fp = formatDateParts(profile.firstPlayDate)
 										return (
 											<>
 												<Badge variant="secondary" className="h-6 rounded-sm">
@@ -74,7 +75,7 @@ const OngekiPossession = () => {
 								<span className="text-muted-foreground text-base font-medium">Last Played</span>
 								<div className="flex items-center gap-2">
 									{(() => {
-										const lp = formatDateParts(possessionData.lastPlayDate)
+										const lp = formatDateParts(profile.lastPlayDate)
 										return (
 											<>
 												<Badge variant="secondary" className="h-6 rounded-sm">

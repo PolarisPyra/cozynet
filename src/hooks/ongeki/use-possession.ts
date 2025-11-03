@@ -16,3 +16,17 @@ export function usePossession() {
 	})
 }
 
+export function usePossessionPlaylog() {
+	return useQuery({
+		queryKey: ["ongeki", "possession", "playlog"],
+		queryFn: async () => {
+			const response = await api.ongeki.possession.playlog.$get()
+			if (!response.ok) {
+				throw new Error("Failed to fetch possession playlog")
+			}
+
+			return await response.json()
+		}
+	})
+}
+

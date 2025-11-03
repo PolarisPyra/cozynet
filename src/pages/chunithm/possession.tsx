@@ -14,11 +14,12 @@ const ChunithmPossession = () => {
 	const version = useChunithmVersion()
 	const { data: possessionData, isLoading } = usePossession()
 
-	const playerRating = possessionData?.playerRating ? possessionData.playerRating / 100 : 0
+	const profile = possessionData?.profile
+	const playerRating = profile?.playerRating ? profile.playerRating / 100 : 0
 	const ratingColor = useChunithmRatingColor(playerRating)
 
 	if (isLoading) return <LoadingState />
-	if (!possessionData) return <NoDataState />
+	if (!profile) return <NoDataState />
 
 	const formatDateParts = (dateString: string | null) => formatSqlDateToLocalParts(dateString ?? undefined)
 
@@ -30,7 +31,7 @@ const ChunithmPossession = () => {
 
 	return (
 		<Container>
-			<Header title={`${possessionData.userName || user?.username || "Player"}'s CHUNITHM Profile`} />
+			<Header title={`${profile.userName || user?.username || "Player"}'s CHUNITHM Profile`} />
 			<Body>
 				<div className="mx-auto w-full max-w-6xl">
 					<div className="bg-card border-border rounded-md border p-4 shadow-sm">
@@ -66,7 +67,7 @@ const ChunithmPossession = () => {
 								<span className="text-muted-foreground text-base font-medium">First Play</span>
 								<div className="flex items-center gap-2">
 									{(() => {
-										const fp = formatDateParts(possessionData.firstPlayDate)
+										const fp = formatDateParts(profile.firstPlayDate)
 										return (
 											<>
 												<Badge variant="secondary" className="h-6 rounded-sm">
@@ -84,7 +85,7 @@ const ChunithmPossession = () => {
 								<span className="text-muted-foreground text-base font-medium">Last Played</span>
 								<div className="flex items-center gap-2">
 									{(() => {
-										const lp = formatDateParts(possessionData.lastPlayDate)
+										const lp = formatDateParts(profile.lastPlayDate)
 										return (
 											<>
 												<Badge variant="secondary" className="h-6 rounded-sm">
@@ -101,13 +102,13 @@ const ChunithmPossession = () => {
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Dan</span>
 								<Badge variant="secondary" className="h-6 rounded-sm">
-									{danToRoman(possessionData.classEmblemMedal) || "None"}
+									{danToRoman(profile.classEmblemMedal) || "None"}
 								</Badge>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Emblem</span>
 								<Badge variant="secondary" className="h-6 rounded-sm">
-									{danToRoman(possessionData.classEmblemBase) || "None"}
+									{danToRoman(profile.classEmblemBase) || "None"}
 								</Badge>
 							</div>
 						</div>
