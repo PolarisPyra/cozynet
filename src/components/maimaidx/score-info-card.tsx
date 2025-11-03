@@ -1,44 +1,13 @@
-import { useState } from "react"
-
 import { Calendar, Clock } from "lucide-react"
 import { DateTime } from "luxon"
 
+import { MaimaiAchievementBadges } from "@/components/maimaidx/achievement-badges"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useImageLoading } from "@/hooks/use-image-loading"
 import { CDN } from "@/lib/constants"
 import { Mai2Playlog } from "@/shared/types"
-import { getMaimaiDxComboStatus, getMaimaiDxGrade, getMaimaiDxSyncStatus, maimaiDxBadgeColors } from "@/utils/maimai"
-
-interface AchievementBadgesProps {
-	comboStatus?: number
-	syncStatus?: number
-	isClear?: number
-}
-
-function AchievementBadges({ comboStatus, syncStatus }: AchievementBadgesProps) {
-	const comboStatusText = getMaimaiDxComboStatus(comboStatus)
-	const syncStatusText = getMaimaiDxSyncStatus(syncStatus)
-
-	return (
-		<div className="flex items-center gap-1">
-			<div className="flex h-8 items-center justify-start md:h-10">
-				{comboStatus && comboStatus !== 0 ? (
-					<div className="rounded bg-yellow-600 px-2 py-1 text-xs font-bold text-white">{comboStatusText}</div>
-				) : (
-					<div className="h-2 w-16 rounded-sm bg-gray-300/20" />
-				)}
-			</div>
-
-			<div className="flex h-8 items-center justify-start md:h-10">
-				{syncStatusText ? (
-					<div className="rounded bg-purple-600 px-2 py-1 text-xs font-bold text-white">{syncStatusText}</div>
-				) : (
-					<div className="h-2 w-16 rounded-sm bg-gray-300/20" />
-				)}
-			</div>
-		</div>
-	)
-}
+import { getMaimaiDxGrade, maimaiDxBadgeColors } from "@/utils/maimai"
 
 export type MaimaiDxScoreInfoCardProps = {
 	score: Mai2Playlog
@@ -47,8 +16,7 @@ export type MaimaiDxScoreInfoCardProps = {
 }
 
 export function MaimaiDxScoreInfoCard({ score, className = "" }: MaimaiDxScoreInfoCardProps) {
-	const [imageLoaded, setImageLoaded] = useState(false)
-
+	const { imageLoaded, onImageLoad } = useImageLoading()
 	const grade = getMaimaiDxGrade(score.achievement ?? 0)
 
 	return (
@@ -64,7 +32,7 @@ export function MaimaiDxScoreInfoCard({ score, className = "" }: MaimaiDxScoreIn
 							height={64}
 							src={`${CDN}/maimaidx/jackets/${score.musicId}.jpg`}
 							className="h-16 w-16 rounded-sm object-cover"
-							onLoad={() => setImageLoaded(true)}
+							onLoad={onImageLoad}
 							style={{ display: imageLoaded ? "block" : "none" }}
 						/>
 					</div>
@@ -102,11 +70,7 @@ export function MaimaiDxScoreInfoCard({ score, className = "" }: MaimaiDxScoreIn
 			</div>
 
 			<div className="flex items-center">
-				<AchievementBadges
-					comboStatus={score.comboStatus ?? 0}
-					syncStatus={score.syncStatus ?? 0}
-					isClear={score.isclear ?? 0}
-				/>
+				<MaimaiAchievementBadges comboStatus={score.comboStatus ?? 0} syncStatus={score.syncStatus ?? 0} />
 			</div>
 
 			{score.userPlayDate && (

@@ -1,16 +1,12 @@
-import { useState } from "react"
-
+import { OngekiAchievementBadges } from "@/components/ongeki/achievement-badges"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useOngekiScoreRating } from "@/hooks/ongeki/use-score-rating"
+import { useImageLoading } from "@/hooks/use-image-loading"
 import { CDN } from "@/lib/constants"
 import { OngekiPlaylog } from "@/shared/types"
-import {
-	OngekiGekForceRating,
-	OngekiRating as OngekiRatingCalc,
-	formatOngekiScorePlaylogDate,
-	getOngekiGrade
-} from "@/utils/ongeki"
+import { formatOngekiScorePlaylogDate } from "@/utils/ongeki"
 
 import { OngekiRatingColors } from "./rating-colors"
 
@@ -18,7 +14,7 @@ interface PlatinumStarsProps {
 	count: number
 }
 
-function PlatinumStars({ count }: PlatinumStarsProps) {
+const PlatinumStars = function ({ count }: PlatinumStarsProps) {
 	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`
 
 	return (
@@ -46,58 +42,6 @@ function PlatinumStars({ count }: PlatinumStarsProps) {
 	)
 }
 
-interface AchievementBadgesProps {
-	isFullCombo: number
-	isAllBreak: number
-	isFullBell: number
-	techScore: number
-}
-
-function AchievementBadges({ isFullCombo, isAllBreak, isFullBell, techScore }: AchievementBadgesProps) {
-	const grade = getOngekiGrade(techScore)
-	const gradeImage = grade
-
-	return (
-		<div className="flex items-center gap-1">
-			<div className="flex h-8 w-8 items-center justify-start md:h-10 md:w-10">
-				{isAllBreak === 1 ? (
-					<img
-						src={`${CDN}/ongeki/badges/filled/${techScore >= 1010000 ? "allbreakplus" : "allbreak"}.webp`}
-						alt={techScore >= 1010000 ? "AB+ Badge" : "AB Badge"}
-						className="h-8 w-8 object-contain md:h-10 md:w-10"
-					/>
-				) : isFullCombo === 1 ? (
-					<img
-						src={`${CDN}/ongeki/badges/filled/fullcombo.webp`}
-						alt="FC Badge"
-						className="h-8 w-8 object-contain md:h-10 md:w-10"
-					/>
-				) : (
-					<Skeleton className="h-8 w-8 rounded-full md:h-10 md:w-10" />
-				)}
-			</div>
-			<div className="flex h-8 w-8 items-center justify-start md:h-10 md:w-10">
-				{isFullBell === 1 ? (
-					<img
-						src={`${CDN}/ongeki/badges/filled/fullbell.webp`}
-						alt="FB Badge"
-						className="h-8 w-8 object-contain md:h-10 md:w-10"
-					/>
-				) : (
-					<Skeleton className="h-8 w-8 rounded-full md:h-10 md:w-10" />
-				)}
-			</div>
-			<div className="flex h-8 w-8 items-center justify-start md:h-10 md:w-10">
-				<img
-					src={`${CDN}/ongeki/badges/filled/${gradeImage}.webp`}
-					alt={`${grade} Badge`}
-					className="h-8 w-8 object-contain md:h-10 md:w-10"
-				/>
-			</div>
-		</div>
-	)
-}
-
 export type OngekiScoreInfoCardProps = {
 	score: OngekiPlaylog
 	levelColorBadge?: (chartId?: number | undefined) => string
@@ -111,32 +55,21 @@ export function OngekiScoreInfoCard({
 	className = "",
 	ongekiVersion
 }: OngekiScoreInfoCardProps) {
-	const [imageLoaded, setImageLoaded] = useState(false)
-
-	const version = ongekiVersion
-	const isRefresh = version >= 8
+	const { imageLoaded, onImageLoad } = useImageLoading()
+	const { calculatedRating, isRefresh } = useOngekiScoreRating({
+		playerRating: score.playerRating,
+		techScore: score.techScore,
+		level: score.level,
+		isFullCombo: score.isFullCombo,
+		isAllBreak: score.isAllBreak,
+		isFullBell: score.isFullBell,
+		version: ongekiVersion
+	})
 
 	const formatLevel = (level?: number | null) => {
 		if (level == null) return "?"
 		return Number.isFinite(level) ? level.toFixed(1) : "?"
 	}
-
-	const calculatedRating =
-		score.playerRating && score.playerRating > 0
-			? isRefresh
-				? score.playerRating / 1000
-				: score.playerRating / 100
-			: score.techScore != null && score.level != null
-				? isRefresh
-					? OngekiGekForceRating(
-							score.level,
-							score.techScore,
-							score.isFullCombo ?? 0,
-							score.isAllBreak ?? 0,
-							score.isFullBell ?? 0
-						) / 1000
-					: OngekiRatingCalc(score.level, score.techScore) / 100
-				: null
 
 	return (
 		<div
@@ -153,7 +86,7 @@ export function OngekiScoreInfoCard({
 								src={`${CDN}/ongeki/jacket/${score.jacketPath}`}
 								className="h-16 w-16 flex-shrink-0 rounded-sm object-cover"
 								alt={score.title}
-								onLoad={() => setImageLoaded(true)}
+								onLoad={onImageLoad}
 								style={{ display: imageLoaded ? "block" : "none" }}
 							/>
 						</div>
@@ -193,7 +126,7 @@ export function OngekiScoreInfoCard({
 							<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
 							<div className="mt-0.5">
 								{calculatedRating !== null ? (
-									<OngekiRatingColors rating={calculatedRating} version={version} decimals={isRefresh ? 3 : 2} />
+									<OngekiRatingColors rating={calculatedRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
 								) : (
 									<span className="text-foreground text-sm font-medium">-</span>
 								)}
@@ -203,7 +136,7 @@ export function OngekiScoreInfoCard({
 				</div>
 
 				<div className="flex items-end justify-between">
-					<AchievementBadges
+					<OngekiAchievementBadges
 						isFullCombo={score.isFullCombo ?? 0}
 						isAllBreak={score.isAllBreak ?? 0}
 						isFullBell={score.isFullBell ?? 0}
