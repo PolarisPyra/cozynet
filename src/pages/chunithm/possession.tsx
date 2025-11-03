@@ -1,5 +1,3 @@
-import { formatDistanceToNow, parseISO } from "date-fns"
-
 import { ChunithmRatingColors } from "@/components/chunithm/rating-colors"
 import Header from "@/components/common/header"
 import Spinner from "@/components/common/spinner"
@@ -7,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"
 import { useChunithmRatingColor, useChunithmVersion, usePossession } from "@/hooks/chunithm"
 import { Body, Container } from "@/pages/layout/layout"
+import { formatSqlDateToLocalParts } from "@/utils/helpers"
 import { getChunithmLogo } from "@/utils/version-logos"
 
 const ChunithmPossession = () => {
@@ -20,15 +19,7 @@ const ChunithmPossession = () => {
 	if (isLoading) return <LoadingState />
 	if (!possessionData) return <NoDataState />
 
-	const formatDate = (dateString: string | null) => {
-		if (!dateString) return "Never"
-		try {
-			const date = parseISO(dateString)
-			return formatDistanceToNow(date, { addSuffix: true })
-		} catch {
-			return "Unknown"
-		}
-	}
+	const formatDateParts = (dateString: string | null) => formatSqlDateToLocalParts(dateString ?? undefined)
 
 	const danToRoman = (dan: number | null) => {
 		if (dan === null || dan === 0) return null
@@ -63,32 +54,60 @@ const ChunithmPossession = () => {
 									) : (
 										<span className="text-foreground text-base font-semibold">-</span>
 									)}
-									{ratingColor && <Badge variant="secondary">{ratingColor.colorName}</Badge>}
+									{ratingColor && (
+										<Badge variant="secondary" className="h-6 rounded-sm">
+											{ratingColor.colorName}
+										</Badge>
+									)}
 								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">First Play</span>
-								<span className="text-foreground text-base font-semibold">
-									{formatDate(possessionData.firstPlayDate)}
-								</span>
+								<div className="flex items-center gap-2">
+									{(() => {
+										const fp = formatDateParts(possessionData.firstPlayDate)
+										return (
+											<>
+												<Badge variant="secondary" className="h-6 rounded-sm">
+													{fp.date}
+												</Badge>
+												<Badge variant="secondary" className="h-6 rounded-sm">
+													{fp.time}
+												</Badge>
+											</>
+										)
+									})()}
+								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Last Played</span>
-								<span className="text-foreground text-base font-semibold">
-									{formatDate(possessionData.lastPlayDate)}
-								</span>
+								<div className="flex items-center gap-2">
+									{(() => {
+										const lp = formatDateParts(possessionData.lastPlayDate)
+										return (
+											<>
+												<Badge variant="secondary" className="h-6 rounded-sm">
+													{lp.date}
+												</Badge>
+												<Badge variant="secondary" className="h-6 rounded-sm">
+													{lp.time}
+												</Badge>
+											</>
+										)
+									})()}
+								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Dan</span>
-								<span className="text-foreground text-base font-semibold">
+								<Badge variant="secondary" className="h-6 rounded-sm">
 									{danToRoman(possessionData.classEmblemMedal) || "None"}
-								</span>
+								</Badge>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Emblem</span>
-								<span className="text-foreground text-base font-semibold">
+								<Badge variant="secondary" className="h-6 rounded-sm">
 									{danToRoman(possessionData.classEmblemBase) || "None"}
-								</span>
+								</Badge>
 							</div>
 						</div>
 					</div>

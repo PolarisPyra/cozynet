@@ -1,14 +1,12 @@
 import React from "react"
 
-import { DateTime } from "luxon"
-
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useChunithmVersion } from "@/hooks/chunithm"
 import { CDN } from "@/lib/constants"
 import { ChunithmPlaylog } from "@/shared/types"
-import { getChunithmGrade } from "@/utils/helpers"
+import { formatSqlDateToLocalParts, getChunithmGrade } from "@/utils/helpers"
 import { getChunithmLogo } from "@/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"
@@ -189,14 +187,10 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 					{score.userPlayDate ? (
 						<>
 							<Badge variant="secondary" className="h-6 rounded-sm">
-								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" })
-									.toLocal()
-									.toLocaleString(DateTime.DATE_SHORT)}
+								{formatSqlDateToLocalParts(score.userPlayDate).date}
 							</Badge>
 							<Badge variant="secondary" className="h-6 rounded-sm">
-								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" })
-									.toLocal()
-									.toLocaleString(DateTime.TIME_SIMPLE)}
+								{formatSqlDateToLocalParts(score.userPlayDate).time}
 							</Badge>
 						</>
 					) : (

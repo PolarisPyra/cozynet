@@ -1,12 +1,11 @@
-import { formatDistanceToNow, parseISO } from "date-fns"
-
-import { OngekiRatingColors } from "@/components/ongeki/rating-colors"
 import Header from "@/components/common/header"
 import Spinner from "@/components/common/spinner"
+import { OngekiRatingColors } from "@/components/ongeki/rating-colors"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"
 import { useOngekiRatingColor, useOngekiVersion, usePossession } from "@/hooks/ongeki"
 import { Body, Container } from "@/pages/layout/layout"
+import { formatSqlDateToLocalParts } from "@/utils/helpers"
 
 const OngekiPossession = () => {
 	const { user } = useAuth()
@@ -27,15 +26,7 @@ const OngekiPossession = () => {
 	if (isLoading) return <LoadingState />
 	if (!possessionData) return <NoDataState />
 
-	const formatDate = (dateString: string | null) => {
-		if (!dateString) return "Never"
-		try {
-			const date = parseISO(dateString)
-			return formatDistanceToNow(date, { addSuffix: true })
-		} catch {
-			return "Unknown"
-		}
-	}
+	const formatDateParts = (dateString: string | null) => formatSqlDateToLocalParts(dateString ?? undefined)
 
 	return (
 		<Container>
@@ -53,20 +44,48 @@ const OngekiPossession = () => {
 									) : (
 										<span className="text-foreground text-base font-semibold">-</span>
 									)}
-									{ratingColor && <Badge variant="secondary">{ratingColor.colorName}</Badge>}
+									{ratingColor && (
+										<Badge variant="secondary" className="h-6 rounded-sm">
+											{ratingColor.colorName}
+										</Badge>
+									)}
 								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">First Play</span>
-								<span className="text-foreground text-base font-semibold">
-									{formatDate(possessionData.firstPlayDate)}
-								</span>
+								<div className="flex items-center gap-2">
+									{(() => {
+										const fp = formatDateParts(possessionData.firstPlayDate)
+										return (
+											<>
+												<Badge variant="secondary" className="h-6 rounded-sm">
+													{fp.date}
+												</Badge>
+												<Badge variant="secondary" className="h-6 rounded-sm">
+													{fp.time}
+												</Badge>
+											</>
+										)
+									})()}
+								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Last Played</span>
-								<span className="text-foreground text-base font-semibold">
-									{formatDate(possessionData.lastPlayDate)}
-								</span>
+								<div className="flex items-center gap-2">
+									{(() => {
+										const lp = formatDateParts(possessionData.lastPlayDate)
+										return (
+											<>
+												<Badge variant="secondary" className="h-6 rounded-sm">
+													{lp.date}
+												</Badge>
+												<Badge variant="secondary" className="h-6 rounded-sm">
+													{lp.time}
+												</Badge>
+											</>
+										)
+									})()}
+								</div>
 							</div>
 						</div>
 					</div>
@@ -95,4 +114,3 @@ const NoDataState = () => (
 )
 
 export default OngekiPossession
-

@@ -1,3 +1,5 @@
+import { DateTime } from "luxon"
+
 // ===================================
 // CHUNITHM UTILITIES
 // ===================================
@@ -441,5 +443,44 @@ export const getMaimaiDxSyncStatus = (syncStatus?: number): string => {
 			return "FDX+"
 		default:
 			return ""
+	}
+}
+
+// ===================================
+// DATE/TIME UTILITIES
+// ===================================
+
+/**
+ * Converts a SQL datetime string (assumed Asia/Tokyo) to local time and returns
+ * formatted date and time parts suitable for badge display.
+ */
+export const formatSqlDateToLocalParts = (sqlDate: string | null | undefined): { date: string; time: string } => {
+	if (!sqlDate) return { date: "—", time: "—" }
+
+	try {
+		const dt = DateTime.fromSQL(sqlDate, { zone: "Asia/Tokyo" }).toLocal()
+		return {
+			date: dt.toLocaleString(DateTime.DATE_SHORT),
+			time: dt.toLocaleString(DateTime.TIME_SIMPLE)
+		}
+	} catch {
+		return { date: "—", time: "—" }
+	}
+}
+
+/**
+ * Converts an ISO datetime string (often ending with Z) assumed Asia/Tokyo source
+ * time to local time and returns formatted date/time parts.
+ */
+export const formatIsoDateToLocalParts = (isoDate: string | null | undefined): { date: string; time: string } => {
+	if (!isoDate) return { date: "—", time: "—" }
+	try {
+		const dt = DateTime.fromISO(isoDate.replace("Z", ""), { zone: "Asia/Tokyo" }).toLocal()
+		return {
+			date: dt.toLocaleString(DateTime.DATE_SHORT),
+			time: dt.toLocaleString(DateTime.TIME_SIMPLE)
+		}
+	} catch {
+		return { date: "—", time: "—" }
 	}
 }
