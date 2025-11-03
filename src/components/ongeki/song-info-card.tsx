@@ -1,9 +1,9 @@
-import { useState } from "react"
-
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useImageLoading } from "@/hooks/use-image-loading"
 import { CDN } from "@/lib/constants"
 import { StaticMusic } from "@/shared/types"
+import { formatOngekiLevel } from "@/utils/ongeki"
 
 type CardProps = {
 	score: StaticMusic
@@ -13,13 +13,8 @@ type CardProps = {
 }
 
 export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
-	const [imageLoaded, setImageLoaded] = useState(false)
+	const { imageLoaded, onImageLoad } = useImageLoading()
 	const song = score
-
-	const formatLevel = (c: { chartId?: number | null; level?: number | null }) => {
-		if (c.level == null) return "?"
-		return Number.isFinite(c.level) ? c.level.toFixed(1) : "?"
-	}
 
 	return (
 		<div
@@ -34,7 +29,7 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 						src={`${CDN}/${jacketArt}/${score.jacketPath ?? ""}`}
 						alt={song.title ?? ""}
 						className="h-16 w-16 flex-shrink-0 rounded-sm object-cover"
-						onLoad={() => setImageLoaded(true)}
+						onLoad={onImageLoad}
 						style={{ display: imageLoaded ? "block" : "none" }}
 					/>
 				</div>
@@ -47,17 +42,21 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 				</div>
 			</div>
 			<div className="mt-3 flex flex-wrap gap-2">
-				{(song.charts || []).map((c, idx) => (
-					<Badge
-						key={`${String(c.chartId)}-${String(c.level)}-${idx}`}
-						variant="outline"
-						className={`flex min-h-[24px] items-center justify-center rounded-sm border-2 bg-transparent px-2.5 py-1 text-xs font-bold ${
-							levelColorBadge ? levelColorBadge(c.chartId ?? undefined) : ""
-						}`}
-					>
-						{formatLevel(c)}
-					</Badge>
-				))}
+				{(song.charts || []).map((c, idx) => {
+					const levelData = formatOngekiLevel(c)
+
+					return (
+						<Badge
+							key={`${String(c.chartId)}-${String(c.level)}-${idx}`}
+							variant="outline"
+							className={`flex min-h-[24px] items-center justify-center rounded-sm border-2 bg-transparent px-2.5 py-1 text-xs font-bold ${
+								levelColorBadge ? levelColorBadge(c.chartId ?? undefined) : ""
+							}`}
+						>
+							{levelData.value}
+						</Badge>
+					)
+				})}
 			</div>
 		</div>
 	)

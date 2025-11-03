@@ -1,8 +1,8 @@
-import { useState } from "react"
-
 import { Skeleton } from "@/components/ui/skeleton"
+import { useImageLoading } from "@/hooks/use-image-loading"
 import { CDN } from "@/lib/constants"
 import { Mai2StaticMusic } from "@/shared/types"
+import { formatMaimaiLevel } from "@/utils/maimai"
 
 interface MaimaiDxSongInfoCardProps {
 	score: Mai2StaticMusic
@@ -15,7 +15,7 @@ export function MaimaiDxSongInfoCard({
 	jacketArt = "maimaidx/jacket",
 	levelColorBadge
 }: MaimaiDxSongInfoCardProps) {
-	const [imageLoaded, setImageLoaded] = useState(false)
+	const { imageLoaded, onImageLoad } = useImageLoading()
 	const song = score
 	const isUtage = song.songId && song.songId > 100000
 
@@ -30,7 +30,7 @@ export function MaimaiDxSongInfoCard({
 						src={`${CDN}/${jacketArt}/${song.jacketPath}`}
 						alt={song.title ?? ""}
 						className="h-16 w-16 flex-shrink-0 rounded-sm object-cover"
-						onLoad={() => setImageLoaded(true)}
+						onLoad={onImageLoad}
 						style={{ display: imageLoaded ? "block" : "none" }}
 					/>
 				</div>
@@ -38,24 +38,15 @@ export function MaimaiDxSongInfoCard({
 					<div className="text-foreground mb-1 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
 						{song.title}
 					</div>
-					<div className="text-muted-foreground mb-0.5 text-[10px] line-clamp-1 sm:text-xs">{song.artist || "Unknown"}</div>
+					<div className="text-muted-foreground mb-0.5 line-clamp-1 text-[10px] sm:text-xs">
+						{song.artist || "Unknown"}
+					</div>
 					<div className="text-muted-foreground text-xs whitespace-nowrap">{song.genre || "N/A"}</div>
 				</div>
 			</div>
 			<div className="flex flex-wrap gap-2">
 				{(song.charts || []).map((c, idx) => {
-					let difficultyValue = "?"
-
-					if (typeof c.difficulty === "number") {
-						const baseLevel = Math.floor(c.difficulty)
-
-						if (isUtage) {
-							const isPlus = (c.difficulty * 10) % 10 >= 6
-							difficultyValue = isPlus ? `${baseLevel}+ ?` : `${baseLevel} ?`
-						} else {
-							difficultyValue = c.difficulty.toFixed(1)
-						}
-					}
+					const levelData = formatMaimaiLevel(c, Boolean(isUtage))
 
 					return (
 						<span
@@ -64,7 +55,7 @@ export function MaimaiDxSongInfoCard({
 								isUtage ? "border-blue-500" : levelColorBadge ? levelColorBadge(c.chartId ?? undefined) : ""
 							}`}
 						>
-							{difficultyValue}
+							{levelData.value}
 						</span>
 					)
 				})}

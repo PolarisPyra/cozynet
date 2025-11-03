@@ -1,108 +1,28 @@
-import React from "react"
-
+import { ChunithmAchievementBadges } from "@/components/chunithm/achievement-badges"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useChunithmVersion } from "@/hooks/chunithm"
+import { useImageLoading } from "@/hooks/use-image-loading"
 import { CDN } from "@/lib/constants"
 import { ChunithmPlaylog } from "@/shared/types"
-import { formatSqlDateToLocalParts, getChunithmGrade } from "@/utils/chunithm"
+import { chunithmBadgeColors, formatSqlDateToLocalParts, getChunithmGrade } from "@/utils/chunithm"
 import { getChunithmLogo } from "@/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"
 
-const clearBadges: Record<number, string> = {
-	103003: "hard",
-	103005: "brave",
-	103006: "absolute",
-	103007: "catastrophy"
-}
-
-const AchievementBadges = function ({
-	isFullCombo,
-	isAllJustice,
-	isClear,
-	fullChainKind,
-	score,
-	skillId
-}: AchievementBadgesProps) {
-	const clearBadge = (skillId && clearBadges[skillId]) || "clear"
-
-	return (
-		<div className="flex items-center gap-1">
-			<div className="flex h-8 items-center justify-start md:h-10">
-				{isClear === 1 ? (
-					<img
-						src={`${CDN}/chunithm/badges/filled/${clearBadge}.webp`}
-						alt={`${clearBadge.charAt(0).toUpperCase() + clearBadge.slice(1)} Badge`}
-						className="h-8 w-20 object-contain md:h-10 md:w-20"
-					/>
-				) : (
-					<Skeleton className="h-2 w-16 rounded-sm" />
-				)}
-			</div>
-
-			<div className="flex h-8 items-center justify-start md:h-10">
-				{score === 1010000 ? (
-					<img
-						src={`${CDN}/chunithm/badges/filled/alljusticecritical.webp`}
-						alt="AJC Badge"
-						className="h-8 w-20 object-contain md:h-10 md:w-20"
-					/>
-				) : isAllJustice === 1 ? (
-					<img
-						src={`${CDN}/chunithm/badges/filled/alljustice.webp`}
-						alt="AJ Badge"
-						className="h-8 w-20 object-contain md:h-10 md:w-20"
-					/>
-				) : isFullCombo === 1 ? (
-					<img
-						src={`${CDN}/chunithm/badges/filled/fullcombo.webp`}
-						alt="FC Badge"
-						className="h-8 w-20 object-contain md:h-10 md:w-20"
-					/>
-				) : (
-					<Skeleton className="h-2 w-16 rounded-sm" />
-				)}
-			</div>
-
-			<div className="flex h-8 items-center justify-start md:h-10">
-				{fullChainKind === 2 ? (
-					<img
-						src={`${CDN}/chunithm/badges/filled/fullchain_rainbow.webp`}
-						alt="Full Chain Rainbow"
-						className="h-8 w-10 object-contain md:h-10 md:w-10"
-					/>
-				) : fullChainKind === 1 ? (
-					<img
-						src={`${CDN}/chunithm/badges/filled/fullchain.webp`}
-						alt="Full Chain"
-						className="h-8 w-10 object-contain md:h-10 md:w-10"
-					/>
-				) : (
-					<Skeleton className="h-2 w-16 rounded-sm" />
-				)}
-			</div>
-		</div>
-	)
-}
-
 export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, className = "" }: ChunithmScoreInfoCardProps) {
-	const [imageLoaded, setImageLoaded] = React.useState(false)
+	const { imageLoaded, onImageLoad } = useImageLoading()
 	const version = useChunithmVersion()
-
-	const worldsEnd = function (level?: number | null, chartId?: number | null) {
-		if (level == null) return "?"
-		if (chartId === 5) {
-			const stars = Math.floor((level + 1) / 2)
-			return "⭐".repeat(stars > 0 ? stars : 1)
-		}
-		return Number.isFinite(level) ? level.toFixed(1) : "?"
-	}
 
 	const appearedLogo = getChunithmLogo.getLogo(score.songVersion)
 	const scoreVersionLogo = getChunithmLogo.getLogo(score.version)
 	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
+
+	const formatLevel = (level?: number | null) => {
+		if (level == null) return "?"
+		return Number.isFinite(level) ? level.toFixed(1) : "?"
+	}
 
 	return (
 		<div
@@ -117,7 +37,7 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 							height={64}
 							src={`${CDN}/chunithm/jacket/${score.jacketPath}`}
 							className="h-16 w-16 rounded-sm object-cover"
-							onLoad={() => setImageLoaded(true)}
+							onLoad={onImageLoad}
 							style={{ display: imageLoaded ? "block" : "none" }}
 						/>
 					</div>
@@ -125,13 +45,14 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
 							{score.title}
 						</div>
-						<span
-							className={`inline-block rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
-								levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : "text-primary-foreground bg-primary"
+						<Badge
+							variant="outline"
+							className={`rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
+								levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : chunithmBadgeColors(score.chartId ?? 0)
 							}`}
 						>
-							{worldsEnd(score.level, score.chartId)}
-						</span>
+							{formatLevel(score.level)}
+						</Badge>
 					</div>
 				</div>
 
@@ -171,7 +92,7 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 			</div>
 
 			<div className="flex items-center">
-				<AchievementBadges
+				<ChunithmAchievementBadges
 					isFullCombo={score.isFullCombo ?? 0}
 					isAllJustice={score.isAllJustice ?? 0}
 					isClear={score.isClear ?? 0}
@@ -220,15 +141,6 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 }
 
 export default ChunithmScoreInfoCard
-
-interface AchievementBadgesProps {
-	isFullCombo: number
-	isAllJustice: number
-	isClear: number
-	fullChainKind: number
-	score: number
-	skillId?: number
-}
 
 export type ChunithmScoreInfoCardProps = {
 	score: ChunithmPlaylog

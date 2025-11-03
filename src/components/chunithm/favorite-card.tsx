@@ -2,8 +2,27 @@ import { Heart } from "lucide-react"
 
 import { CDN } from "@/lib/constants"
 
-export const FavoriteCard = function({ score, favoriteSongIds, onToggleFavorite }: FavoriteCardProps) {
-	const isFavorited = favoriteSongIds.some((favorite: ChunithmFavorite) => favorite.favId === score.songId)
+interface FavoriteSong {
+	songId: number
+	title: string
+	jacketPath: string
+}
+
+export interface FavoriteCardProps {
+	score: FavoriteSong
+	isFavorited?: boolean
+	onToggleFavorite: (songId: number) => void
+	favoriteSongIds?: Array<{ favId: number }>
+	levelColorBadge?: (chartId?: number) => string
+	jacketArt?: string
+	chunithmVersion?: number
+	isPotential?: boolean
+	isRecommend?: boolean
+	ongekiVersion?: number
+}
+
+export const FavoriteCard = function ({ score, onToggleFavorite, favoriteSongIds = [] }: FavoriteCardProps) {
+	const isFavorited = favoriteSongIds.some(fav => fav.favId === score.songId)
 
 	return (
 		<div className="bg-card flex items-center justify-between rounded-sm border p-4 transition-colors">
@@ -12,7 +31,7 @@ export const FavoriteCard = function({ score, favoriteSongIds, onToggleFavorite 
 					width={48}
 					height={48}
 					src={`${CDN}/chunithm/jacket/${score.jacketPath}`}
-					alt={score.title || ""}
+					alt={score.title}
 					className="h-12 w-12 flex-shrink-0 rounded-sm"
 				/>
 				<span className="text-foreground truncate text-base leading-tight font-bold">{score.title}</span>
@@ -20,30 +39,10 @@ export const FavoriteCard = function({ score, favoriteSongIds, onToggleFavorite 
 			<Heart
 				fill={isFavorited ? "currentColor" : "none"}
 				className={`h-6 w-6 flex-shrink-0 cursor-pointer transition-colors ${isFavorited ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-red-500"}`}
-				onClick={() => score.songId && onToggleFavorite(score.songId)}
+				onClick={() => onToggleFavorite(score.songId)}
 			/>
 		</div>
 	)
 }
 
 export default FavoriteCard
-
-interface ChunithmFavorite {
-	songId?: number | null
-	title?: string | null
-	chartId?: number | null
-	isFavorited?: boolean
-	jacketPath?: string | null
-	id?: number
-	user?: number
-	version?: number
-	favId?: number
-	favKind?: number
-	option?: string
-}
-
-interface FavoriteCardProps {
-	score: ChunithmFavorite
-	favoriteSongIds: ChunithmFavorite[]
-	onToggleFavorite: (songId: number) => void
-}
