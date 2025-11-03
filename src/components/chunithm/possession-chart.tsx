@@ -110,10 +110,6 @@ const ChunithmPossessionChart = () => {
 		return data
 	}, [scores])
 
-	const textColor = "#e5e7eb"
-	const axisColor = "#6b7280"
-	const gridColor = "#374151"
-
 	if (isLoading) {
 		return (
 			<div className="bg-card border-border flex h-96 items-center justify-center rounded-md border p-4 shadow-sm">
@@ -145,7 +141,7 @@ const ChunithmPossessionChart = () => {
 	return (
 		<div className="bg-card border-border rounded-md border p-2 shadow-sm">
 			<h3 className="text-foreground mb-3 text-lg font-semibold">Songs Cleared by Level</h3>
-			<div className="w-full">
+			<div className="w-full [&_text]:fill-primary [&_line]:stroke-border [&_line]:stroke-muted-foreground">
 				<VictoryChart
 					theme={VictoryTheme.material}
 					domainPadding={{ x: [15, 15] }}
@@ -157,26 +153,26 @@ const ChunithmPossessionChart = () => {
 						dependentAxis
 						tickValues={tickValues}
 						label="Number of Songs"
-						gridComponent={<line stroke={gridColor} strokeWidth={0.5} strokeDasharray="4,4" />}
+						gridComponent={<line stroke="hsl(var(--border))" strokeWidth={0.5} strokeDasharray="4,4" />}
 						style={{
-							axis: { stroke: axisColor, strokeWidth: 2 },
-							ticks: { stroke: axisColor, size: 5 },
-							tickLabels: { fill: textColor, fontSize: 11, padding: 5 },
-							axisLabel: { fill: textColor, fontSize: 12, padding: 50 },
-							grid: { stroke: gridColor, strokeWidth: 0.5, strokeDasharray: "4,4" }
+							axis: { stroke: "hsl(var(--muted-foreground))", strokeWidth: 2 },
+							ticks: { stroke: "hsl(var(--muted-foreground))", size: 5 },
+							tickLabels: { fill: "hsl(var(--primary))", fontSize: 11, padding: 5 },
+							axisLabel: { fill: "hsl(var(--primary))", fontSize: 12, padding: 50 },
+							grid: { stroke: "hsl(var(--border))", strokeWidth: 0.5, strokeDasharray: "4,4" }
 						}}
 					/>
 					<VictoryAxis
 						tickValues={xTickValues}
 						tickFormat={(x: string) => x}
 						label="Level"
-						gridComponent={<line stroke={gridColor} strokeWidth={0.5} strokeDasharray="4,4" />}
+						gridComponent={<line stroke="hsl(var(--border))" strokeWidth={0.5} strokeDasharray="4,4" />}
 						style={{
-							axis: { stroke: axisColor, strokeWidth: 1.5 },
-							ticks: { stroke: axisColor, size: 4 },
-							tickLabels: { fill: textColor, fontSize: 10, angle: -45, textAnchor: "end", padding: 8 },
-							axisLabel: { fill: textColor, fontSize: 11, padding: 50 },
-							grid: { stroke: gridColor, strokeWidth: 0.5, strokeDasharray: "4,4" }
+							axis: { stroke: "hsl(var(--muted-foreground))", strokeWidth: 1.5 },
+							ticks: { stroke: "hsl(var(--muted-foreground))", size: 4 },
+							tickLabels: { fill: "hsl(var(--primary))", fontSize: 10, angle: -45, textAnchor: "end", padding: 8 },
+							axisLabel: { fill: "hsl(var(--primary))", fontSize: 11, padding: 50 },
+							grid: { stroke: "hsl(var(--border))", strokeWidth: 0.5, strokeDasharray: "4,4" }
 						}}
 					/>
 					<VictoryBar
