@@ -1,13 +1,16 @@
 import { useState } from "react"
 
-import { DateTime } from "luxon"
-
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CDN } from "@/lib/constants"
 import { OngekiPlaylog } from "@/shared/types"
-import { OngekiGekForceRating, OngekiRating as OngekiRatingCalc, getOngekiGrade } from "@/utils/helpers"
+import {
+	OngekiGekForceRating,
+	OngekiRating as OngekiRatingCalc,
+	formatIsoDateToLocalParts,
+	getOngekiGrade
+} from "@/utils/helpers"
 
 import { OngekiRatingColors } from "./rating-colors"
 
@@ -216,14 +219,10 @@ export function OngekiScoreInfoCard({
 					<div className="text-muted-foreground flex flex-col gap-2 text-xs font-medium md:flex-row md:items-center md:justify-between">
 						<div className="flex flex-wrap items-center gap-1.5">
 							<Badge variant="secondary" className="h-6 rounded-sm whitespace-nowrap">
-								{DateTime.fromISO(score.userPlayDate.replace("Z", ""), { zone: "Asia/Tokyo" })
-									.toLocal()
-									.toLocaleString(DateTime.DATE_SHORT)}
+								{formatIsoDateToLocalParts(score.userPlayDate).date}
 							</Badge>
 							<Badge variant="secondary" className="h-6 rounded-sm whitespace-nowrap">
-								{DateTime.fromISO(score.userPlayDate.replace("Z", ""), { zone: "Asia/Tokyo" })
-									.toLocal()
-									.toLocaleString(DateTime.TIME_SIMPLE)}
+								{formatIsoDateToLocalParts(score.userPlayDate).time}
 							</Badge>
 						</div>
 						<div className="flex flex-wrap items-center gap-2 md:justify-end">
