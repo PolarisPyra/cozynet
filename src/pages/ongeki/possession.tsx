@@ -46,31 +46,26 @@ const OngekiPossession = () => {
 						<h2 className="text-foreground mb-4 text-xl font-bold">Player Stats</h2>
 						<div className="space-y-3">
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Color</span>
-								{ratingColor ? (
-									<Badge variant="secondary">{ratingColor.colorName}</Badge>
-								) : (
-									<span className="text-foreground text-base font-semibold">-</span>
-								)}
-							</div>
-							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Player Rating</span>
-								{playerRating > 0 && version ? (
-									<OngekiRatingColors rating={playerRating} version={version} decimals={isRefreshOrAbove ? 3 : 2} />
-								) : (
-									<span className="text-foreground text-base font-semibold">-</span>
-								)}
-							</div>
-							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Last Played</span>
-								<span className="text-foreground text-base font-semibold">
-									{formatDate(possessionData.lastPlayDate)}
-								</span>
+								<div className="flex items-center gap-2">
+									{playerRating > 0 && version ? (
+										<OngekiRatingColors rating={playerRating} version={version} decimals={isRefreshOrAbove ? 3 : 2} />
+									) : (
+										<span className="text-foreground text-base font-semibold">-</span>
+									)}
+									{ratingColor && <Badge variant="secondary">{ratingColor.colorName}</Badge>}
+								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">First Play</span>
 								<span className="text-foreground text-base font-semibold">
 									{formatDate(possessionData.firstPlayDate)}
+								</span>
+							</div>
+							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
+								<span className="text-muted-foreground text-base font-medium">Last Played</span>
+								<span className="text-foreground text-base font-semibold">
+									{formatDate(possessionData.lastPlayDate)}
 								</span>
 							</div>
 						</div>

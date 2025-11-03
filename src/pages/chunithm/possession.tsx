@@ -56,12 +56,27 @@ const ChunithmPossession = () => {
 						</div>
 						<div className="space-y-3">
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Color</span>
-								{ratingColor ? (
-									<Badge variant="secondary">{ratingColor.colorName}</Badge>
-								) : (
-									<span className="text-foreground text-base font-semibold">-</span>
-								)}
+								<span className="text-muted-foreground text-base font-medium">Player Rating</span>
+								<div className="flex items-center gap-2">
+									{playerRating > 0 && version ? (
+										<ChunithmRatingColors rating={playerRating} version={version} />
+									) : (
+										<span className="text-foreground text-base font-semibold">-</span>
+									)}
+									{ratingColor && <Badge variant="secondary">{ratingColor.colorName}</Badge>}
+								</div>
+							</div>
+							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
+								<span className="text-muted-foreground text-base font-medium">First Play</span>
+								<span className="text-foreground text-base font-semibold">
+									{formatDate(possessionData.firstPlayDate)}
+								</span>
+							</div>
+							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
+								<span className="text-muted-foreground text-base font-medium">Last Played</span>
+								<span className="text-foreground text-base font-semibold">
+									{formatDate(possessionData.lastPlayDate)}
+								</span>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
 								<span className="text-muted-foreground text-base font-medium">Dan</span>
@@ -73,26 +88,6 @@ const ChunithmPossession = () => {
 								<span className="text-muted-foreground text-base font-medium">Emblem</span>
 								<span className="text-foreground text-base font-semibold">
 									{danToRoman(possessionData.classEmblemBase) || "None"}
-								</span>
-							</div>
-							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Player Rating</span>
-								{playerRating > 0 && version ? (
-									<ChunithmRatingColors rating={playerRating} version={version} />
-								) : (
-									<span className="text-foreground text-base font-semibold">-</span>
-								)}
-							</div>
-							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Last Played</span>
-								<span className="text-foreground text-base font-semibold">
-									{formatDate(possessionData.lastPlayDate)}
-								</span>
-							</div>
-							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">First Play</span>
-								<span className="text-foreground text-base font-semibold">
-									{formatDate(possessionData.firstPlayDate)}
 								</span>
 							</div>
 						</div>
