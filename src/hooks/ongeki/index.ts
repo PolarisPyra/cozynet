@@ -18,7 +18,7 @@ import type { FilterValues } from "./filters/types/card-types"
 import type { MusicFilterValues } from "./filters/types/music-types"
 import { useOngekiCards } from "./use-cards"
 import { useLeaderboard } from "./use-leaderboard"
-import { usePossession } from "./use-possession"
+import { usePossession, usePossessionPlaylog } from "./use-possession"
 import {
 	useNewHighestRating,
 	useNewPlayerRating,
@@ -67,6 +67,7 @@ export {
 	useOngekiScores,
 	useOngekiSongs,
 	usePossession,
+	usePossessionPlaylog,
 	useUnlockAllCards,
 	useUnlockAllItems,
 	useUnlockSpecificItem,
