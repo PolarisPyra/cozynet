@@ -39,13 +39,13 @@ export function RivalInfoCard({ user, isRival, onAddRival, onRemoveRival, rivalC
 					<h3 className="text-foreground mb-2 truncate text-base leading-tight font-bold">{user.username}</h3>
 					<div className="flex min-h-[24px] flex-wrap items-center gap-2">
 						{user.isMutual && (
-							<Badge variant="secondary" className="bg-green-500/10 px-2 py-0.5 text-green-600 hover:bg-green-500/20">
+							<Badge variant="secondary" className="h-6 rounded-sm">
 								<Handshake className="mr-1 h-3.5 w-3.5" />
 								<span className="text-xs">Mutual</span>
 							</Badge>
 						)}
 						{isRival && (
-							<Badge variant="destructive" className="bg-red-500/10 px-2 py-0.5 text-red-600 hover:bg-red-500/20">
+							<Badge variant="secondary" className="h-6 rounded-sm">
 								<Skull className="mr-1 h-3.5 w-3.5" />
 								<span className="text-xs">Rival</span>
 							</Badge>

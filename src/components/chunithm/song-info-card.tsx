@@ -8,11 +8,11 @@ import { CDN } from "@/lib/constants"
 import { StaticMusic } from "@/shared/types"
 import { getChunithmLogo } from "@/utils/version-logos"
 
-export const SongInfoCard = function({ score, levelColorBadge, jacketArt }: CardProps) {
+export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: CardProps) {
 	const [imageLoaded, setImageLoaded] = React.useState(false)
 	const song = score
 
-	const worldsEnd = function(level?: number | null, chartId?: number | null) {
+	const worldsEnd = function (level?: number | null, chartId?: number | null) {
 		if (level == null) return "?"
 		if (chartId === 5) {
 			const stars = Math.floor((level + 1) / 2)
@@ -39,11 +39,13 @@ export const SongInfoCard = function({ score, levelColorBadge, jacketArt }: Card
 					/>
 				</div>
 				<div className="min-w-0 flex-1">
-					<div className="text-foreground mb-1 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
+					<div className="text-foreground mb-1 line-clamp-1 text-xs leading-tight font-bold sm:text-sm md:text-base">
 						{song.title}
 					</div>
-					<div className="text-muted-foreground mb-0.5 text-[10px] sm:text-xs">{song.artist || "Unknown"}</div>
-					<div className="text-muted-foreground text-xs">{song.genre || "N/A"}</div>
+					<div className="text-muted-foreground mb-0.5 line-clamp-1 text-[10px] sm:text-xs">
+						{song.artist || "Unknown"}
+					</div>
+					<div className="text-muted-foreground line-clamp-1 text-xs">{song.genre || "N/A"}</div>
 				</div>
 			</div>
 			<div className="flex flex-wrap gap-2">
