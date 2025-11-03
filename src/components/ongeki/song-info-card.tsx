@@ -39,11 +39,11 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 					/>
 				</div>
 				<div className="max-w-[180px] min-w-0 flex-1 md:max-w-[360px] lg:max-w-[160px] xl:max-w-[240px]">
-					<div className="text-primary line-clamp-1 text-xs font-bold sm:text-sm md:text-base">
+					<div className="text-primary text-xs font-bold whitespace-nowrap sm:text-sm md:text-base">
 						{song.title ?? ""}
 					</div>
 					<div className="text-primary line-clamp-1 text-[10px] sm:text-xs">{song.artist ?? "Unknown"}</div>
-					<div className="text-primary line-clamp-1 text-sm">{song.genre ?? "N/A"}</div>
+					<div className="text-primary text-sm whitespace-nowrap">{song.genre ?? "N/A"}</div>
 				</div>
 			</div>
 			<div className="mt-3 flex flex-wrap gap-2">
