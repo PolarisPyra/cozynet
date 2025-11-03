@@ -21,6 +21,7 @@ const OngekiProfilePlaylog = new Hono().get("playlog", async c => {
                     csp.platinumScoreStar,
                     csp.playerRating,
                     csp.isAllBreak,
+                    csp.musicId,
                     csp.isFullBell,
                     csp.techScore,
                     csp.battleScore,

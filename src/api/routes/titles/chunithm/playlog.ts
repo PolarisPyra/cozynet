@@ -16,6 +16,7 @@ const ChunithmScorePlaylog = new Hono().get("playlog", async c => {
 				ul.isFullCombo,
 				ul.userPlayDate,
 				ul.playerRating,
+				ul.musicId,
 				ul.isAllJustice,
 				ul.score,
 				ul.judgeHeaven,
