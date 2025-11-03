@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"
 import { useChunithmRatingColor, useChunithmVersion, usePossession } from "@/hooks/chunithm"
 import { Body, Container } from "@/pages/layout/layout"
-import { formatSqlDateToLocalParts } from "@/utils/helpers"
+import { formatSqlDateToLocalParts } from "@/utils/chunithm"
 import { getChunithmLogo } from "@/utils/version-logos"
 
 const ChunithmPossession = () => {

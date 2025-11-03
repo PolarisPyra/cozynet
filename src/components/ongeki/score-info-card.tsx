@@ -8,9 +8,9 @@ import { OngekiPlaylog } from "@/shared/types"
 import {
 	OngekiGekForceRating,
 	OngekiRating as OngekiRatingCalc,
-	formatIsoDateToLocalParts,
+	formatOngekiScorePlaylogDate,
 	getOngekiGrade
-} from "@/utils/helpers"
+} from "@/utils/ongeki"
 
 import { OngekiRatingColors } from "./rating-colors"
 
@@ -219,10 +219,10 @@ export function OngekiScoreInfoCard({
 					<div className="text-muted-foreground flex flex-col gap-2 text-xs font-medium md:flex-row md:items-center md:justify-between">
 						<div className="flex flex-wrap items-center gap-1.5">
 							<Badge variant="secondary" className="h-6 rounded-sm whitespace-nowrap">
-								{formatIsoDateToLocalParts(score.userPlayDate).date}
+								{formatOngekiScorePlaylogDate(score.userPlayDate).date}
 							</Badge>
 							<Badge variant="secondary" className="h-6 rounded-sm whitespace-nowrap">
-								{formatIsoDateToLocalParts(score.userPlayDate).time}
+								{formatOngekiScorePlaylogDate(score.userPlayDate).time}
 							</Badge>
 						</div>
 						<div className="flex flex-wrap items-center gap-2 md:justify-end">

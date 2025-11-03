@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"
 import { useOngekiRatingColor, useOngekiVersion, usePossession } from "@/hooks/ongeki"
 import { Body, Container } from "@/pages/layout/layout"
-import { formatSqlDateToLocalParts } from "@/utils/helpers"
+import { formatOngekiProfileDate } from "@/utils/ongeki"
 
 const OngekiPossession = () => {
 	const { user } = useAuth()
@@ -28,7 +28,7 @@ const OngekiPossession = () => {
 	if (isLoading) return <LoadingState />
 	if (!profile) return <NoDataState />
 
-	const formatDateParts = (dateString: string | null) => formatSqlDateToLocalParts(dateString ?? undefined)
+	const formatDateParts = (dateString: string | null) => formatOngekiProfileDate(dateString)
 
 	return (
 		<Container>

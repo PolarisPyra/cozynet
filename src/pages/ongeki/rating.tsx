@@ -16,7 +16,7 @@ import {
 import useOngekiRatingData from "@/hooks/ongeki/use-rating-data"
 import { Body, Container, FilterArea } from "@/pages/layout/layout"
 import type { FilterValues } from "@/shared/types"
-import { ongekiBadgeColors } from "@/utils/helpers"
+import { ongekiBadgeColors } from "@/utils/ongeki"
 
 export function OngekiRatingFrames() {
 	const [searchQuery, setSearchQuery] = useState("")

@@ -15,7 +15,7 @@ import {
 } from "@/hooks/maimaidx"
 import { Mai2StaticMusic } from "@/shared/types"
 import type { FilterValues } from "@/shared/types"
-import { maimaiDxBadgeColors } from "@/utils/helpers"
+import { maimaiDxBadgeColors } from "@/utils/maimai"
 
 export function MaimaiDxAllSongs() {
 	const [searchParams, setSearchParams] = useSearchParams()

@@ -3,7 +3,7 @@ import type { RowDataPacket } from "mysql2"
 
 import { db } from "@/api/db"
 import { rethrowWithMessage } from "@/api/utils/error"
-import { OngekiGekForceRating, OngekiRating, getDifficultyFromOngekiChart, getOngekiGrade } from "@/utils/helpers"
+import { OngekiGekForceRating, OngekiRating, getDifficultyFromOngekiChart, getOngekiGrade } from "@/utils/ongeki"
 
 interface OngekiSongResult {
 	musicId: number

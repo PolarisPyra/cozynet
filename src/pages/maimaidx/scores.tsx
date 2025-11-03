@@ -12,7 +12,7 @@ import {
 	useScoreFilters
 } from "@/hooks/maimaidx"
 import type { FilterValues } from "@/shared/types"
-import { maimaiDxBadgeColors } from "@/utils/helpers"
+import { maimaiDxBadgeColors } from "@/utils/maimai"
 
 export function MaimaiDxScorePage() {
 	const [searchQuery, setSearchQuery] = useState("")

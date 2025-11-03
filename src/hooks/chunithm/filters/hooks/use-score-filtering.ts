@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 
 import { useChunithmScores, useChunithmVersion } from "@/hooks/chunithm"
-import { convertRomVersionToVersion } from "@/utils/helpers"
+import { convertRomVersionToVersion } from "@/utils/chunithm"
 
 import { scoreFilters } from "../definitions/score-filters"
 import type { UseChunithmFilteringParams } from "../types/music-types"

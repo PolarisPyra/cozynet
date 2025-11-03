@@ -15,7 +15,7 @@ import {
 } from "@/hooks/ongeki"
 import { Body, Container, FilterArea } from "@/pages/layout/layout"
 import { OngekiStaticMusic } from "@/shared/types"
-import { ongekiBadgeColors } from "@/utils/helpers"
+import { ongekiBadgeColors } from "@/utils/ongeki"
 
 export function OngekiAllSongs() {
 	const [searchParams, setSearchParams] = useSearchParams()

@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CDN } from "@/lib/constants"
 import { ChunithmRating } from "@/shared/types"
-import { ChunitmRating, getChunithmGrade } from "@/utils/helpers"
+import { ChunitmRating, getChunithmGrade } from "@/utils/chunithm"
 import { getChunithmLogo } from "@/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"

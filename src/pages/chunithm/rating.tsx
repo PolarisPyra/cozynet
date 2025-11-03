@@ -10,7 +10,7 @@ import { getDefaultRatingFilterValues, useChunithmRatingFiltering, useRatingFilt
 import { getRatingFilters } from "@/hooks/chunithm/filters/definitions/rating-filters"
 import { Body, Container, FilterArea } from "@/pages/layout/layout"
 import type { FilterValues } from "@/shared/types"
-import { chunithmBadgeColors } from "@/utils/helpers"
+import { chunithmBadgeColors } from "@/utils/chunithm"
 
 /**
  * CHUNITHM Rating System:

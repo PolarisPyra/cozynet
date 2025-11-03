@@ -65,36 +65,67 @@ const CHART_COLORS = [
 	"#ef4444" // Red
 ]
 
-const OngekiPossessionChart = () => {
-	const { data: scores = [], isLoading } = usePossessionPlaylog()
+const CHART_CONFIG = {
+	barWidth: 12,
+	domainPadding: { x: [15, 15] as [number, number] },
+	padding: { top: 50, left: 75, right: 25, bottom: 75 },
+	height: 300,
+	minWidth: 600
+}
 
+const TOOLTIP_CONFIG = {
+	flyoutStyle: {
+		fill: "#1f2937",
+		stroke: "#4b5563",
+		strokeWidth: 1
+	},
+	textStyle: {
+		fill: "#e5e7eb",
+		fontSize: 11,
+		fontFamily: "inherit"
+	},
+	cornerRadius: 4,
+	pointerLength: 6,
+	flyoutPadding: { top: 8, bottom: 8, left: 12, right: 12 },
+	offset: { dx: 0, dy: -5 }
+}
+
+interface PossessionChartProps {
+	data: any[]
+	isLoading: boolean
+	levelLabels: string[]
+	levelConfig: (level: number, label: string) => boolean
+	filterClearedScore: (score: any) => boolean
+	title: string
+}
+
+const PossessionChart = function({
+	data: scores = [],
+	isLoading,
+	levelLabels,
+	levelConfig,
+	filterClearedScore,
+	title
+}: PossessionChartProps) {
 	const chartData = useMemo(() => {
 		if (!scores || scores.length === 0) return []
 
-		// Filter only cleared songs (clearStatus === 2 means "Won")
-		// Version filtering is already handled server-side in the playlog endpoint
-		const clearedScores = scores.filter(score => {
-			const isCleared = score.clearStatus === 2
-			const hasLevel = score.level != null && score.level > 0
-			const hasMusicId = score.musicId != null
+		const clearedScores = scores.filter(filterClearedScore)
 
-			return isCleared && hasLevel && hasMusicId
-		})
-
-		// Group unique songs by level category (using same logic as filters)
+		// Group unique songs by level category
 		const levelMap = new Map<string, Set<string>>()
 
 		clearedScores.forEach(score => {
 			if (!score.level || !score.musicId) return
 
 			// Find which level label this score belongs to
-			for (const label of LEVEL_LABELS) {
-				if (LEVEL_CONFIGS.ONGEKI(score.level, label)) {
+			for (const label of levelLabels) {
+				if (levelConfig(score.level, label)) {
 					if (!levelMap.has(label)) {
 						levelMap.set(label, new Set())
 					}
 
-					// Track unique songs by musicId + chartId combination (same song can have multiple charts)
+					// Track unique songs by musicId + chartId combination
 					const uniqueKey = `${score.musicId}-${score.chartId}`
 					levelMap.get(label)!.add(uniqueKey)
 					break
@@ -106,22 +137,24 @@ const OngekiPossessionChart = () => {
 		const totalSongs = Array.from(levelMap.values()).reduce((sum, set) => sum + set.size, 0)
 
 		// Convert to chart data, only including levels with cleared songs
-		const data = LEVEL_LABELS.map((label, index) => {
-			const count = levelMap.get(label)?.size || 0
-			const percentage = totalSongs > 0 ? ((count / totalSongs) * 100).toFixed(2) : "0.00"
-			return {
-				x: label,
-				y: count,
-				label: count === 0 ? "" : `Level ${label}\n${count} songs cleared`,
-				count,
-				percentage,
-				total: totalSongs,
-				index
-			}
-		}).filter(item => item.count > 0)
+		const data = levelLabels
+			.map((label, index) => {
+				const count = levelMap.get(label)?.size || 0
+				const percentage = totalSongs > 0 ? ((count / totalSongs) * 100).toFixed(2) : "0.00"
+				return {
+					x: label,
+					y: count,
+					label: count === 0 ? "" : `Level ${label}\n${count} songs cleared`,
+					count,
+					percentage,
+					total: totalSongs,
+					index
+				}
+			})
+			.filter(item => item.count > 0)
 
 		return data
-	}, [scores])
+	}, [scores, levelLabels, levelConfig, filterClearedScore])
 
 	if (isLoading) {
 		return (
@@ -134,7 +167,7 @@ const OngekiPossessionChart = () => {
 	if (chartData.length === 0) {
 		return (
 			<div className="bg-card border-border rounded-md border p-4 shadow-sm">
-				<h3 className="text-foreground mb-4 text-lg font-semibold">Songs Cleared by Level</h3>
+				<h3 className="text-foreground mb-4 text-lg font-semibold">{title}</h3>
 				<div className="flex h-96 items-center justify-center">
 					<p className="text-muted-foreground">No cleared songs found</p>
 				</div>
@@ -149,18 +182,18 @@ const OngekiPossessionChart = () => {
 		tickValues.push(i)
 	}
 
-	const xTickValues = LEVEL_LABELS
+	const chartWidth = Math.max(CHART_CONFIG.minWidth, chartData.length * 24)
 
 	return (
 		<div className="bg-card border-border rounded-md border p-2 shadow-sm">
-			<h3 className="text-primary mb-3 text-lg font-semibold">Songs Cleared by Level</h3>
-			<div className="w-full">
+			<h3 className="text-primary mb-3 text-lg font-semibold">{title}</h3>
+			<div className="w-full overflow-x-auto">
 				<VictoryChart
 					theme={VictoryTheme.material}
-					domainPadding={{ x: [15, 15] }}
-					padding={{ top: 20, left: 75, right: 25, bottom: 75 }}
-					height={300}
-					width={Math.max(600, chartData.length * 24)}
+					domainPadding={CHART_CONFIG.domainPadding}
+					padding={CHART_CONFIG.padding}
+					height={CHART_CONFIG.height}
+					width={chartWidth}
 				>
 					<VictoryAxis
 						dependentAxis
@@ -174,7 +207,7 @@ const OngekiPossessionChart = () => {
 						}}
 					/>
 					<VictoryAxis
-						tickValues={xTickValues}
+						tickValues={levelLabels}
 						tickFormat={(x: string) => x}
 						label="Level"
 						style={{
@@ -186,37 +219,24 @@ const OngekiPossessionChart = () => {
 					/>
 					<VictoryBar
 						data={chartData}
-						barWidth={12}
+						barWidth={CHART_CONFIG.barWidth}
 						labelComponent={
 							<VictoryTooltip
-								flyoutStyle={{
-									fill: "#1f2937",
-									stroke: "#4b5563",
-									strokeWidth: 1
-								}}
-								style={{
-									fill: "#e5e7eb",
-									fontSize: 11,
-									fontFamily: "inherit"
-								}}
-								cornerRadius={4}
-								pointerLength={6}
-								flyoutPadding={{ top: 8, bottom: 8, left: 12, right: 12 }}
-								dx={0}
-								dy={-5}
+								flyoutStyle={TOOLTIP_CONFIG.flyoutStyle}
+								style={TOOLTIP_CONFIG.textStyle}
+								cornerRadius={TOOLTIP_CONFIG.cornerRadius}
+								pointerLength={TOOLTIP_CONFIG.pointerLength}
+								flyoutPadding={TOOLTIP_CONFIG.flyoutPadding}
+								dx={TOOLTIP_CONFIG.offset.dx}
+								dy={TOOLTIP_CONFIG.offset.dy}
+								constrainToVisibleArea
 							/>
 						}
 						style={{
 							data: {
-								fill: ({ datum }) => {
-									const levelIndex = datum.index
-									return CHART_COLORS[levelIndex % CHART_COLORS.length]
-								},
+								fill: ({ datum }) => CHART_COLORS[datum.index % CHART_COLORS.length],
 								fillOpacity: 0.85,
-								stroke: ({ datum }) => {
-									const levelIndex = datum.index
-									return CHART_COLORS[levelIndex % CHART_COLORS.length]
-								},
+								stroke: ({ datum }) => CHART_COLORS[datum.index % CHART_COLORS.length],
 								strokeWidth: 1.5
 							}
 						}}
@@ -224,6 +244,27 @@ const OngekiPossessionChart = () => {
 				</VictoryChart>
 			</div>
 		</div>
+	)
+}
+
+const OngekiPossessionChart = () => {
+	const { data: scores = [], isLoading } = usePossessionPlaylog()
+
+	return (
+		<PossessionChart
+			data={scores}
+			isLoading={isLoading}
+			levelLabels={LEVEL_LABELS}
+			levelConfig={(level, label) => LEVEL_CONFIGS.ONGEKI(level, label)}
+			filterClearedScore={score => {
+				const isCleared = score.clearStatus === 2
+				const hasLevel = score.level != null && score.level > 0
+				const hasMusicId = score.musicId != null
+
+				return isCleared && hasLevel && hasMusicId
+			}}
+			title="Songs Cleared by Level"
+		/>
 	)
 }
 
