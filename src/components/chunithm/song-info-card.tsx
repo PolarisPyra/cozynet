@@ -39,13 +39,11 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 					/>
 				</div>
 				<div className="min-w-0 flex-1">
-					<div className="text-foreground mb-1 line-clamp-1 text-xs leading-tight font-bold sm:text-sm md:text-base">
+					<div className="text-foreground mb-1 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
 						{song.title}
 					</div>
-					<div className="text-muted-foreground mb-0.5 line-clamp-1 text-[10px] sm:text-xs">
-						{song.artist || "Unknown"}
-					</div>
-					<div className="text-muted-foreground line-clamp-1 text-xs">{song.genre || "N/A"}</div>
+					<div className="text-muted-foreground mb-0.5 text-[10px] line-clamp-1 sm:text-xs">{song.artist || "Unknown"}</div>
+					<div className="text-muted-foreground text-xs whitespace-nowrap">{song.genre || "N/A"}</div>
 				</div>
 			</div>
 			<div className="flex flex-wrap gap-2">

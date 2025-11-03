@@ -69,7 +69,7 @@ export function MaimaiDxScoreInfoCard({ score, className = "" }: MaimaiDxScoreIn
 						/>
 					</div>
 					<div className="min-w-0 flex-1">
-						<div className="text-foreground mb-2 line-clamp-1 text-xs leading-tight font-bold sm:text-sm md:text-base">
+						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
 							{score.title}
 						</div>
 						<span
