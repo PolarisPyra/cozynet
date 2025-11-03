@@ -1,6 +1,6 @@
-import OngekiPossessionChart from "@/components/ongeki/possession-chart"
 import Header from "@/components/common/header"
 import Spinner from "@/components/common/spinner"
+import OngekiPossessionChart from "@/components/ongeki/possession-chart"
 import { OngekiRatingColors } from "@/components/ongeki/rating-colors"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"
@@ -39,7 +39,7 @@ const OngekiPossession = () => {
 						<h2 className="text-foreground mb-4 text-xl font-bold">Player Stats</h2>
 						<div className="space-y-3">
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Player Rating</span>
+								<span className="text-primary text-base font-medium">Player Rating</span>
 								<div className="flex items-center gap-2">
 									{playerRating > 0 && version ? (
 										<OngekiRatingColors rating={playerRating} version={version} decimals={isRefreshOrAbove ? 3 : 2} />
@@ -54,7 +54,7 @@ const OngekiPossession = () => {
 								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">First Play</span>
+								<span className="text-primary text-base font-medium">First Play</span>
 								<div className="flex items-center gap-2">
 									{(() => {
 										const fp = formatDateParts(profile.firstPlayDate)
@@ -72,7 +72,7 @@ const OngekiPossession = () => {
 								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Last Played</span>
+								<span className="text-primary text-base font-medium">Last Played</span>
 								<div className="flex items-center gap-2">
 									{(() => {
 										const lp = formatDateParts(profile.lastPlayDate)

@@ -49,7 +49,7 @@ const ChunithmPossession = () => {
 						</div>
 						<div className="space-y-3">
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Player Rating</span>
+								<span className="text-primary text-base font-medium">Player Rating</span>
 								<div className="flex items-center gap-2">
 									{playerRating > 0 && version ? (
 										<ChunithmRatingColors rating={playerRating} version={version} />
@@ -64,7 +64,7 @@ const ChunithmPossession = () => {
 								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">First Play</span>
+								<span className="text-primary text-base font-medium">First Play</span>
 								<div className="flex items-center gap-2">
 									{(() => {
 										const fp = formatDateParts(profile.firstPlayDate)
@@ -82,7 +82,7 @@ const ChunithmPossession = () => {
 								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Last Played</span>
+								<span className="text-primary text-base font-medium">Last Played</span>
 								<div className="flex items-center gap-2">
 									{(() => {
 										const lp = formatDateParts(profile.lastPlayDate)
@@ -100,13 +100,13 @@ const ChunithmPossession = () => {
 								</div>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Dan</span>
+								<span className="text-primary text-base font-medium">Dan</span>
 								<Badge variant="secondary" className="h-6 rounded-sm">
 									{danToRoman(profile.classEmblemMedal) || "None"}
 								</Badge>
 							</div>
 							<div className="border-border flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
-								<span className="text-muted-foreground text-base font-medium">Emblem</span>
+								<span className="text-primary text-base font-medium">Emblem</span>
 								<Badge variant="secondary" className="h-6 rounded-sm">
 									{danToRoman(profile.classEmblemBase) || "None"}
 								</Badge>
