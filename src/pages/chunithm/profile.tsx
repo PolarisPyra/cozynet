@@ -1,20 +1,17 @@
-import ChunithmPossessionChart from "@/components/chunithm/possession-chart"
 import { ChunithmRatingColors } from "@/components/chunithm/rating-colors"
 import Header from "@/components/common/header"
 import Spinner from "@/components/common/spinner"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"
-import { useChunithmRatingColor, useChunithmVersion, usePossession } from "@/hooks/chunithm"
+import { useChunithmProfile, useChunithmRatingColor, useChunithmVersion } from "@/hooks/chunithm"
 import { Body, Container } from "@/pages/layout/layout"
 import { formatSqlDateToLocalParts } from "@/utils/chunithm"
 import { getChunithmLogo } from "@/utils/version-logos"
 
-const ChunithmPossession = () => {
+const ChunithmProfile = () => {
 	const { user } = useAuth()
 	const version = useChunithmVersion()
-	const { data: possessionData, isLoading } = usePossession()
-
-	const profile = possessionData?.profile
+	const { data: profile, isLoading } = useChunithmProfile()
 	const playerRating = profile?.playerRating ? profile.playerRating / 100 : 0
 	const ratingColor = useChunithmRatingColor(playerRating)
 
@@ -113,9 +110,6 @@ const ChunithmPossession = () => {
 							</div>
 						</div>
 					</div>
-					<div className="mt-6">
-						<ChunithmPossessionChart />
-					</div>
 				</div>
 			</Body>
 		</Container>
@@ -124,7 +118,7 @@ const ChunithmPossession = () => {
 
 const LoadingState = () => (
 	<div className="relative flex-1 overflow-auto">
-		<Header title="Possession Overview" />
+		<Header title="Profile Overview" />
 		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
 			<Spinner size={24} />
 		</div>
@@ -133,11 +127,11 @@ const LoadingState = () => (
 
 const NoDataState = () => (
 	<div className="relative flex-1 overflow-auto">
-		<Header title="Possession Overview" />
+		<Header title="Profile Overview" />
 		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">No possession data available</p>
+			<p className="text-primary">No profile data available</p>
 		</div>
 	</div>
 )
 
-export default ChunithmPossession
+export default ChunithmProfile

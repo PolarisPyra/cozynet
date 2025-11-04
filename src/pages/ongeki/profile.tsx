@@ -1,19 +1,16 @@
 import Header from "@/components/common/header"
 import Spinner from "@/components/common/spinner"
-import OngekiPossessionChart from "@/components/ongeki/possession-chart"
 import { OngekiRatingColors } from "@/components/ongeki/rating-colors"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/auth"
-import { useOngekiRatingColor, useOngekiVersion, usePossession } from "@/hooks/ongeki"
+import { useOngekiProfile, useOngekiRatingColor, useOngekiVersion } from "@/hooks/ongeki"
 import { Body, Container } from "@/pages/layout/layout"
 import { formatOngekiProfileDate } from "@/utils/ongeki"
 
-const OngekiPossession = () => {
+const OngekiProfile = () => {
 	const { user } = useAuth()
 	const version = useOngekiVersion()
-	const { data: possessionData, isLoading } = usePossession()
-
-	const profile = possessionData?.profile
+	const { data: profile, isLoading } = useOngekiProfile()
 	const isRefreshOrAbove = version >= 8
 	const playerRating = isRefreshOrAbove
 		? profile?.newPlayerRating
@@ -91,9 +88,6 @@ const OngekiPossession = () => {
 							</div>
 						</div>
 					</div>
-					<div className="mt-6">
-						<OngekiPossessionChart />
-					</div>
 				</div>
 			</Body>
 		</Container>
@@ -102,7 +96,7 @@ const OngekiPossession = () => {
 
 const LoadingState = () => (
 	<div className="relative flex-1 overflow-auto">
-		<Header title="Possession Overview" />
+		<Header title="Profile Overview" />
 		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
 			<Spinner size={24} />
 		</div>
@@ -111,11 +105,11 @@ const LoadingState = () => (
 
 const NoDataState = () => (
 	<div className="relative flex-1 overflow-auto">
-		<Header title="Possession Overview" />
+		<Header title="Profile Overview" />
 		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">No possession data available</p>
+			<p className="text-primary">No profile data available</p>
 		</div>
 	</div>
 )
 
-export default OngekiPossession
+export default OngekiProfile

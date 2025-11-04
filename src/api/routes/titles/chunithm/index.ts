@@ -5,7 +5,7 @@ import { ChunithmKamaitachiRoutes } from "./kamaitachi"
 import { ChunithmLeaderboardRoutes } from "./leaderboard"
 import { ChunithmModsRoutes } from "./modifications"
 import { ChunithmOptionsRoutes } from "./options"
-import { ChunithmPossessionRoutes } from "./possession"
+import { ChunithmProfileRoutes } from "./profile"
 import { ChunithmScorePlaylog } from "./playlog"
 import { UserRatingFramesRoutes } from "./rating"
 import { ChunithmReiwaRoutes } from "./reiwa"
@@ -18,7 +18,7 @@ import { UserBoxRoutes } from "./userbox"
 
 export const AllChunithmRoutes = new Hono()
 	.route("static", ChunithmStaticMusic)
-	.route("profile", ChunithmScorePlaylog)
+	.route("profile", ChunithmProfileRoutes)
 	.route("favorites", FavoritesRoutes)
 	.route("kamaitachi", ChunithmKamaitachiRoutes)
 	.route("leaderboard", ChunithmLeaderboardRoutes)
@@ -28,7 +28,7 @@ export const AllChunithmRoutes = new Hono()
 	.route("cozynet", ChunithmSettingsRoutes)
 	.route("options", ChunithmOptionsRoutes)
 	.route("mods", ChunithmModsRoutes)
-	.route("possession", ChunithmPossessionRoutes)
+	.route("playlog", ChunithmScorePlaylog)
 	.route("teams", ChunithmTeamsRoutes)
 	.route("userbox", UserBoxRoutes)
 	.route("username", UsernameRoutes)

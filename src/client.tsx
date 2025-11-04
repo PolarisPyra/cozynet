@@ -42,12 +42,12 @@ const Account = React.lazy(() => import("./pages/account/account"))
 const ChunithmAllSongs = React.lazy(() => import("./pages/chunithm/allsongs"))
 const ChunithmFavorites = React.lazy(() => import("./pages/chunithm/favorites"))
 const ChunithmLeaderboard = React.lazy(() => import("./pages/chunithm/leaderboard"))
-const ChunithmPossession = React.lazy(() => import("./pages/chunithm/possession"))
+const ChunithmProfile = React.lazy(() => import("./pages/chunithm/profile"))
 const ChunithmRatingBaseList = React.lazy(() => import("./pages/chunithm/rating"))
 const ChunithmRivals = React.lazy(() => import("./pages/chunithm/rivals"))
 const ChunithmScorePage = React.lazy(() => import("./pages/chunithm/scores"))
 const ChunithmSettingsPage = React.lazy(() => import("./pages/chunithm/settings"))
-const OngekiPossession = React.lazy(() => import("./pages/ongeki/possession"))
+const OngekiProfile = React.lazy(() => import("./pages/ongeki/profile"))
 
 const queryClient = new QueryClient()
 
@@ -98,7 +98,7 @@ const app = (
 									<Route path="/chunithm/allsongs" element={<ChunithmAllSongs />} />
 									<Route path="/chunithm/rivals" element={<ChunithmRivals />} />
 									<Route path="/chunithm/rating" element={<ChunithmRatingBaseList />} />
-									<Route path="/chunithm/possession" element={<ChunithmPossession />} />
+									<Route path="/chunithm/profile" element={<ChunithmProfile />} />
 
 									<Route path="/ongeki/settings" element={<OngekiSettingsPage />} />
 									<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
@@ -108,7 +108,7 @@ const app = (
 									<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
 									<Route path="/ongeki/rivals" element={<OngekiRivals />} />
 									<Route path="/ongeki/cards" element={<CardManagement />} />
-									<Route path="/ongeki/possession" element={<OngekiPossession />} />
+									<Route path="/ongeki/profile" element={<OngekiProfile />} />
 									<Route path="/maimaidx/scores" element={<MaimaiDxScorePage />} />
 									<Route path="/maimaidx/settings" element={<MaimaiDxSettings />} />
 									<Route path="/maimaidx/allsongs" element={<MaimaiDxAllSongs />} />

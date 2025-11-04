@@ -15,7 +15,7 @@ import { useGameOptions, useUpdateGameOptions } from "./use-game-options"
 import { useKamaitachiExport } from "./use-kamatachi"
 import { useLeaderboard } from "./use-leaderboard"
 import { useIsMobile } from "./use-mobile"
-import { usePossession, usePossessionPlaylog } from "./use-possession"
+import { useChunithmProfile } from "./use-profile"
 import {
 	usePlayerRating,
 	useUserRatingBaseHotList,
@@ -49,8 +49,7 @@ export {
 	useUpdateGameOptions,
 	useKamaitachiExport,
 	useLeaderboard,
-	usePossession,
-	usePossessionPlaylog,
+	useChunithmProfile,
 	useIsMobile,
 	usePlayerRating,
 	useUserRatingBaseHotList,
