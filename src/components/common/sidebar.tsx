@@ -13,7 +13,8 @@ import {
 	Pencil,
 	RectangleVertical,
 	Swords,
-	Trophy
+	Trophy,
+	User
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
@@ -75,9 +76,9 @@ const chunithmSubnav: MenuItem[] = [
 		icon: List
 	},
 	{
-		name: "Possession",
-		href: "/chunithm/possession",
-		icon: BarChart3
+		name: "Profile",
+		href: "/chunithm/profile",
+		icon: User
 	}
 ]
 
@@ -109,9 +110,9 @@ const ongekiSubnav: MenuItem[] = [
 		icon: RectangleVertical
 	},
 	{
-		name: "Possession",
-		href: "/ongeki/possession",
-		icon: BarChart3
+		name: "Profile",
+		href: "/ongeki/profile",
+		icon: User
 	}
 ]
 
