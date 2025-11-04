@@ -91,9 +91,9 @@ const OngekiPossession = () => {
 							</div>
 						</div>
 					</div>
-					{/* <div className="mt-6">
+					<div className="mt-6">
 						<OngekiPossessionChart />
-					</div> */}
+					</div>
 				</div>
 			</Body>
 		</Container>
