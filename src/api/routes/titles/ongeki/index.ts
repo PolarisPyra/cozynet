@@ -6,7 +6,6 @@ import { OngekiModsRoutes } from "./modifications"
 import { OngekiStaticMusic } from "./music"
 import { NewUserRatingFramesRoutes } from "./new-rating"
 import { OngekiProfileRoutes } from "./profile"
-import { OngekiProfilePlaylog } from "./playlog"
 import { OngekiRatingRoutes } from "./rating"
 import { OngekiReiwaRoutes } from "./reiwa"
 import { OngekiRivalsRoutes } from "./rivals"
@@ -20,7 +19,6 @@ export const AllOngekiRoutes = new Hono()
 	.route("newRating", NewUserRatingFramesRoutes)
 	.route("settings", OngekiSettingsRoutes)
 	.route("leaderboard", OngekiLeaderboardRoutes)
-	.route("playlog", OngekiProfilePlaylog)
 
 	.route("rivals", OngekiRivalsRoutes)
 	.route("mods", OngekiModsRoutes)
