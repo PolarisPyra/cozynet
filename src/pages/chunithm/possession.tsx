@@ -113,9 +113,9 @@ const ChunithmPossession = () => {
 							</div>
 						</div>
 					</div>
-					<div className="mt-6">
+					{/* <div className="mt-6">
 						<ChunithmPossessionChart />
-					</div>
+					</div> */}
 				</div>
 			</Body>
 		</Container>
