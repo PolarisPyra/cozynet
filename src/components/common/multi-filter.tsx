@@ -1,3 +1,5 @@
+import { Star } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -32,14 +34,45 @@ export const MultiFilter = ({ filters, filterValues, onFilterChange, onClearAll 
 						onValueChange={value => onFilterChange(filter.identifier, value)}
 					>
 						<SelectTrigger className="w-auto min-w-[100px] rounded-sm px-2">
-							<SelectValue placeholder={filter.label} />
+							<SelectValue placeholder={filter.label}>
+								{(() => {
+									const selectedValue = filterValues[filter.identifier] || "all"
+									const selectedOption = filter.options.find(opt => opt.value === selectedValue)
+									if (selectedOption?.value.startsWith("star")) {
+										const starCount = parseInt(selectedOption.value.replace("star", ""), 10)
+										return (
+											<div className="flex items-center gap-1">
+												{Array.from({ length: starCount }, (_, i) => (
+													<Star key={i} className="h-3.5 w-3.5 fill-current" />
+												))}
+											</div>
+										)
+									}
+									return selectedOption?.label || filter.label
+								})()}
+							</SelectValue>
 						</SelectTrigger>
 						<SelectContent>
-							{filter.options.map(option => (
-								<SelectItem key={option.value} value={option.value}>
-									{option.label}
-								</SelectItem>
-							))}
+							{filter.options.map(option => {
+								// Render star icons for star filter options
+								if (option.value.startsWith("star")) {
+									const starCount = parseInt(option.value.replace("star", ""), 10)
+									return (
+										<SelectItem key={option.value} value={option.value}>
+											<div className="flex items-center gap-1.5">
+												{Array.from({ length: starCount }, (_, i) => (
+													<Star key={i} className="h-3.5 w-3.5 fill-current" />
+												))}
+											</div>
+										</SelectItem>
+									)
+								}
+								return (
+									<SelectItem key={option.value} value={option.value}>
+										{option.label}
+									</SelectItem>
+								)
+							})}
 						</SelectContent>
 					</Select>
 				))}

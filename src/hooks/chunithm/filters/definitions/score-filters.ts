@@ -1,4 +1,5 @@
 import type { FilterValues } from "@/shared/types"
+import { levelToStars } from "@/utils/chunithm"
 import { LEVEL_CONFIGS } from "@/utils/level-filter"
 
 import type { ScoreFilter } from "../types/music-types"
@@ -38,9 +39,26 @@ export const scoreLevelFilter: ScoreFilter = {
 		{ label: "14", value: "14" },
 		{ label: "14+", value: "14+" },
 		{ label: "15", value: "15" },
-		{ label: "15+", value: "15+" }
+		{ label: "15+", value: "15+" },
+		{ label: "2 Star", value: "star2" },
+		{ label: "3 Star", value: "star3" },
+		{ label: "4 Star", value: "star4" },
+		{ label: "5 Star", value: "star5" }
 	],
 	predicate: (score, value) => {
+		// For World's End scores, filter by star count
+		if (score.chartId === 5) {
+			if (value === "all") return true
+			// Handle star filter values (star2, star3, star4, star5)
+			if (value.startsWith("star")) {
+				const filterStarCount = parseInt(value.replace("star", ""), 10)
+				const starCount = levelToStars(score.level)
+				return starCount === filterStarCount
+			}
+			// For regular level filters, World's End scores don't match
+			return false
+		}
+		// For regular scores, use the standard level filter
 		return LEVEL_CONFIGS.CHUNITHM(score.level, value)
 	}
 }
