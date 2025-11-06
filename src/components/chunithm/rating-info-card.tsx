@@ -1,3 +1,4 @@
+import { Star } from "lucide-react"
 import { DateTime } from "luxon"
 
 import { ChunithmAchievementBadges } from "@/components/chunithm/achievement-badges"
@@ -7,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useImageLoading } from "@/hooks/use-image-loading"
 import { CDN } from "@/lib/constants"
 import { ChunithmRating } from "@/shared/types"
-import { ChunitmRating, getChunithmGrade } from "@/utils/chunithm"
+import { ChunitmRating, getChunithmGrade, levelToStars } from "@/utils/chunithm"
 import { getChunithmLogo } from "@/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"
@@ -22,6 +23,8 @@ export const ChunithmRatingInfoCard = function ({
 	const rating = score
 	const calculatedRating = ChunitmRating(rating.level ?? 0, rating.score ?? 0) / 100
 	const logoUrl = getChunithmLogo.getLogo(rating.version)
+	const isWorldsEnd = rating.chartId === 5
+	const starCount = levelToStars(rating.level)
 
 	const formatLevel = function (level?: number | null, chartId?: number | null) {
 		if (level == null) return "?"
@@ -52,9 +55,19 @@ export const ChunithmRatingInfoCard = function ({
 							{rating.title}
 						</div>
 						<span
-							className={`inline-block rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${levelColorBadge ? levelColorBadge(rating.chartId ?? undefined) : "text-primary-foreground bg-primary"}`}
+							className={`inline-flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${levelColorBadge ? levelColorBadge(rating.chartId ?? undefined) : "text-primary-foreground bg-primary"}`}
 						>
-							{formatLevel(rating.level, rating.chartId)}
+							{rating.level == null || !Number.isFinite(rating.level) ? (
+								"?"
+							) : isWorldsEnd ? (
+								<div className="flex items-center gap-0.5">
+									{Array.from({ length: starCount }, (_, i) => (
+										<Star key={i} className="h-3 w-3 fill-current" />
+									))}
+								</div>
+							) : (
+								formatLevel(rating.level, rating.chartId)
+							)}
 						</span>
 					</div>
 				</div>

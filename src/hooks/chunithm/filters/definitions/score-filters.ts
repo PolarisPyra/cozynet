@@ -41,7 +41,6 @@ export const scoreLevelFilter: ScoreFilter = {
 		{ label: "15+", value: "15+" }
 	],
 	predicate: (score, value) => {
-		if (!score.level || score.chartId === 5) return false
 		return LEVEL_CONFIGS.CHUNITHM(score.level, value)
 	}
 }

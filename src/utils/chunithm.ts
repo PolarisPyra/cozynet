@@ -210,3 +210,13 @@ export const formatSqlDateToLocalParts = (sqlDate: string | null | undefined): D
 		return DEFAULT_DATE_PARTS
 	}
 }
+
+/**
+ * Convert CHUNITHM level to number of stars
+ * Formula: (level + 1) / 2
+ * Examples: 1 = 1 star, 3 = 2 stars, 5 = 3 stars
+ */
+export const levelToStars = (level: number | null | undefined): number => {
+	if (level == null || !Number.isFinite(level)) return 0
+	return Math.floor((level + 1) / 2)
+}
