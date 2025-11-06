@@ -28,7 +28,8 @@ const ChunithmProfileRoutes = new Hono()
 	})
 	.get("playlog", async c => {
 		try {
-			const { userId } = c.payload
+			const { userId, versions } = c.payload
+			const version = versions.chunithm_version
 
 			const [results] = await db.execute<(DB.ChuniScorePlaylog & RowDataPacket)[]>(
 				`SELECT
@@ -56,19 +57,20 @@ const ChunithmProfileRoutes = new Hono()
 					music.genre,
 					music.jacketPath,
 					music.artist,
-					sv.version as songVersion,
+					sv.latest_version as songVersion,
 					ls.name as skillName,
 					ls.categoryName
 				FROM chuni_score_playlog ul
 				INNER JOIN (
-					SELECT songId, chartId, MIN(version) as version
+					SELECT songId, chartId, MAX(version) as latest_version
 					FROM chuni_static_music
+					WHERE version <= ?
 					GROUP BY songId, chartId
 				) sv ON ul.musicId = sv.songId AND ul.level = sv.chartId
 				INNER JOIN chuni_static_music music 
 					ON ul.musicId = music.songId
 					AND ul.level = music.chartId
-					AND music.version = sv.version
+					AND music.version = sv.latest_version
 				LEFT JOIN (
 					SELECT skillId, name, categoryName
 					FROM (
@@ -85,7 +87,7 @@ const ChunithmProfileRoutes = new Hono()
 				WHERE ul.user = ?
 				ORDER BY ul.userPlayDate DESC
 				`,
-				[userId]
+				[version, userId]
 			)
 
 			return c.json(results)
