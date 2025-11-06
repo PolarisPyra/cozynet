@@ -1,3 +1,5 @@
+import { Star } from "lucide-react"
+
 import { ChunithmAchievementBadges } from "@/components/chunithm/achievement-badges"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -6,7 +8,7 @@ import { useChunithmVersion } from "@/hooks/chunithm"
 import { useImageLoading } from "@/hooks/use-image-loading"
 import { CDN } from "@/lib/constants"
 import { ChunithmPlaylog } from "@/shared/types"
-import { chunithmBadgeColors, formatSqlDateToLocalParts, getChunithmGrade } from "@/utils/chunithm"
+import { chunithmBadgeColors, formatSqlDateToLocalParts, getChunithmGrade, levelToStars } from "@/utils/chunithm"
 import { getChunithmLogo } from "@/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"
@@ -18,6 +20,8 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 	const appearedLogo = getChunithmLogo.getLogo(score.songVersion)
 	const scoreVersionLogo = getChunithmLogo.getLogo(score.version)
 	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
+	const isWorldsEnd = score.chartId === 5
+	const starCount = levelToStars(score.level)
 
 	const formatLevel = (level?: number | null) => {
 		if (level == null) return "?"
@@ -47,11 +51,21 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 						</div>
 						<Badge
 							variant="outline"
-							className={`rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
+							className={`flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
 								levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : chunithmBadgeColors(score.chartId ?? 0)
 							}`}
 						>
-							{formatLevel(score.level)}
+							{score.level == null || !Number.isFinite(score.level) ? (
+								"?"
+							) : isWorldsEnd ? (
+								<div className="flex items-center gap-0.5">
+									{Array.from({ length: starCount }, (_, i) => (
+										<Star key={i} className="h-3 w-3 fill-current" />
+									))}
+								</div>
+							) : (
+								formatLevel(score.level)
+							)}
 						</Badge>
 					</div>
 				</div>
