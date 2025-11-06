@@ -23,14 +23,21 @@ const ChunithmStaticMusic = new Hono().get("chuni_static_music", async c => {
 				m.level,
 				m.chartId,
 				m.opt,
-				sv.latest_version AS version
+				ev.earliest_version AS version
 			FROM (
-				-- Latest version for each song/chart up to user's selected version
+				-- Latest version for each song/chart up to user's selected version (for level data)
 				SELECT songId, chartId, MAX(version) AS latest_version
 				FROM chuni_static_music
 				WHERE version <= ?
 				GROUP BY songId, chartId
 			) sv
+			INNER JOIN (
+				-- Earliest version for each song/chart (for version logo)
+				SELECT songId, chartId, MIN(version) AS earliest_version
+				FROM chuni_static_music
+				WHERE version <= ?
+				GROUP BY songId, chartId
+			) ev ON ev.songId = sv.songId AND ev.chartId = sv.chartId
 			LEFT JOIN (
 				-- Latest ULTIMA versions for charts introduced >= version 11
 				SELECT songId, chartId, MAX(version) AS latest_ultima_version
@@ -51,9 +58,9 @@ const ChunithmStaticMusic = new Hono().get("chuni_static_music", async c => {
 					WHERE chartId = 3 AND level = 1
 				)
 				AND (sv.chartId != ? OR sv.latest_version >= ?)
-			ORDER BY sv.latest_version DESC, m.id DESC
+			ORDER BY ev.earliest_version DESC, m.id DESC
 			`,
-			[version, version, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION, userId, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION]
+			[version, version, version, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION, userId, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION]
 		)
 
 		return c.json(results)
