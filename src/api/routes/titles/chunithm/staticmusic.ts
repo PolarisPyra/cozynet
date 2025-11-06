@@ -23,25 +23,25 @@ const ChunithmStaticMusic = new Hono().get("chuni_static_music", async c => {
 				m.level,
 				m.chartId,
 				m.opt,
-				sv.earliest_version AS version
+				sv.latest_version AS version
 			FROM (
-				-- Earliest version for each song/chart
-				SELECT songId, chartId, MIN(version) AS earliest_version
+				-- Latest version for each song/chart up to user's selected version
+				SELECT songId, chartId, MAX(version) AS latest_version
 				FROM chuni_static_music
 				WHERE version <= ?
 				GROUP BY songId, chartId
 			) sv
 			LEFT JOIN (
 				-- Latest ULTIMA versions for charts introduced >= version 11
-				SELECT songId, chartId, MAX(version) AS latest_version
+				SELECT songId, chartId, MAX(version) AS latest_ultima_version
 				FROM chuni_static_music
-				WHERE version = ? AND chartId = ? AND version >= ?
+				WHERE version <= ? AND chartId = ? AND version >= ?
 				GROUP BY songId, chartId
 			) uv ON uv.songId = sv.songId AND uv.chartId = sv.chartId
 			INNER JOIN chuni_static_music m
 				ON m.songId = sv.songId
 				AND m.chartId = sv.chartId
-				AND m.version = COALESCE(uv.latest_version, sv.earliest_version)
+				AND m.version = COALESCE(uv.latest_ultima_version, sv.latest_version)
 			LEFT JOIN chuni_static_opts o ON m.opt = o.id
 			LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
 			WHERE (dwp.status = 1 OR o.isEnable = 1 OR o.name = 'A000' OR o.name IS NULL)
@@ -50,8 +50,8 @@ const ChunithmStaticMusic = new Hono().get("chuni_static_music", async c => {
 					FROM chuni_static_music 
 					WHERE chartId = 3 AND level = 1
 				)
-				AND (sv.chartId != ? OR sv.earliest_version >= ?)
-			ORDER BY sv.earliest_version DESC, m.id DESC
+				AND (sv.chartId != ? OR sv.latest_version >= ?)
+			ORDER BY sv.latest_version DESC, m.id DESC
 			`,
 			[version, version, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION, userId, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION]
 		)
