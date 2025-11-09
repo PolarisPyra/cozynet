@@ -11,7 +11,7 @@ const OngekiStaticMusic = new Hono().get("music", async c => {
 		const version = versions.ongeki_version
 
 		const [results] = await db.execute<(DB.OngekiStaticMusic & RowDataPacket)[]>(
-			`SELECT 
+			`SELECT
             m.songId,
             m.title,
             m.artist,
@@ -20,7 +20,7 @@ const OngekiStaticMusic = new Hono().get("music", async c => {
             m.level,
             m.chartId,
             m.opt,
-            earliest.version 
+            earliest.version
         FROM ongeki_static_music m
         INNER JOIN (
             SELECT songId, chartId, MAX(version) AS maxVersion, MIN(version) AS version

@@ -23,8 +23,8 @@ const ChunithmModsRoutes = new Hono()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
-					UPDATE daphnis_user_option 
-             		SET value = ? 
+					UPDATE daphnis_user_option
+             		SET value = ?
 		    		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.UnlockAllSongs}'
 				`,
 					[value, userId]
@@ -59,8 +59,8 @@ const ChunithmModsRoutes = new Hono()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
-					UPDATE daphnis_user_option 
-             		SET value = ? 
+					UPDATE daphnis_user_option
+             		SET value = ?
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.UnlockAllSongs}'
 				`,
 					[value, userId]
@@ -95,8 +95,8 @@ const ChunithmModsRoutes = new Hono()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
-					UPDATE daphnis_user_option 
-             		SET value = ? 
+					UPDATE daphnis_user_option
+             		SET value = ?
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.MaxTickets}'
 				`,
 					[value, userId]
@@ -131,8 +131,8 @@ const ChunithmModsRoutes = new Hono()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
-					UPDATE daphnis_user_option 
-             		SET value = ? 
+					UPDATE daphnis_user_option
+             		SET value = ?
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.MaxTickets}'
 				`,
 					[value, userId]

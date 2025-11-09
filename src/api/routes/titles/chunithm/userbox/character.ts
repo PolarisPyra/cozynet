@@ -18,7 +18,7 @@ interface CharacterItem {
 async function getCurrentCharacter(userId: number, version: number): Promise<CharacterItem[]> {
 	const [result] = await db.execute<(CharacterItem & RowDataPacket)[]>(
 		`
-        SELECT               
+        SELECT
             dsn.characterId,
             dsn.imagePath,
             dsn.name AS label,
@@ -26,19 +26,19 @@ async function getCurrentCharacter(userId: number, version: number): Promise<Cha
                 WHEN cic.user IS NULL THEN 1
                 ELSE 0
             END AS locked,
-            1 as equipped          
+            1 as equipped
         FROM chuni_profile_data cpd
-        JOIN daphnis_static_character dsn 
+        JOIN daphnis_static_character dsn
             ON dsn.characterId = cpd.characterId
             AND dsn.version = ?
-        LEFT JOIN chuni_item_character cic 
-            ON cic.characterId = dsn.characterId 
+        LEFT JOIN chuni_item_character cic
+            ON cic.characterId = dsn.characterId
             AND cic.user = ?
         LEFT JOIN chuni_static_opts cso
             ON dsn.opt = cso.id
         LEFT JOIN daphnis_web_permissions dwp
             ON dwp.user = ?
-        WHERE cpd.user = ? 
+        WHERE cpd.user = ?
             AND cpd.version = ?
             AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
         `,
@@ -92,7 +92,7 @@ const routes = new Hono()
 
 				// Update profile
 				await db.execute<ResultSetHeader>(
-					`UPDATE chuni_profile_data 
+					`UPDATE chuni_profile_data
                     SET characterId = ?
                     WHERE user = ? AND version = ?`,
 					[characterId, userId, version]
@@ -144,17 +144,17 @@ const routes = new Hono()
                         ELSE 0
                     END AS locked,
                     CASE
-                        WHEN cpd.characterId = dsn.characterId 
-                        AND cpd.user = ? 
+                        WHEN cpd.characterId = dsn.characterId
+                        AND cpd.user = ?
                         AND cpd.version = ? THEN 1
                         ELSE 0
                     END AS equipped,
                     COUNT(*) OVER() AS total_count
                 FROM daphnis_static_character dsn
-                LEFT JOIN chuni_item_character cic 
-                    ON cic.characterId = dsn.characterId 
+                LEFT JOIN chuni_item_character cic
+                    ON cic.characterId = dsn.characterId
                     AND cic.user = ?
-                LEFT JOIN chuni_profile_data cpd 
+                LEFT JOIN chuni_profile_data cpd
                     ON cpd.characterId = dsn.characterId
                     AND cpd.user = ?
                     AND cpd.version = ?
@@ -164,7 +164,7 @@ const routes = new Hono()
                     ON dwp.user = ?
                 ${whereClause}
                     AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
-                ORDER BY 
+                ORDER BY
                     locked DESC,
                     dsn.characterId DESC
                 `

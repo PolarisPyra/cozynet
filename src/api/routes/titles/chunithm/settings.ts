@@ -28,7 +28,7 @@ const ChunithmSettingsRoutes = new Hono()
 
 				const [result] = await conn.execute<ResultSetHeader>(
 					`
-						UPDATE daphnis_user_option 
+						UPDATE daphnis_user_option
 						SET value = ?
 						WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.ChunithmVersion}'
 					`,
@@ -70,9 +70,9 @@ const ChunithmSettingsRoutes = new Hono()
 			const userId = c.payload.userId
 			const [versions] = await db.execute<({ version: number } & RowDataPacket)[]>(
 				`
-					SELECT DISTINCT version 
-					FROM chuni_profile_data 
-					WHERE user = ? 
+					SELECT DISTINCT version
+					FROM chuni_profile_data
+					WHERE user = ?
 					ORDER BY version DESC
 				`,
 				[userId]

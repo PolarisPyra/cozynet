@@ -51,7 +51,7 @@ const OngekiRivalsRoutes = new Hono()
 
 				const [results] = await db.execute<ResultSetHeader>(
 					`
-						DELETE FROM ongeki_profile_rival 
+						DELETE FROM ongeki_profile_rival
          				WHERE user = ? AND rivalUserId = ?
 					`,
 					[userId, rivalUserId]
@@ -72,7 +72,7 @@ const OngekiRivalsRoutes = new Hono()
 
 			const [results] = await db.execute<({ rivalUserId: number } & RowDataPacket)[]>(
 				`
-					SELECT rivalUserId 
+					SELECT rivalUserId
          			FROM ongeki_profile_rival
          			WHERE user = ?
 				`,
@@ -92,13 +92,13 @@ const OngekiRivalsRoutes = new Hono()
 
 			const [results] = await db.execute<({ rivalId: number; isMutual: number } & RowDataPacket)[]>(
 				`
-					SELECT 
+					SELECT
 						r1.rivalUserId AS rivalId,
-						CASE 
+						CASE
 							WHEN EXISTS (
-							SELECT 1 
+							SELECT 1
 							FROM ongeki_profile_rival AS r2
-							WHERE r2.user = r1.rivalUserId 
+							WHERE r2.user = r1.rivalUserId
 								AND r2.rivalUserId = r1.user
 							) THEN 1
 							ELSE 0
@@ -128,10 +128,10 @@ const OngekiRivalsRoutes = new Hono()
 
 			const [results] = await db.execute<({ id: number; username: string } & RowDataPacket)[]>(
 				`
-					SELECT 
+					SELECT
           				user AS id,
           				userName AS username
-         			FROM ongeki_profile_data 
+         			FROM ongeki_profile_data
          			WHERE version = ?
          			AND user != ?
 				`,
@@ -150,7 +150,7 @@ const OngekiRivalsRoutes = new Hono()
 			const version = versions.ongeki_version
 
 			const [result] = await db.execute<({ rivalCount: number } & RowDataPacket)[]>(
-				`SELECT COUNT(*) AS rivalCount 
+				`SELECT COUNT(*) AS rivalCount
          FROM ongeki_profile_rival AS opr
          WHERE opr.user = ?
          	AND EXISTS (

@@ -1,10 +1,10 @@
 import { useState } from "react"
 
-import Avatar from "@/components/chunithm/userbox/avatar"
-import MapIcon from "@/components/chunithm/userbox/map-icon"
-import Nameplate from "@/components/chunithm/userbox/nameplate"
-import SystemVoice from "@/components/chunithm/userbox/system-voice"
-import Trophies from "@/components/chunithm/userbox/trophies"
+import { Avatar } from "@/components/chunithm/userbox/avatar"
+import { MapiconCustomization } from "@/components/chunithm/userbox/map-icon"
+import { NameplateCustomization } from "@/components/chunithm/userbox/nameplate"
+import { SystemvoiceCustomization } from "@/components/chunithm/userbox/system-voice"
+import { TrophyCustomization } from "@/components/chunithm/userbox/trophies"
 import Header from "@/components/common/header"
 import { Button } from "@/components/ui/button"
 import { useChunithmVersion } from "@/hooks/chunithm"
@@ -30,16 +30,16 @@ const ChunithmUserbox = () => {
 					<Avatar />
 				</div>
 				<div className={activeTab === "nameplate" ? active : "hidden"}>
-					<Nameplate />
+					<NameplateCustomization />
 				</div>
 				<div className={activeTab === "trophy" ? active : "hidden"}>
-					<Trophies />
+					<TrophyCustomization />
 				</div>
 				<div className={activeTab === "systemvoice" ? active : "hidden"}>
-					<SystemVoice />
+					<SystemvoiceCustomization />
 				</div>
 				<div className={activeTab === "mapicon" ? active : "hidden"}>
-					<MapIcon />
+					<MapiconCustomization />
 				</div>
 			</>
 		)

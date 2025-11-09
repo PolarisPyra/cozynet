@@ -33,8 +33,8 @@ const OngekiSettingsRoutes = new Hono()
 			const userId = c.payload.userId
 
 			const [results] = await db.execute<(VersionResult & RowDataPacket)[]>(
-				`SELECT value 
-       FROM daphnis_user_option 
+				`SELECT value
+       FROM daphnis_user_option
        WHERE user = ? AND \`key\` = 'ongeki_version'`,
 				[userId]
 			)
@@ -66,7 +66,7 @@ const OngekiSettingsRoutes = new Hono()
 
 				const [result] = await conn.execute<ResultSetHeader>(
 					`
-        UPDATE daphnis_user_option 
+        UPDATE daphnis_user_option
         SET value = ?
         WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.OngekiVersion}'
         `,
@@ -110,9 +110,9 @@ const OngekiSettingsRoutes = new Hono()
 			const userId = c.payload.userId
 
 			const [versions] = await db.execute<(VersionEntry & RowDataPacket)[]>(
-				`SELECT DISTINCT version 
-       FROM ongeki_profile_data 
-       WHERE user = ? 
+				`SELECT DISTINCT version
+       FROM ongeki_profile_data
+       WHERE user = ?
        ORDER BY version DESC`,
 				[userId]
 			)

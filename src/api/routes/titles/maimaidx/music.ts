@@ -13,15 +13,15 @@ const MaimaiDXStaticMusic = new Hono().get("music", async c => {
 		const [results] = await db.execute<(Mai2StaticMusic & RowDataPacket)[]>(
 			`WITH song_versions AS (
                 -- Get the earliest version each song/chart combination appeared in
-                SELECT 
-                    songId, 
-                    chartId, 
+                SELECT
+                    songId,
+                    chartId,
                     MIN(version) as earliest_version
                 FROM mai2_static_music
                 WHERE version <= 21
                 GROUP BY songId, chartId
             )
-            SELECT 
+            SELECT
                 m.songId,
                 m.title,
                 m.artist,
@@ -31,8 +31,8 @@ const MaimaiDXStaticMusic = new Hono().get("music", async c => {
                 m.jacketPath,
                 sv.earliest_version as version
             FROM song_versions sv
-            INNER JOIN mai2_static_music m 
-                ON m.songId = sv.songId 
+            INNER JOIN mai2_static_music m
+                ON m.songId = sv.songId
                 AND m.chartId = sv.chartId
                 AND m.version = sv.earliest_version
             ORDER BY sv.earliest_version DESC, m.id DESC`,

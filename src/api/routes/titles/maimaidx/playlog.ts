@@ -13,9 +13,9 @@ const MaimaiDXPlaylogRoute = new Hono().get("playlog", async c => {
 		const [results] = await db.execute<(Mai2Playlog & RowDataPacket)[]>(
 			`WITH song_versions AS (
                 -- Get the earliest version each song/chart combination appeared in
-                SELECT 
-                    songId, 
-                    chartId, 
+                SELECT
+                    songId,
+                    chartId,
                     MIN(version) as version
                 FROM mai2_static_music
                 GROUP BY songId, chartId
@@ -37,16 +37,16 @@ const MaimaiDXPlaylogRoute = new Hono().get("playlog", async c => {
                 msm.artist,
                 sv.version as songVersion
             FROM mai2_playlog mp
-            INNER JOIN mai2_profile_detail pd 
+            INNER JOIN mai2_profile_detail pd
                 ON mp.user = pd.user
-            INNER JOIN song_versions sv 
-                ON mp.musicId = sv.songId 
+            INNER JOIN song_versions sv
+                ON mp.musicId = sv.songId
                 AND mp.level = sv.chartId
-            INNER JOIN mai2_static_music msm 
+            INNER JOIN mai2_static_music msm
                 ON mp.musicId = msm.songId
                 AND mp.level = msm.chartId
                 AND msm.version = sv.version
-            WHERE mp.user = ? 
+            WHERE mp.user = ?
                 AND pd.version = ?
             ORDER BY mp.userPlayDate DESC`,
 			[userId, version]

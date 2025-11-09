@@ -10,7 +10,7 @@ const OngekiCardsRoutes = new Hono().get("/", async c => {
 		const { userId } = c.payload
 
 		const [cards] = await db.execute<(RowDataPacket & DB.OngekiUserCard & DB.OngekiStaticCards)[]>(
-			`SELECT 
+			`SELECT
 		sc.cardId,
 		sc.name,
 		sc.charaId,

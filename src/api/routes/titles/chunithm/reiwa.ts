@@ -1,9 +1,8 @@
 import { Hono } from "hono"
 import type { RowDataPacket } from "mysql2"
 
-import { getSongs } from "@/api/db"
-import { authMiddleware } from "@/api/middleware/jwtPayload"
-import { errorHandler } from "@/api/utils/error"
+import db from "@/api/db"
+import { rethrowWithMessage } from "@/api/utils/error"
 import { ChunitmRating, getChunithmGrade, getDifficultyFromChunithmChart } from "@/utils/chunithm"
 
 interface ChunithmSongResult {
@@ -37,7 +36,7 @@ const ChunithmReiwaRoutes = new Hono().get("export", async c => {
 		const highestRating = ratingResults.length > 0 ? ratingResults[0].highestRating : 0
 
 		const [bestListResults] = await db.execute<(ChunithmSongResult & RowDataPacket)[]>(
-			`SELECT 
+			`SELECT
                 r.musicId,
                 b.scoreMax as score,
                 r.difficultId,
@@ -51,8 +50,8 @@ const ChunithmReiwaRoutes = new Hono().get("export", async c => {
                 m.genre,
                 m.chartId
             FROM chuni_profile_rating r
-            JOIN chuni_score_best b 
-                ON r.musicId = b.musicId 
+            JOIN chuni_score_best b
+                ON r.musicId = b.musicId
                 AND r.difficultId = b.level
                 AND b.user = r.user
             JOIN chuni_static_music m
@@ -66,7 +65,7 @@ const ChunithmReiwaRoutes = new Hono().get("export", async c => {
 		)
 
 		const [hotListResults] = await db.execute<(ChunithmSongResult & RowDataPacket)[]>(
-			`SELECT 
+			`SELECT
                 r.musicId,
                 b.scoreMax as score,
                 r.difficultId,
@@ -80,8 +79,8 @@ const ChunithmReiwaRoutes = new Hono().get("export", async c => {
                 m.genre,
                 m.chartId
             FROM chuni_profile_rating r
-            JOIN chuni_score_best b 
-                ON r.musicId = b.musicId 
+            JOIN chuni_score_best b
+                ON r.musicId = b.musicId
                 AND r.difficultId = b.level
                 AND b.user = r.user
             JOIN chuni_static_music m

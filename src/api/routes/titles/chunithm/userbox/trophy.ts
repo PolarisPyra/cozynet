@@ -115,10 +115,10 @@ const routes = new Hono()
 				// Update profile
 				await db.execute<ResultSetHeader>(
 					`
-                    UPDATE chuni_profile_data 
-                    SET ${equipColumn} = 
+                    UPDATE chuni_profile_data
+                    SET ${equipColumn} =
 						(
-							CASE 
+							CASE
 								WHEN ${equipColumn} = ? THEN null
 								ELSE ?
 							END
@@ -184,19 +184,19 @@ const routes = new Hono()
                         END AS equipped,
                         COUNT(*) OVER() AS total_count
                     FROM daphnis_static_trophy dst
-                    LEFT JOIN chuni_item_item cii 
-                        ON cii.itemId = dst.trophyId 
+                    LEFT JOIN chuni_item_item cii
+                        ON cii.itemId = dst.trophyId
                         AND cii.user = ?
                         AND cii.itemKind = 3
-                    LEFT JOIN chuni_profile_data cpd 
-                        ON cpd.user = ? 
+                    LEFT JOIN chuni_profile_data cpd
+                        ON cpd.user = ?
                         AND cpd.version = ?
                         AND cpd.trophyId = dst.trophyId
                     LEFT JOIN chuni_static_opts cso ON dst.opt = cso.id
                     LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
                     WHERE dst.version = ?
                         AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)${additionalWhere}
-                    ORDER BY 
+                    ORDER BY
                         locked ASC,
                         dst.trophyId DESC
                 `

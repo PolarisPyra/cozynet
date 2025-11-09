@@ -12,10 +12,10 @@ const ChunithmLeaderboardRoutes = new Hono().get("", async c => {
 
 		const [results] = await db.execute<(DB.ChuniProfileData & RowDataPacket)[]>(
 			`
-				SELECT 
+				SELECT
 					cpd.user,
 					cpd.playerRating,
-					cpd.userName 
+					cpd.userName
 				FROM chuni_profile_data cpd
 				WHERE cpd.version = ?
 				ORDER BY cpd.playerRating DESC

@@ -28,7 +28,7 @@ const MaimaiDXSettings = new Hono()
 
 				const [result] = await conn.execute<ResultSetHeader>(
 					`
-						UPDATE daphnis_user_option 
+						UPDATE daphnis_user_option
 						SET value = ?
 						WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.MaimaiDXVersion}'
 					`,
@@ -70,9 +70,9 @@ const MaimaiDXSettings = new Hono()
 			const userId = c.payload.userId
 			const [versions] = await db.execute<({ version: number } & RowDataPacket)[]>(
 				`
-					SELECT DISTINCT version 
-					FROM mai2_profile_detail 
-					WHERE user = ? 
+					SELECT DISTINCT version
+					FROM mai2_profile_detail
+					WHERE user = ?
 					ORDER BY version DESC
 				`,
 				[userId]
