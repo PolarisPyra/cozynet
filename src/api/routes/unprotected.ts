@@ -55,8 +55,8 @@ const UnprotectedRoutes = new Hono()
 			// Update last login date
 			await conn.execute(
 				`
-                        UPDATE aime_user 
-                        SET last_login_date = NOW() 
+                        UPDATE aime_user
+                        SET last_login_date = NOW()
                         WHERE id = ?
                     `,
 				[foundUser.id]
@@ -152,8 +152,8 @@ const UnprotectedRoutes = new Hono()
 			// Update last login date
 			await conn.execute(
 				`
-                        UPDATE aime_user 
-     					SET last_login_date = NOW() 
+                        UPDATE aime_user
+     					SET last_login_date = NOW()
      					WHERE id = ?
                     `,
 				[userId]

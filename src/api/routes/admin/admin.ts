@@ -37,9 +37,9 @@ const AdminRoutes = new Hono()
 			}
 
 			const [existingArcade] = await db.execute<RowDataPacket[]>(
-				`SELECT id 
-				FROM arcade 
-				WHERE name = ? 
+				`SELECT id
+				FROM arcade
+				WHERE name = ?
 				AND nickname = ?`,
 				[name, arcade_nickname]
 			)
@@ -55,8 +55,8 @@ const AdminRoutes = new Hono()
 			}
 
 			const [existingMachine] = await db.execute<RowDataPacket[]>(
-				`SELECT id 
-				FROM machine 
+				`SELECT id
+				FROM machine
 				WHERE serial = ?`,
 				[serialId]
 			)
@@ -67,7 +67,7 @@ const AdminRoutes = new Hono()
 
 			// Create new arcade
 			const [result] = await db.execute<ResultSetHeader>(
-				`INSERT INTO arcade (name, nickname) 
+				`INSERT INTO arcade (name, nickname)
 				VALUES (?, ?)`,
 				[name, arcade_nickname]
 			)
@@ -75,13 +75,13 @@ const AdminRoutes = new Hono()
 			const arcadeId = result.insertId
 
 			await db.execute<ResultSetHeader>(
-				`INSERT INTO arcade_owner (user, arcade, permissions) 
+				`INSERT INTO arcade_owner (user, arcade, permissions)
 				VALUES (?, ?, ?)`,
 				[userId, arcadeId, 1]
 			)
 
 			await db.execute<ResultSetHeader>(
-				`INSERT INTO machine (arcade, serial, game) 
+				`INSERT INTO machine (arcade, serial, game)
 				VALUES (?, ?, ?)`,
 				[arcadeId, serialId, game === "SDEW" ? game : null]
 			)

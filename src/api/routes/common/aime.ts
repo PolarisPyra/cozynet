@@ -49,8 +49,8 @@ const AimeCardRoute = new Hono()
 			const { accessCode } = await c.req.json()
 
 			const [result] = await db.execute<ResultSetHeader>(
-				`UPDATE aime_card 
-            SET access_code = ? 
+				`UPDATE aime_card
+            SET access_code = ?
             WHERE user = ?`,
 				[accessCode, userId]
 			)
