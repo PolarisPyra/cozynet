@@ -6,8 +6,7 @@ import { z } from "zod"
 import { db } from "@/api/db"
 import { validateJson } from "@/api/middleware/validator"
 import { rethrowWithMessage } from "@/api/utils/error"
-import { DB } from "@/shared/types"
-import { UserRole } from "@/shared/types"
+import { DB, UserRole } from "@/shared/types"
 
 const ArcadeRoutes = new Hono()
 
@@ -96,7 +95,7 @@ LEFT JOIN arcade_owner ao ON a.id = ao.arcade
 
 				// Update location fields in the arcade table
 				const [update] = await db.execute<ResultSetHeader>(
-					`UPDATE arcade 
+					`UPDATE arcade
     		SET country = ?, state = ?, region_id = ?
     		WHERE id = ?`,
 					[country, state, regionId, arcade]
@@ -183,7 +182,7 @@ LEFT JOIN arcade_owner ao ON a.id = ao.arcade
 
 				// Update the user column n arcade_owner table
 				const [update] = await db.execute<ResultSetHeader>(
-					`UPDATE arcade_owner 
+					`UPDATE arcade_owner
 									SET user = ?
 									WHERE arcade = ?`,
 					[user, arcade]

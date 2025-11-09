@@ -1,6 +1,6 @@
 import "dotenv/config"
-import mysql from "mysql2/promise"
 import type { Pool } from "mysql2/promise"
+import mysql from "mysql2/promise"
 
 const isProd = process.env.NODE_ENV === "production"
 
