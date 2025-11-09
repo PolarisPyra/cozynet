@@ -51,8 +51,8 @@ const ChunithmStaticMusic = new Hono().get("chuni_static_music", async c => {
 				AND m.version = COALESCE(uv.latest_ultima_version, sv.latest_version)
 			LEFT JOIN chuni_static_opts o ON m.opt = o.id
 			LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
-			WHERE (dwp.status = 1 OR o.isEnable = 1 OR o.name = 'A000' OR o.name IS NULL)
-				AND sv.songId NOT IN (
+		
+				AND sv.son	WHERE (dwp.status = 1 OR o.isEnable = 1 OR o.name = 'A000' OR o.name IS NULL)gId NOT IN (
 					SELECT songId 
 					FROM chuni_static_music 
 					WHERE chartId = 3 AND level = 1
@@ -60,7 +60,16 @@ const ChunithmStaticMusic = new Hono().get("chuni_static_music", async c => {
 				AND (sv.chartId != ? OR sv.latest_version >= ?)
 			ORDER BY ev.earliest_version DESC, m.id DESC
 			`,
-			[version, version, version, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION, userId, ULTIMA_CHART_ID, ULTIMA_MINIMUM_VERSION]
+			[
+				version,
+				version,
+				version,
+				ULTIMA_CHART_ID,
+				ULTIMA_MINIMUM_VERSION,
+				userId,
+				ULTIMA_CHART_ID,
+				ULTIMA_MINIMUM_VERSION
+			]
 		)
 
 		return c.json(results)

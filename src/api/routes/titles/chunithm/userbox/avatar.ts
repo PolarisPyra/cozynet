@@ -56,15 +56,15 @@ async function getCurrentAvatarItems(userId: number, version: number): Promise<A
 		LEFT JOIN daphnis_web_permissions dwp
 			ON dwp.user = ?
 		WHERE csa.version = ?
-		AND (
-			(csa.category = 1 AND csa.avatarAccessoryId = cpd.avatarWear) OR
-			(csa.category = 2 AND csa.avatarAccessoryId = cpd.avatarHead) OR
-			(csa.category = 3 AND csa.avatarAccessoryId = cpd.avatarFace) OR
-			(csa.category = 4 AND csa.avatarAccessoryId = cpd.avatarSkin) OR
-			(csa.category = 5 AND csa.avatarAccessoryId = cpd.avatarItem) OR
-			(csa.category = 7 AND csa.avatarAccessoryId = cpd.avatarBack)
-		)
-		AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
+AND (
+    (csa.category = 1 AND csa.avatarAccessoryId = cpd.avatarWear) OR
+    (csa.category = 2 AND csa.avatarAccessoryId = cpd.avatarHead) OR
+    (csa.category = 3 AND csa.avatarAccessoryId = cpd.avatarFace) OR
+    (csa.category = 4 AND csa.avatarAccessoryId = cpd.avatarSkin) OR
+    (csa.category = 5 AND csa.avatarAccessoryId = cpd.avatarItem) OR
+    (csa.category = 7 AND csa.avatarAccessoryId = cpd.avatarBack)
+)
+AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)
 		ORDER BY csa.category
       	`,
 		[userId, userId, version, userId, version]
