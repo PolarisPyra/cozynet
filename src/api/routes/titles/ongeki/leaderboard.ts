@@ -12,15 +12,15 @@ const OngekiLeaderboardRoutes = new Hono().get("", async c => {
 
 		const [results] = await db.execute<(DB.OngekiProfileData & RowDataPacket)[]>(
 			`
-			 SELECT 
+			 SELECT
           opd.user,
           opd.playerRating,
           opd.userName,
           opd.newPlayerRating
         FROM ongeki_profile_data opd
         WHERE opd.version = ?
-       ORDER BY 
-          CASE 
+       ORDER BY
+          CASE
             WHEN opd.newPlayerRating IS NOT NULL THEN opd.newPlayerRating
           END DESC,
           opd.playerRating DESC

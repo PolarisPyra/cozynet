@@ -13,7 +13,7 @@ const ChunithmProfileRoutes = new Hono()
 
 			const [profileResults] = await db.execute<(DB.ChuniProfileData & RowDataPacket)[]>(
 				`
-					SELECT 
+					SELECT
 						cpd.*
 					FROM chuni_profile_data cpd
 					WHERE cpd.user = ? AND cpd.version = ?
@@ -51,7 +51,7 @@ const ChunithmProfileRoutes = new Hono()
 					ul.skillId,
 					ul.isNewRecord,
 					ul.fullChainKind,
-					music.chartId,  
+					music.chartId,
 					music.title,
 					music.level,
 					music.genre,
@@ -75,16 +75,16 @@ const ChunithmProfileRoutes = new Hono()
 					WHERE version <= ?
 					GROUP BY songId, chartId
 				) ev ON ev.songId = sv.songId AND ev.chartId = sv.chartId
-				INNER JOIN chuni_static_music music 
+				INNER JOIN chuni_static_music music
 					ON ul.musicId = music.songId
 					AND ul.level = music.chartId
 					AND music.version = sv.latest_version
 				LEFT JOIN (
 					SELECT skillId, name, categoryName
 					FROM (
-						SELECT 
-							skillId, 
-							name, 
+						SELECT
+							skillId,
+							name,
 							categoryName,
 							ROW_NUMBER() OVER (PARTITION BY skillId ORDER BY version DESC) as rn
 						FROM daphnis_static_skill

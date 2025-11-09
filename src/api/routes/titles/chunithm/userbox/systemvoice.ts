@@ -27,13 +27,13 @@ const EquipRequestSchema = z.object({
 async function getCurrentSystemVoice(userId: number, version: number): Promise<SystemVoiceItem | null> {
 	const [result] = await db.execute<(SystemVoiceItem & RowDataPacket)[]>(
 		`
-		SELECT 
+		SELECT
 			dssv.systemVoiceId,
 			dssv.name as label,
 			dssv.imagePath,
-			CASE 
+			CASE
 				WHEN cii.itemId IS NOT NULL THEN 0
-				ELSE 1 
+				ELSE 1
 			END as locked
 		FROM chuni_profile_data cpd
 		JOIN daphnis_static_system_voice dssv ON cpd.voiceId = dssv.systemVoiceId
@@ -100,7 +100,7 @@ const routes = new Hono()
 			// Update profile with new systemvoice
 			const [result] = await db.execute<ResultSetHeader>(
 				`
-				UPDATE chuni_profile_data 
+				UPDATE chuni_profile_data
 				SET voiceId = ?
 				WHERE user = ? AND version = ?
 				`,
@@ -162,11 +162,11 @@ const routes = new Hono()
 				dssv.systemVoiceId,
 				dssv.name as label,
 				dssv.imagePath,
-				CASE 
+				CASE
 					WHEN cii.itemId IS NOT NULL THEN 0
 					ELSE 1
 				END as locked,
-				CASE 
+				CASE
 					WHEN cpd.voiceId = dssv.systemVoiceId THEN 0
 					ELSE 1
 				END as sort_current,
@@ -178,7 +178,7 @@ const routes = new Hono()
 			LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
 			WHERE dssv.version = ?
 			AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)${additionalWhere}
-			ORDER BY 
+			ORDER BY
 				locked DESC,
 				dssv.systemVoiceId DESC
 			`,

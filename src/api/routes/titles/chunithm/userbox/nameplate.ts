@@ -18,7 +18,7 @@ interface NameplateItem {
 async function getCurrentNameplate(userId: number, version: number): Promise<NameplateItem[]> {
 	const [result] = await db.execute<(NameplateItem & RowDataPacket)[]>(
 		`
-        SELECT               
+        SELECT
             dsn.nameplateId,
             dsn.imagePath,
             dsn.name AS label,
@@ -26,20 +26,20 @@ async function getCurrentNameplate(userId: number, version: number): Promise<Nam
                 WHEN cii.user IS NULL THEN 1
                 ELSE 0
             END AS locked,
-            1 as equipped          
+            1 as equipped
         FROM chuni_profile_data cpd
-        JOIN daphnis_static_nameplate dsn 
+        JOIN daphnis_static_nameplate dsn
             ON dsn.nameplateId = cpd.nameplateId
             AND dsn.version = ?
-        LEFT JOIN chuni_item_item cii 
-            ON cii.itemId = dsn.nameplateId 
+        LEFT JOIN chuni_item_item cii
+            ON cii.itemId = dsn.nameplateId
             AND cii.user = ?
             AND cii.itemKind = 1
         LEFT JOIN chuni_static_opts cso
             ON dsn.opt = cso.id
         LEFT JOIN daphnis_web_permissions dwp
             ON dwp.user = ?
-        WHERE cpd.user = ? 
+        WHERE cpd.user = ?
             AND cpd.version = ?
             AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
         `,
@@ -80,7 +80,7 @@ const routes = new Hono()
 
 				// Verify user owns the nameplate
 				const [ownership] = await db.execute<RowDataPacket[]>(
-					`SELECT 1 FROM chuni_item_item 
+					`SELECT 1 FROM chuni_item_item
                     WHERE user = ? AND itemId = ? AND itemKind = 1`,
 					[userId, nameplateId]
 				)
@@ -93,7 +93,7 @@ const routes = new Hono()
 
 				// Update profile
 				await db.execute<ResultSetHeader>(
-					`UPDATE chuni_profile_data 
+					`UPDATE chuni_profile_data
                     SET nameplateId = ?
                     WHERE user = ? AND version = ?`,
 					[nameplateId, userId, version]
@@ -142,18 +142,18 @@ const routes = new Hono()
                         ELSE 0
                     END AS locked,
                     CASE
-                        WHEN cpd.nameplateId = dsn.nameplateId 
-                        AND cpd.user = ? 
+                        WHEN cpd.nameplateId = dsn.nameplateId
+                        AND cpd.user = ?
                         AND cpd.version = ? THEN 1
                         ELSE 0
                     END AS equipped,
                     COUNT(*) OVER() AS total_count
                 FROM daphnis_static_nameplate dsn
-                LEFT JOIN chuni_item_item cii 
-                    ON cii.itemId = dsn.nameplateId 
+                LEFT JOIN chuni_item_item cii
+                    ON cii.itemId = dsn.nameplateId
                     AND cii.user = ?
                     AND cii.itemKind = 1
-                LEFT JOIN chuni_profile_data cpd 
+                LEFT JOIN chuni_profile_data cpd
                     ON cpd.nameplateId = dsn.nameplateId
                     AND cpd.user = ?
                     AND cpd.version = ?
@@ -163,7 +163,7 @@ const routes = new Hono()
                     ON dwp.user = ?
                 ${whereClause}
                     AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
-                ORDER BY 
+                ORDER BY
                     locked DESC,
                     dsn.nameplateId DESC
                 `
@@ -193,7 +193,7 @@ const routes = new Hono()
 
 				// Add nameplate to user's inventory
 				await db.execute<ResultSetHeader>(
-					`INSERT IGNORE INTO chuni_item_item 
+					`INSERT IGNORE INTO chuni_item_item
                     (user, itemId, itemKind, stock, isValid)
                     VALUES (?, ?, 1, 1, 1)`,
 					[userId, nameplateId]

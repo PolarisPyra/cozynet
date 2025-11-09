@@ -13,7 +13,7 @@ const OngekiProfileRoutes = new Hono()
 
 			const [profileResults] = await db.execute<(DB.OngekiProfileData & RowDataPacket)[]>(
 				`
-					SELECT 
+					SELECT
 						opd.*
 					FROM ongeki_profile_data opd
 					WHERE opd.user = ? AND opd.version = ?
@@ -33,13 +33,13 @@ const OngekiProfileRoutes = new Hono()
 
 			const [results] = await db.execute<RowDataPacket[]>(
 				`
-                SELECT 
+                SELECT
                     csp.id,
                     csp.userPlayDate,
                     csp.maxCombo,
                     csp.isFullCombo,
                     csp.platinumScore,
-                    csp.platinumScoreMax, 
+                    csp.platinumScoreMax,
                     csp.platinumScoreStar,
                     csp.playerRating,
                     csp.isAllBreak,
@@ -55,25 +55,25 @@ const OngekiProfileRoutes = new Hono()
                     csp.cardId1,
                     csp.isTechNewRecord,
                     csp.isBattleNewRecord,
-                    csm.chartId,  
-                    csm.title, 
-                    csm.level, 
-                    csm.genre, 
+                    csm.chartId,
+                    csm.title,
+                    csm.level,
+                    csm.genre,
                     csm.jacketPath,
                     csm.noteCount,
                     csm.artist
-                FROM 
+                FROM
                     ongeki_score_playlog csp
                 JOIN ongeki_profile_data d ON csp.user = d.user
-                JOIN ongeki_static_music csm 
-                    ON csp.musicId = csm.songId 
-                    AND csp.level = csm.chartId 
+                JOIN ongeki_static_music csm
+                    ON csp.musicId = csm.songId
+                    AND csp.level = csm.chartId
                     AND csm.version = ?
                 JOIN aime_card a ON d.user = a.user
-                WHERE 
+                WHERE
                     a.user = ?
                     AND d.version = ?
-                ORDER BY 
+                ORDER BY
                     csp.userPlayDate DESC;
                     `,
 				[version, userId, version]

@@ -134,7 +134,7 @@ const ChunithmOptionsRoutes = new Hono()
 				if (existing.length > 0) {
 					// Update existing record with all fields
 					const [result] = await db.execute<ResultSetHeader>(
-						`UPDATE chuni_profile_option SET 
+						`UPDATE chuni_profile_option SET
 							speed = ?, speed_120 = ?, mirrorFumen = ?, trackSkip = ?,
 							judgeTimingOffset = ?, judgeTimingOffset_120 = ?, playTimingOffset = ?, playTimingOffset_120 = ?,
 							matching = ?, playerLevel = ?, rating = ?, categoryDetail = ?,

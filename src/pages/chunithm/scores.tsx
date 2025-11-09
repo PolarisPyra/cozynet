@@ -6,10 +6,10 @@ import { MultiFilter } from "@/components/common/multi-filter"
 import ResponsiveGrid from "@/components/common/responsive-grid"
 import Spinner from "@/components/common/spinner"
 import {
-	type ChunithmFilterValues,
-	getDefaultScoreFilterValues,
-	useNewScoreFiltering as useChunithmScoreFiltering,
-	useScoreFilters
+    type ChunithmFilterValues,
+    getDefaultScoreFilterValues,
+    useNewScoreFiltering as useChunithmScoreFiltering,
+    useScoreFilters
 } from "@/hooks/chunithm"
 import { Body, Container, FilterArea } from "@/pages/layout/layout"
 import { chunithmBadgeColors } from "@/utils/chunithm"

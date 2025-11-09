@@ -6,7 +6,6 @@ import JsonExport from "@/components/settings/chunithm/json-export"
 import SongManagement from "@/components/settings/chunithm/song-management"
 import TeamManagement from "@/components/settings/chunithm/team-management"
 import TicketManagement from "@/components/settings/chunithm/ticket-management"
-import UpdateUsernameBox from "@/components/settings/chunithm/update-username"
 import ChunithmVersionManager from "@/components/settings/chunithm/version-management"
 import { Body, Container } from "@/pages/layout/layout"
 

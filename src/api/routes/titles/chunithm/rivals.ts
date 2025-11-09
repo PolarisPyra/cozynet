@@ -58,9 +58,9 @@ const RivalsRoutes = new Hono()
 				const [results] = await db.execute<ResultSetHeader>(
 					`
 						DELETE FROM chuni_item_favorite
-       					WHERE user = ? 
-						  AND version = ? 
-						  AND favId = ? 
+       					WHERE user = ?
+						  AND version = ?
+						  AND favId = ?
 						  AND favKind = 2
 					`,
 					[userId, version, favId]
@@ -83,10 +83,10 @@ const RivalsRoutes = new Hono()
 
 			const [results] = await db.execute<({ favId: number } & RowDataPacket)[]>(
 				`
-					SELECT favId 
+					SELECT favId
 			        FROM chuni_item_favorite
-       			    WHERE user = ? 
-					  AND version = ? 
+       			    WHERE user = ?
+					  AND version = ?
 					  AND favKind = 2
 				`,
 				[userId, version]
@@ -105,13 +105,13 @@ const RivalsRoutes = new Hono()
 
 			const [results] = await db.execute<({ rivalId: number; isMutual: number } & RowDataPacket)[]>(
 				`
-					SELECT 
+					SELECT
 						f1.favId AS rivalId,
-						CASE 
+						CASE
 							WHEN EXISTS (
 								SELECT 1
 								FROM chuni_item_favorite AS f2
-								WHERE f2.user = f1.favId 
+								WHERE f2.user = f1.favId
 									AND f2.favId = f1.user
 									AND f2.version = f1.version
 									AND f2.favKind = 2
@@ -145,8 +145,8 @@ const RivalsRoutes = new Hono()
 
 			const [results] = await db.execute<({ id: number; username: string } & RowDataPacket)[]>(
 				`
-					SELECT 
-						user AS id, 
+					SELECT
+						user AS id,
 						userName AS username
 					FROM chuni_profile_data
 					WHERE version = ?
@@ -168,10 +168,10 @@ const RivalsRoutes = new Hono()
 
 			const [result] = await db.execute<({ rivalCount: number } & RowDataPacket)[]>(
 				`
-					SELECT COUNT(*) AS rivalCount 
+					SELECT COUNT(*) AS rivalCount
 					FROM chuni_item_favorite AS cif
-					WHERE cif.user = ? 
-					  AND cif.version = ? 
+					WHERE cif.user = ?
+					  AND cif.version = ?
 					  AND cif.favKind = 2
 					  AND EXISTS (
 					    SELECT 1

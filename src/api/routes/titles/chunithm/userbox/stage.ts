@@ -18,7 +18,7 @@ interface StageItem {
 async function getCurrentStage(userId: number, version: number): Promise<StageItem[]> {
 	const [result] = await db.execute<(StageItem & RowDataPacket)[]>(
 		`
-        SELECT               
+        SELECT
             dsn.stageId,
             dsn.imagePath,
             dsn.name AS label,
@@ -26,18 +26,18 @@ async function getCurrentStage(userId: number, version: number): Promise<StageIt
                 WHEN cii.user IS NULL THEN 1
                 ELSE 0
             END AS locked,
-            1 as equipped          
+            1 as equipped
         FROM chuni_profile_data cpd
-        JOIN daphnis_static_stages dsn 
+        JOIN daphnis_static_stages dsn
             ON dsn.stageId = cpd.stageId
             AND dsn.version = ?
-        LEFT JOIN chuni_item_item cii 
-            ON cii.itemId = dsn.stageId 
+        LEFT JOIN chuni_item_item cii
+            ON cii.itemId = dsn.stageId
             AND cii.user = ?
             AND cii.itemKind = 13
         LEFT JOIN chuni_static_opts cso
             ON dsn.opt = cso.id
-        WHERE cpd.user = ? 
+        WHERE cpd.user = ?
             AND cpd.version = ?
             AND (cso.name != 'A000' OR cso.name IS NULL)
             AND dsn.name != 'Linked VERSE'
@@ -79,7 +79,7 @@ const routes = new Hono()
 
 				// Verify user owns the stage
 				const [ownership] = await db.execute<RowDataPacket[]>(
-					`SELECT 1 FROM chuni_item_item 
+					`SELECT 1 FROM chuni_item_item
                     WHERE user = ? AND itemId = ? AND itemKind = 13`,
 					[userId, stageId]
 				)
@@ -92,7 +92,7 @@ const routes = new Hono()
 
 				// Update profile
 				await db.execute<ResultSetHeader>(
-					`UPDATE chuni_profile_data 
+					`UPDATE chuni_profile_data
                     SET stageId = ?
                     WHERE user = ? AND version = ?`,
 					[stageId, userId, version]
@@ -141,18 +141,18 @@ const routes = new Hono()
                         ELSE 0
                     END AS locked,
                     CASE
-                        WHEN cpd.stageId = dsn.stageId 
-                        AND cpd.user = ? 
+                        WHEN cpd.stageId = dsn.stageId
+                        AND cpd.user = ?
                         AND cpd.version = ? THEN 1
                         ELSE 0
                     END AS equipped,
                     COUNT(*) OVER() AS total_count
                 FROM daphnis_static_stages dsn
-                LEFT JOIN chuni_item_item cii 
-                    ON cii.itemId = dsn.stageId 
+                LEFT JOIN chuni_item_item cii
+                    ON cii.itemId = dsn.stageId
                     AND cii.user = ?
                     AND cii.itemKind = 13
-                LEFT JOIN chuni_profile_data cpd 
+                LEFT JOIN chuni_profile_data cpd
                     ON cpd.stageId = dsn.stageId
                     AND cpd.user = ?
                     AND cpd.version = ?
@@ -161,7 +161,7 @@ const routes = new Hono()
                 ${whereClause}
                     AND (cso.name != 'A000' OR cso.name IS NULL)
                     AND dsn.name != 'Linked VERSE'
-                ORDER BY 
+                ORDER BY
                     locked DESC,
                     dsn.stageId DESC
                 `
@@ -191,7 +191,7 @@ const routes = new Hono()
 
 				// Add stage to user's inventory
 				await db.execute<ResultSetHeader>(
-					`INSERT IGNORE INTO chuni_item_item 
+					`INSERT IGNORE INTO chuni_item_item
                     (user, itemId, itemKind, stock, isValid)
                     VALUES (?, ?, 13, 1, 1)`,
 					[userId, stageId]

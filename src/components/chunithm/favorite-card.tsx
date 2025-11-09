@@ -1,8 +1,9 @@
 import { Heart } from "lucide-react"
 
 import { CDN } from "@/lib/constants"
+import type { DB } from "@/shared/types"
 
-interface FavoriteSong {
+type FavoriteSong = DB.ChuniStaticMusic & {
 	songId: number
 	title: string
 	jacketPath: string

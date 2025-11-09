@@ -29,13 +29,13 @@ const OngekiModsRoutes = new Hono()
 
 				await conn.execute(
 					`
-						INSERT INTO ongeki_user_card 
+						INSERT INTO ongeki_user_card
 							(user, cardId, digitalStock, analogStock, level, maxLevel, exp, printCount, useCount, isNew, kaikaDate, choKaikaDate, skillId, isAcquired, created)
-						SELECT 
+						SELECT
 							?, c.cardId, 5, 0, 70, 70, 0, 0, 0, 0, "2021-01-01 00:00:00.0", "2021-01-01 00:00:00.0", c.choKaikaSkillId, 1, "2021-01-01 00:00:00.0"
 						FROM ongeki_static_cards AS c
 						WHERE c.version = ?
-						ON DUPLICATE KEY UPDATE 
+						ON DUPLICATE KEY UPDATE
 							digitalStock = 5,
 							level = 70,
 							maxLevel = 70,
@@ -52,7 +52,7 @@ const OngekiModsRoutes = new Hono()
 					`
 						UPDATE ongeki_user_card uc
 						INNER JOIN ongeki_static_cards sc ON uc.cardId = sc.cardId
-						SET 
+						SET
 							digitalStock = 11,
 							level = 100,
 							maxLevel = 100
@@ -99,9 +99,9 @@ const OngekiModsRoutes = new Hono()
 
 				await db.execute(
 					`
-					INSERT IGNORE INTO ongeki_user_item 
+					INSERT IGNORE INTO ongeki_user_item
 						(user, itemKind, itemId, stock, isValid)
-					SELECT 
+					SELECT
 						?, itemKind, itemId, 1, 1
 					FROM ongeki_static_rewards
 					WHERE version = ? AND itemKind = ?
@@ -125,11 +125,11 @@ const OngekiModsRoutes = new Hono()
 			for (const itemKind of itemKinds) {
 				await db.execute(
 					`
-						INSERT IGNORE INTO ongeki_user_item 
+						INSERT IGNORE INTO ongeki_user_item
 							(user, itemKind, itemId, stock, isValid)
-						SELECT 
+						SELECT
 							?, itemKind, itemId, 1, 1
-						FROM ongeki_static_rewards 
+						FROM ongeki_static_rewards
 						WHERE version = ? AND itemKind = ?
 				`,
 					[userId, version, itemKind]

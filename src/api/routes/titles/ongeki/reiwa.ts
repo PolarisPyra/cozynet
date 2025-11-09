@@ -89,7 +89,7 @@ const OngekiReiwaRoutes = new Hono()
 
 			// Fetch best 30 songs
 			const [bestListResults] = await db.execute<(OngekiSongResult & RowDataPacket)[]>(
-				`SELECT 
+				`SELECT
                 r.musicId,
                 b.techScoreMax as score,
                 r.difficultId,
@@ -104,8 +104,8 @@ const OngekiReiwaRoutes = new Hono()
                 m.genre,
                 m.chartId
             FROM ongeki_profile_rating r
-            JOIN ongeki_score_best b 
-                ON r.musicId = b.musicId 
+            JOIN ongeki_score_best b
+                ON r.musicId = b.musicId
                 AND r.difficultId = b.level
                 AND b.user = r.user
             JOIN ongeki_static_music m
@@ -119,7 +119,7 @@ const OngekiReiwaRoutes = new Hono()
 			)
 
 			const [newListResults] = await db.execute<(OngekiSongResult & RowDataPacket)[]>(
-				`SELECT 
+				`SELECT
                 r.musicId,
                 b.techScoreMax as score,
                 r.difficultId,
@@ -134,8 +134,8 @@ const OngekiReiwaRoutes = new Hono()
                 m.genre,
                 m.chartId
             FROM ongeki_profile_rating r
-            JOIN ongeki_score_best b 
-                ON r.musicId = b.musicId 
+            JOIN ongeki_score_best b
+                ON r.musicId = b.musicId
                 AND r.difficultId = b.level
                 AND b.user = r.user
             JOIN ongeki_static_music m
@@ -149,7 +149,7 @@ const OngekiReiwaRoutes = new Hono()
 			)
 
 			const [hotListResults] = await db.execute<(OngekiSongResult & RowDataPacket)[]>(
-				`SELECT 
+				`SELECT
                 r.musicId,
                 b.techScoreMax as score,
                 r.difficultId,
@@ -164,8 +164,8 @@ const OngekiReiwaRoutes = new Hono()
                 m.genre,
                 m.chartId
             FROM ongeki_profile_rating r
-            JOIN ongeki_score_best b 
-                ON r.musicId = b.musicId 
+            JOIN ongeki_score_best b
+                ON r.musicId = b.musicId
                 AND r.difficultId = b.level
                 AND b.user = r.user
             JOIN ongeki_static_music m
@@ -260,7 +260,7 @@ const OngekiReiwaRoutes = new Hono()
 
 			// Fetch best 50 songs
 			const [bestListResults] = await db.execute<(OngekiRefreshSongResult & RowDataPacket)[]>(
-				`SELECT 
+				`SELECT
                     r.musicId,
                     b.techScoreMax,
                     b.platinumScoreMax,
@@ -276,17 +276,17 @@ const OngekiReiwaRoutes = new Hono()
                     m.level,
                     m.genre,
                     m.chartId,
-                    (SELECT userPlayDate 
+                    (SELECT userPlayDate
                      FROM ongeki_score_playlog osp
-                     WHERE osp.musicId = r.musicId 
-                     AND osp.level = r.difficultId 
+                     WHERE osp.musicId = r.musicId
+                     AND osp.level = r.difficultId
                      AND osp.user = r.user
                      AND osp.techScore = b.techScoreMax
                      ORDER BY osp.userPlayDate DESC
                      LIMIT 1) as userPlayDate
                 FROM ongeki_profile_rating r
-                JOIN ongeki_score_best b 
-                    ON r.musicId = b.musicId 
+                JOIN ongeki_score_best b
+                    ON r.musicId = b.musicId
                     AND r.difficultId = b.level
                     AND b.user = r.user
                 JOIN ongeki_static_music m
@@ -302,7 +302,7 @@ const OngekiReiwaRoutes = new Hono()
 
 			// Fetch new 10 songs
 			const [newListResults] = await db.execute<(OngekiRefreshSongResult & RowDataPacket)[]>(
-				`SELECT 
+				`SELECT
                     r.musicId,
                     b.techScoreMax,
                     b.platinumScoreMax,
@@ -318,17 +318,17 @@ const OngekiReiwaRoutes = new Hono()
                     m.level,
                     m.genre,
                     m.chartId,
-                    (SELECT userPlayDate 
+                    (SELECT userPlayDate
                      FROM ongeki_score_playlog osp
-                     WHERE osp.musicId = r.musicId 
-                     AND osp.level = r.difficultId 
+                     WHERE osp.musicId = r.musicId
+                     AND osp.level = r.difficultId
                      AND osp.user = r.user
                      AND osp.techScore = b.techScoreMax
                      ORDER BY osp.userPlayDate DESC
                      LIMIT 1) as userPlayDate
                 FROM ongeki_profile_rating r
-                JOIN ongeki_score_best b 
-                    ON r.musicId = b.musicId 
+                JOIN ongeki_score_best b
+                    ON r.musicId = b.musicId
                     AND r.difficultId = b.level
                     AND b.user = r.user
                 JOIN ongeki_static_music m
@@ -344,7 +344,7 @@ const OngekiReiwaRoutes = new Hono()
 
 			// Fetch pscore 50 songs
 			const [pscoreListResults] = await db.execute<(OngekiRefreshSongResult & RowDataPacket)[]>(
-				`SELECT 
+				`SELECT
                     r.musicId,
                     b.techScoreMax,
                     b.platinumScoreMax,
@@ -360,17 +360,17 @@ const OngekiReiwaRoutes = new Hono()
                     m.level,
                     m.genre,
                     m.chartId,
-                    (SELECT userPlayDate 
+                    (SELECT userPlayDate
                      FROM ongeki_score_playlog osp
-                     WHERE osp.musicId = r.musicId 
-                     AND osp.level = r.difficultId 
+                     WHERE osp.musicId = r.musicId
+                     AND osp.level = r.difficultId
                      AND osp.user = r.user
                      AND osp.techScore = b.techScoreMax
                      ORDER BY osp.userPlayDate DESC
                      LIMIT 1) as userPlayDate
                 FROM ongeki_profile_rating r
-                JOIN ongeki_score_best b 
-                    ON r.musicId = b.musicId 
+                JOIN ongeki_score_best b
+                    ON r.musicId = b.musicId
                     AND r.difficultId = b.level
                     AND b.user = r.user
                 JOIN ongeki_static_music m

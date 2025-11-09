@@ -35,10 +35,10 @@ const ChunithmTeamsRoutes = new Hono()
 
 				const [result] = await db.execute<ResultSetHeader>(
 					`
-                UPDATE 
-                chuni_profile_data 
-                SET teamId = ? 
-                WHERE user = ? 
+                UPDATE
+                chuni_profile_data
+                SET teamId = ?
+                WHERE user = ?
                 AND version = ?`,
 					[teamId, userId, version]
 				)

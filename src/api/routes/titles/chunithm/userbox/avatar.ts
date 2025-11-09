@@ -28,7 +28,7 @@ const validAvatarItemId = z.number().gte(0).optional()
 async function getCurrentAvatarItems(userId: number, version: number): Promise<AvatarItem[]> {
 	const [result] = await db.execute<(AvatarItem & RowDataPacket)[]>(
 		`
-		SELECT 
+		SELECT
 		csa.avatarAccessoryId,
 		csa.texturePath       AS imagePath,
 		csa.name              AS label,
@@ -45,11 +45,11 @@ async function getCurrentAvatarItems(userId: number, version: number): Promise<A
 			ELSE 0
 		END AS locked
 		FROM chuni_static_avatar csa
-		LEFT JOIN chuni_item_item cii 
-			ON cii.itemId = csa.avatarAccessoryId 
+		LEFT JOIN chuni_item_item cii
+			ON cii.itemId = csa.avatarAccessoryId
 		AND cii.user = ?
-		JOIN chuni_profile_data cpd 
-			ON cpd.user = ? 
+		JOIN chuni_profile_data cpd
+			ON cpd.user = ?
 		AND cpd.version = ?
 		LEFT JOIN chuni_static_opts cso
 			ON csa.opt = cso.id
@@ -215,11 +215,11 @@ const routes = new Hono()
 						ELSE 1
 					END AS sort_current
 				FROM chuni_static_avatar csa
-				LEFT JOIN chuni_item_item cii 
-				ON cii.itemId = csa.avatarAccessoryId 
+				LEFT JOIN chuni_item_item cii
+				ON cii.itemId = csa.avatarAccessoryId
 				AND cii.user = ?
-				LEFT JOIN chuni_profile_data cpd 
-				ON cpd.user = ? 
+				LEFT JOIN chuni_profile_data cpd
+				ON cpd.user = ?
 				AND cpd.version = ?
 				LEFT JOIN chuni_static_opts cso
 				ON csa.opt = cso.id
@@ -231,9 +231,9 @@ const routes = new Hono()
 					${locked !== null ? `AND (cii.user IS ${locked ? "NULL" : "NOT NULL"})` : ""}
 				)
 				AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
-				ORDER BY 
+				ORDER BY
 					sort_current,
-					locked DESC, 
+					locked DESC,
 					csa.avatarAccessoryId DESC
 			`
 
@@ -341,8 +341,8 @@ const routes = new Hono()
 						ELSE 0
 					END AS locked
 				FROM chuni_static_avatar csa
-				LEFT JOIN chuni_item_item cii 
-				ON cii.itemId = csa.avatarAccessoryId 
+				LEFT JOIN chuni_item_item cii
+				ON cii.itemId = csa.avatarAccessoryId
 				AND cii.user = ?
 				LEFT JOIN chuni_static_opts cso
 				ON csa.opt = cso.id

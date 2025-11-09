@@ -8,6 +8,7 @@ import ResponsiveGrid from "@/components/common/responsive-grid"
 import Spinner from "@/components/common/spinner"
 import { useAddFavorite, useChunithmSongs, useChunithmVersion, useFavorites, useRemoveFavorite } from "@/hooks/chunithm"
 import { Body, Container } from "@/pages/layout/layout"
+import type { DB } from "@/shared/types"
 
 const ChunithmFavorites = () => {
 	const version = useChunithmVersion()
@@ -21,16 +22,23 @@ const ChunithmFavorites = () => {
 		const normalizedQuery = searchQuery.trim().toLowerCase()
 
 		return songs
-			.filter((song: any) => song.chartId === 3) // Only MASTER difficulty
-			.filter((song: any) => {
+			.filter((song: DB.ChuniStaticMusic) => song.chartId === 3) // Only MASTER difficulty
+			.filter((song: DB.ChuniStaticMusic) => song.songId !== null && song.title !== null && song.jacketPath !== null)
+			.filter((song: DB.ChuniStaticMusic) => {
 				if (!normalizedQuery) return true
 				return song.title?.toLowerCase().includes(normalizedQuery)
 			})
+			.map((song: DB.ChuniStaticMusic) => ({
+				...song,
+				songId: song.songId!,
+				title: song.title!,
+				jacketPath: song.jacketPath!
+			}))
 	}, [songs, searchQuery])
 
-	const searchItems = filteredSongs.map((song: any) => ({
+	const searchItems = filteredSongs.map((song) => ({
 		id: song.songId,
-		title: song.title || ""
+		title: song.title
 	}))
 
 	const handleToggleFavorite = (songId: number) => {

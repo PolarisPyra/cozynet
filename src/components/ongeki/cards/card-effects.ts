@@ -132,7 +132,7 @@ export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOp
 	const handleMouseEnter = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			if (isMobile) return
-			
+
 			const el = cardRef.current
 			const canvas = canvasRef.current
 			if (!el) return
@@ -151,7 +151,7 @@ export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOp
 	const handleMouseMove = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			if (isMobile) return
-			
+
 			const el = cardRef.current
 			if (!el || rotationFrameRef.current !== null) return
 
@@ -177,7 +177,7 @@ export const useCardEffects = ({ enabled, cardRef, canvasRef }: UseCardEffectsOp
 	const handleMouseLeave = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			if (isMobile) return
-			
+
 			const el = cardRef.current
 			const canvas = canvasRef.current
 			if (!el) return
