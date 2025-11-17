@@ -13,7 +13,7 @@ import {
 	DialogTitle,
 	DialogTrigger
 } from "@/app/shared/components/ui/dialog"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 export type SearchItem = {
 	id: string | number

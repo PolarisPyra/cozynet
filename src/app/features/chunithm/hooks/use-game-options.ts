@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { DB } from "@/app/shared/types"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 export function useGameOptions() {
 	return useQuery({

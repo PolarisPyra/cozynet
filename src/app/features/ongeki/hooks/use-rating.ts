@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 /**
  * Fetches and returns the 10 most recent plays that contribute to their rating.

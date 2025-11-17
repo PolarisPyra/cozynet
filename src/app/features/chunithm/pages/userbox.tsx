@@ -8,7 +8,7 @@ import { TrophyCustomization } from "@/app/features/chunithm/components/userbox/
 import Header from "@/app/shared/components/common/header"
 import { Button } from "@/app/shared/components/ui/button"
 import { useChunithmVersion } from "@/app/features/chunithm/hooks"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 const ChunithmUserbox = () => {
 	const version = useChunithmVersion()

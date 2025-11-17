@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { useOngekiVersion } from "@/app/features/ongeki/hooks"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 interface B45ExportData {
 	honor: string

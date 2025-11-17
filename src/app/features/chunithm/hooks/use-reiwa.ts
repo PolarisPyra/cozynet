@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { useChunithmVersion } from "@/app/features/chunithm/hooks/use-version"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 interface B30ExportData {
 	honor: string

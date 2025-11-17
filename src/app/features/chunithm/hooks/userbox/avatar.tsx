@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { InferResponseType } from "hono"
 
 import { CDN } from "@/app/shared/utils/constants"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 type AvatarItem = InferResponseType<typeof api.chunithm.userbox.avatar.$get>[0]
 type AvatarImages = {

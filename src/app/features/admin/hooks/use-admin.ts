@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 export const useAdmin = () => {
 	return useQuery({

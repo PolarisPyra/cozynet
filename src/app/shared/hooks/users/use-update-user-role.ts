@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
 
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 interface UpdateUserRoleResponse {
 	success?: boolean

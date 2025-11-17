@@ -4,7 +4,7 @@ import * as React from "react"
 
 import * as SliderPrimitive from "@radix-ui/react-slider"
 
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 function Slider({
 	className,

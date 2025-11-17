@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import type { DB } from "@/app/shared/types"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 interface CardsResponse {
 	cards: (DB.OngekiUserCard & DB.OngekiStaticCards)[]

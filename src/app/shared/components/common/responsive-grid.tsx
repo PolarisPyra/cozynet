@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react"
 
 import Spinner from "@/app/shared/components/common/spinner"
 import { Button } from "@/app/shared/components/ui/button"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 export type ResponsiveGridProps<T> = {
 	items: T[]

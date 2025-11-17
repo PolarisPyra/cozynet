@@ -4,7 +4,7 @@ import { Check, ChevronDown, Filter as FilterIcon } from "lucide-react"
 
 import { Button } from "@/app/shared/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/shared/components/ui/dropdown-menu"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 export interface FilterOption {
 	value: string

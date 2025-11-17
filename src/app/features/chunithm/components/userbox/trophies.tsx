@@ -9,9 +9,6 @@ import {
 	UserboxSearchCommandWrapper
 } from "@/app/features/chunithm/components/userbox/userbox-layout"
 import { UserboxSearchCommand } from "@/app/features/chunithm/components/userbox/userbox-search-command"
-import { Filter } from "@/app/shared/components/common/filter"
-import { Button } from "@/app/shared/components/ui/button"
-import { MarqueeLabel } from "@/app/shared/components/ui/marquee-label"
 import { useChunithmVersion } from "@/app/features/chunithm/hooks"
 import {
 	TrophyItem,
@@ -20,7 +17,11 @@ import {
 	useSearchTrophies,
 	useUnlockTrophy
 } from "@/app/features/chunithm/hooks/userbox/trophy"
-import { CDN, honorBackgrounds } from "@/app/shared/utils/constants"
+import { Filter } from "@/app/shared/components/common/filter"
+import { Button } from "@/app/shared/components/ui/button"
+import { MarqueeLabel } from "@/app/shared/components/ui/marquee-label"
+import { honorBackgrounds } from "@/app/shared/utils/chunithm"
+import { CDN } from "@/app/shared/utils/constants"
 import { TrophyRareType } from "@/app/shared/utils/enums"
 
 import { Grid } from "./grid/grid"
