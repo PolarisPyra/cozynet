@@ -50,11 +50,8 @@ const UpdateUsernameBox = () => {
 			<div className="text-primary mb-4 text-sm">
 				Change your in-game username here. Characters will be automatically converted to full-width (全角).
 			</div>
-			<form onSubmit={handleSubmit} className="space-y-4">
-				<div>
-					<label htmlFor="username" className="text-primary mb-1 block text-sm font-medium">
-						New Username
-					</label>
+			<form onSubmit={handleSubmit}>
+				<div className="mb-4">
 					<input
 						id="username"
 						type="text"
@@ -66,7 +63,7 @@ const UpdateUsernameBox = () => {
 						maxLength={8}
 					/>
 				</div>
-				<Button variant="custom" disabled={isPending || !userName.trim()} className="mt-4 w-full">
+				<Button variant="custom" disabled={isPending || !userName.trim()} className="w-full">
 					{isPending ? "Updating..." : "Update Username"}
 				</Button>
 			</form>
