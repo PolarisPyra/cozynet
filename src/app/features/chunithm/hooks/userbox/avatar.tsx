@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { InferResponseType } from "hono"
@@ -6,7 +6,9 @@ import { InferResponseType } from "hono"
 import { api } from "@/app/shared/utils"
 import { CDN } from "@/app/shared/utils/constants"
 
+// Infer types from API routes
 type AvatarItem = InferResponseType<typeof api.chunithm.userbox.avatar.$get>[0]
+type AvatarSearchResponse = InferResponseType<typeof api.chunithm.userbox.avatar.search.$post>
 type AvatarImages = {
 	back: string
 	wear: string
@@ -145,12 +147,23 @@ export const useAvatar = () => {
 	}
 }
 
+// Avatar slot enum - matches backend
+export enum AvatarSlot {
+	BACK = "back",
+	FACE = "face",
+	FRONT = "front",
+	HEAD = "head",
+	ITEM = "item",
+	SKIN = "skin",
+	WEAR = "wear"
+}
+
 // New hooks for the simplified userbox
 export interface AvatarAccessoryItem {
 	avatarAccessoryId: number
 	imagePath: string
 	label: string
-	slot: "back" | "wear" | "head" | "face" | "item" | "skin" | "front"
+	slot: AvatarSlot
 	locked: boolean
 }
 
@@ -173,21 +186,28 @@ export function useCurrentAvatar() {
 	})
 }
 
-export function useSearchAvatarItems(filters: { category: number | null; locked: boolean | null }) {
-	// Map category to slot - matches chuni_static_avatar.category values
-	const slotMap: Record<number, string> = {
-		1: "wear",
-		2: "head",
-		3: "face",
-		4: "skin",
-		5: "item",
-		6: "front",
-		7: "back"
-	}
+// Category ID to slot mapping (from chuni_static_avatar)
+const CATEGORY_TO_SLOT: Record<number, AvatarSlot> = {
+	1: AvatarSlot.WEAR,
+	2: AvatarSlot.HEAD,
+	3: AvatarSlot.FACE,
+	4: AvatarSlot.SKIN,
+	5: AvatarSlot.ITEM,
+	6: AvatarSlot.FRONT,
+	7: AvatarSlot.BACK
+} as const
 
-	// If category is null, search all slots
-	const slots =
-		filters.category === null ? ["back", "wear", "head", "face", "item", "skin"] : [slotMap[filters.category]]
+const ALL_SEARCHABLE_SLOTS: AvatarSlot[] = [
+	AvatarSlot.BACK,
+	AvatarSlot.WEAR,
+	AvatarSlot.HEAD,
+	AvatarSlot.FACE,
+	AvatarSlot.ITEM,
+	AvatarSlot.SKIN
+] as const
+
+export function useSearchAvatarItems(filters: { category: number | null; locked: boolean | null }) {
+	const slots: AvatarSlot[] = filters.category === null ? ALL_SEARCHABLE_SLOTS : [CATEGORY_TO_SLOT[filters.category]]
 
 	return useQuery({
 		queryKey: ["userbox", "avatar", "search", filters.category, filters.locked],
@@ -195,7 +215,7 @@ export function useSearchAvatarItems(filters: { category: number | null; locked:
 			const response = await api.chunithm.userbox.avatar.search.$post({
 				json: {
 					filter: {
-						slot: slots as ("back" | "wear" | "head" | "face" | "item" | "skin")[],
+						slot: slots,
 						locked: filters.locked
 					}
 				}
@@ -205,7 +225,8 @@ export function useSearchAvatarItems(filters: { category: number | null; locked:
 				throw new Error("Failed to search avatar items")
 			}
 
-			return await response.json()
+			const data: AvatarSearchResponse = await response.json()
+			return data
 		}
 	})
 }
@@ -214,10 +235,7 @@ export function useEquipAvatarItem() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: async (params: {
-			avatarAccessoryId: number
-			slot: "back" | "wear" | "head" | "face" | "item" | "skin" | "front"
-		}) => {
+		mutationFn: async (params: { avatarAccessoryId: number; slot: AvatarSlot }) => {
 			const response = await api.chunithm.userbox.avatar.$post({
 				json: {
 					[params.slot]: params.avatarAccessoryId

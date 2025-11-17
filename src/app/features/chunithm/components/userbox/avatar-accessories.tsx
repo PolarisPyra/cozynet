@@ -4,6 +4,7 @@ import { Shirt } from "lucide-react"
 import { toast } from "sonner"
 
 import {
+	AvatarSlot,
 	useCurrentAvatar,
 	useEquipAvatarItem,
 	useSearchAvatarItems,
@@ -14,19 +15,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
-type AvatarSlot = "back" | "wear" | "head" | "face" | "item" | "skin" | "front"
-
 const SLOT_LABELS: Record<AvatarSlot, string> = {
-	back: "Back",
-	wear: "Wear",
-	head: "Head",
-	face: "Face",
-	item: "Item",
-	skin: "Skin",
-	front: "Front"
+	[AvatarSlot.BACK]: "Back",
+	[AvatarSlot.WEAR]: "Wear",
+	[AvatarSlot.HEAD]: "Head",
+	[AvatarSlot.FACE]: "Face",
+	[AvatarSlot.ITEM]: "Item",
+	[AvatarSlot.SKIN]: "Skin",
+	[AvatarSlot.FRONT]: "Front"
 }
 
-const SLOT_ORDER: AvatarSlot[] = ["back", "wear", "head", "face", "item", "skin"]
+const SLOT_ORDER: AvatarSlot[] = [
+	AvatarSlot.BACK,
+	AvatarSlot.WEAR,
+	AvatarSlot.HEAD,
+	AvatarSlot.FACE,
+	AvatarSlot.ITEM,
+	AvatarSlot.SKIN
+]
 
 export function AvatarAccessories() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -185,13 +191,13 @@ export function AvatarAccessories() {
 
 function getCategoryForSlot(slot: AvatarSlot): number {
 	const categoryMap: Record<AvatarSlot, number> = {
-		back: 7,
-		wear: 1,
-		head: 2,
-		face: 3,
-		item: 5,
-		skin: 4,
-		front: 6
+		[AvatarSlot.BACK]: 7,
+		[AvatarSlot.WEAR]: 1,
+		[AvatarSlot.HEAD]: 2,
+		[AvatarSlot.FACE]: 3,
+		[AvatarSlot.ITEM]: 5,
+		[AvatarSlot.SKIN]: 4,
+		[AvatarSlot.FRONT]: 6
 	}
 	return categoryMap[slot]
 }

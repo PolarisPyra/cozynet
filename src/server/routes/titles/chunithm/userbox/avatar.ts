@@ -7,9 +7,10 @@ import { db } from "@/server/db"
 import { validateJson, validateParams } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
 
-enum AvatarSlot {
+export enum AvatarSlot {
 	BACK = "back",
 	FACE = "face",
+	FRONT = "front",
 	HEAD = "head",
 	ITEM = "item",
 	SKIN = "skin",
