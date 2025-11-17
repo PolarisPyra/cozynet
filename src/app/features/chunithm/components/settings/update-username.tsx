@@ -46,10 +46,8 @@ const UpdateUsernameBox = () => {
 
 	return (
 		<div className="bg-card rounded-sm p-6">
-			<h2 className="text-primary mb-2 text-xl font-semibold">Username Settings</h2>
-			<div className="text-primary mb-4 text-sm">
-				Change your in-game username here. Characters will be automatically converted to full-width (全角).
-			</div>
+			<h2 className="text-primary mb-2 text-xl font-semibold">Change Username</h2>
+			<div className="text-primary mb-4 text-sm">Characters will be converted to full-width (全角).</div>
 			<form onSubmit={handleSubmit}>
 				<div className="mb-4">
 					<input
