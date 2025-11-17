@@ -1,170 +1,93 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 
+import { Image } from "lucide-react"
 import { toast } from "sonner"
 
 import {
-	UserboxContent,
-	UserboxPageWrapper,
-	UserboxPreviewEmpty,
-	UserboxPreviewWrapper,
-	UserboxSearchBar,
-	UserboxSearchCommandWrapper
-} from "@/app/features/chunithm/components/userbox/userbox-layout"
-import { UserboxSearchCommand } from "@/app/features/chunithm/components/userbox/userbox-search-command"
-import { Button } from "@/app/shared/components/ui/button"
-import {
-	NameplateItem,
 	useCurrentNameplate,
 	useEquipNameplate,
-	useSearchNameplates,
-	useUnlockNameplate
+	useSearchNameplates
 } from "@/app/features/chunithm/hooks/userbox/nameplate"
+import { Button } from "@/app/shared/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
-import { Grid } from "./grid/grid"
-
-export function NameplateCustomization() {
-	const [selectedNameplateId, setSelectedNameplateId] = useState<number | null>(null)
-	const [originalNameplateId, setOriginalNameplateId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState("")
-
-	const { data: currentNameplate, isLoading: currentLoading } = useCurrentNameplate()
-	const { data: searchData, isLoading: searchLoading } = useSearchNameplates({ locked: null })
+export function Nameplate() {
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
+	const { data: currentNameplate } = useCurrentNameplate()
+	const { data: searchResults } = useSearchNameplates({ locked: lockedFilter })
 	const { mutate: equipNameplate } = useEquipNameplate()
-	const { mutate: unlockNameplate } = useUnlockNameplate()
 
-	useEffect(() => {
-		if (!currentNameplate) {
-			setOriginalNameplateId(null)
-			setSelectedNameplateId(null)
-			return
-		}
-		setOriginalNameplateId(currentNameplate.nameplateId)
-		setSelectedNameplateId(currentNameplate.nameplateId)
-	}, [currentNameplate])
+	const items = searchResults?.items ?? []
 
-	const handleSelect = useCallback((item: NameplateItem) => {
-		setSelectedNameplateId(item.nameplateId)
-	}, [])
-
-	const handleEquip = useCallback(
-		(item: NameplateItem) => {
-			equipNameplate(item.nameplateId, {
-				onSuccess: () => {
-					toast.success("Nameplate equipped successfully")
-				},
-				onError: error => {
-					toast.error("Failed to equip nameplate")
-					console.error("Error equipping nameplate:", error)
-				}
-			})
-		},
-		[equipNameplate]
-	)
-
-	const handleUnlock = useCallback(
-		(item: NameplateItem) => {
-			unlockNameplate(item.nameplateId, {
-				onSuccess: () => {
-					toast.success("Nameplate unlocked successfully")
-				},
-				onError: error => {
-					toast.error("Failed to unlock nameplate")
-					console.error("Error unlocking nameplate:", error)
-				}
-			})
-		},
-		[unlockNameplate]
-	)
-
-	const hasChanges = useMemo(
-		() => selectedNameplateId !== originalNameplateId,
-		[selectedNameplateId, originalNameplateId]
-	)
-
-	const equippedItemIds = useMemo(() => {
-		if (searchData?.items) {
-			const equippedFromSearch = searchData.items.filter(item => item.equipped).map(item => item.nameplateId)
-			if (equippedFromSearch.length > 0) return new Set(equippedFromSearch)
-		}
-		if (currentNameplate) return new Set([currentNameplate.nameplateId])
-		return new Set<number>()
-	}, [currentNameplate, searchData?.items])
-
-	const isLoading = currentLoading || searchLoading
-
-	const filteredItems = useMemo(() => {
-		if (!searchData?.items) return []
-		if (!searchTerm) return searchData.items
-		return searchData.items.filter(item => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
-	}, [searchData?.items, searchTerm])
-
-	const customPreview = useCallback(
-		(selectedItem: NameplateItem | null) => {
-			if (!selectedItem)
-				return <UserboxPreviewEmpty title="Select a Nameplate" description="Choose a nameplate to preview and equip" />
-
-			const handleAction = () => {
-				if (selectedItem.locked) {
-					handleUnlock(selectedItem)
-					return
-				}
-				handleEquip(selectedItem)
-			}
-
-			return (
-				<UserboxPreviewWrapper>
-					<div className="flex flex-col items-center justify-center gap-4 p-4 sm:p-6">
-						{selectedItem.imagePath && (
-							<img
-								src={`${CDN}/chunithm/nameplate/${selectedItem.imagePath}`}
-								alt={selectedItem.label}
-								className="mx-auto h-auto max-w-full rounded-sm"
-								style={{
-									width: "min(320px, 80vw)",
-									height: "auto",
-									objectFit: "contain"
-								}}
-							/>
-						)}
-						<Button onClick={handleAction} disabled={!hasChanges} variant="custom" className="w-full rounded-sm sm:w-auto">
-							{selectedItem.locked ? "Unlock" : "Equip"}
-						</Button>
-					</div>
-				</UserboxPreviewWrapper>
-			)
-		},
-		[handleEquip, handleUnlock, hasChanges]
-	)
+	const handleEquip = (id: number) => {
+		equipNameplate(id, {
+			onSuccess: () => {
+				toast.success("Nameplate equipped successfully!")
+				setIsDialogOpen(false)
+			},
+			onError: () => toast.error("Failed to equip nameplate")
+		})
+	}
 
 	return (
-		<UserboxPageWrapper>
-			<UserboxSearchBar>
-				<UserboxSearchCommandWrapper>
-					<UserboxSearchCommand
-						items={searchData?.items || []}
-						searchQuery={searchTerm}
-						onSearchChange={setSearchTerm}
-						onItemSelect={handleSelect}
-						itemType="nameplate"
-					/>
-				</UserboxSearchCommandWrapper>
-			</UserboxSearchBar>
+		<>
+			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
+				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-4 py-3">
+					<span className="text-primary text-sm font-semibold">Nameplate</span>
+				</div>
+				<div className="flex flex-1 flex-col p-4 text-center">
+					<p className="mb-3 min-h-[20px] truncate text-sm font-medium">{currentNameplate?.label || "None"}</p>
+					<div className="mb-auto flex flex-1 items-center justify-center">
+						{currentNameplate?.imagePath ? (
+							<img
+								src={`${CDN}/chunithm/nameplate/${currentNameplate.imagePath}`}
+								alt="Nameplate"
+								className="h-16 w-full max-w-[160px] rounded-sm object-cover"
+							/>
+						) : (
+							<div className="bg-muted flex h-16 w-full max-w-[160px] items-center justify-center rounded-sm">
+								<Image className="h-6 w-6 opacity-30" />
+							</div>
+						)}
+					</div>
+					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-4 w-full">
+						Change
+					</Button>
+				</div>
+			</div>
 
-			<UserboxContent>
-				<Grid
-					items={filteredItems}
-					equippedItemIds={equippedItemIds}
-					selectedItemId={selectedNameplateId}
-					loading={isLoading}
-					imageBasePath="chunithm/nameplate"
-					onItemClick={handleSelect}
-					onEquip={handleEquip}
-					onUnlock={handleUnlock}
-					hasChanges={hasChanges}
-					customPreview={customPreview}
-				/>
-			</UserboxContent>
-		</UserboxPageWrapper>
+			<ItemSelectionDialog
+				title="Select Nameplate"
+				isOpen={isDialogOpen}
+				onClose={() => setIsDialogOpen(false)}
+				items={items.map(item => ({
+					id: item.nameplateId,
+					name: item.label,
+					imageUrl: `${CDN}/chunithm/nameplate/${item.imagePath}`,
+					locked: item.locked
+				}))}
+				currentItemId={currentNameplate?.nameplateId}
+				onSelect={handleEquip}
+				imageClassName="h-16 w-full"
+				headerControls={
+					<Select
+						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
+						onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
+					>
+						<SelectTrigger className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All</SelectItem>
+							<SelectItem value="unlocked">Unlocked</SelectItem>
+							<SelectItem value="locked">Locked</SelectItem>
+						</SelectContent>
+					</Select>
+				}
+			/>
+		</>
 	)
 }

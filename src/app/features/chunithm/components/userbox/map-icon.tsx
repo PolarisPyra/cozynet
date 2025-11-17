@@ -1,141 +1,89 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 
+import { MapPin } from "lucide-react"
 import { toast } from "sonner"
 
-import {
-	UserboxContent,
-	UserboxEquipUnlockButton,
-	UserboxPageWrapper,
-	UserboxPreviewEmpty,
-	UserboxPreviewImage,
-	UserboxPreviewWrapper,
-	UserboxSearchBar,
-	UserboxSearchCommandWrapper
-} from "@/app/features/chunithm/components/userbox/userbox-layout"
-import { UserboxSearchCommand } from "@/app/features/chunithm/components/userbox/userbox-search-command"
-import {
-	MapiconItem,
-	useCurrentMapicon,
-	useEquipMapicon,
-	useSearchMapicons,
-	useUnlockMapicon
-} from "@/app/features/chunithm/hooks/userbox/mapicon"
+import { useCurrentMapicon, useEquipMapicon, useSearchMapicons } from "@/app/features/chunithm/hooks/userbox/mapicon"
+import { Button } from "@/app/shared/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
-import { Grid } from "./grid/grid"
-
-export function MapiconCustomization() {
-	const [selectedMapiconId, setSelectedMapiconId] = useState<number | null>(null)
-	const [originalMapiconId, setOriginalMapiconId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState("")
-
+export function MapIcon() {
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
 	const { data: currentMapicon } = useCurrentMapicon()
-	const { data: searchData, isLoading } = useSearchMapicons({ locked: null })
+	const { data: searchResults } = useSearchMapicons({ locked: lockedFilter })
 	const { mutate: equipMapicon } = useEquipMapicon()
-	const { mutate: unlockMapicon } = useUnlockMapicon()
 
-	useEffect(() => {
-		if (!currentMapicon) {
-			setOriginalMapiconId(null)
-			setSelectedMapiconId(null)
-			return
-		}
-		setOriginalMapiconId(currentMapicon.mapiconId)
-		setSelectedMapiconId(currentMapicon.mapiconId)
-	}, [currentMapicon])
+	const items = searchResults?.items ?? []
 
-	const handleSelect = useCallback((item: MapiconItem) => {
-		setSelectedMapiconId(item.mapiconId)
-	}, [])
-
-	const handleEquip = useCallback(
-		(item: MapiconItem) => {
-			equipMapicon(item.mapiconId, {
-				onSuccess: () => {
-					setOriginalMapiconId(item.mapiconId)
-				},
-				onError: error => {
-					toast.error("Failed to equip mapicon")
-					console.error("Error equipping mapicon:", error)
-				}
-			})
-		},
-		[equipMapicon]
-	)
-
-	const handleUnlock = useCallback(
-		(item: MapiconItem) => {
-			unlockMapicon(item.mapiconId, {
-				onError: error => {
-					toast.error("Failed to unlock mapicon")
-					console.error("Error unlocking mapicon:", error)
-				}
-			})
-		},
-		[unlockMapicon]
-	)
-
-	const hasChanges = useMemo(() => selectedMapiconId !== originalMapiconId, [selectedMapiconId, originalMapiconId])
-
-	const equippedItemIds = useMemo(() => {
-		if (!currentMapicon) return new Set<number>()
-		return new Set([currentMapicon.mapiconId])
-	}, [currentMapicon])
-
-	const filteredItems = useMemo(() => {
-		if (!searchData?.items) return []
-		if (!searchTerm) return searchData.items
-		return searchData.items.filter(item => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
-	}, [searchData?.items, searchTerm])
-
-	const customPreview = useCallback(
-		(item: MapiconItem | null) => {
-			if (!item)
-				return <UserboxPreviewEmpty title="Select a Map Icon" description="Choose a map icon to preview and equip" />
-
-			return (
-				<UserboxPreviewWrapper>
-					<UserboxPreviewImage
-						src={`${CDN}/chunithm/map_icon/${item.imagePath || ""}`}
-						alt={item.label}
-						width={240}
-						height={240}
-					/>
-					<UserboxEquipUnlockButton item={item} hasChanges={hasChanges} onEquip={() => handleEquip(item)} onUnlock={() => handleUnlock(item)} />
-				</UserboxPreviewWrapper>
-			)
-		},
-		[hasChanges, handleEquip, handleUnlock]
-	)
+	const handleEquip = (id: number) => {
+		equipMapicon(id, {
+			onSuccess: () => {
+				toast.success("Map icon equipped successfully!")
+				setIsDialogOpen(false)
+			},
+			onError: () => toast.error("Failed to equip map icon")
+		})
+	}
 
 	return (
-		<UserboxPageWrapper>
-			<UserboxSearchBar>
-				<UserboxSearchCommandWrapper>
-					<UserboxSearchCommand
-						items={searchData?.items || []}
-						searchQuery={searchTerm}
-						onSearchChange={setSearchTerm}
-						onItemSelect={handleSelect}
-						itemType="mapicon"
-					/>
-				</UserboxSearchCommandWrapper>
-			</UserboxSearchBar>
+		<>
+			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
+				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-4 py-3">
+					<span className="text-primary text-sm font-semibold">Map Icon</span>
+				</div>
+				<div className="flex flex-1 flex-col p-4 text-center">
+					<p className="mb-3 min-h-[20px] truncate text-sm font-medium">{currentMapicon?.label || "None"}</p>
+					<div className="mb-auto flex flex-1 items-center justify-center">
+						{currentMapicon?.imagePath ? (
+							<img
+								src={`${CDN}/chunithm/map_icon/${currentMapicon.imagePath}`}
+								alt="Map Icon"
+								className="h-32 w-32 rounded-sm object-cover"
+							/>
+						) : (
+							<div className="bg-muted flex h-32 w-32 items-center justify-center rounded-sm">
+								<MapPin className="h-10 w-10 opacity-30" />
+							</div>
+						)}
+					</div>
+					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-4 w-full">
+						Change
+					</Button>
+				</div>
+			</div>
 
-			<UserboxContent>
-				<Grid
-					items={filteredItems}
-					equippedItemIds={equippedItemIds}
-					selectedItemId={selectedMapiconId}
-					loading={isLoading}
-					imageBasePath="chunithm/map_icon"
-					onItemClick={handleSelect}
-					onEquip={handleEquip}
-					onUnlock={handleUnlock}
-					hasChanges={hasChanges}
-					customPreview={customPreview}
-				/>
-			</UserboxContent>
-		</UserboxPageWrapper>
+			<ItemSelectionDialog
+				title="Select Map Icon"
+				isOpen={isDialogOpen}
+				onClose={() => setIsDialogOpen(false)}
+				items={items.map(item => ({
+					id: item.mapiconId,
+					name: item.label,
+					imageUrl: `${CDN}/chunithm/map_icon/${item.imagePath}`,
+					locked: item.locked
+				}))}
+				currentItemId={currentMapicon?.mapiconId}
+				onSelect={handleEquip}
+				imageClassName="h-20 w-20"
+				headerControls={
+					<Select
+						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
+						onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
+					>
+						<SelectTrigger className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All</SelectItem>
+							<SelectItem value="unlocked">Unlocked</SelectItem>
+							<SelectItem value="locked">Locked</SelectItem>
+						</SelectContent>
+					</Select>
+				}
+			/>
+		</>
 	)
 }

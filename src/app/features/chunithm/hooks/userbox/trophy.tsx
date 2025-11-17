@@ -48,6 +48,8 @@ export function useSearchTrophies(filters: { locked: boolean | null; rareType?: 
 }
 
 export function useEquipTrophy() {
+	const queryClient = useQueryClient()
+
 	return useMutation({
 		mutationFn: async (params: { trophyId: number; slot: "main" | "sub1" | "sub2" }) => {
 			const response = await api.chunithm.userbox.trophy.$post({
@@ -59,6 +61,9 @@ export function useEquipTrophy() {
 			}
 
 			return await response.json()
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["userbox", "trophy", "current"] })
 		}
 	})
 }

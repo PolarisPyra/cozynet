@@ -56,23 +56,8 @@ export function useEquipSystemvoice() {
 
 			return await response.json()
 		},
-		onSuccess: (_, systemVoiceId) => {
-			// Update current systemvoice in cache
-			queryClient.setQueryData(["userbox", "systemvoice", "current"], (old: SystemvoiceItem | undefined) => {
-				if (!old) return old
-				const searchQueries = queryClient.getQueriesData({ queryKey: ["userbox", "systemvoice", "search"] })
-				let equippedItem = null
-
-				for (const [, searchData] of searchQueries) {
-					if (searchData && typeof searchData === "object" && "items" in searchData) {
-						const items = (searchData as any).items as SystemvoiceItem[]
-						equippedItem = items.find(item => item.systemVoiceId === systemVoiceId)
-						if (equippedItem) break
-					}
-				}
-
-				return equippedItem || { ...old, id: systemVoiceId }
-			})
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["userbox", "systemvoice", "current"] })
 		}
 	})
 }

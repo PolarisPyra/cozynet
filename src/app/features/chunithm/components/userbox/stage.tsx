@@ -1,145 +1,89 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 
+import { Image } from "lucide-react"
 import { toast } from "sonner"
 
-import {
-	UserboxContent,
-	UserboxEquipUnlockButton,
-	UserboxPageWrapper,
-	UserboxPreviewEmpty,
-	UserboxPreviewImage,
-	UserboxPreviewWrapper,
-	UserboxSearchBar,
-	UserboxSearchCommandWrapper
-} from "@/app/features/chunithm/components/userbox/userbox-layout"
-import { UserboxSearchCommand } from "@/app/features/chunithm/components/userbox/userbox-search-command"
-import {
-	StageItem,
-	useCurrentStage,
-	useEquipStage,
-	useSearchStages,
-	useUnlockStage
-} from "@/app/features/chunithm/hooks/userbox/stage"
+import { useCurrentStage, useEquipStage, useSearchStages } from "@/app/features/chunithm/hooks/userbox/stage"
+import { Button } from "@/app/shared/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
-import { Grid } from "./grid/grid"
-
-export function StageCustomization() {
-	const [selectedStageId, setSelectedStageId] = useState<number | null>(null)
-	const [originalStageId, setOriginalStageId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState("")
-
-	const { data: currentStage, isLoading: currentLoading } = useCurrentStage()
-	const { data: searchData, isLoading: searchLoading } = useSearchStages({ locked: null })
+export function Stage() {
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
+	const { data: currentStage } = useCurrentStage()
+	const { data: searchResults } = useSearchStages({ locked: lockedFilter })
 	const { mutate: equipStage } = useEquipStage()
-	const { mutate: unlockStage } = useUnlockStage()
 
-	useEffect(() => {
-		if (!currentStage) {
-			setOriginalStageId(null)
-			setSelectedStageId(null)
-			return
-		}
-		setOriginalStageId(currentStage.stageId)
-		setSelectedStageId(currentStage.stageId)
-	}, [currentStage])
+	const items = searchResults?.items ?? []
 
-	const handleSelect = useCallback((item: StageItem) => {
-		setSelectedStageId(item.stageId)
-	}, [])
-
-	const handleEquip = useCallback(
-		(item: StageItem) => {
-			equipStage(item.stageId, {
-				onSuccess: () => {
-					toast.success("Stage equipped successfully")
-				},
-				onError: error => {
-					toast.error("Failed to equip stage")
-					console.error("Error equipping stage:", error)
-				}
-			})
-		},
-		[equipStage]
-	)
-
-	const handleUnlock = useCallback(
-		(item: StageItem) => {
-			unlockStage(item.stageId, {
-				onSuccess: () => {
-					toast.success("Stage unlocked successfully")
-				},
-				onError: error => {
-					toast.error("Failed to unlock stage")
-					console.error("Error unlocking stage:", error)
-				}
-			})
-		},
-		[unlockStage]
-	)
-
-	const hasChanges = useMemo(() => selectedStageId !== originalStageId, [selectedStageId, originalStageId])
-
-	const equippedItemIds = useMemo(() => {
-		if (!currentStage) return new Set<number>()
-		return new Set([currentStage.stageId])
-	}, [currentStage])
-
-	const isLoading = currentLoading || searchLoading
-
-	const filteredItems = useMemo(() => {
-		if (!searchData?.items) return []
-		if (!searchTerm) return searchData.items
-		return searchData.items.filter(item => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
-	}, [searchData?.items, searchTerm])
-
-	const customPreview = useCallback(
-		(item: StageItem | null) => {
-			if (!item) return <UserboxPreviewEmpty title="Select a Stage" description="Choose a stage to preview and equip" />
-
-			return (
-				<UserboxPreviewWrapper>
-					<UserboxPreviewImage
-						src={`${CDN}/chunithm/stage/${item.imagePath || ""}`}
-						alt={item.label}
-						width={240}
-						height={180}
-					/>
-					<UserboxEquipUnlockButton item={item} hasChanges={hasChanges} onEquip={() => handleEquip(item)} onUnlock={() => handleUnlock(item)} />
-				</UserboxPreviewWrapper>
-			)
-		},
-		[hasChanges, handleEquip, handleUnlock]
-	)
+	const handleEquip = (id: number) => {
+		equipStage(id, {
+			onSuccess: () => {
+				toast.success("Stage equipped successfully!")
+				setIsDialogOpen(false)
+			},
+			onError: () => toast.error("Failed to equip stage")
+		})
+	}
 
 	return (
-		<UserboxPageWrapper>
-			<UserboxSearchBar>
-				<UserboxSearchCommandWrapper>
-					<UserboxSearchCommand
-						items={searchData?.items || []}
-						searchQuery={searchTerm}
-						onSearchChange={setSearchTerm}
-						onItemSelect={handleSelect}
-						itemType="stage"
-					/>
-				</UserboxSearchCommandWrapper>
-			</UserboxSearchBar>
+		<>
+			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
+				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-4 py-3">
+					<span className="text-primary text-sm font-semibold">Stage</span>
+				</div>
+				<div className="flex flex-1 flex-col p-4 text-center">
+					<p className="mb-3 min-h-[20px] truncate text-sm font-medium">{currentStage?.label || "None"}</p>
+					<div className="mb-auto flex flex-1 items-center justify-center">
+						{currentStage?.imagePath ? (
+							<img
+								src={`${CDN}/chunithm/stage/${currentStage.imagePath}`}
+								alt="Stage"
+								className="h-24 w-full max-w-[200px] rounded-sm object-cover"
+							/>
+						) : (
+							<div className="bg-muted flex h-24 w-full max-w-[200px] items-center justify-center rounded-sm">
+								<Image className="h-8 w-8 opacity-30" />
+							</div>
+						)}
+					</div>
+					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-4 w-full">
+						Change
+					</Button>
+				</div>
+			</div>
 
-			<UserboxContent>
-				<Grid
-					items={filteredItems}
-					equippedItemIds={equippedItemIds}
-					selectedItemId={selectedStageId}
-					loading={isLoading}
-					imageBasePath="chunithm/stage"
-					onItemClick={handleSelect}
-					onEquip={handleEquip}
-					onUnlock={handleUnlock}
-					hasChanges={hasChanges}
-					customPreview={customPreview}
-				/>
-			</UserboxContent>
-		</UserboxPageWrapper>
+			<ItemSelectionDialog
+				title="Select Stage"
+				isOpen={isDialogOpen}
+				onClose={() => setIsDialogOpen(false)}
+				items={items.map(item => ({
+					id: item.stageId,
+					name: item.label,
+					imageUrl: `${CDN}/chunithm/stage/${item.imagePath}`,
+					locked: item.locked
+				}))}
+				currentItemId={currentStage?.stageId}
+				onSelect={handleEquip}
+				imageClassName="h-16 w-full"
+				headerControls={
+					<Select
+						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
+						onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
+					>
+						<SelectTrigger className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All</SelectItem>
+							<SelectItem value="unlocked">Unlocked</SelectItem>
+							<SelectItem value="locked">Locked</SelectItem>
+						</SelectContent>
+					</Select>
+				}
+			/>
+		</>
 	)
 }

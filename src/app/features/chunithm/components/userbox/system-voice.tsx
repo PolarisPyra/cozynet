@@ -1,146 +1,93 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 
+import { Volume2 } from "lucide-react"
 import { toast } from "sonner"
 
 import {
-	UserboxContent,
-	UserboxEquipUnlockButton,
-	UserboxPageWrapper,
-	UserboxPreviewEmpty,
-	UserboxPreviewImage,
-	UserboxPreviewWrapper,
-	UserboxSearchBar,
-	UserboxSearchCommandWrapper
-} from "@/app/features/chunithm/components/userbox/userbox-layout"
-import { UserboxSearchCommand } from "@/app/features/chunithm/components/userbox/userbox-search-command"
-import {
-	SystemvoiceItem,
 	useCurrentSystemvoice,
 	useEquipSystemvoice,
-	useSearchSystemvoices,
-	useUnlockSystemvoice
+	useSearchSystemvoices
 } from "@/app/features/chunithm/hooks/userbox/systemvoice"
+import { Button } from "@/app/shared/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
-import { Grid } from "./grid/grid"
-import { VoiceSampleDropdown } from "./voice-sample-dropdown"
-
-export function SystemvoiceCustomization() {
-	const [selectedSystemvoiceId, setSelectedSystemvoiceId] = useState<number | null>(null)
-	const [originalSystemvoiceId, setOriginalSystemvoiceId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState("")
-
+export function SystemVoice() {
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
 	const { data: currentSystemvoice } = useCurrentSystemvoice()
-	const { data: searchData, isLoading } = useSearchSystemvoices({ locked: null })
+	const { data: searchResults } = useSearchSystemvoices({ locked: lockedFilter })
 	const { mutate: equipSystemvoice } = useEquipSystemvoice()
-	const { mutate: unlockSystemvoice } = useUnlockSystemvoice()
 
-	useEffect(() => {
-		if (!currentSystemvoice || originalSystemvoiceId !== null) return
-		setOriginalSystemvoiceId(currentSystemvoice.systemVoiceId)
-		setSelectedSystemvoiceId(currentSystemvoice.systemVoiceId)
-	}, [currentSystemvoice, originalSystemvoiceId])
+	const items = searchResults?.items ?? []
 
-	const handleSelect = useCallback((item: SystemvoiceItem) => {
-		setSelectedSystemvoiceId(item.systemVoiceId)
-	}, [])
-
-	const handleEquip = useCallback(
-		(item: SystemvoiceItem) => {
-			equipSystemvoice(item.systemVoiceId, {
-				onSuccess: () => {
-					setOriginalSystemvoiceId(item.systemVoiceId)
-				},
-				onError: error => {
-					toast.error("Failed to equip systemvoice")
-					console.error("Error equipping systemvoice:", error)
-				}
-			})
-		},
-		[equipSystemvoice]
-	)
-
-	const handleUnlock = useCallback(
-		(item: SystemvoiceItem) => {
-			unlockSystemvoice(item.systemVoiceId, {
-				onError: error => {
-					toast.error("Failed to unlock systemvoice")
-					console.error("Error unlocking systemvoice:", error)
-				}
-			})
-		},
-		[unlockSystemvoice]
-	)
-
-	const hasChanges = useMemo(
-		() => selectedSystemvoiceId !== originalSystemvoiceId,
-		[selectedSystemvoiceId, originalSystemvoiceId]
-	)
-
-	const equippedItemIds = originalSystemvoiceId ? new Set([originalSystemvoiceId]) : new Set<number>()
-
-	const filteredItems = useMemo(() => {
-		if (!searchData?.items) return []
-		if (!searchTerm) return searchData.items
-		return searchData.items.filter(item => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
-	}, [searchData?.items, searchTerm])
-
-	const customPreview = useCallback(
-		(item: SystemvoiceItem | null) => {
-			if (!item)
-				return (
-					<UserboxPreviewEmpty title="Select a System Voice" description="Choose a system voice to preview and equip" />
-				)
-
-			return (
-				<UserboxPreviewWrapper>
-					<UserboxPreviewImage
-						src={`${CDN}/chunithm/system_voice_thumbnails/${item.imagePath || ""}`}
-						alt={item.label}
-						width={360}
-						height={135}
-					/>
-					<VoiceSampleDropdown systemVoiceId={item.systemVoiceId} />
-					<UserboxEquipUnlockButton
-						item={item}
-						hasChanges={hasChanges}
-						onEquip={() => handleEquip(item)}
-						onUnlock={() => handleUnlock(item)}
-					/>
-				</UserboxPreviewWrapper>
-			)
-		},
-		[hasChanges, handleEquip, handleUnlock]
-	)
+	const handleEquip = (id: number) => {
+		equipSystemvoice(id, {
+			onSuccess: () => {
+				toast.success("System voice equipped successfully!")
+				setIsDialogOpen(false)
+			},
+			onError: () => toast.error("Failed to equip system voice")
+		})
+	}
 
 	return (
-		<UserboxPageWrapper>
-			<UserboxSearchBar>
-				<UserboxSearchCommandWrapper>
-					<UserboxSearchCommand
-						items={searchData?.items || []}
-						searchQuery={searchTerm}
-						onSearchChange={setSearchTerm}
-						onItemSelect={handleSelect}
-						itemType="systemvoice"
-					/>
-				</UserboxSearchCommandWrapper>
-			</UserboxSearchBar>
+		<>
+			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
+				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-4 py-3">
+					<span className="text-primary text-sm font-semibold">System Voice</span>
+				</div>
+				<div className="flex flex-1 flex-col p-4 text-center">
+					<p className="mb-3 min-h-[20px] truncate text-sm font-medium">{currentSystemvoice?.label || "None"}</p>
+					<div className="mb-auto flex flex-1 items-center justify-center">
+						{currentSystemvoice?.imagePath ? (
+							<img
+								src={`${CDN}/chunithm/system_voice_thumbnails/${currentSystemvoice.imagePath}`}
+								alt="System Voice"
+								className="h-32 w-32 rounded-sm object-cover"
+							/>
+						) : (
+							<div className="bg-muted flex h-32 w-32 items-center justify-center rounded-sm">
+								<Volume2 className="h-10 w-10 opacity-30" />
+							</div>
+						)}
+					</div>
+					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-4 w-full">
+						Change
+					</Button>
+				</div>
+			</div>
 
-			<UserboxContent>
-				<Grid
-					items={filteredItems}
-					equippedItemIds={equippedItemIds}
-					selectedItemId={selectedSystemvoiceId}
-					loading={isLoading}
-					imageBasePath="chunithm/system_voice_thumbnails"
-					onItemClick={handleSelect}
-					onEquip={handleEquip}
-					onUnlock={handleUnlock}
-					hasChanges={hasChanges}
-					customPreview={customPreview}
-				/>
-			</UserboxContent>
-		</UserboxPageWrapper>
+			<ItemSelectionDialog
+				title="Select System Voice"
+				isOpen={isDialogOpen}
+				onClose={() => setIsDialogOpen(false)}
+				items={items.map(item => ({
+					id: item.systemVoiceId,
+					name: item.label,
+					imageUrl: `${CDN}/chunithm/system_voice_thumbnails/${item.imagePath}`,
+					locked: item.locked
+				}))}
+				currentItemId={currentSystemvoice?.systemVoiceId}
+				onSelect={handleEquip}
+				imageClassName="h-20 w-20"
+				headerControls={
+					<Select
+						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
+						onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
+					>
+						<SelectTrigger className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All</SelectItem>
+							<SelectItem value="unlocked">Unlocked</SelectItem>
+							<SelectItem value="locked">Locked</SelectItem>
+						</SelectContent>
+					</Select>
+				}
+			/>
+		</>
 	)
 }
