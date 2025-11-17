@@ -12,8 +12,8 @@ import { jwt } from "hono/jwt"
 import { logger } from "hono/logger"
 import { secureHeaders } from "hono/secure-headers"
 
-import { jwtPayloadMiddleware } from "./api/middleware/jwtPayload"
-import { Routes, UnprotectedRoutes } from "./api/routes"
+import { jwtPayloadMiddleware } from "./server/middleware/jwtPayload"
+import { Routes, UnprotectedRoutes } from "./server/routes"
 
 const { NODE_ENV, CLIENT_PORT, DOMAIN, JWT_SECRET, SERVER_PORT } = process.env
 

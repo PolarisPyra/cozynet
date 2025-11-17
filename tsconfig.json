@@ -5,11 +5,12 @@
 		"module": "ESNext",
 		"lib": ["ES2020", "DOM", "DOM.Iterable"],
 		"skipLibCheck": true,
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/*"],
-			"@shared/*": ["src/shared/*"]
-		},
+	"baseUrl": ".",
+	"paths": {
+		"@/*": ["./src/*"],
+		"@/app/*": ["./src/app/*"],
+		"@/server/*": ["./src/server/*"]
+	},
 
 		/* Bundler mode */
 		"moduleResolution": "Bundler",
