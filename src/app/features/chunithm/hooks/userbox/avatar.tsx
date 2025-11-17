@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 
-import { InferResponseType } from "hono"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { InferResponseType } from "hono"
 
-import { CDN } from "@/app/shared/utils/constants"
 import { api } from "@/app/shared/utils"
+import { CDN } from "@/app/shared/utils/constants"
 
 type AvatarItem = InferResponseType<typeof api.chunithm.userbox.avatar.$get>[0]
 type AvatarImages = {
@@ -184,11 +184,10 @@ export function useSearchAvatarItems(filters: { category: number | null; locked:
 		6: "front",
 		7: "back"
 	}
-	
+
 	// If category is null, search all slots
-	const slots = filters.category === null 
-		? ["back", "wear", "head", "face", "item", "skin"]
-		: [slotMap[filters.category]]
+	const slots =
+		filters.category === null ? ["back", "wear", "head", "face", "item", "skin"] : [slotMap[filters.category]]
 
 	return useQuery({
 		queryKey: ["userbox", "avatar", "search", filters.category, filters.locked],
@@ -233,6 +232,36 @@ export function useEquipAvatarItem() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["userbox", "avatar", "current"] })
+		}
+	})
+}
+
+export function useUnlockAvatarItem() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: async (avatarAccessoryId: number) => {
+			const response = await api.chunithm.userbox.avatar.unlock[":id"].$patch({
+				param: { id: avatarAccessoryId.toString() }
+			})
+
+			if (!response.ok) {
+				throw new Error("Failed to unlock avatar item")
+			}
+
+			return await response.json()
+		},
+		onSuccess: (_, avatarAccessoryId) => {
+			// Update search results to mark item as unlocked
+			queryClient.setQueriesData({ queryKey: ["userbox", "avatar", "search"] }, (old: any) => {
+				if (!old?.items) return old
+				return {
+					...old,
+					items: old.items.map((item: AvatarAccessoryItem) =>
+						item.avatarAccessoryId === avatarAccessoryId ? { ...item, locked: false } : item
+					)
+				}
+			})
 		}
 	})
 }

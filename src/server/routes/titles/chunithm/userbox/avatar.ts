@@ -298,7 +298,7 @@ const routes = new Hono()
 						VALUES (?, ?, 1, 1, 1)
 						ON DUPLICATE KEY UPDATE user = user
 					`,
-					[userId, id, version]
+					[userId, id]
 				)
 				return c.json({ message: "Avatar item unlocked successfully" })
 			} catch (error) {

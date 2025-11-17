@@ -6,7 +6,8 @@ import { toast } from "sonner"
 import {
 	useCurrentSystemvoice,
 	useEquipSystemvoice,
-	useSearchSystemvoices
+	useSearchSystemvoices,
+	useUnlockSystemvoice
 } from "@/app/features/chunithm/hooks/userbox/systemvoice"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
@@ -19,6 +20,7 @@ export function SystemVoice() {
 	const { data: currentSystemvoice } = useCurrentSystemvoice()
 	const { data: searchResults } = useSearchSystemvoices({ locked: lockedFilter })
 	const { mutate: equipSystemvoice } = useEquipSystemvoice()
+	const { mutate: unlockSystemvoice } = useUnlockSystemvoice()
 
 	const items = searchResults?.items ?? []
 
@@ -29,6 +31,15 @@ export function SystemVoice() {
 				setIsDialogOpen(false)
 			},
 			onError: () => toast.error("Failed to equip system voice")
+		})
+	}
+
+	const handleUnlock = (id: number) => {
+		unlockSystemvoice(id, {
+			onSuccess: () => {
+				toast.success("System voice unlocked successfully!")
+			},
+			onError: () => toast.error("Failed to unlock system voice")
 		})
 	}
 
@@ -71,6 +82,7 @@ export function SystemVoice() {
 				}))}
 				currentItemId={currentSystemvoice?.systemVoiceId}
 				onSelect={handleEquip}
+				onUnlock={handleUnlock}
 				imageClassName="h-20 w-20"
 				headerControls={
 					<Select

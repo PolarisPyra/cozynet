@@ -3,7 +3,12 @@ import { useState } from "react"
 import { MapPin } from "lucide-react"
 import { toast } from "sonner"
 
-import { useCurrentMapicon, useEquipMapicon, useSearchMapicons } from "@/app/features/chunithm/hooks/userbox/mapicon"
+import {
+	useCurrentMapicon,
+	useEquipMapicon,
+	useSearchMapicons,
+	useUnlockMapicon
+} from "@/app/features/chunithm/hooks/userbox/mapicon"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -15,6 +20,7 @@ export function MapIcon() {
 	const { data: currentMapicon } = useCurrentMapicon()
 	const { data: searchResults } = useSearchMapicons({ locked: lockedFilter })
 	const { mutate: equipMapicon } = useEquipMapicon()
+	const { mutate: unlockMapicon } = useUnlockMapicon()
 
 	const items = searchResults?.items ?? []
 
@@ -25,6 +31,15 @@ export function MapIcon() {
 				setIsDialogOpen(false)
 			},
 			onError: () => toast.error("Failed to equip map icon")
+		})
+	}
+
+	const handleUnlock = (id: number) => {
+		unlockMapicon(id, {
+			onSuccess: () => {
+				toast.success("Map icon unlocked successfully!")
+			},
+			onError: () => toast.error("Failed to unlock map icon")
 		})
 	}
 
@@ -67,6 +82,7 @@ export function MapIcon() {
 				}))}
 				currentItemId={currentMapicon?.mapiconId}
 				onSelect={handleEquip}
+				onUnlock={handleUnlock}
 				imageClassName="h-20 w-20"
 				headerControls={
 					<Select

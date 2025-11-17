@@ -6,7 +6,8 @@ import { toast } from "sonner"
 import {
 	useCurrentNameplate,
 	useEquipNameplate,
-	useSearchNameplates
+	useSearchNameplates,
+	useUnlockNameplate
 } from "@/app/features/chunithm/hooks/userbox/nameplate"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
@@ -19,6 +20,7 @@ export function Nameplate() {
 	const { data: currentNameplate } = useCurrentNameplate()
 	const { data: searchResults } = useSearchNameplates({ locked: lockedFilter })
 	const { mutate: equipNameplate } = useEquipNameplate()
+	const { mutate: unlockNameplate } = useUnlockNameplate()
 
 	const items = searchResults?.items ?? []
 
@@ -29,6 +31,15 @@ export function Nameplate() {
 				setIsDialogOpen(false)
 			},
 			onError: () => toast.error("Failed to equip nameplate")
+		})
+	}
+
+	const handleUnlock = (id: number) => {
+		unlockNameplate(id, {
+			onSuccess: () => {
+				toast.success("Nameplate unlocked successfully!")
+			},
+			onError: () => toast.error("Failed to unlock nameplate")
 		})
 	}
 
@@ -71,6 +82,7 @@ export function Nameplate() {
 				}))}
 				currentItemId={currentNameplate?.nameplateId}
 				onSelect={handleEquip}
+				onUnlock={handleUnlock}
 				imageClassName="h-16 w-full"
 				headerControls={
 					<Select

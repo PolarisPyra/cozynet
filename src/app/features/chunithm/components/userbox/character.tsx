@@ -6,7 +6,8 @@ import { toast } from "sonner"
 import {
 	useCurrentCharacter,
 	useEquipCharacter,
-	useSearchCharacters
+	useSearchCharacters,
+	useUnlockCharacter
 } from "@/app/features/chunithm/hooks/userbox/character"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
@@ -20,6 +21,7 @@ export function Character() {
 	const { data: currentCharacter } = useCurrentCharacter()
 	const { data: searchResults } = useSearchCharacters({ locked: lockedFilter })
 	const { mutate: equipCharacter } = useEquipCharacter()
+	const { mutate: unlockCharacter } = useUnlockCharacter()
 
 	const items = searchResults?.items ?? []
 
@@ -31,6 +33,15 @@ export function Character() {
 				setIsDialogOpen(false)
 			},
 			onError: () => toast.error("Failed to equip character")
+		})
+	}
+
+	const handleUnlock = (id: number) => {
+		unlockCharacter(id, {
+			onSuccess: () => {
+				toast.success("Character unlocked successfully!")
+			},
+			onError: () => toast.error("Failed to unlock character")
 		})
 	}
 
@@ -74,6 +85,7 @@ export function Character() {
 				}))}
 				currentItemId={currentCharacter?.characterId}
 				onSelect={handleEquip}
+				onUnlock={handleUnlock}
 				imageClassName="h-20 w-20"
 				headerControls={
 					<Select
