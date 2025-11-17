@@ -71,5 +71,6 @@ export const OngekiVersions: Record<number, string> = {
 	4: "R.E.D.",
 	5: "R.E.D. PLUS",
 	6: "bright",
-	7: "bright MEMORY"
+	7: "bright MEMORY",
+	8: "Re:Fresh"
 }

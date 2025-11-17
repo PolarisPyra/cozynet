@@ -2,10 +2,15 @@ import { DateTime } from "luxon"
 
 import { TrophyRareType } from "./enums"
 
-/**
- * DOMAIN TYPES & CONSTANTS
- * Pure, immutable data structures following Adapter Pattern
- */
+export const enum ChunithmAvatarCategory {
+	WEAR = 1,
+	HEAD = 2,
+	FACE = 3,
+	SKIN = 4,
+	ITEM = 5,
+	FRONT = 6,
+	BACK = 7
+}
 
 export enum ChunithmDifficulty {
 	Basic = 0,
