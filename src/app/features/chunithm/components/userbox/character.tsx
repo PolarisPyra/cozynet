@@ -1,149 +1,96 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 
+import { User } from "lucide-react"
 import { toast } from "sonner"
 
 import {
-	UserboxContent,
-	UserboxEquipUnlockButton,
-	UserboxPageWrapper,
-	UserboxPreviewEmpty,
-	UserboxPreviewImage,
-	UserboxPreviewWrapper,
-	UserboxSearchBar,
-	UserboxSearchCommandWrapper
-} from "@/app/features/chunithm/components/userbox/userbox-layout"
-import { UserboxSearchCommand } from "@/app/features/chunithm/components/userbox/userbox-search-command"
-import {
-	CharacterItem,
 	useCurrentCharacter,
 	useEquipCharacter,
-	useSearchCharacters,
-	useUnlockCharacter
+	useSearchCharacters
 } from "@/app/features/chunithm/hooks/userbox/character"
+import { Button } from "@/app/shared/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
-import { Grid } from "./grid/grid"
-
-export function CharacterCustomization() {
-	const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null)
-	const [originalCharacterId, setOriginalCharacterId] = useState<number | null>(null)
-	const [searchTerm, setSearchTerm] = useState("")
-
-	const { data: currentCharacter, isLoading: currentLoading } = useCurrentCharacter()
-	const { data: searchData, isLoading: searchLoading } = useSearchCharacters({ locked: null })
+export function Character() {
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [imageError, setImageError] = useState(false)
+	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
+	const { data: currentCharacter } = useCurrentCharacter()
+	const { data: searchResults } = useSearchCharacters({ locked: lockedFilter })
 	const { mutate: equipCharacter } = useEquipCharacter()
-	const { mutate: unlockCharacter } = useUnlockCharacter()
 
-	useEffect(() => {
-		if (!currentCharacter) {
-			setOriginalCharacterId(null)
-			setSelectedCharacterId(null)
-			return
-		}
-		setOriginalCharacterId(currentCharacter.characterId)
-		setSelectedCharacterId(currentCharacter.characterId)
-	}, [currentCharacter])
+	const items = searchResults?.items ?? []
 
-	const handleSelect = useCallback((item: CharacterItem) => {
-		setSelectedCharacterId(item.characterId)
-	}, [])
-
-	const handleEquip = useCallback(
-		(item: CharacterItem) => {
-			equipCharacter(item.characterId, {
-				onSuccess: () => {
-					toast.success("Character equipped successfully")
-				},
-				onError: error => {
-					toast.error("Failed to equip character")
-					console.error("Error equipping character:", error)
-				}
-			})
-		},
-		[equipCharacter]
-	)
-
-	const handleUnlock = useCallback(
-		(item: CharacterItem) => {
-			unlockCharacter(item.characterId, {
-				onSuccess: () => {
-					toast.success("Character unlocked successfully")
-				},
-				onError: error => {
-					toast.error("Failed to unlock character")
-					console.error("Error unlocking character:", error)
-				}
-			})
-		},
-		[unlockCharacter]
-	)
-
-	const hasChanges = useMemo(
-		() => selectedCharacterId !== originalCharacterId,
-		[selectedCharacterId, originalCharacterId]
-	)
-
-	const equippedItemIds = useMemo(() => {
-		if (!currentCharacter) return new Set<number>()
-		return new Set([currentCharacter.characterId])
-	}, [currentCharacter])
-
-	const isLoading = currentLoading || searchLoading
-
-	const filteredItems = useMemo(() => {
-		if (!searchData?.items) return []
-		if (!searchTerm) return searchData.items
-		return searchData.items.filter(item => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
-	}, [searchData?.items, searchTerm])
-
-	const customPreview = useCallback(
-		(item: CharacterItem | null) => {
-			if (!item)
-				return <UserboxPreviewEmpty title="Select a Character" description="Choose a character to preview and equip" />
-
-			return (
-				<UserboxPreviewWrapper>
-					<UserboxPreviewImage
-						src={`${CDN}/chunithm/characters/${item.imagePath || ""}`}
-						alt={item.label}
-						width={280}
-						height={360}
-					/>
-					<UserboxEquipUnlockButton item={item} hasChanges={hasChanges} onEquip={() => handleEquip(item)} onUnlock={() => handleUnlock(item)} />
-				</UserboxPreviewWrapper>
-			)
-		},
-		[hasChanges, handleEquip, handleUnlock]
-	)
+	const handleEquip = (id: number) => {
+		equipCharacter(id, {
+			onSuccess: () => {
+				toast.success("Character equipped successfully!")
+				setImageError(false)
+				setIsDialogOpen(false)
+			},
+			onError: () => toast.error("Failed to equip character")
+		})
+	}
 
 	return (
-		<UserboxPageWrapper>
-			<UserboxSearchBar>
-				<UserboxSearchCommandWrapper>
-					<UserboxSearchCommand
-						items={searchData?.items || []}
-						searchQuery={searchTerm}
-						onSearchChange={setSearchTerm}
-						onItemSelect={handleSelect}
-						itemType="character"
-					/>
-				</UserboxSearchCommandWrapper>
-			</UserboxSearchBar>
+		<>
+			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
+				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-4 py-3">
+					<span className="text-primary text-sm font-semibold">Character</span>
+				</div>
+				<div className="flex flex-1 flex-col p-4 text-center">
+					<p className="mb-3 min-h-[20px] truncate text-sm font-medium">{currentCharacter?.label || "None"}</p>
+					<div className="mb-auto flex flex-1 items-center justify-center">
+						{currentCharacter?.imagePath && !imageError ? (
+							<img
+								src={`${CDN}/chunithm/characters/${currentCharacter.imagePath}`}
+								alt="Character"
+								className="h-32 w-32 rounded-sm object-cover"
+								onError={() => setImageError(true)}
+							/>
+						) : (
+							<div className="bg-muted flex h-32 w-32 items-center justify-center rounded-sm">
+								<User className="h-10 w-10 opacity-30" />
+							</div>
+						)}
+					</div>
+					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-4 w-full">
+						Change
+					</Button>
+				</div>
+			</div>
 
-			<UserboxContent>
-				<Grid
-					items={filteredItems}
-					equippedItemIds={equippedItemIds}
-					selectedItemId={selectedCharacterId}
-					loading={isLoading}
-					imageBasePath="chunithm/characters"
-					onItemClick={handleSelect}
-					onEquip={handleEquip}
-					onUnlock={handleUnlock}
-					hasChanges={hasChanges}
-					customPreview={customPreview}
-				/>
-			</UserboxContent>
-		</UserboxPageWrapper>
+			<ItemSelectionDialog
+				title="Select Character"
+				isOpen={isDialogOpen}
+				onClose={() => setIsDialogOpen(false)}
+				items={items.map(item => ({
+					id: item.characterId,
+					name: item.label,
+					imageUrl: `${CDN}/chunithm/characters/${item.imagePath}`,
+					locked: item.locked
+				}))}
+				currentItemId={currentCharacter?.characterId}
+				onSelect={handleEquip}
+				imageClassName="h-20 w-20"
+				headerControls={
+					<Select
+						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
+						onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
+					>
+						<SelectTrigger className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All</SelectItem>
+							<SelectItem value="unlocked">Unlocked</SelectItem>
+							<SelectItem value="locked">Locked</SelectItem>
+						</SelectContent>
+					</Select>
+				}
+			/>
+		</>
 	)
 }

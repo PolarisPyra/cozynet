@@ -56,23 +56,8 @@ export function useEquipMapicon() {
 
 			return await response.json()
 		},
-		onSuccess: (_, mapIconId) => {
-			// Update current mapicon in cache
-			queryClient.setQueryData(["userbox", "mapicon", "current"], (old: MapiconItem | undefined) => {
-				if (!old) return old
-				const searchQueries = queryClient.getQueriesData({ queryKey: ["userbox", "mapicon", "search"] })
-				let equippedItem = null
-
-				for (const [, searchData] of searchQueries) {
-					if (searchData && typeof searchData === "object" && "items" in searchData) {
-						const items = (searchData as any).items as MapiconItem[]
-						equippedItem = items.find(item => item.mapiconId === mapIconId)
-						if (equippedItem) break
-					}
-				}
-
-				return equippedItem || { ...old, mapiconId: mapIconId }
-			})
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["userbox", "mapicon", "current"] })
 		}
 	})
 }

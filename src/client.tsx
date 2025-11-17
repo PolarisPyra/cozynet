@@ -6,14 +6,6 @@ import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
 
 import { Toaster } from "@/app/shared/components/ui/sonner"
 
-import { Avatar } from "./app/features/chunithm/components/userbox/avatar"
-import { CharacterCustomization } from "./app/features/chunithm/components/userbox/character"
-import { MapiconCustomization } from "./app/features/chunithm/components/userbox/map-icon"
-import { NameplateCustomization } from "./app/features/chunithm/components/userbox/nameplate"
-import { StageCustomization } from "./app/features/chunithm/components/userbox/stage"
-import { SystemvoiceCustomization } from "./app/features/chunithm/components/userbox/system-voice"
-import { TrophyCustomization } from "./app/features/chunithm/components/userbox/trophies"
-import { UserboxLayout } from "./app/features/chunithm/components/userbox/userbox-layout"
 import { MaimaiDxAllSongs } from "./app/features/maimaidx/pages/allsongs"
 import { MaimaiDxScorePage } from "./app/features/maimaidx/pages/scores"
 import { MaimaiDxSettings } from "./app/features/maimaidx/pages/settings"
@@ -46,6 +38,7 @@ const ChunithmRatingBaseList = React.lazy(() => import("./app/features/chunithm/
 const ChunithmRivals = React.lazy(() => import("./app/features/chunithm/pages/rivals"))
 const ChunithmScorePage = React.lazy(() => import("./app/features/chunithm/pages/scores"))
 const ChunithmSettingsPage = React.lazy(() => import("./app/features/chunithm/pages/settings"))
+const ChunithmUserbox = React.lazy(() => import("./app/features/chunithm/pages/userbox"))
 const OngekiProfile = React.lazy(() => import("./app/features/ongeki/pages/profile"))
 
 const queryClient = new QueryClient()
@@ -80,17 +73,8 @@ const app = (
 									<Route path="/home" element={<ServerNews />} />
 									<Route path="/account" element={<Account />} />
 
-									<Route path="/chunithm/settings" element={<ChunithmSettingsPage />} />
-									<Route path="/chunithm/userbox" element={<UserboxLayout />}>
-										<Route index element={<Avatar />} />
-										<Route path="avatar" element={<Avatar />} />
-										<Route path="character" element={<CharacterCustomization />} />
-										<Route path="nameplate" element={<NameplateCustomization />} />
-										<Route path="trophy" element={<TrophyCustomization />} />
-										<Route path="stage" element={<StageCustomization />} />
-										<Route path="systemvoice" element={<SystemvoiceCustomization />} />
-										<Route path="mapicon" element={<MapiconCustomization />} />
-									</Route>
+					<Route path="/chunithm/settings" element={<ChunithmSettingsPage />} />
+					<Route path="/chunithm/userbox" element={<ChunithmUserbox />} />
 									<Route path="/chunithm/scores" element={<ChunithmScorePage />} />
 									<Route path="/chunithm/favorites" element={<ChunithmFavorites />} />
 									<Route path="/chunithm/leaderboard" element={<ChunithmLeaderboard />} />

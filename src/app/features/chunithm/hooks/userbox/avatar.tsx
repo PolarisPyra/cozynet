@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 
 import { InferResponseType } from "hono"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { CDN } from "@/app/shared/utils/constants"
 import { api } from "@/app/shared/utils"
@@ -142,4 +143,96 @@ export const useAvatar = () => {
 		equip,
 		isLoading
 	}
+}
+
+// New hooks for the simplified userbox
+export interface AvatarAccessoryItem {
+	avatarAccessoryId: number
+	imagePath: string
+	label: string
+	slot: "back" | "wear" | "head" | "face" | "item" | "skin" | "front"
+	locked: boolean
+}
+
+export function useCurrentAvatar() {
+	return useQuery({
+		queryKey: ["userbox", "avatar", "current"],
+		queryFn: async () => {
+			const response = await api.chunithm.userbox.avatar.$get()
+			if (!response.ok) {
+				throw new Error("Failed to fetch current avatar")
+			}
+			const items = await response.json()
+			// Convert array to object with slots as keys
+			const avatarObj: Record<string, AvatarAccessoryItem> = {}
+			items.forEach(item => {
+				avatarObj[item.slot] = item
+			})
+			return avatarObj
+		}
+	})
+}
+
+export function useSearchAvatarItems(filters: { category: number | null; locked: boolean | null }) {
+	// Map category to slot - matches chuni_static_avatar.category values
+	const slotMap: Record<number, string> = {
+		1: "wear",
+		2: "head",
+		3: "face",
+		4: "skin",
+		5: "item",
+		6: "front",
+		7: "back"
+	}
+	
+	// If category is null, search all slots
+	const slots = filters.category === null 
+		? ["back", "wear", "head", "face", "item", "skin"]
+		: [slotMap[filters.category]]
+
+	return useQuery({
+		queryKey: ["userbox", "avatar", "search", filters.category, filters.locked],
+		queryFn: async () => {
+			const response = await api.chunithm.userbox.avatar.search.$post({
+				json: {
+					filter: {
+						slot: slots as ("back" | "wear" | "head" | "face" | "item" | "skin")[],
+						locked: filters.locked
+					}
+				}
+			})
+
+			if (!response.ok) {
+				throw new Error("Failed to search avatar items")
+			}
+
+			return await response.json()
+		}
+	})
+}
+
+export function useEquipAvatarItem() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: async (params: {
+			avatarAccessoryId: number
+			slot: "back" | "wear" | "head" | "face" | "item" | "skin" | "front"
+		}) => {
+			const response = await api.chunithm.userbox.avatar.$post({
+				json: {
+					[params.slot]: params.avatarAccessoryId
+				}
+			})
+
+			if (!response.ok) {
+				throw new Error("Failed to equip avatar item")
+			}
+
+			return await response.json()
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["userbox", "avatar", "current"] })
+		}
+	})
 }
