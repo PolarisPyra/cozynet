@@ -3,7 +3,12 @@ import { useState } from "react"
 import { Trophy as TrophyIcon } from "lucide-react"
 import { toast } from "sonner"
 
-import { useCurrentTrophies, useEquipTrophy, useSearchTrophies } from "@/app/features/chunithm/hooks/userbox/trophy"
+import {
+	useCurrentTrophies,
+	useEquipTrophy,
+	useSearchTrophies,
+	useUnlockTrophy
+} from "@/app/features/chunithm/hooks/userbox/trophy"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -42,6 +47,7 @@ export function Trophy() {
 	const { data: currentTrophies } = useCurrentTrophies()
 	const { data: searchResults } = useSearchTrophies({ locked: lockedFilter, rareType: rareTypeFilter })
 	const { mutate: equipTrophy } = useEquipTrophy()
+	const { mutate: unlockTrophy } = useUnlockTrophy()
 
 	const items = searchResults?.items ?? []
 
@@ -60,6 +66,15 @@ export function Trophy() {
 				onError: () => toast.error("Failed to equip trophy")
 			}
 		)
+	}
+
+	const handleUnlock = (id: number) => {
+		unlockTrophy(id, {
+			onSuccess: () => {
+				toast.success("Trophy unlocked successfully!")
+			},
+			onError: () => toast.error("Failed to unlock trophy")
+		})
 	}
 
 	const getTrophyImageUrl = (trophy: typeof mainTrophy) => {
@@ -142,6 +157,7 @@ export function Trophy() {
 				})}
 				currentItemId={currentTrophies?.find(t => t.slot === selectedSlot)?.trophyId}
 				onSelect={handleEquip}
+				onUnlock={handleUnlock}
 				imageClassName="h-12 w-full"
 				headerControls={
 					<div className="flex flex-col gap-3">

@@ -6,7 +6,8 @@ import { toast } from "sonner"
 import {
 	useCurrentAvatar,
 	useEquipAvatarItem,
-	useSearchAvatarItems
+	useSearchAvatarItems,
+	useUnlockAvatarItem
 } from "@/app/features/chunithm/hooks/userbox/avatar"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
@@ -38,6 +39,7 @@ export function AvatarAccessories() {
 		locked: lockedFilter
 	})
 	const { mutate: equipAvatarItem } = useEquipAvatarItem()
+	const { mutate: unlockAvatarItem } = useUnlockAvatarItem()
 
 	const items = searchResults?.items ?? []
 	const currentItem = selectedSlot !== "all" ? currentAvatar?.[selectedSlot] : undefined
@@ -63,6 +65,15 @@ export function AvatarAccessories() {
 				onError: () => toast.error(`Failed to equip ${SLOT_LABELS[itemSlot].toLowerCase()}`)
 			}
 		)
+	}
+
+	const handleUnlock = (id: number) => {
+		unlockAvatarItem(id, {
+			onSuccess: () => {
+				toast.success("Avatar item unlocked successfully!")
+			},
+			onError: () => toast.error("Failed to unlock avatar item")
+		})
 	}
 
 	return (
@@ -129,6 +140,7 @@ export function AvatarAccessories() {
 				})}
 				currentItemId={currentItem?.avatarAccessoryId}
 				onSelect={handleEquip}
+				onUnlock={handleUnlock}
 				imageClassName="h-16 w-16"
 				headerControls={
 					<div className="flex flex-col gap-3">

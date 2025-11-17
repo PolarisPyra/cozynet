@@ -3,7 +3,12 @@ import { useState } from "react"
 import { Image } from "lucide-react"
 import { toast } from "sonner"
 
-import { useCurrentStage, useEquipStage, useSearchStages } from "@/app/features/chunithm/hooks/userbox/stage"
+import {
+	useCurrentStage,
+	useEquipStage,
+	useSearchStages,
+	useUnlockStage
+} from "@/app/features/chunithm/hooks/userbox/stage"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -15,6 +20,7 @@ export function Stage() {
 	const { data: currentStage } = useCurrentStage()
 	const { data: searchResults } = useSearchStages({ locked: lockedFilter })
 	const { mutate: equipStage } = useEquipStage()
+	const { mutate: unlockStage } = useUnlockStage()
 
 	const items = searchResults?.items ?? []
 
@@ -25,6 +31,15 @@ export function Stage() {
 				setIsDialogOpen(false)
 			},
 			onError: () => toast.error("Failed to equip stage")
+		})
+	}
+
+	const handleUnlock = (id: number) => {
+		unlockStage(id, {
+			onSuccess: () => {
+				toast.success("Stage unlocked successfully!")
+			},
+			onError: () => toast.error("Failed to unlock stage")
 		})
 	}
 
@@ -67,6 +82,7 @@ export function Stage() {
 				}))}
 				currentItemId={currentStage?.stageId}
 				onSelect={handleEquip}
+				onUnlock={handleUnlock}
 				imageClassName="h-16 w-full"
 				headerControls={
 					<Select

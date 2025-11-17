@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useMemo, useState } from "react"
 
-import { ChevronLeft, ChevronRight, Lock, Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, Lock, LockOpen, Search } from "lucide-react"
 
 import { Button } from "@/app/shared/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/shared/components/ui/dialog"
@@ -21,6 +21,7 @@ interface ItemSelectionDialogProps {
 	items: Item[]
 	currentItemId?: number
 	onSelect: (id: number) => void
+	onUnlock?: (id: number) => void
 	imageClassName?: string
 	headerControls?: ReactNode
 }
@@ -32,6 +33,7 @@ export function ItemSelectionDialog({
 	items,
 	currentItemId,
 	onSelect,
+	onUnlock,
 	imageClassName = "h-20 w-20",
 	headerControls
 }: ItemSelectionDialogProps) {
@@ -84,6 +86,13 @@ export function ItemSelectionDialog({
 		}
 	}
 
+	const handleUnlock = (id: number, e: React.MouseEvent) => {
+		e.stopPropagation()
+		if (onUnlock) {
+			onUnlock(id)
+		}
+	}
+
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="max-h-[90vh] max-w-4xl">
@@ -112,15 +121,20 @@ export function ItemSelectionDialog({
 						{paginatedItems.map(item => (
 							<div
 								key={item.id}
-								onClick={() => !item.locked && handleSelect(item.id)}
 								className={cn(
-									"bg-card flex cursor-pointer flex-col rounded-sm border-2 p-3 text-center transition-colors",
+									"bg-card flex flex-col rounded-sm border-2 p-3 text-center",
 									selectedId === item.id ? "border-primary" : "border-border",
-									item.locked && "cursor-not-allowed opacity-60"
+									item.locked && !onUnlock && "cursor-not-allowed opacity-60"
 								)}
 							>
 								<p className="mb-2 line-clamp-2 h-8 overflow-hidden text-xs font-medium">{item.name}</p>
-								<div className="relative flex h-20 w-full items-center justify-center">
+								<div
+									onClick={() => !item.locked && handleSelect(item.id)}
+									className={cn(
+										"relative flex h-20 w-full items-center justify-center",
+										!item.locked && "cursor-pointer"
+									)}
+								>
 									<img
 										src={item.imageUrl}
 										alt={item.name}
@@ -128,12 +142,22 @@ export function ItemSelectionDialog({
 										loading="lazy"
 										decoding="async"
 									/>
-									{item.locked ? (
+									{item.locked && !onUnlock ? (
 										<div className="bg-foreground/70 text-background absolute top-1 right-1 rounded-full p-1">
 											<Lock className="h-3 w-3" />
 										</div>
 									) : null}
 								</div>
+								{item.locked && onUnlock ? (
+									<button
+										onClick={e => handleUnlock(item.id, e)}
+										className="bg-primary hover:bg-primary/90 text-primary-foreground mt-2 flex w-full items-center justify-center gap-1 rounded-sm px-2 py-1.5 text-xs font-medium"
+										title="Click to unlock item"
+									>
+										<LockOpen className="h-3 w-3" />
+										Unlock
+									</button>
+								) : null}
 							</div>
 						))}
 					</div>
