@@ -53,7 +53,6 @@ interface B45ExportData {
  */
 export const useReiwaExport = () => {
 	const version = useOngekiVersion()
-	const isRefreshOrAbove = version ? Number(version) >= 8 : false
 
 	return useQuery<B45ExportData>({
 		queryKey: ["ongeki", "reiwa", "export", version],
@@ -66,7 +65,7 @@ export const useReiwaExport = () => {
 
 			return response.json() as Promise<B45ExportData>
 		},
-		enabled: !!version && !isRefreshOrAbove
+		enabled: false // Only fetch when manually triggered
 	})
 }
 
@@ -137,7 +136,6 @@ interface RefreshExportData {
  */
 export const useReiwaRefreshExport = () => {
 	const version = useOngekiVersion()
-	const isRefreshOrAbove = version ? Number(version) >= 8 : false
 
 	return useQuery<RefreshExportData>({
 		queryKey: ["ongeki", "reiwa", "exportRefresh", version],
@@ -150,6 +148,6 @@ export const useReiwaRefreshExport = () => {
 
 			return response.json() as Promise<RefreshExportData>
 		},
-		enabled: !!version && isRefreshOrAbove
+		enabled: false // Only fetch when manually triggered
 	})
 }
