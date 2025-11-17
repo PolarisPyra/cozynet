@@ -25,6 +25,7 @@ export const useKamaitachiExport = () => {
 			}
 
 			return data.data
-		}
+		},
+		enabled: false // Only fetch when manually triggered
 	})
 }

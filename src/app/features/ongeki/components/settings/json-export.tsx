@@ -7,44 +7,67 @@ const JsonExport = () => {
 	const version = useOngekiVersion()
 	const isRefreshOrAbove = version ? Number(version) >= 8 : false
 
-	// Only fetch the appropriate export based on version
-	const { data: exportData, isLoading } = useReiwaExport()
-	const { data: refreshExportData, isLoading: isLoadingRefresh } = useReiwaRefreshExport()
+	// Only fetch the appropriate export based on version when button is clicked
+	const { data: exportData, isLoading: isLoading, refetch: refetchReiwa } = useReiwaExport()
+	const { data: refreshExportData, isLoading: isLoadingRefresh, refetch: refetchRefresh } = useReiwaRefreshExport()
 
-	const currentData = isRefreshOrAbove ? refreshExportData : exportData
-	const isLoadingData = isRefreshOrAbove ? isLoadingRefresh : isLoading
+	const handleExport = async () => {
+		try {
+			let currentData
 
-	const handleExport = () => {
-		if (!currentData) {
-			toast.error("No data available to export")
-			return
+			// Fetch the appropriate export based on version
+			if (isRefreshOrAbove) {
+				// Fetch refresh export if not already loaded
+				currentData = refreshExportData
+				if (!currentData) {
+					const result = await refetchRefresh()
+					currentData = result.data
+				}
+			} else {
+				// Fetch regular export if not already loaded
+				currentData = exportData
+				if (!currentData) {
+					const result = await refetchReiwa()
+					currentData = result.data
+				}
+			}
+
+			if (!currentData) {
+				toast.error("No data available to export")
+				return
+			}
+
+			const blob = new Blob([JSON.stringify(currentData, null, 2)], {
+				type: "application/json"
+			})
+			const url = URL.createObjectURL(blob)
+			const link = document.createElement("a")
+			link.href = url
+			link.download = isRefreshOrAbove
+				? "ongeki_reiwa_refresh_export.json"
+				: "ongeki_reiwa_export.json"
+			document.body.appendChild(link)
+			link.click()
+			document.body.removeChild(link)
+			URL.revokeObjectURL(url)
+
+			toast.success(
+				isRefreshOrAbove
+					? "Successfully exported Re:Fresh data"
+					: "Successfully exported B45 data"
+			)
+		} catch (error) {
+			toast.error("Failed to export data")
 		}
-
-		const blob = new Blob([JSON.stringify(currentData, null, 2)], {
-			type: "application/json"
-		})
-		const url = URL.createObjectURL(blob)
-		const link = document.createElement("a")
-		link.href = url
-		link.download = isRefreshOrAbove
-			? "ongeki_reiwa_refresh_export.json"
-			: "ongeki_reiwa_export.json"
-		document.body.appendChild(link)
-		link.click()
-		document.body.removeChild(link)
-		URL.revokeObjectURL(url)
-
-		toast.success(
-			isRefreshOrAbove
-				? "Successfully exported Re:Fresh data"
-				: "Successfully exported B45 data"
-		)
 	}
+
+	const isLoadingData = isRefreshOrAbove ? isLoadingRefresh : isLoading
+	const currentData = isRefreshOrAbove ? refreshExportData : exportData
 
 	return (
 		<div className="bg-card rounded-sm p-4 md:p-6">
 			<h2 className="text-primary mb-4 text-xl font-semibold">Export Data</h2>
-			<Button onClick={handleExport} variant="custom" disabled={isLoadingData || !currentData}>
+			<Button onClick={handleExport} variant="custom" disabled={isLoadingData}>
 				{isLoadingData ? "Exporting..." : "Export ratings as json (for reiwa.f5.si)"}
 			</Button>
 		</div>

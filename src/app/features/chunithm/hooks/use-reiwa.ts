@@ -51,6 +51,6 @@ export const useReiwaExport = () => {
 
 			return response.json() as Promise<B30ExportData>
 		},
-		enabled: !!version
+		enabled: false // Only fetch when manually triggered
 	})
 }
