@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/app/shared/components/ui/button"
-import { useAuth } from "@/app/shared/hooks/auth"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { turnstile } from "@/app/shared/utils/constants"
 import { signupSchema } from "@/app/shared/types/validation/auth"
 

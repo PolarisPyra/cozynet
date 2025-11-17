@@ -12,7 +12,7 @@ import {
 	DropdownMenuTrigger
 } from "@/app/shared/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/app/shared/components/ui/sidebar"
-import { useAuth } from "@/app/shared/hooks/auth"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 
 export function NavUser({
 	user

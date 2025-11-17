@@ -5,7 +5,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/app/shared/components/ui/button"
 import { Input } from "@/app/shared/components/ui/input"
-import { useAuth } from "@/app/shared/hooks/auth"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { useUpdateAimecard } from "@/app/shared/hooks/users"
 
 const AimeCardSwap = () => {

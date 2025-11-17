@@ -2,7 +2,7 @@ import { Link, Navigate, Outlet } from "react-router-dom"
 
 // BgGame removed
 import { Button } from "@/app/shared/components/ui/button"
-import { useAuth } from "@/app/shared/hooks/auth"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 
 export const WelcomeContent = () => (
 	<div className="bg-card mx-4 w-full max-w-md rounded-sm p-8">

@@ -2,7 +2,7 @@
 import { Navigate, Outlet } from "react-router-dom"
 
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
-import { useAuth } from "@/app/shared/hooks/auth"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 
 export const ProtectedRoute = () => {
 	const { user, isLoading } = useAuth()

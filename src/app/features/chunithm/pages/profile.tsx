@@ -2,7 +2,7 @@ import { ChunithmRatingColors } from "@/app/features/chunithm/components/rating-
 import Header from "@/app/shared/components/common/header"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Badge } from "@/app/shared/components/ui/badge"
-import { useAuth } from "@/app/shared/hooks/auth"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { useChunithmProfile, useChunithmRatingColor, useChunithmVersion } from "@/app/features/chunithm/hooks"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { formatSqlDateToLocalParts } from "@/app/shared/utils/chunithm"
