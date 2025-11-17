@@ -31,7 +31,7 @@ import {
 	SidebarMenuSub,
 	SidebarSeparator
 } from "@/app/shared/components/ui/sidebar"
-import { useAuth } from "@/app/shared/hooks/auth"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { cn } from "@/app/shared/utils"
 
 import { NavUser } from "./nav-user"

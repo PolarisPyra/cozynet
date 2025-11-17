@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { api } from "@/app/shared/utils"
 
-import { useAuth } from "@/app/shared/hooks/auth"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { useCurrentUser } from "@/app/shared/hooks/users"
 
 export const useMaimaiDxVersion = (): number => {
