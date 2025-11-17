@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { User } from "@/app/shared/types"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 import { AuthContext } from "./context"
 

@@ -5,7 +5,7 @@ import { toast } from "sonner"
 
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/shared/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 import { Button } from "@/app/shared/components/ui/button"
 

@@ -1,6 +1,6 @@
 import React from "react"
 
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 type ContainerProps = React.HTMLAttributes<HTMLDivElement> & {
 	children: React.ReactNode

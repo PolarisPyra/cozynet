@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { TrophyRareType } from "@/app/shared/utils/enums"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 export interface TrophyItem {
 	trophyId: number

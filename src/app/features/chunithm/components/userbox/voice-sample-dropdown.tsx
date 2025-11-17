@@ -3,7 +3,7 @@ import React, { useCallback, useMemo, useRef, useState } from "react"
 import { Button } from "@/app/shared/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/shared/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 const DEFAULT_VOICE_SAMPLES: Record<string, string> = {
 	"00000": "Full Combo",

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { OngekiPlaylog } from "@/app/shared/types"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 // Fetch Ongeki scores
 export function useOngekiScores() {

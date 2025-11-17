@@ -15,7 +15,7 @@ import {
 	DialogTrigger
 } from "@/app/shared/components/ui/dialog"
 import { TrophyRareType } from "@/app/shared/utils/enums"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 type ItemType = "avatar" | "character" | "trophy" | "nameplate" | "mapicon" | "stage" | "systemvoice"
 

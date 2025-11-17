@@ -1,13 +1,13 @@
 import { CreditCardIcon, Gamepad, TriangleAlert } from "lucide-react"
 
 import { KeychipGenerator } from "@/app/features/admin/components/keychip-generator"
+import { useAdmin } from "@/app/features/admin/hooks"
+import { hasAdminAccess } from "@/app/features/admin/utils"
 import Header from "@/app/shared/components/common/header"
 import AimeCardSwap from "@/app/shared/components/settings/aime-card"
 import ArcadeLocation from "@/app/shared/components/settings/arcade-location"
 import ArcadeName from "@/app/shared/components/settings/arcade-name"
 import ArcadeOwnership from "@/app/shared/components/settings/arcade-ownership"
-import { useAdmin } from "@/app/features/admin/hooks"
-import { hasAdminAccess } from "@/app/shared/utils/permissions"
 
 const Account = () => {
 	const { data: systemAdmin } = useAdmin()

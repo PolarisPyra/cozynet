@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { Mai2Playlog } from "@/app/shared/types"
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 // Fetch MaiMai DX scores from playlog
 export function useMaimaiDxScores() {

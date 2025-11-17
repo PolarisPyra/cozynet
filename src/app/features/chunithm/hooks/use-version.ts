@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 import { useAuth } from "@/app/shared/hooks/auth"
 import { useCurrentUser } from "@/app/shared/hooks/users"

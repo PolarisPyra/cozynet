@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { api } from "@/app/shared/utils/api"
+import { api } from "@/app/shared/utils"
 
 export function useArcades() {
 	return useQuery({

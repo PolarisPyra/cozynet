@@ -32,7 +32,7 @@ import {
 	SidebarSeparator
 } from "@/app/shared/components/ui/sidebar"
 import { useAuth } from "@/app/shared/hooks/auth"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 import { NavUser } from "./nav-user"
 

@@ -7,7 +7,7 @@ import Header from "@/app/shared/components/common/header"
 import { Button } from "@/app/shared/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/shared/components/ui/dropdown-menu"
 import { useChunithmVersion } from "@/app/features/chunithm/hooks"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 const TABS = [
 	{ id: "avatar", label: "Avatar", path: "/chunithm/userbox/avatar" },

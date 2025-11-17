@@ -7,7 +7,7 @@ import { PreviewSlot } from "@/app/shared/components/common/preview-slot"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
 import { usePaginationKeyboard } from "@/app/shared/hooks/use-pagination-keyboard"
 import { CDN } from "@/app/shared/utils/constants"
-import { cn } from "@/app/shared/utils/cn"
+import { cn } from "@/app/shared/utils"
 
 export function getItemId(item: BaseItem): number {
 	return (
