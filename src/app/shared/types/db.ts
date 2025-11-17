@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-namespace */
-import { ChunithmAvatarCategory } from "./enums"
+import { ChunithmAvatarCategory } from "@/app/shared/utils/chunithm"
 
 /**
  * Database type definitions for the application tables

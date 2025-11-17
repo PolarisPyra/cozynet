@@ -40,6 +40,7 @@ import { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } 
 import { useOngekiScores } from "./use-scores"
 import { useOngekiSongs } from "./use-songs"
 import { useUnlockAllCards, useUnlockAllItems, useUnlockSpecificItem } from "./use-unlocks"
+import { useUpdateName } from "./use-update-name"
 import { useOngekiVersion, useOngekiVersions, useUpdateOngekiVersion } from "./use-version"
 
 export {
@@ -84,7 +85,8 @@ export {
 	useUserNewRatingBaseNextBestList,
 	useNewPlayerRating,
 	useNewHighestRating,
-	useOngekiRatingColor
+	useOngekiRatingColor,
+	useUpdateName
 }
 
 export type { FilterValues, MusicFilterValues }

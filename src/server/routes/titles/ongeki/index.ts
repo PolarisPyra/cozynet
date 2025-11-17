@@ -10,6 +10,7 @@ import { OngekiRatingRoutes } from "./rating"
 import { OngekiReiwaRoutes } from "./reiwa"
 import { OngekiRivalsRoutes } from "./rivals"
 import { OngekiSettingsRoutes } from "./settings"
+import { UsernameRoutes } from "./update-name"
 
 export const AllOngekiRoutes = new Hono()
 	.route("profile", OngekiProfileRoutes)
@@ -24,3 +25,4 @@ export const AllOngekiRoutes = new Hono()
 	.route("mods", OngekiModsRoutes)
 	.route("reiwa", OngekiReiwaRoutes)
 	.route("cards", OngekiCardsRoutes)
+	.route("username", UsernameRoutes)
