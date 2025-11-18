@@ -43,25 +43,4 @@ const AimeCardRoute = new Hono()
 			throw rethrowWithMessage("Failed to fetch users", error)
 		}
 	})
-	.post("/update", async c => {
-		try {
-			const userId = c.payload.userId
-			const { accessCode } = await c.req.json()
-
-			const [result] = await db.execute<ResultSetHeader>(
-				`UPDATE aime_card
-            SET access_code = ?
-            WHERE user = ?`,
-				[accessCode, userId]
-			)
-
-			if (result.affectedRows === 0) {
-				return c.json({ error: "User not found" }, 404)
-			}
-
-			return c.json({ success: true })
-		} catch (error) {
-			throw rethrowWithMessage("Failed to update aime card", error)
-		}
-	})
 export { AimeCardRoute }
