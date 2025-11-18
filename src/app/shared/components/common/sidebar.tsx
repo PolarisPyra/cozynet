@@ -88,6 +88,11 @@ const ongekiSubnav: MenuItem[] = [
 		href: "/ongeki/scores",
 		icon: NotepadText
 	},
+	{
+		name: "Userbox",
+		href: "/ongeki/userbox",
+		icon: Pencil
+	},
 	{ name: "Rivals", href: "/ongeki/rivals", icon: Swords },
 	{
 		name: "Leaderboard",

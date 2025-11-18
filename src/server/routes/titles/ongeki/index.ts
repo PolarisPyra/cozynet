@@ -11,6 +11,7 @@ import { OngekiReiwaRoutes } from "./reiwa"
 import { OngekiRivalsRoutes } from "./rivals"
 import { OngekiSettingsRoutes } from "./settings"
 import { UsernameRoutes } from "./update-name"
+import { UserBoxRoutes } from "./userbox"
 
 export const AllOngekiRoutes = new Hono()
 	.route("profile", OngekiProfileRoutes)
@@ -26,3 +27,4 @@ export const AllOngekiRoutes = new Hono()
 	.route("reiwa", OngekiReiwaRoutes)
 	.route("cards", OngekiCardsRoutes)
 	.route("username", UsernameRoutes)
+	.route("userbox", UserBoxRoutes)
