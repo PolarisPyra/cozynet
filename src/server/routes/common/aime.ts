@@ -1,10 +1,10 @@
 import { Hono } from "hono"
 import { HTTPException } from "hono/http-exception"
-import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import type { RowDataPacket } from "mysql2"
 
+import { DB, UserRole } from "@/app/shared/types"
 import { db } from "@/server/db"
 import { rethrowWithMessage } from "@/server/utils/error"
-import { DB, UserRole } from "@/app/shared/types"
 
 const AimeCardRoute = new Hono()
 	.get("/aime_card", async c => {
