@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { CreditCard, Eye, EyeOff, Pencil, Plus, X } from "lucide-react"
+import { CreditCard, Eye, EyeOff, Pencil, Plus, Shuffle, X } from "lucide-react"
 import { toast } from "sonner"
 
 import Header from "@/app/shared/components/common/header"
@@ -85,26 +85,6 @@ const CardsPage = () => {
 		}
 	})
 
-	const setDefaultCard = useMutation({
-		mutationFn: async (accessCode: string) => {
-			const response = await api.users.cards["set-default"].$post({
-				json: { accessCode }
-			})
-			if (!response.ok) {
-				const error = (await response.json()) as { message?: string }
-				throw new Error(error.message || "Failed to set default card")
-			}
-			return await response.json()
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["user", "cards"] })
-			toast.success("Default card set successfully")
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || "Failed to set default card")
-		}
-	})
-
 	const toggleCardVisibility = (cardId: number) => {
 		setHiddenCards(prev => ({
 			...prev,
@@ -122,6 +102,12 @@ const CardsPage = () => {
 	const copyToClipboard = (text: string) => {
 		navigator.clipboard.writeText(text)
 		toast.success("Copied to clipboard")
+	}
+
+	const generateAccessCode = () => {
+		// Generate a random 20-digit access code
+		const digits = Array.from({ length: 20 }, () => Math.floor(Math.random() * 10)).join("")
+		setBindAccessCode(digits)
 	}
 
 	const cards = cardsData?.cards || []
@@ -268,17 +254,6 @@ const CardsPage = () => {
 											)}
 										</div>
 
-										<div className="flex gap-2">
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={() => setDefaultCard.mutate(fullCode)}
-												disabled={setDefaultCard.isPending}
-											>
-												Set as Default
-											</Button>
-										</div>
-
 										{/* Unbind Dialog */}
 										<Dialog
 											open={unbindDialogOpen === card.id}
@@ -360,12 +335,24 @@ const CardsPage = () => {
 										</DialogDescription>
 									</DialogHeader>
 									<div className="space-y-4">
-										<Input
-											value={bindAccessCode}
-											onChange={e => setBindAccessCode(e.target.value)}
-											placeholder="Enter 20-digit access code"
-											maxLength={20}
-										/>
+										<div className="flex gap-2">
+											<Input
+												value={bindAccessCode}
+												onChange={e => {
+													const value = e.target.value
+													if (/^\d{0,20}$/.test(value)) {
+														setBindAccessCode(value)
+													}
+												}}
+												placeholder="Enter 20-digit access code"
+												maxLength={20}
+												inputMode="numeric"
+												className="flex-1"
+											/>
+											<Button type="button" variant="outline" onClick={generateAccessCode} className="shrink-0">
+												<Shuffle className="h-4 w-4" />
+											</Button>
+										</div>
 									</div>
 									<DialogFooter>
 										<Button variant="outline" onClick={() => setBindDialogOpen(false)}>
