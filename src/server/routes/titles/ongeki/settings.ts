@@ -34,7 +34,7 @@ const OngekiSettingsRoutes = new Hono()
 
 			const [results] = await db.execute<(VersionResult & RowDataPacket)[]>(
 				`SELECT value
-       FROM daphnis_user_option
+       FROM cozynet_user_option
        WHERE user = ? AND \`key\` = 'ongeki_version'`,
 				[userId]
 			)
@@ -66,7 +66,7 @@ const OngekiSettingsRoutes = new Hono()
 
 				const [result] = await conn.execute<ResultSetHeader>(
 					`
-        UPDATE daphnis_user_option
+        UPDATE cozynet_user_option
         SET value = ?
         WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.OngekiVersion}'
         `,

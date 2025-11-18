@@ -61,7 +61,7 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async c => {
 				judgeGuilty, judgeAttack, judgeJustice, judgeCritical, judgeHeaven,
 				isFullCombo, isAllJustice, isClear, s.categoryId AS skillCategoryId
 			FROM chuni_score_playlog p
-			LEFT JOIN daphnis_static_skill s ON s.skillId = p.skillId
+			LEFT JOIN cozynet_static_skill s ON s.skillId = p.skillId
 			WHERE user = ?
 			GROUP BY p.id`,
 			[userId]

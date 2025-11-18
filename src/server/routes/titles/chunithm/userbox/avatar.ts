@@ -54,7 +54,7 @@ async function getCurrentAvatarItems(userId: number, version: number): Promise<A
 		AND cpd.version = ?
 		LEFT JOIN chuni_static_opts cso
 			ON csa.opt = cso.id
-		LEFT JOIN daphnis_web_permissions dwp
+		LEFT JOIN cozynet_web_permissions dwp
 			ON dwp.user = ?
 		WHERE csa.version = ?
 AND (
@@ -224,7 +224,7 @@ const routes = new Hono()
 				AND cpd.version = ?
 				LEFT JOIN chuni_static_opts cso
 				ON csa.opt = cso.id
-				LEFT JOIN daphnis_web_permissions dwp
+				LEFT JOIN cozynet_web_permissions dwp
 				ON dwp.user = ?
 				WHERE csa.version = ?
 				AND (
@@ -347,7 +347,7 @@ const routes = new Hono()
 				AND cii.user = ?
 				LEFT JOIN chuni_static_opts cso
 				ON csa.opt = cso.id
-				LEFT JOIN daphnis_web_permissions dwp
+				LEFT JOIN cozynet_web_permissions dwp
 				ON dwp.user = ?
 				WHERE csa.avatarAccessoryId = ?
 				AND csa.version = ?

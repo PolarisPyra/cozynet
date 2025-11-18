@@ -28,7 +28,7 @@ async function getCurrentCharacter(userId: number, version: number): Promise<Cha
             END AS locked,
             1 as equipped
         FROM chuni_profile_data cpd
-        JOIN daphnis_static_character dsn
+        JOIN cozynet_static_character dsn
             ON dsn.characterId = cpd.characterId
             AND dsn.version = ?
         LEFT JOIN chuni_item_character cic
@@ -36,7 +36,7 @@ async function getCurrentCharacter(userId: number, version: number): Promise<Cha
             AND cic.user = ?
         LEFT JOIN chuni_static_opts cso
             ON dsn.opt = cso.id
-        LEFT JOIN daphnis_web_permissions dwp
+        LEFT JOIN cozynet_web_permissions dwp
             ON dwp.user = ?
         WHERE cpd.user = ?
             AND cpd.version = ?
@@ -150,7 +150,7 @@ const routes = new Hono()
                         ELSE 0
                     END AS equipped,
                     COUNT(*) OVER() AS total_count
-                FROM daphnis_static_character dsn
+                FROM cozynet_static_character dsn
                 LEFT JOIN chuni_item_character cic
                     ON cic.characterId = dsn.characterId
                     AND cic.user = ?
@@ -160,7 +160,7 @@ const routes = new Hono()
                     AND cpd.version = ?
                 LEFT JOIN chuni_static_opts cso
                     ON dsn.opt = cso.id
-                LEFT JOIN daphnis_web_permissions dwp
+                LEFT JOIN cozynet_web_permissions dwp
                     ON dwp.user = ?
                 ${whereClause}
                     AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)

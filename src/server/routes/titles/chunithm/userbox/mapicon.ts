@@ -26,7 +26,7 @@ async function getCurrentMapicon(userId: number, version: number): Promise<Mapic
               ELSE 0
           END AS locked
         FROM chuni_profile_data cpd
-        JOIN daphnis_static_map_icon dsm 
+        JOIN cozynet_static_map_icon dsm 
             ON dsm.mapIconId = cpd.mapIconId
         LEFT JOIN chuni_item_item cii 
             ON cii.itemId = dsm.mapIconId 
@@ -34,7 +34,7 @@ async function getCurrentMapicon(userId: number, version: number): Promise<Mapic
           AND cii.itemKind = 8
         LEFT JOIN chuni_static_opts cso
             ON dsm.opt = cso.id
-        LEFT JOIN daphnis_web_permissions dwp
+        LEFT JOIN cozynet_web_permissions dwp
             ON dwp.user = ?
         WHERE cpd.user = ? 
           AND cpd.version = ?
@@ -148,7 +148,7 @@ const routes = new Hono()
 						ELSE 0
 					END AS equipped,
 					COUNT(*) OVER() AS total_count
-				FROM daphnis_static_map_icon dsm
+				FROM cozynet_static_map_icon dsm
 				LEFT JOIN chuni_item_item cii 
 					ON cii.itemId = dsm.mapIconId 
 				AND cii.user = ?
@@ -159,7 +159,7 @@ const routes = new Hono()
 				AND cpd.mapIconId = dsm.mapIconId
 				LEFT JOIN chuni_static_opts cso
 					ON dsm.opt = cso.id
-				LEFT JOIN daphnis_web_permissions dwp
+				LEFT JOIN cozynet_web_permissions dwp
 					ON dwp.user = ?
 				${whereClause}
 					AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)

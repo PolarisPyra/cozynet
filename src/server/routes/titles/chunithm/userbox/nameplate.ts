@@ -28,7 +28,7 @@ async function getCurrentNameplate(userId: number, version: number): Promise<Nam
             END AS locked,
             1 as equipped
         FROM chuni_profile_data cpd
-        JOIN daphnis_static_nameplate dsn
+        JOIN cozynet_static_nameplate dsn
             ON dsn.nameplateId = cpd.nameplateId
             AND dsn.version = ?
         LEFT JOIN chuni_item_item cii
@@ -37,7 +37,7 @@ async function getCurrentNameplate(userId: number, version: number): Promise<Nam
             AND cii.itemKind = 1
         LEFT JOIN chuni_static_opts cso
             ON dsn.opt = cso.id
-        LEFT JOIN daphnis_web_permissions dwp
+        LEFT JOIN cozynet_web_permissions dwp
             ON dwp.user = ?
         WHERE cpd.user = ?
             AND cpd.version = ?
@@ -148,7 +148,7 @@ const routes = new Hono()
                         ELSE 0
                     END AS equipped,
                     COUNT(*) OVER() AS total_count
-                FROM daphnis_static_nameplate dsn
+                FROM cozynet_static_nameplate dsn
                 LEFT JOIN chuni_item_item cii
                     ON cii.itemId = dsn.nameplateId
                     AND cii.user = ?
@@ -159,7 +159,7 @@ const routes = new Hono()
                     AND cpd.version = ?
                 LEFT JOIN chuni_static_opts cso
                     ON dsn.opt = cso.id
-                LEFT JOIN daphnis_web_permissions dwp
+                LEFT JOIN cozynet_web_permissions dwp
                     ON dwp.user = ?
                 ${whereClause}
                     AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
