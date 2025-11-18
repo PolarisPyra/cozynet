@@ -88,7 +88,7 @@ const CardsPage = () => {
 	const toggleCardVisibility = (cardId: number) => {
 		setHiddenCards(prev => ({
 			...prev,
-			[cardId]: !prev[cardId]
+			[cardId]: !(prev[cardId] ?? true)
 		}))
 	}
 
@@ -142,17 +142,19 @@ const CardsPage = () => {
 									<div key={card.id} className="bg-card text-card-foreground rounded-sm border p-4">
 										<div className="mb-3 flex items-center justify-between">
 											<div className="flex items-center gap-2">
-												<CreditCard className="h-5 w-5 text-blue-500" />
-												<span className="font-semibold">Card #{card.id}</span>
+												<CreditCard className="h-5 w-5 text-white" />
+												<span className="font-semibold">{card.id === 1 ? "Primary" : `Card #${card.id}`}</span>
 											</div>
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => setUnbindDialogOpen(card.id)}
-												className="text-destructive hover:text-destructive"
-											>
-												<X className="h-4 w-4" />
-											</Button>
+											{card.id !== 1 && (
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => setUnbindDialogOpen(card.id)}
+													className="text-destructive hover:text-destructive"
+												>
+													<X className="h-4 w-4" />
+												</Button>
+											)}
 										</div>
 
 										<div className="mb-3 space-y-2">
