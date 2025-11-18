@@ -191,35 +191,6 @@ const KeychipPage = () => {
 												<div className="flex items-center gap-2">
 													<Gamepad className="h-5 w-5" />
 													<span className="font-semibold">{placeNameDisplay}</span>
-													<Popover
-														open={hoveredIcon?.keychipId === keychip.id && hoveredIcon?.type === "edit"}
-														onOpenChange={() => {}}
-													>
-														<PopoverTrigger asChild>
-															<Button
-																variant="ghost"
-																size="sm"
-																onClick={() => {
-																	setPlaceName(placeNameDisplay)
-																	setRenameDialogOpen(keychip.id)
-																}}
-																onMouseEnter={() => setHoveredIcon({ keychipId: keychip.id, type: "edit" })}
-																onMouseLeave={() => setHoveredIcon(null)}
-																onBlur={e => e.currentTarget.blur()}
-																className="h-6 w-6 p-0 focus-visible:ring-0 focus-visible:outline-none"
-															>
-																<Pencil className="h-3.5 w-3.5" />
-															</Button>
-														</PopoverTrigger>
-														<PopoverContent
-															className="w-auto p-2 text-xs"
-															side="top"
-															onMouseEnter={() => setHoveredIcon({ keychipId: keychip.id, type: "edit" })}
-															onMouseLeave={() => setHoveredIcon(null)}
-														>
-															Rename keychip
-														</PopoverContent>
-													</Popover>
 												</div>
 												<Button
 													variant="ghost"
@@ -320,7 +291,7 @@ const KeychipPage = () => {
 														onMouseEnter={() => setHoveredIcon({ keychipId: keychip.id, type: "edit" })}
 														onMouseLeave={() => setHoveredIcon(null)}
 													>
-														Rename keychip
+														Rename arcade
 													</PopoverContent>
 												</Popover>
 											</div>
