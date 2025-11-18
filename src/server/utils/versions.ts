@@ -49,7 +49,7 @@ export const getUserGameVersions = async (userId: number, conn: PoolConnection):
 		const [rows] = await conn.execute<(DB.DaphnisUserOption & RowDataPacket)[]>(
 			`
                 SELECT \`key\`, value
-                FROM daphnis_user_option
+                FROM cozynet_user_option
                 WHERE user = ?
                     AND \`key\` IN (
                         ${versionKeys.map(key => `'${key}'`).join(",")}
@@ -65,7 +65,7 @@ export const getUserGameVersions = async (userId: number, conn: PoolConnection):
 		for (const key of missingVersionKeys) {
 			const version = await getInitVersion(userId, key, conn)
 			rows.push({ key, value: version } as DB.DaphnisUserOption & RowDataPacket)
-			await conn.execute(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
+			await conn.execute(`INSERT INTO cozynet_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 				userId,
 				key,
 				version

@@ -28,7 +28,7 @@ const ChunithmSettingsRoutes = new Hono()
 
 				const [result] = await conn.execute<ResultSetHeader>(
 					`
-						UPDATE daphnis_user_option
+						UPDATE cozynet_user_option
 						SET value = ?
 						WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.ChunithmVersion}'
 					`,

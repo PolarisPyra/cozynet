@@ -45,14 +45,14 @@ const routes = new Hono()
 						ELSE null
 					END as slot,
 					FALSE as locked
-                FROM daphnis_static_trophy dst
+                FROM cozynet_static_trophy dst
                 INNER JOIN chuni_profile_data cpd ON cpd.user = ? AND (
 						cpd.trophyId = dst.trophyId
 					OR  cpd.trophyIdSub1 = dst.trophyId
 					OR  cpd.trophyIdSub2 = dst.trophyId
 				)
                 LEFT JOIN chuni_static_opts cso ON dst.opt = cso.id
-                LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
+                LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
                 WHERE cpd.version = ?
 				  AND dst.version = ?
 				  AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
@@ -183,7 +183,7 @@ const routes = new Hono()
                             ELSE 0
                         END AS equipped,
                         COUNT(*) OVER() AS total_count
-                    FROM daphnis_static_trophy dst
+                    FROM cozynet_static_trophy dst
                     LEFT JOIN chuni_item_item cii
                         ON cii.itemId = dst.trophyId
                         AND cii.user = ?
@@ -193,7 +193,7 @@ const routes = new Hono()
                         AND cpd.version = ?
                         AND cpd.trophyId = dst.trophyId
                     LEFT JOIN chuni_static_opts cso ON dst.opt = cso.id
-                    LEFT JOIN daphnis_web_permissions dwp ON dwp.user = ?
+                    LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
                     WHERE dst.version = ?
                         AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)${additionalWhere}
                     ORDER BY

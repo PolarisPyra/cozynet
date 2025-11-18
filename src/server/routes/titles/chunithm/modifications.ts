@@ -23,7 +23,7 @@ const ChunithmModsRoutes = new Hono()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
-					UPDATE daphnis_user_option
+					UPDATE cozynet_user_option
              		SET value = ?
 		    		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.UnlockAllSongs}'
 				`,
@@ -31,7 +31,7 @@ const ChunithmModsRoutes = new Hono()
 				)
 
 				if (update.affectedRows === 0) {
-					await db.execute<ResultSetHeader>(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
+					await db.execute<ResultSetHeader>(`INSERT INTO cozynet_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 						userId,
 						DaphnisUserOptionKey.UnlockAllSongs,
 						value
@@ -59,7 +59,7 @@ const ChunithmModsRoutes = new Hono()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
-					UPDATE daphnis_user_option
+					UPDATE cozynet_user_option
              		SET value = ?
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.UnlockAllSongs}'
 				`,
@@ -67,7 +67,7 @@ const ChunithmModsRoutes = new Hono()
 				)
 
 				if (update.affectedRows === 0) {
-					await db.execute<ResultSetHeader>(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
+					await db.execute<ResultSetHeader>(`INSERT INTO cozynet_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 						userId,
 						DaphnisUserOptionKey.UnlockAllSongs,
 						value
@@ -95,7 +95,7 @@ const ChunithmModsRoutes = new Hono()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
-					UPDATE daphnis_user_option
+					UPDATE cozynet_user_option
              		SET value = ?
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.MaxTickets}'
 				`,
@@ -103,7 +103,7 @@ const ChunithmModsRoutes = new Hono()
 				)
 
 				if (update.affectedRows === 0) {
-					await db.execute<ResultSetHeader>(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
+					await db.execute<ResultSetHeader>(`INSERT INTO cozynet_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 						userId,
 						DaphnisUserOptionKey.MaxTickets,
 						value
@@ -131,7 +131,7 @@ const ChunithmModsRoutes = new Hono()
 
 				const [update] = await db.execute<ResultSetHeader>(
 					`
-					UPDATE daphnis_user_option
+					UPDATE cozynet_user_option
              		SET value = ?
              		WHERE user = ? AND \`key\` = '${DaphnisUserOptionKey.MaxTickets}'
 				`,
@@ -139,7 +139,7 @@ const ChunithmModsRoutes = new Hono()
 				)
 
 				if (update.affectedRows === 0) {
-					await db.execute<ResultSetHeader>(`INSERT INTO daphnis_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
+					await db.execute<ResultSetHeader>(`INSERT INTO cozynet_user_option (user, \`key\`, value) VALUES (?, ?, ?)`, [
 						userId,
 						DaphnisUserOptionKey.MaxTickets,
 						value

@@ -2115,7 +2115,7 @@ export enum DaphnisUserOptionVersionKey {
 }
 
 /**
- * The set of keys for daphnis_user_option table
+ * The set of keys for cozynet_user_option table
  */
 export enum DaphnisUserOptionKey {
 	OngekiVersion = DaphnisUserOptionVersionKey.Ongeki,

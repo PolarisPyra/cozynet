@@ -87,7 +87,7 @@ const ChunithmProfileRoutes = new Hono()
 							name,
 							categoryName,
 							ROW_NUMBER() OVER (PARTITION BY skillId ORDER BY version DESC) as rn
-						FROM daphnis_static_skill
+						FROM cozynet_static_skill
 						WHERE skillId IS NOT NULL
 					) ranked
 					WHERE rn = 1

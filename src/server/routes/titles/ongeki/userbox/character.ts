@@ -28,7 +28,7 @@ async function getCurrentCharacter(userId: number, version: number): Promise<Cha
             END AS locked,
             1 as equipped
         FROM ongeki_profile_data opd
-        JOIN daphnis_static_character dsc
+        JOIN cozynet_static_character dsc
             ON dsc.characterId = opd.characterId
             AND dsc.version = ?
         LEFT JOIN ongeki_user_character ouc
@@ -145,7 +145,7 @@ const routes = new Hono()
                         ELSE 0
                     END AS equipped,
                     COUNT(*) OVER() AS total_count
-                FROM daphnis_static_character dsc
+                FROM cozynet_static_character dsc
                 LEFT JOIN ongeki_user_character ouc
                     ON ouc.characterId = dsc.characterId
                     AND ouc.user = ?
