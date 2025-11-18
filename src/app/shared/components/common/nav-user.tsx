@@ -113,7 +113,7 @@ export function NavUser({
 								onClick={() => navigate("/keychip")}
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 							>
-								<Gamepad />
+								<Gamepad className="text-primary" />
 								Keychip Management
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
