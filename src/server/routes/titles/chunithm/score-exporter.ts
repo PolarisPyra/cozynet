@@ -186,4 +186,4 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async c => {
 	}
 })
 
-export { ChunithmKamaitachiRoutes }
+export { ChunithmKamaitachiRoutes as ChunithmScoreExporterRoutes }

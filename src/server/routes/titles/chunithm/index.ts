@@ -1,13 +1,12 @@
 import { Hono } from "hono"
 
 import { FavoritesRoutes } from "./favorites"
-import { ChunithmKamaitachiRoutes } from "./kamaitachi"
+import { ChunithmScoreExporterRoutes } from "./score-exporter"
 import { ChunithmLeaderboardRoutes } from "./leaderboard"
 import { ChunithmModsRoutes } from "./modifications"
 import { ChunithmOptionsRoutes } from "./options"
 import { ChunithmProfileRoutes } from "./profile"
 import { UserRatingFramesRoutes } from "./rating"
-import { ChunithmReiwaRoutes } from "./reiwa"
 import { RivalsRoutes } from "./rivals"
 import { ChunithmScoreLeaderboardRoutes } from "./score-leaderboard"
 import { ChunithmSettingsRoutes } from "./settings"
@@ -20,11 +19,10 @@ export const AllChunithmRoutes = new Hono()
 	.route("static", ChunithmStaticMusic)
 	.route("profile", ChunithmProfileRoutes)
 	.route("favorites", FavoritesRoutes)
-	.route("kamaitachi", ChunithmKamaitachiRoutes)
+	.route("scoreExporter", ChunithmScoreExporterRoutes)
 	.route("leaderboard", ChunithmLeaderboardRoutes)
 	.route("score-leaderboard", ChunithmScoreLeaderboardRoutes)
 	.route("rating", UserRatingFramesRoutes)
-	.route("reiwa", ChunithmReiwaRoutes)
 	.route("rivals", RivalsRoutes)
 	.route("cozynet", ChunithmSettingsRoutes)
 	.route("options", ChunithmOptionsRoutes)

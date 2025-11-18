@@ -34,7 +34,7 @@ import {
 	useUserRatingBaseNewList,
 	useUserRatingBaseNextList
 } from "./use-rating"
-import { useReiwaExport, useReiwaRefreshExport } from "./use-reiwa"
+import { useOngekiScoreExporter } from "./use-score-exporter"
 import { useOngekiRatingColor } from "./use-rating-colors"
 import { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "./use-rivals"
 import { useOngekiScores } from "./use-scores"
@@ -58,8 +58,7 @@ export {
 	useScoreFilters,
 	getDefaultScoreFilterValues,
 	useLeaderboard,
-	useReiwaExport,
-	useReiwaRefreshExport,
+	useOngekiScoreExporter,
 	useAddRival,
 	useRemoveRival,
 	useRivalCount,

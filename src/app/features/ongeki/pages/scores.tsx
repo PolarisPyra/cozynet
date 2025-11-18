@@ -1,13 +1,16 @@
 import { useState } from "react"
+import { toast } from "sonner"
 
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
 import Spinner from "@/app/shared/components/common/spinner"
+import { Button } from "@/app/shared/components/ui/button"
 import { OngekiScoreInfoCard } from "@/app/features/ongeki/components/score-info-card"
 import {
 	type MusicFilterValues,
 	getDefaultScoreFilterValues,
+	useOngekiScoreExporter,
 	useOngekiScoreFiltering,
 	useOngekiVersion,
 	useScoreFilters
@@ -25,6 +28,7 @@ export function OngekiScorePage() {
 		searchQuery,
 		filterValues
 	})
+	const { data: exportData, isLoading: isLoadingExport, refetch: refetchExport } = useOngekiScoreExporter()
 
 	const handleFilterChange = (identifier: string, value: string) => {
 		setFilterValues(prev => ({
@@ -35,6 +39,38 @@ export function OngekiScorePage() {
 
 	const handleClearAll = () => {
 		setFilterValues(getDefaultScoreFilterValues())
+	}
+
+	const handleExportScores = async () => {
+		try {
+			// Fetch data if not already loaded
+			let data = exportData
+			if (!data) {
+				const result = await refetchExport()
+				data = result.data
+			}
+
+			if (!data) {
+				toast.error("No score data available")
+				return
+			}
+
+			const blob = new Blob([JSON.stringify(data, null, 2)], {
+				type: "application/json"
+			})
+			const url = URL.createObjectURL(blob)
+			const link = document.createElement("a")
+			link.href = url
+			link.download = "ongeki_scores_export.json"
+			document.body.appendChild(link)
+			link.click()
+			document.body.removeChild(link)
+			URL.revokeObjectURL(url)
+
+			toast.success("Successfully exported scores")
+		} catch (error) {
+			toast.error("Failed to export scores")
+		}
 	}
 
 	const searchItems = filteredScores.map(score => ({
@@ -60,13 +96,16 @@ export function OngekiScorePage() {
 			/>
 			<Body>
 				<FilterArea>
-					<div className="flex justify-start">
+					<div className="flex justify-between items-center">
 						<MultiFilter
 							filters={filters}
 							filterValues={filterValues}
 							onFilterChange={handleFilterChange}
 							onClearAll={handleClearAll}
 						/>
+						<Button onClick={handleExportScores} variant="custom" disabled={isLoadingExport}>
+							{isLoadingExport ? "Exporting..." : "Export Scores"}
+						</Button>
 					</div>
 				</FilterArea>
 				<ResponsiveGrid

@@ -1,7 +1,6 @@
 import React from "react"
 
 import ChunithmGameOptions from "@/app/features/chunithm/components/settings/game-options"
-import JsonExport from "@/app/features/chunithm/components/settings/json-export"
 import SongManagement from "@/app/features/chunithm/components/settings/song-management"
 import TeamManagement from "@/app/features/chunithm/components/settings/team-management"
 import TicketManagement from "@/app/features/chunithm/components/settings/ticket-management"
@@ -25,7 +24,6 @@ const ChunithmSettingsPage: React.FC<GameSettingsProps> = () => {
 				<TeamManagement />
 				<SongManagement />
 				<TicketManagement />
-				<JsonExport />
 			</Body>
 		</Container>
 	)

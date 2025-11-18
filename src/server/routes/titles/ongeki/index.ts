@@ -1,13 +1,13 @@
 import { Hono } from "hono"
 
 import { OngekiCardsRoutes } from "./cards"
+import { OngekiScoreExporterRoutes } from "./score-exporter"
 import { OngekiLeaderboardRoutes } from "./leaderboard"
 import { OngekiModsRoutes } from "./modifications"
 import { OngekiStaticMusic } from "./music"
 import { NewUserRatingFramesRoutes } from "./new-rating"
 import { OngekiProfileRoutes } from "./profile"
 import { OngekiRatingRoutes } from "./rating"
-import { OngekiReiwaRoutes } from "./reiwa"
 import { OngekiRivalsRoutes } from "./rivals"
 import { OngekiScoreLeaderboardRoutes } from "./score-leaderboard"
 import { OngekiSettingsRoutes } from "./settings"
@@ -26,7 +26,7 @@ export const AllOngekiRoutes = new Hono()
 
 	.route("rivals", OngekiRivalsRoutes)
 	.route("mods", OngekiModsRoutes)
-	.route("reiwa", OngekiReiwaRoutes)
+	.route("scoreExporter", OngekiScoreExporterRoutes)
 	.route("cards", OngekiCardsRoutes)
 	.route("username", UsernameRoutes)
 	.route("userbox", UserBoxRoutes)
