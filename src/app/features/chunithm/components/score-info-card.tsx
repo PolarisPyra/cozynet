@@ -1,21 +1,34 @@
-import { Star } from "lucide-react"
+import { useState } from "react"
+
+import { MoreHorizontal, Star } from "lucide-react"
 
 import { ChunithmAchievementBadges } from "@/app/features/chunithm/components/achievement-badges"
+import { useChunithmVersion } from "@/app/features/chunithm/hooks"
+import { useScoreLeaderboard } from "@/app/features/chunithm/hooks/use-score-leaderboard"
+import { CardImage } from "@/app/shared/components/common/card-image"
+import { Leaderboard } from "@/app/shared/components/leaderboard"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
-import { useChunithmVersion } from "@/app/features/chunithm/hooks"
-import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
-import { CDN } from "@/app/shared/utils/constants"
+import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { ChunithmPlaylog } from "@/app/shared/types"
-import { chunithmBadgeColors, formatSqlDateToLocalParts, getChunithmGrade, levelToStars } from "@/app/shared/utils/chunithm"
+import {
+	calculateChunithmRating,
+	chunithmBadgeColors,
+	formatSqlDateToLocalParts,
+	getChunithmGrade,
+	levelToStars
+} from "@/app/shared/utils/chunithm"
+import { CDN } from "@/app/shared/utils/constants"
+import { formatLevel } from "@/app/shared/utils/format-level"
 import { getChunithmLogo } from "@/app/shared/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"
 
 export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, className = "" }: ChunithmScoreInfoCardProps) {
-	const { imageLoaded, onImageLoad } = useImageLoading()
 	const version = useChunithmVersion()
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const currentUser = useCurrentUser()
 
 	const appearedLogo = getChunithmLogo.getLogo(score.songVersion)
 	const scoreVersionLogo = getChunithmLogo.getLogo(score.version)
@@ -23,10 +36,12 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 	const isWorldsEnd = score.chartId === 5
 	const starCount = levelToStars(score.level)
 
-	const formatLevel = (level?: number | null) => {
-		if (level == null) return "?"
-		return Number.isFinite(level) ? level.toFixed(1) : "?"
-	}
+	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
+		score.musicId ?? 0,
+		score.chartId ?? 0,
+		100,
+		isDialogOpen
+	)
 
 	return (
 		<div
@@ -34,17 +49,12 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 		>
 			<div className="flex items-start justify-between gap-3">
 				<div className="flex min-w-0 flex-1 items-start gap-3">
-					<div className="relative h-16 w-16 flex-shrink-0">
-						{!imageLoaded && <Skeleton className="absolute inset-0 rounded-sm" />}
-						<img
-							width={64}
-							height={64}
-							src={`${CDN}/chunithm/jacket/${score.jacketPath}`}
-							className="h-16 w-16 rounded-sm object-cover"
-							onLoad={onImageLoad}
-							style={{ display: imageLoaded ? "block" : "none" }}
-						/>
-					</div>
+					<CardImage
+						src={`${CDN}/chunithm/jacket/${score.jacketPath}`}
+						alt={score.title ?? ""}
+						width={64}
+						height={64}
+					/>
 					<div className="min-w-0 flex-1">
 						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
 							{score.title}
@@ -148,8 +158,34 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 							<img src={appearedLogo} alt="Version Logo" className="max-h-5 w-auto object-contain" />
 						</Badge>
 					)}
+					<Badge
+						variant="secondary"
+						className="hover:bg-muted h-6 cursor-pointer rounded-sm px-1.5"
+						onClick={() => setIsDialogOpen(true)}
+					>
+						<MoreHorizontal className="h-4 w-4" />
+					</Badge>
 				</div>
 			</div>
+
+			<Leaderboard
+				open={isDialogOpen}
+				onOpenChange={setIsDialogOpen}
+				title="Song Leaderboard"
+				description={score.title}
+				isLoading={isLoadingLeaderboard}
+				chartLevel={leaderboardData?.chart?.level}
+				chartBadgeClassName={chunithmBadgeColors(score.chartId ?? 0)}
+				totalScores={leaderboardData?.total ?? 0}
+				entries={leaderboardData?.leaderboard ?? []}
+				currentUserId={currentUser.id}
+				renderRating={entry => {
+					const level = leaderboardData?.chart?.level ?? 0
+					if (level === 0 || !version) return null
+					const entryRating = calculateChunithmRating(level, entry.score) / 100
+					return <ChunithmRatingColors rating={entryRating} version={version} />
+				}}
+			/>
 		</div>
 	)
 }

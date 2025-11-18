@@ -1,12 +1,24 @@
+import { useState } from "react"
+
+import { MoreHorizontal } from "lucide-react"
+
 import { OngekiAchievementBadges } from "@/app/features/ongeki/components/achievement-badges"
+import { useScoreLeaderboard } from "@/app/features/ongeki/hooks/use-score-leaderboard"
+import { useOngekiScoreRating } from "@/app/features/ongeki/hooks/use-score-rating"
+import { CardImage } from "@/app/shared/components/common/card-image"
+import { Leaderboard } from "@/app/shared/components/leaderboard"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
-import { Skeleton } from "@/app/shared/components/ui/skeleton"
-import { useOngekiScoreRating } from "@/app/features/ongeki/hooks/use-score-rating"
-import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
-import { CDN } from "@/app/shared/utils/constants"
+import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { OngekiPlaylog } from "@/app/shared/types"
-import { formatOngekiScorePlaylogDate } from "@/app/shared/utils/ongeki"
+import { CDN } from "@/app/shared/utils/constants"
+import { formatLevel } from "@/app/shared/utils/format-level"
+import {
+	OngekiGekForceRating,
+	OngekiRating,
+	formatOngekiScorePlaylogDate,
+	ongekiBadgeColors
+} from "@/app/shared/utils/ongeki"
 
 import { OngekiRatingColors } from "./rating-colors"
 
@@ -55,7 +67,8 @@ export function OngekiScoreInfoCard({
 	className = "",
 	ongekiVersion
 }: OngekiScoreInfoCardProps) {
-	const { imageLoaded, onImageLoad } = useImageLoading()
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const currentUser = useCurrentUser()
 	const { calculatedRating, isRefresh } = useOngekiScoreRating({
 		playerRating: score.playerRating,
 		techScore: score.techScore,
@@ -66,10 +79,12 @@ export function OngekiScoreInfoCard({
 		version: ongekiVersion
 	})
 
-	const formatLevel = (level?: number | null) => {
-		if (level == null) return "?"
-		return Number.isFinite(level) ? level.toFixed(1) : "?"
-	}
+	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
+		score.musicId ?? 0,
+		score.chartId ?? 0,
+		100,
+		isDialogOpen
+	)
 
 	return (
 		<div
@@ -78,18 +93,7 @@ export function OngekiScoreInfoCard({
 			<div className="flex flex-1 flex-col gap-3">
 				<div className="flex items-start justify-between gap-3">
 					<div className="flex min-w-0 flex-1 items-start gap-3">
-						<div className="relative h-16 w-16 flex-shrink-0">
-							{!imageLoaded && <Skeleton className="absolute inset-0 rounded-sm" />}
-							<img
-								width={72}
-								height={72}
-								src={`${CDN}/ongeki/jacket/${score.jacketPath}`}
-								className="h-16 w-16 flex-shrink-0 rounded-sm object-cover"
-								alt={score.title}
-								onLoad={onImageLoad}
-								style={{ display: imageLoaded ? "block" : "none" }}
-							/>
-						</div>
+						<CardImage src={`${CDN}/ongeki/jacket/${score.jacketPath}`} alt={score.title} width={72} height={72} />
 						<div className="min-w-0 flex-1">
 							<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
 								{score.title}
@@ -146,41 +150,75 @@ export function OngekiScoreInfoCard({
 				</div>
 			</div>
 
-			{score.userPlayDate ? (
-				<>
-					<Separator />
-					<div className="text-muted-foreground flex flex-col gap-2 text-xs font-medium md:flex-row md:items-center md:justify-between">
-						<div className="flex flex-wrap items-center gap-1.5">
+			<Separator />
+			<div className="text-muted-foreground flex flex-col gap-2 text-xs font-medium md:flex-row md:items-center md:justify-between">
+				<div className="flex flex-wrap items-center gap-1.5">
+					{score.userPlayDate ? (
+						<>
 							<Badge variant="secondary" className="h-6 rounded-sm whitespace-nowrap">
 								{formatOngekiScorePlaylogDate(score.userPlayDate).date}
 							</Badge>
 							<Badge variant="secondary" className="h-6 rounded-sm whitespace-nowrap">
 								{formatOngekiScorePlaylogDate(score.userPlayDate).time}
 							</Badge>
-						</div>
-						<div className="flex flex-wrap items-center gap-2 md:justify-end">
-							{score.isTechNewRecord === 1 && (
-								<Badge
-									variant="secondary"
-									className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase"
-								>
-									New Score Record
-								</Badge>
-							)}
-							{score.isBattleNewRecord === 1 && (
-								<Badge
-									variant="secondary"
-									className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase"
-								>
-									New Battle Record
-								</Badge>
-							)}
-						</div>
-					</div>
-				</>
-			) : (
-				<div className="h-[52px]" />
-			)}
+						</>
+					) : (
+						<span>—</span>
+					)}
+				</div>
+				<div className="flex flex-wrap items-center gap-2 md:justify-end">
+					{score.isTechNewRecord === 1 && (
+						<Badge
+							variant="secondary"
+							className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase"
+						>
+							New Score Record
+						</Badge>
+					)}
+					{score.isBattleNewRecord === 1 && (
+						<Badge
+							variant="secondary"
+							className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase"
+						>
+							New Battle Record
+						</Badge>
+					)}
+					<Badge
+						variant="secondary"
+						className="hover:bg-muted h-6 cursor-pointer rounded-sm px-1.5"
+						onClick={() => setIsDialogOpen(true)}
+					>
+						<MoreHorizontal className="h-4 w-4" />
+					</Badge>
+				</div>
+			</div>
+
+			<Leaderboard
+				open={isDialogOpen}
+				onOpenChange={setIsDialogOpen}
+				title="Song Leaderboard"
+				description={score.title}
+				isLoading={isLoadingLeaderboard}
+				chartLevel={leaderboardData?.chart?.level}
+				chartBadgeClassName={ongekiBadgeColors(score.chartId ?? 0)}
+				totalScores={leaderboardData?.total ?? 0}
+				entries={leaderboardData?.leaderboard ?? []}
+				currentUserId={currentUser.id}
+				renderRating={entry => {
+					const level = leaderboardData?.chart?.level ?? 0
+					if (level === 0) return null
+					const entryRating = isRefresh
+						? OngekiGekForceRating(
+								level,
+								entry.score,
+								entry.isFullCombo ?? 0,
+								entry.isAllBreak ?? 0,
+								entry.isFullBell ?? 0
+							) / 1000
+						: OngekiRating(level, entry.score) / 100
+					return <OngekiRatingColors rating={entryRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
+				}}
+			/>
 		</div>
 	)
 }

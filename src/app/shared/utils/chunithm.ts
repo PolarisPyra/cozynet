@@ -122,6 +122,24 @@ export const getChunithmGrade = (score: number): ChunithmGradeLevel => {
 	return matchingGrade?.grade ?? ChunithmGradeLevel.D
 }
 
+export const getChunithmGradeFromRank = (scoreRank: number): string => {
+	if (scoreRank === 0) return "D"
+	if (scoreRank === 1) return "C"
+	if (scoreRank === 2) return "B"
+	if (scoreRank === 3) return "BB"
+	if (scoreRank === 4) return "BBB"
+	if (scoreRank === 5) return "A"
+	if (scoreRank === 6) return "AA"
+	if (scoreRank === 7) return "AAA"
+	if (scoreRank === 8) return "S"
+	if (scoreRank === 9) return "S+"
+	if (scoreRank === 10) return "SS"
+	if (scoreRank === 11) return "SS+"
+	if (scoreRank === 12) return "SSS"
+	if (scoreRank > 12) return "SSS+"
+	return "D"
+}
+
 export const getDifficultyFromChunithmChart = (chartId: number): string => {
 	return DIFFICULTY_NAMES[chartId as ChunithmDifficulty] ?? "Unknown"
 }

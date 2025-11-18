@@ -38,6 +38,7 @@ const ChunithmRatingBaseList = React.lazy(() => import("./app/features/chunithm/
 const ChunithmRivals = React.lazy(() => import("./app/features/chunithm/pages/rivals"))
 const ChunithmScorePage = React.lazy(() => import("./app/features/chunithm/pages/scores"))
 const ChunithmSettingsPage = React.lazy(() => import("./app/features/chunithm/pages/settings"))
+const ChunithmSongLeaderboard = React.lazy(() => import("./app/features/chunithm/pages/song-leaderboard"))
 const ChunithmUserbox = React.lazy(() => import("./app/features/chunithm/pages/userbox"))
 const OngekiProfile = React.lazy(() => import("./app/features/ongeki/pages/profile"))
 const OngekiUserbox = React.lazy(() => import("./app/features/ongeki/pages/userbox"))
@@ -79,21 +80,22 @@ const app = (
 									<Route path="/chunithm/scores" element={<ChunithmScorePage />} />
 									<Route path="/chunithm/favorites" element={<ChunithmFavorites />} />
 									<Route path="/chunithm/leaderboard" element={<ChunithmLeaderboard />} />
+								<Route path="/chunithm/song-leaderboard/:musicId/:chartId" element={<ChunithmSongLeaderboard />} />
 									<Route path="/chunithm/allsongs" element={<ChunithmAllSongs />} />
 									<Route path="/chunithm/rivals" element={<ChunithmRivals />} />
 									<Route path="/chunithm/rating" element={<ChunithmRatingBaseList />} />
 									<Route path="/chunithm/profile" element={<ChunithmProfile />} />
 
-								<Route path="/ongeki/settings" element={<OngekiSettingsPage />} />
+									<Route path="/ongeki/settings" element={<OngekiSettingsPage />} />
 								<Route path="/ongeki/userbox" element={<OngekiUserbox />} />
-								<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
-								<Route path="/ongeki/scores" element={<OngekiScorePage />} />
-								<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
-								<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
-								<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
-								<Route path="/ongeki/rivals" element={<OngekiRivals />} />
-								<Route path="/ongeki/cards" element={<CardManagement />} />
-								<Route path="/ongeki/profile" element={<OngekiProfile />} />
+									<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
+									<Route path="/ongeki/scores" element={<OngekiScorePage />} />
+									<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
+									<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
+									<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
+									<Route path="/ongeki/rivals" element={<OngekiRivals />} />
+									<Route path="/ongeki/cards" element={<CardManagement />} />
+									<Route path="/ongeki/profile" element={<OngekiProfile />} />
 									<Route path="/maimaidx/scores" element={<MaimaiDxScorePage />} />
 									<Route path="/maimaidx/settings" element={<MaimaiDxSettings />} />
 									<Route path="/maimaidx/allsongs" element={<MaimaiDxAllSongs />} />
