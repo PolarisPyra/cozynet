@@ -12,7 +12,7 @@ import {
 } from "./filters"
 import { useAddFavorite, useFavorites, useRemoveFavorite } from "./use-favorites"
 import { useGameOptions, useUpdateGameOptions } from "./use-game-options"
-import { useKamaitachiExport } from "./use-kamatachi"
+import { useScoreExporter } from "./use-score-exporter"
 import { useLeaderboard } from "./use-leaderboard"
 import { useIsMobile } from "./use-mobile"
 import { useChunithmProfile } from "./use-profile"
@@ -24,7 +24,6 @@ import {
 	useUserRatingBaseNextList
 } from "./use-rating"
 import { useChunithmRatingColor } from "./use-rating-colors"
-import { useReiwaExport } from "./use-reiwa"
 import { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "./use-rivals"
 import { useChunithmScores } from "./use-scores"
 import { useChunithmSongs } from "./use-songs"
@@ -47,7 +46,7 @@ export {
 	getDefaultScoreFilterValues,
 	useGameOptions,
 	useUpdateGameOptions,
-	useKamaitachiExport,
+	useScoreExporter,
 	useLeaderboard,
 	useChunithmProfile,
 	useIsMobile,
@@ -56,7 +55,6 @@ export {
 	useUserRatingBaseList,
 	useUserRatingBaseNewList,
 	useUserRatingBaseNextList,
-	useReiwaExport,
 	useAddRival,
 	useRemoveRival,
 	useRivalCount,
