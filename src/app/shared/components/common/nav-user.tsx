@@ -1,6 +1,8 @@
-import { ChevronsUpDown, LogOut, SettingsIcon, UserCog } from "lucide-react"
+import { ChevronsUpDown, CreditCard, Gamepad, LayoutDashboard, LogOut, SettingsIcon, UserCog } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
+import { useAdmin } from "@/app/features/admin/hooks"
+import { hasAdminAccess } from "@/app/features/admin/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/shared/components/ui/avatar"
 import {
 	DropdownMenu,
@@ -26,6 +28,8 @@ export function NavUser({
 	const { isMobile } = useSidebar()
 	const { logout } = useAuth()
 	const navigate = useNavigate()
+	const { data: systemAdmin } = useAdmin()
+	const adminPerms = hasAdminAccess(systemAdmin)
 
 	return (
 		<SidebarMenu>
@@ -70,6 +74,77 @@ export function NavUser({
 						</DropdownMenuLabel>
 
 						<DropdownMenuSeparator className="bg-border" />
+						{adminPerms && (
+							<>
+								<DropdownMenuGroup>
+									<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
+										Admin
+									</DropdownMenuLabel>
+									<DropdownMenuItem
+										onClick={() => navigate("/admin")}
+										className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+									>
+										<LayoutDashboard className="text-primary" />
+										Dashboard
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => navigate("/admin/cards")}
+										className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+									>
+										<CreditCard className="text-primary" />
+										Card Management
+									</DropdownMenuItem>
+								</DropdownMenuGroup>
+								<DropdownMenuSeparator className="bg-border" />
+							</>
+						)}
+						<DropdownMenuGroup>
+							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
+								Management
+							</DropdownMenuLabel>
+							<DropdownMenuItem
+								onClick={() => navigate("/cards")}
+								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+							>
+								<CreditCard className="text-primary" />
+								Card Management
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => navigate("/keychip")}
+								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+							>
+								<Gamepad />
+								Keychip Management
+							</DropdownMenuItem>
+						</DropdownMenuGroup>
+						<DropdownMenuSeparator className="bg-border" />
+						<DropdownMenuGroup>
+							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
+								Games
+							</DropdownMenuLabel>
+							<DropdownMenuItem
+								onClick={() => navigate("/maimaidx/settings")}
+								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+							>
+								<SettingsIcon className="text-primary" />
+								Maimai DX Settings
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => navigate("/ongeki/settings")}
+								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+							>
+								<SettingsIcon className="text-primary" />
+								Ongeki Settings
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => navigate("/chunithm/settings")}
+								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+							>
+								<SettingsIcon className="text-primary" />
+								Chunithm Settings
+							</DropdownMenuItem>
+						</DropdownMenuGroup>
+						<DropdownMenuSeparator className="bg-border" />
 						<DropdownMenuGroup>
 							<DropdownMenuItem
 								onClick={() => navigate("/account")}
@@ -77,34 +152,6 @@ export function NavUser({
 							>
 								<UserCog className="text-primary" />
 								Account Settings
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator className="bg-border" />
-						<DropdownMenuGroup>
-							<DropdownMenuItem
-								onClick={() => navigate("/maimaidx/settings")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<SettingsIcon className="text-primary`" />
-								Maimai DX Settings
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuGroup>
-							<DropdownMenuItem
-								onClick={() => navigate("/ongeki/settings")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<SettingsIcon className="text-primary`" />
-								Ongeki Settings
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuGroup>
-							<DropdownMenuItem
-								onClick={() => navigate("/chunithm/settings")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<SettingsIcon className="text-primary" />
-								Chunithm Settings
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator className="bg-border" />
