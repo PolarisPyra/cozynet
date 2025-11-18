@@ -40,6 +40,7 @@ const ChunithmScorePage = React.lazy(() => import("./app/features/chunithm/pages
 const ChunithmSettingsPage = React.lazy(() => import("./app/features/chunithm/pages/settings"))
 const ChunithmUserbox = React.lazy(() => import("./app/features/chunithm/pages/userbox"))
 const OngekiProfile = React.lazy(() => import("./app/features/ongeki/pages/profile"))
+const OngekiUserbox = React.lazy(() => import("./app/features/ongeki/pages/userbox"))
 
 const queryClient = new QueryClient()
 
@@ -83,15 +84,16 @@ const app = (
 									<Route path="/chunithm/rating" element={<ChunithmRatingBaseList />} />
 									<Route path="/chunithm/profile" element={<ChunithmProfile />} />
 
-									<Route path="/ongeki/settings" element={<OngekiSettingsPage />} />
-									<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
-									<Route path="/ongeki/scores" element={<OngekiScorePage />} />
-									<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
-									<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
-									<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
-									<Route path="/ongeki/rivals" element={<OngekiRivals />} />
-									<Route path="/ongeki/cards" element={<CardManagement />} />
-									<Route path="/ongeki/profile" element={<OngekiProfile />} />
+								<Route path="/ongeki/settings" element={<OngekiSettingsPage />} />
+								<Route path="/ongeki/userbox" element={<OngekiUserbox />} />
+								<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
+								<Route path="/ongeki/scores" element={<OngekiScorePage />} />
+								<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
+								<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
+								<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
+								<Route path="/ongeki/rivals" element={<OngekiRivals />} />
+								<Route path="/ongeki/cards" element={<CardManagement />} />
+								<Route path="/ongeki/profile" element={<OngekiProfile />} />
 									<Route path="/maimaidx/scores" element={<MaimaiDxScorePage />} />
 									<Route path="/maimaidx/settings" element={<MaimaiDxSettings />} />
 									<Route path="/maimaidx/allsongs" element={<MaimaiDxAllSongs />} />
