@@ -1,4 +1,4 @@
-import { ChevronsUpDown, CreditCard, Gamepad, LayoutDashboard, LogOut, SettingsIcon, UserCog } from "lucide-react"
+import { ChevronsUpDown, CreditCard, KeySquare, LayoutDashboard, LogOut, SettingsIcon, UserCog } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { useAdmin } from "@/app/features/admin/hooks"
@@ -107,41 +107,41 @@ export function NavUser({
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 							>
 								<CreditCard className="text-primary" />
-								Card Management
+								Edit Cards
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => navigate("/keychip")}
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 							>
-								<Gamepad className="text-primary" />
-								Keychip Management
+								<KeySquare className="text-primary" />
+								Edit keychips
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator className="bg-border" />
 						<DropdownMenuGroup>
 							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
-								Games
+								Game Settings
 							</DropdownMenuLabel>
 							<DropdownMenuItem
-								onClick={() => navigate("/maimaidx/settings")}
+								onClick={() => navigate("/chunithm/settings")}
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 							>
 								<SettingsIcon className="text-primary" />
-								Maimai DX Settings
+								Chunithm
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => navigate("/ongeki/settings")}
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 							>
 								<SettingsIcon className="text-primary" />
-								Ongeki Settings
+								Ongeki
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onClick={() => navigate("/chunithm/settings")}
+								onClick={() => navigate("/maimaidx/settings")}
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 							>
 								<SettingsIcon className="text-primary" />
-								Chunithm Settings
+								Maimai DX
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator className="bg-border" />
