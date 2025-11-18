@@ -130,7 +130,22 @@ const UserRoutes = new Hono()
 				)
 
 				if (cards.length === 0) {
-					throw new HTTPException(404, { message: "Card not found" })
+					// Card doesn't exist, create a new one
+					// Generate IDM (16 hex characters) - typically derived from access code
+					// For simplicity, we'll generate a random hex string
+					const idm = Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("")
+
+					// Generate chip_id (random number)
+					const chipId = Math.floor(Math.random() * 1000000)
+
+					// Create new card bound to user
+					await db.execute<ResultSetHeader>(
+						`INSERT INTO aime_card (user, access_code, idm, chip_id, created_date, is_locked, is_banned, memo)
+						VALUES (?, ?, ?, ?, NOW(), 0, 0, '')`,
+						[userId, accessCode, idm, chipId]
+					)
+
+					return c.json({ success: true })
 				}
 
 				const card = cards[0]
@@ -184,13 +199,15 @@ const UserRoutes = new Hono()
 					throw new HTTPException(404, { message: "Card not found or not bound to your account" })
 				}
 
-				// Unbind card (set user to 0 or a default system user)
-				// Note: This depends on your system - you might want to keep the user but mark as unbound
-				// For now, we'll just remove the binding by setting user to 0
-				await db.execute<ResultSetHeader>("UPDATE aime_card SET user = 0 WHERE access_code = ? AND user = ?", [
+				// Delete the card
+				const [result] = await db.execute<ResultSetHeader>("DELETE FROM aime_card WHERE access_code = ? AND user = ?", [
 					accessCode,
 					userId
 				])
+
+				if (result.affectedRows === 0) {
+					throw new HTTPException(404, { message: "Card not found or not bound to your account" })
+				}
 
 				return c.json({ success: true })
 			} catch (error) {
@@ -199,38 +216,4 @@ const UserRoutes = new Hono()
 			}
 		}
 	)
-	.post(
-		"/cards/set-default",
-		validateJson(
-			z.object({
-				accessCode: z.string().length(20)
-			})
-		),
-		async c => {
-			try {
-				const { userId } = c.payload
-				const { accessCode } = await c.req.json()
-
-				if (!userId) throw new HTTPException(403)
-
-				// Verify card belongs to user
-				const [cards] = await db.execute<(DB.AimeCard & RowDataPacket)[]>(
-					"SELECT * FROM aime_card WHERE access_code = ? AND user = ?",
-					[accessCode, userId]
-				)
-
-				if (cards.length === 0) {
-					throw new HTTPException(404, { message: "Card not found or not bound to your account" })
-				}
-
-				// Set as default (you may need to add a default flag to aime_card table)
-				// For now, we'll just return success - implementation depends on your schema
-				return c.json({ success: true })
-			} catch (error) {
-				if (error instanceof HTTPException) throw error
-				throw rethrowWithMessage("Failed to set default card", error)
-			}
-		}
-	)
-
 export { UserRoutes }
