@@ -1,9 +1,20 @@
+import { useState } from "react"
+
+import { ArrowLeft, MoreHorizontal } from "lucide-react"
+
+import { useOngekiVersion } from "@/app/features/ongeki/hooks"
+import { useScoreLeaderboard } from "@/app/features/ongeki/hooks/use-score-leaderboard"
+import { CardImage } from "@/app/shared/components/common/card-image"
+import Spinner from "@/app/shared/components/common/spinner"
 import { Badge } from "@/app/shared/components/ui/badge"
-import { Skeleton } from "@/app/shared/components/ui/skeleton"
-import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
-import { CDN } from "@/app/shared/utils/constants"
+import { Button } from "@/app/shared/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/app/shared/components/ui/dialog"
+import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { StaticMusic } from "@/app/shared/types"
-import { formatOngekiLevel } from "@/app/shared/utils/ongeki"
+import { CDN } from "@/app/shared/utils/constants"
+import { OngekiGekForceRating, OngekiRating, formatOngekiLevel, ongekiBadgeColors } from "@/app/shared/utils/ongeki"
+
+import { OngekiRatingColors } from "./rating-colors"
 
 type CardProps = {
 	score: StaticMusic
@@ -13,35 +24,55 @@ type CardProps = {
 }
 
 export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
-	const { imageLoaded, onImageLoad } = useImageLoading()
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [selectedChartId, setSelectedChartId] = useState<number | null>(null)
 	const song = score
+	const ongekiVersion = useOngekiVersion() ?? 0
+	const currentUser = useCurrentUser()
+
+	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
+		song.songId ?? 0,
+		selectedChartId ?? 0,
+		100,
+		isDialogOpen && selectedChartId !== null
+	)
+
+	const handleLeaderboardClick = (chartId: number) => {
+		setSelectedChartId(chartId)
+	}
+
+	const handleBackToSelection = () => {
+		setSelectedChartId(null)
+	}
+
+	const handleDialogClose = (open: boolean) => {
+		setIsDialogOpen(open)
+		if (!open) {
+			setSelectedChartId(null)
+		}
+	}
 
 	return (
-		<div
-			className={`bg-card border-border relative flex flex-col rounded-sm border p-3 pb-10 shadow-sm transition-shadow hover:shadow-md`}
-		>
+		<div className="bg-card border-border flex min-h-[180px] flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md">
 			<div className="flex items-start gap-3">
-				<div className="relative h-16 w-16 flex-shrink-0">
-					{!imageLoaded && <Skeleton className="absolute inset-0 rounded-sm" />}
-					<img
-						width={72}
-						height={72}
-						src={`${CDN}/${jacketArt}/${score.jacketPath ?? ""}`}
-						alt={song.title ?? ""}
-						className="h-16 w-16 flex-shrink-0 rounded-sm object-cover"
-						onLoad={onImageLoad}
-						style={{ display: imageLoaded ? "block" : "none" }}
-					/>
-				</div>
-				<div className="max-w-[180px] min-w-0 flex-1 md:max-w-[360px] lg:max-w-[160px] xl:max-w-[240px]">
-					<div className="text-primary text-xs font-bold whitespace-nowrap sm:text-sm md:text-base">
+				<CardImage
+					src={`${CDN}/${jacketArt}/${score.jacketPath ?? ""}`}
+					alt={song.title ?? ""}
+					width={72}
+					height={72}
+				/>
+				<div className="min-w-0 flex-1">
+					<div className="text-foreground mb-1 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
 						{song.title ?? ""}
 					</div>
-					<div className="text-primary line-clamp-1 text-[10px] sm:text-xs">{song.artist ?? "Unknown"}</div>
-					<div className="text-primary text-sm whitespace-nowrap">{song.genre ?? "N/A"}</div>
+					<div className="text-muted-foreground mb-0.5 line-clamp-1 text-[10px] sm:text-xs">
+						{song.artist ?? "Unknown"}
+					</div>
+					<div className="text-muted-foreground text-xs whitespace-nowrap">{song.genre ?? "N/A"}</div>
 				</div>
 			</div>
-			<div className="mt-3 flex flex-wrap gap-2">
+
+			<div className="mt-3 flex min-h-[2rem] flex-wrap items-start gap-2">
 				{(song.charts || []).map((c, idx) => {
 					const levelData = formatOngekiLevel(c)
 
@@ -49,8 +80,8 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 						<Badge
 							key={`${String(c.chartId)}-${String(c.level)}-${idx}`}
 							variant="outline"
-							className={`flex min-h-[24px] items-center justify-center rounded-sm border-2 bg-transparent px-2.5 py-1 text-xs font-bold ${
-								levelColorBadge ? levelColorBadge(c.chartId ?? undefined) : ""
+							className={`flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
+								levelColorBadge ? levelColorBadge(c.chartId ?? undefined) : ongekiBadgeColors(c.chartId ?? 0)
 							}`}
 						>
 							{levelData.value}
@@ -58,6 +89,186 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 					)
 				})}
 			</div>
+
+			<div className="border-border/50 flex justify-end gap-2 border-t pt-2.5">
+				<Badge
+					variant="secondary"
+					className="hover:bg-muted h-6 cursor-pointer rounded-sm px-1.5"
+					onClick={() => setIsDialogOpen(true)}
+				>
+					<MoreHorizontal className="h-4 w-4" />
+				</Badge>
+			</div>
+
+			<Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+				<DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
+					{selectedChartId === null ? (
+						<>
+							<DialogHeader>
+								<DialogTitle>View Leaderboard</DialogTitle>
+								<DialogDescription>Select a difficulty to view the leaderboard for this song</DialogDescription>
+							</DialogHeader>
+							<div className="grid gap-3 py-4">
+								{(song.charts || []).map((c, idx) => {
+									const levelData = formatOngekiLevel(c)
+									const chartName = ["Basic", "Advanced", "Expert", "Master", "Lunatic"][c.chartId ?? 0]
+
+									return (
+										<Button
+											key={`${String(c.chartId)}-${String(c.level)}-${idx}`}
+											variant="outline"
+											className="flex h-auto items-center justify-between p-4"
+											onClick={() => handleLeaderboardClick(c.chartId ?? 0)}
+										>
+											<span className="text-base font-semibold">{chartName}</span>
+											<Badge
+												variant="outline"
+												className={`flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
+													levelColorBadge ? levelColorBadge(c.chartId ?? undefined) : ongekiBadgeColors(c.chartId ?? 0)
+												}`}
+											>
+												{levelData.value}
+											</Badge>
+										</Button>
+									)
+								})}
+							</div>
+						</>
+					) : (
+						<>
+							<DialogHeader>
+								<div className="flex items-center gap-2">
+									<Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBackToSelection}>
+										<ArrowLeft className="h-4 w-4" />
+									</Button>
+									<div>
+										<DialogTitle>Song Leaderboard</DialogTitle>
+										<DialogDescription>{song.title}</DialogDescription>
+									</div>
+								</div>
+							</DialogHeader>
+
+							{isLoadingLeaderboard ? (
+								<div className="flex h-64 items-center justify-center">
+									<Spinner />
+								</div>
+							) : leaderboardData ? (
+								<div className="space-y-3 py-4">
+									{leaderboardData.chart && (
+										<div className="mb-4">
+											<Badge
+												variant="outline"
+												className={`${ongekiBadgeColors(selectedChartId)} rounded-sm border-2 px-3 py-1 text-sm font-bold`}
+											>
+												Level {leaderboardData.chart.level.toFixed(1)}
+											</Badge>
+										</div>
+									)}
+
+									<p className="text-muted-foreground text-sm">Top {leaderboardData.total} Scores</p>
+
+									{leaderboardData.leaderboard.length === 0 ? (
+										<div className="bg-muted/50 rounded-sm p-8 text-center">
+											<p className="text-muted-foreground">No scores recorded yet</p>
+										</div>
+									) : (
+										<div className="space-y-2">
+											{leaderboardData.leaderboard.map((entry, index) => {
+												const isRefresh = ongekiVersion >= 8
+												const level = leaderboardData.chart?.level ?? 0
+												const isUserScore = entry.userId === currentUser.id
+												const rank = index + 1
+												const getRankBgColor = () => {
+													if (rank === 1) return "bg-yellow-500"
+													if (rank === 2) return "bg-slate-400"
+													if (rank === 3) return "bg-teal-500"
+													return "bg-muted"
+												}
+												const calculatedRating =
+													level > 0
+														? isRefresh
+															? OngekiGekForceRating(
+																	level,
+																	entry.score,
+																	entry.isFullCombo ?? 0,
+																	entry.isAllBreak ?? 0,
+																	entry.isFullBell ?? 0
+																) / 1000
+															: OngekiRating(level, entry.score) / 100
+														: null
+
+												return (
+													<div
+														key={`${entry.userId}-${index}`}
+														className={`rounded-sm p-3 transition-colors ${
+															isUserScore
+																? "bg-primary/20 border-primary hover:bg-primary/30 border-2"
+																: "bg-muted/30 hover:bg-muted/50"
+														}`}
+													>
+														<div className="flex items-center justify-between gap-4">
+															<div className="flex items-center gap-3">
+																<div
+																	className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-sm text-sm font-bold text-white ${getRankBgColor()}`}
+																>
+																	{rank}
+																</div>
+																<div>
+																	<p
+																		className={`text-sm font-semibold ${isUserScore ? "text-primary" : "text-foreground"}`}
+																	>
+																		{entry.username}
+																	</p>
+																	<div className="mt-1 flex items-center gap-2">
+																		{entry.isAllBreak > 0 && (
+																			<Badge variant="secondary" className="text-xs">
+																				AB
+																			</Badge>
+																		)}
+																		{entry.isFullBell > 0 && (
+																			<Badge variant="secondary" className="text-xs">
+																				FB
+																			</Badge>
+																		)}
+																		{entry.isFullCombo > 0 && entry.isAllBreak === 0 && (
+																			<Badge variant="secondary" className="text-xs">
+																				FC
+																			</Badge>
+																		)}
+																	</div>
+																</div>
+															</div>
+															<div className="text-right">
+																<p className="text-foreground text-lg font-bold">{entry.score.toLocaleString()}</p>
+																{calculatedRating !== null && (
+																	<div className="mt-0.5">
+																		<OngekiRatingColors
+																			rating={calculatedRating}
+																			version={ongekiVersion}
+																			decimals={isRefresh ? 3 : 2}
+																		/>
+																	</div>
+																)}
+																<p className="text-muted-foreground text-xs">
+																	{new Date(entry.playDate).toLocaleDateString()}
+																</p>
+															</div>
+														</div>
+													</div>
+												)
+											})}
+										</div>
+									)}
+								</div>
+							) : (
+								<div className="bg-muted/50 rounded-sm p-8 text-center">
+									<p className="text-muted-foreground">Failed to load leaderboard</p>
+								</div>
+							)}
+						</>
+					)}
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }

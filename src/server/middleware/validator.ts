@@ -14,3 +14,5 @@ export const validate = <T extends ZodSchema, Target extends keyof ValidationTar
 export const validateJson = <T extends ZodSchema>(schema: T) => validate("json", schema)
 
 export const validateParams = <T extends ZodSchema>(schema: T) => validate("param", schema)
+
+export const validateQuery = <T extends ZodSchema>(schema: T) => validate("query", schema)
