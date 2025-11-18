@@ -122,18 +122,18 @@ const KeychipPage = () => {
 	const toggleKeychipVisibility = (keychipId: number) => {
 		setHiddenKeychips(prev => ({
 			...prev,
-			[keychipId]: !prev[keychipId]
+			[keychipId]: !(prev[keychipId] ?? true)
 		}))
 	}
 
 	const formatKeychipId = (keychipId: string, hidden: boolean) => {
 		if (hidden) {
-			// Display as: A69E-01A97462352 (first 4 chars, dash, then rest)
-			return keychipId.substring(0, 4) + "-" + keychipId.substring(4)
+			// Display as: A69E-****** (first 4 chars, dash, then masked)
+			return keychipId.substring(0, 4) + "-******"
 		}
 		// Format: A69E01A97462352 (15 chars: 4-2-1-8)
-		// Display as: A69E-01A-97462352 (formatted with two dashes)
-		return keychipId.substring(0, 4) + "-" + keychipId.substring(4, 7) + "-" + keychipId.substring(7)
+		// Display as: A69E-01A36924818 (single dash after prefix)
+		return keychipId.substring(0, 4) + "-" + keychipId.substring(4)
 	}
 
 	const copyToClipboard = (text: string) => {
