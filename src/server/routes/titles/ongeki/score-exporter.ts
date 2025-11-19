@@ -17,6 +17,7 @@ interface BatchManualScore {
 	score: number
 	noteLamp: BatchManualNoteLamp
 	bellLamp: BatchManualBellLamp
+	platinumScore: number
 	difficulty: "BASIC" | "ADVANCED" | "EXPERT" | "MASTER" | "LUNATIC"
 	timeAchieved?: number
 	judgements?: {
@@ -76,7 +77,8 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
                 p.isFullBell,
                 p.isFullCombo,
                 p.isAllBreak,
-                p.clearStatus
+                p.clearStatus,
+				p.platinumScore
             FROM ongeki_score_playlog p
             WHERE user = ?
             GROUP BY p.id
@@ -114,7 +116,8 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 				isFullBell,
 				isFullCombo,
 				isAllBreak,
-				clearStatus
+				clearStatus,
+				platinumScore
 			} = log
 
 			if (
@@ -155,6 +158,7 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 				score: techScore,
 				noteLamp,
 				bellLamp,
+				platinumScore,
 				identifier: musicId.toString(),
 				matchType: "inGameID",
 				difficulty: TACHI_DIFFICULTIES[level]
