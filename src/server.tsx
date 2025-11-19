@@ -49,8 +49,10 @@ const server = new Hono()
 		return c.json({ error: err.message }, 500)
 	})
 	.use(compress())
-	// Apply rate limiting to all API routes
-	.use(
+
+// Apply rate limiting to all API routes (only in production)
+if (NODE_ENV === "production") {
+	server.use(
 		"/api/*",
 		rateLimiter({
 			windowMs: 1 * 60 * 1000, // 1 minute
@@ -62,6 +64,9 @@ const server = new Hono()
 			}
 		})
 	)
+}
+
+server
 	.route("/api", UnprotectedRoutes)
 	.use(jwt({ secret: JWT_SECRET!, cookie: "auth_token" }))
 	.use(jwtPayloadMiddleware())
