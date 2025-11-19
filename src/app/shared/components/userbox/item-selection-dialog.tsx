@@ -1,10 +1,12 @@
 import { ReactNode, useEffect, useMemo, useState } from "react"
 
-import { ChevronLeft, ChevronRight, Lock, LockOpen, Search } from "lucide-react"
+import { Lock, LockOpen, Search } from "lucide-react"
 
+import { Pagination } from "@/app/shared/components/common/pagination"
 import { Button } from "@/app/shared/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/shared/components/ui/dialog"
 import { Input } from "@/app/shared/components/ui/input"
+import { usePaginationKeyboard } from "@/app/shared/hooks/use-pagination-keyboard"
 import { cn } from "@/app/shared/utils"
 
 interface Item {
@@ -76,6 +78,9 @@ export function ItemSelectionDialog({
 		return filteredItems.slice(start, start + itemsPerPage)
 	}, [filteredItems, currentPage])
 
+	// Enable keyboard navigation for pagination
+	usePaginationKeyboard(totalPages, setCurrentPage, totalPages > 1 && isOpen)
+
 	const handleSelect = (id: number) => {
 		setSelectedId(id)
 	}
@@ -138,7 +143,7 @@ export function ItemSelectionDialog({
 									<img
 										src={item.imageUrl}
 										alt={item.name}
-										className={cn("rounded-sm object-contain max-h-full max-w-full", imageClassName)}
+										className={cn("max-h-full max-w-full rounded-sm object-contain", imageClassName)}
 										loading="lazy"
 										decoding="async"
 									/>
@@ -166,29 +171,13 @@ export function ItemSelectionDialog({
 				</div>
 
 				{/* Pagination Bottom */}
-				{totalPages > 1 && (
-					<div className="border-border flex items-center justify-center gap-2 border-t pt-4">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-							disabled={currentPage === 1}
-						>
-							<ChevronLeft className="h-4 w-4" />
-						</Button>
-						<span className="text-muted-foreground text-sm">
-							Page {currentPage} of {totalPages}
-						</span>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-							disabled={currentPage === totalPages}
-						>
-							<ChevronRight className="h-4 w-4" />
-						</Button>
-					</div>
-				)}
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					showKeyboardHints={true}
+					className="border-border border-t pt-4"
+				/>
 
 				{/* Action Button */}
 				<div className="mt-4">
