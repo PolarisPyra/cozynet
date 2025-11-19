@@ -41,9 +41,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 	/**
 	 * Verifies the current session by checking the JWT token.
+	 * This is handled automatically by React Query via useVerifySession hook.
+	 * Returns true if user is authenticated, false otherwise.
 	 */
 	const verifySession = useCallback(async (): Promise<boolean> => {
-		// React Query handles this automatically via useVerifySession
+		// React Query handles verification automatically via useVerifySession
+		// This function exists for API compatibility but verification happens in the hook
 		return user !== null
 	}, [user])
 
