@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { ArrowLeft, MoreHorizontal } from "lucide-react"
+import { ArrowLeft, Medal } from "lucide-react"
 
 import { useOngekiVersion } from "@/app/features/ongeki/hooks"
 import { useScoreLeaderboard } from "@/app/features/ongeki/hooks/use-score-leaderboard"
@@ -93,10 +93,10 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 			<div className="border-border/50 flex justify-end gap-2 border-t pt-2.5">
 				<Badge
 					variant="secondary"
-					className="hover:bg-muted h-6 cursor-pointer rounded-sm px-1.5"
+					className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"
 					onClick={() => setIsDialogOpen(true)}
 				>
-					<MoreHorizontal className="h-4 w-4" />
+					<Medal className="h-4 w-4" />
 				</Badge>
 			</div>
 
@@ -141,7 +141,7 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 									<Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBackToSelection}>
 										<ArrowLeft className="h-4 w-4" />
 									</Button>
-									<div>
+									<div className="flex flex-col gap-1">
 										<DialogTitle>Song Leaderboard</DialogTitle>
 										<DialogDescription>{song.title}</DialogDescription>
 									</div>
@@ -153,9 +153,9 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 									<Spinner />
 								</div>
 							) : leaderboardData ? (
-								<div className="space-y-3 py-4">
+								<div className="space-y-3 pb-4">
 									{leaderboardData.chart && (
-										<div className="mb-4">
+										<div className="-mt-2 mb-2">
 											<Badge
 												variant="outline"
 												className={`${ongekiBadgeColors(selectedChartId)} rounded-sm border-2 px-3 py-1 text-sm font-bold`}

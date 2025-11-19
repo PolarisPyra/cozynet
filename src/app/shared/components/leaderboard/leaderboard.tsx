@@ -65,7 +65,7 @@ export function Leaderboard({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
-				<DialogHeader>
+				<DialogHeader className="gap-1">
 					<DialogTitle>{title}</DialogTitle>
 					{description && <DialogDescription>{description}</DialogDescription>}
 				</DialogHeader>
@@ -79,9 +79,9 @@ export function Leaderboard({
 						<p className="text-muted-foreground">{emptyMessage}</p>
 					</div>
 				) : (
-					<div className="space-y-3 py-4">
+					<div className="space-y-3 pb-4">
 						{chartLevel !== undefined && chartBadgeClassName && (
-							<div className="mb-4">
+							<div className="-mt-2 mb-2">
 								<Badge
 									variant="outline"
 									className={`${chartBadgeClassName} rounded-sm border-2 px-3 py-1 text-sm font-bold`}
