@@ -116,13 +116,13 @@ export function ItemSelectionDialog({
 				</div>
 
 				{/* Items Grid */}
-				<div className="max-h-[60vh] min-h-[400px] overflow-y-auto">
+				<div>
 					<div className="grid grid-cols-2 gap-3 p-2 sm:grid-cols-3 lg:grid-cols-4">
 						{paginatedItems.map(item => (
 							<div
 								key={item.id}
 								className={cn(
-									"bg-card flex flex-col rounded-sm border-2 p-3 text-center",
+									"bg-card flex h-[180px] flex-col rounded-sm border-2 p-3 text-center",
 									selectedId === item.id ? "border-primary" : "border-border",
 									item.locked && !onUnlock && "cursor-not-allowed opacity-60"
 								)}
@@ -131,14 +131,14 @@ export function ItemSelectionDialog({
 								<div
 									onClick={() => !item.locked && handleSelect(item.id)}
 									className={cn(
-										"relative flex h-20 w-full items-center justify-center",
+										"relative flex h-20 w-full items-center justify-center overflow-hidden",
 										!item.locked && "cursor-pointer"
 									)}
 								>
 									<img
 										src={item.imageUrl}
 										alt={item.name}
-										className={cn("rounded-sm object-cover", imageClassName)}
+										className={cn("rounded-sm object-contain max-h-full max-w-full", imageClassName)}
 										loading="lazy"
 										decoding="async"
 									/>
@@ -148,16 +148,18 @@ export function ItemSelectionDialog({
 										</div>
 									) : null}
 								</div>
-								{item.locked && onUnlock ? (
-									<button
-										onClick={e => handleUnlock(item.id, e)}
-										className="bg-primary hover:bg-primary/90 text-primary-foreground mt-2 flex w-full items-center justify-center gap-1 rounded-sm px-2 py-1.5 text-xs font-medium"
-										title="Click to unlock item"
-									>
-										<LockOpen className="h-3 w-3" />
-										Unlock
-									</button>
-								) : null}
+								<div className="mt-auto">
+									{item.locked && onUnlock ? (
+										<button
+											onClick={e => handleUnlock(item.id, e)}
+											className="bg-primary hover:bg-primary/90 text-primary-foreground flex w-full items-center justify-center gap-1 rounded-sm px-2 py-1.5 text-xs font-medium"
+											title="Click to unlock item"
+										>
+											<LockOpen className="h-3 w-3" />
+											Unlock
+										</button>
+									) : null}
+								</div>
 							</div>
 						))}
 					</div>
