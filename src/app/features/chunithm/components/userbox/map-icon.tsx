@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { MapPin } from "lucide-react"
 import { toast } from "sonner"
@@ -9,6 +9,7 @@ import {
 	useSearchMapicons,
 	useUnlockMapicon
 } from "@/app/features/chunithm/hooks/userbox/mapicon"
+import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -17,21 +18,44 @@ import { CDN } from "@/app/shared/utils/constants"
 export function MapIcon() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
+	const { mapIcon: pendingMapIcon, setMapIcon } = useUserboxPending()
 	const { data: currentMapicon } = useCurrentMapicon()
 	const { data: searchResults } = useSearchMapicons({ locked: lockedFilter })
 	const { mutate: equipMapicon } = useEquipMapicon()
 	const { mutate: unlockMapicon } = useUnlockMapicon()
 
 	const items = searchResults?.items ?? []
+	const hasPendingSelection = pendingMapIcon !== null
 
-	const handleEquip = (id: number) => {
-		equipMapicon(id, {
+	const displayItem = useMemo(() => {
+		if (pendingMapIcon) {
+			return items.find(item => item.mapiconId === pendingMapIcon) || currentMapicon
+		}
+		return currentMapicon
+	}, [pendingMapIcon, items, currentMapicon])
+
+	const handleSelect = (id: number) => {
+		setMapIcon(id)
+		setIsDialogOpen(false)
+	}
+
+	const handleSave = () => {
+		if (!pendingMapIcon) {
+			toast.error("No changes to save")
+			return
+		}
+
+		equipMapicon(pendingMapIcon, {
 			onSuccess: () => {
 				toast.success("Map icon equipped successfully!")
-				setIsDialogOpen(false)
+				setMapIcon(null)
 			},
 			onError: () => toast.error("Failed to equip map icon")
 		})
+	}
+
+	const handleEquip = (id: number) => {
+		handleSelect(id)
 	}
 
 	const handleUnlock = (id: number) => {
@@ -53,14 +77,14 @@ export function MapIcon() {
 					<div className="bg-muted/50 overflow-hidden rounded-sm px-2 py-1 mb-1">
 						<div className="marquee-container">
 							<span className="marquee-text text-primary text-xs whitespace-nowrap">
-								{currentMapicon?.label || "None"}
+								{displayItem?.label || "None"}
 							</span>
 						</div>
 					</div>
 					<div className="mb-1 flex flex-1 items-center justify-center">
-						{currentMapicon?.imagePath ? (
+						{displayItem?.imagePath ? (
 							<img
-								src={`${CDN}/chunithm/map_icon/${currentMapicon.imagePath}`}
+								src={`${CDN}/chunithm/map_icon/${displayItem.imagePath}`}
 								alt="Map Icon"
 								className="h-32 w-32 rounded-sm object-cover"
 							/>
@@ -70,9 +94,20 @@ export function MapIcon() {
 							</div>
 						)}
 					</div>
-					<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
-						Change
-					</Button>
+					<div className="mt-auto flex gap-2">
+						<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="flex-1">
+							Change
+						</Button>
+						<Button
+							size="sm"
+							variant="default"
+							onClick={handleSave}
+							disabled={!hasPendingSelection}
+							className="flex-1"
+						>
+							Save
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -86,7 +121,7 @@ export function MapIcon() {
 					imageUrl: `${CDN}/chunithm/map_icon/${item.imagePath}`,
 					locked: item.locked
 				}))}
-				currentItemId={currentMapicon?.mapiconId}
+				currentItemId={displayItem?.mapiconId}
 				onSelect={handleEquip}
 				onUnlock={handleUnlock}
 				imageClassName="h-20 w-20"

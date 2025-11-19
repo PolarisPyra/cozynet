@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Image } from "lucide-react"
 import { toast } from "sonner"
@@ -9,6 +9,7 @@ import {
 	useSearchNameplates,
 	useUnlockNameplate
 } from "@/app/features/chunithm/hooks/userbox/nameplate"
+import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -17,21 +18,45 @@ import { CDN } from "@/app/shared/utils/constants"
 export function Nameplate() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
+	const { nameplate: pendingNameplate, setNameplate } = useUserboxPending()
 	const { data: currentNameplate } = useCurrentNameplate()
 	const { data: searchResults } = useSearchNameplates({ locked: lockedFilter })
 	const { mutate: equipNameplate } = useEquipNameplate()
 	const { mutate: unlockNameplate } = useUnlockNameplate()
 
 	const items = searchResults?.items ?? []
+	const hasPendingSelection = pendingNameplate !== null
 
-	const handleEquip = (id: number) => {
-		equipNameplate(id, {
+	// Get display item - prefer pending selection, then current
+	const displayItem = useMemo(() => {
+		if (pendingNameplate) {
+			return items.find(item => item.nameplateId === pendingNameplate) || currentNameplate
+		}
+		return currentNameplate
+	}, [pendingNameplate, items, currentNameplate])
+
+	const handleSelect = (id: number) => {
+		setNameplate(id)
+		setIsDialogOpen(false)
+	}
+
+	const handleSave = () => {
+		if (!pendingNameplate) {
+			toast.error("No changes to save")
+			return
+		}
+
+		equipNameplate(pendingNameplate, {
 			onSuccess: () => {
 				toast.success("Nameplate equipped successfully!")
-				setIsDialogOpen(false)
+				setNameplate(null)
 			},
 			onError: () => toast.error("Failed to equip nameplate")
 		})
+	}
+
+	const handleEquip = (id: number) => {
+		handleSelect(id)
 	}
 
 	const handleUnlock = (id: number) => {
@@ -53,14 +78,14 @@ export function Nameplate() {
 					<div className="bg-muted/50 overflow-hidden rounded-sm px-2 py-1 mb-1">
 						<div className="marquee-container">
 							<span className="marquee-text text-primary text-xs whitespace-nowrap">
-								{currentNameplate?.label || "None"}
+								{displayItem?.label || "None"}
 							</span>
 						</div>
 					</div>
 					<div className="mb-1 flex flex-1 items-center justify-center">
-						{currentNameplate?.imagePath ? (
+						{displayItem?.imagePath ? (
 							<img
-								src={`${CDN}/chunithm/nameplate/${currentNameplate.imagePath}`}
+								src={`${CDN}/chunithm/nameplate/${displayItem.imagePath}`}
 								alt="Nameplate"
 								className="h-16 w-full max-w-[160px] rounded-sm object-cover"
 							/>
@@ -70,9 +95,20 @@ export function Nameplate() {
 							</div>
 						)}
 					</div>
-					<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
-						Change
-					</Button>
+					<div className="mt-auto flex gap-2">
+						<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="flex-1">
+							Change
+						</Button>
+						<Button
+							size="sm"
+							variant="default"
+							onClick={handleSave}
+							disabled={!hasPendingSelection}
+							className="flex-1"
+						>
+							Save
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -86,7 +122,7 @@ export function Nameplate() {
 					imageUrl: `${CDN}/chunithm/nameplate/${item.imagePath}`,
 					locked: item.locked
 				}))}
-				currentItemId={currentNameplate?.nameplateId}
+				currentItemId={displayItem?.nameplateId}
 				onSelect={handleEquip}
 				onUnlock={handleUnlock}
 				imageClassName="h-16 w-full"
