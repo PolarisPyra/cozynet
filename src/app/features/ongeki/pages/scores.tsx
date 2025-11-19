@@ -104,7 +104,7 @@ export function OngekiScorePage() {
 							onClearAll={handleClearAll}
 						/>
 						<Button onClick={handleExportScores} variant="custom" disabled={isLoadingExport}>
-							{isLoadingExport ? "Exporting..." : "Export Scores"}
+							{isLoadingExport ? "Exporting..." : "Export All Scores"}
 						</Button>
 					</div>
 				</FilterArea>
