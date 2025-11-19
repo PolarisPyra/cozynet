@@ -6,8 +6,7 @@ import { CDN } from "@/app/shared/utils/constants"
 const staticPath = `${CDN}/chunithm/avatarStatic`
 const nonStaticPath = `${CDN}/chunithm/avatar`
 
-const maybeImg = (path?: string) =>
-	path && path.trim() && !path.endsWith("/") ? <img src={path} alt="" /> : null
+const maybeImg = (path?: string) => (path && path.trim() && !path.endsWith("/") ? <img src={path} alt="" /> : null)
 
 export function AvatarPreview() {
 	const { data: currentAvatar } = useCurrentAvatar()
@@ -31,29 +30,18 @@ export function AvatarPreview() {
 
 		return {
 			...defaultImages,
-			back: currentAvatar.back?.imagePath
-				? `${nonStaticPath}/${currentAvatar.back.imagePath}`
-				: defaultImages.back,
-			wear: currentAvatar.wear?.imagePath
-				? `${nonStaticPath}/${currentAvatar.wear.imagePath}`
-				: defaultImages.wear,
-			head: currentAvatar.head?.imagePath
-				? `${nonStaticPath}/${currentAvatar.head.imagePath}`
-				: defaultImages.head,
-			item: currentAvatar.item?.imagePath
-				? `${nonStaticPath}/${currentAvatar.item.imagePath}`
-				: defaultImages.item,
-			face: currentAvatar.face?.imagePath
-				? `${nonStaticPath}/${currentAvatar.face.imagePath}`
-				: defaultImages.face
+			back: currentAvatar.back?.imagePath ? `${nonStaticPath}/${currentAvatar.back.imagePath}` : defaultImages.back,
+			wear: currentAvatar.wear?.imagePath ? `${nonStaticPath}/${currentAvatar.wear.imagePath}` : defaultImages.wear,
+			head: currentAvatar.head?.imagePath ? `${nonStaticPath}/${currentAvatar.head.imagePath}` : defaultImages.head,
+			item: currentAvatar.item?.imagePath ? `${nonStaticPath}/${currentAvatar.item.imagePath}` : defaultImages.item,
+			face: currentAvatar.face?.imagePath ? `${nonStaticPath}/${currentAvatar.face.imagePath}` : defaultImages.face
 		}
 	}, [currentAvatar])
 
 	return (
-		<div className="bg-card border-border rounded-sm border p-2">
-			<h3 className="text-foreground mb-1 text-center text-sm font-semibold">Current Avatar</h3>
-			<div className="flex items-center justify-center overflow-hidden" style={{ height: "140px" }}>
-				<div className="avatar_group" style={{ display: "flex", justifyContent: "center", transform: "scale(0.5)" }}>
+		<div className="bg-card border-border rounded-sm border pb-2">
+			<div className="flex items-center justify-center overflow-hidden" style={{ height: "180px" }}>
+				<div className="avatar_group" style={{ display: "flex", justifyContent: "center", transform: "scale(0.6)" }}>
 					<div className="avatar_base">
 						<div className="avatar_back">{maybeImg(avatarImages.back)}</div>
 						<div className="avatar_wear">{maybeImg(avatarImages.wear)}</div>
@@ -73,4 +61,3 @@ export function AvatarPreview() {
 		</div>
 	)
 }
-
