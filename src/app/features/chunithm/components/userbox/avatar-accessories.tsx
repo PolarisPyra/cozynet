@@ -85,12 +85,12 @@ export function AvatarAccessories() {
 	return (
 		<>
 			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
-				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-4 py-3">
+				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-3 py-2">
 					<span className="text-primary text-sm font-semibold">Avatar</span>
 				</div>
-				<div className="flex flex-1 flex-col p-4">
+				<div className="flex flex-1 flex-col p-2">
 					{/* All Avatar Slots */}
-					<div className="mb-auto grid grid-cols-3 gap-2">
+					<div className="grid grid-cols-3 gap-2 mb-2">
 						{SLOT_ORDER.map(slot => {
 							const avatarPart = currentAvatar?.[slot]
 							return (
@@ -123,7 +123,7 @@ export function AvatarAccessories() {
 						})}
 					</div>
 
-					<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="mt-4 w-full">
+					<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
 						Change
 					</Button>
 				</div>
