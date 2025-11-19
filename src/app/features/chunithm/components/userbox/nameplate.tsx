@@ -50,8 +50,14 @@ export function Nameplate() {
 					<span className="text-primary text-sm font-semibold">Nameplate</span>
 				</div>
 				<div className="flex flex-1 flex-col p-2 text-center">
-					<p className="mb-1 min-h-[20px] truncate text-sm font-medium">{currentNameplate?.label || "None"}</p>
-					<div className="flex items-center justify-center mb-1">
+					<div className="bg-muted/50 overflow-hidden rounded-sm px-2 py-1 mb-1">
+						<div className="marquee-container">
+							<span className="marquee-text text-primary text-xs whitespace-nowrap">
+								{currentNameplate?.label || "None"}
+							</span>
+						</div>
+					</div>
+					<div className="mb-1 flex flex-1 items-center justify-center">
 						{currentNameplate?.imagePath ? (
 							<img
 								src={`${CDN}/chunithm/nameplate/${currentNameplate.imagePath}`}

@@ -50,8 +50,14 @@ export function MapIcon() {
 					<span className="text-primary text-sm font-semibold">Map Icon</span>
 				</div>
 				<div className="flex flex-1 flex-col p-2 text-center">
-					<p className="mb-1 min-h-[20px] truncate text-sm font-medium">{currentMapicon?.label || "None"}</p>
-					<div className="flex items-center justify-center mb-1">
+					<div className="bg-muted/50 overflow-hidden rounded-sm px-2 py-1 mb-1">
+						<div className="marquee-container">
+							<span className="marquee-text text-primary text-xs whitespace-nowrap">
+								{currentMapicon?.label || "None"}
+							</span>
+						</div>
+					</div>
+					<div className="mb-1 flex flex-1 items-center justify-center">
 						{currentMapicon?.imagePath ? (
 							<img
 								src={`${CDN}/chunithm/map_icon/${currentMapicon.imagePath}`}

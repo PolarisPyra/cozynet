@@ -94,7 +94,7 @@ export function Trophy() {
 					<span className="text-primary text-sm font-semibold">Trophy</span>
 				</div>
 				<div className="flex flex-1 flex-col p-2">
-					<div className="flex flex-col gap-1.5 mb-2">
+					<div className="mb-2 flex flex-1 flex-col items-center justify-center gap-1.5">
 						{[
 							{ trophy: mainTrophy, label: "Main" },
 							{ trophy: sub1Trophy, label: "Sub 1" },
