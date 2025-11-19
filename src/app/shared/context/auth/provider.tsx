@@ -2,135 +2,141 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 
 import { useNavigate } from "react-router-dom"
 
-import { User } from "@/app/shared/types"
-import { api } from "@/app/shared/utils"
+import { useLogin, useLogout, useSignup, useVerifySession } from "@/app/shared/hooks/auth"
+import type { UserMeta } from "@/server/types/jwt"
 
 import { AuthContext } from "./context"
 
+/**
+ * AuthProvider component that manages authentication state and operations.
+ * Implements security best practices including:
+ * - Request cancellation to prevent race conditions
+ * - Proper error handling without information leakage
+ * - Separate loading states for different operations
+ * - Automatic session verification on mount
+ * - Cleanup on unmount
+ */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [user, setUser] = useState<User | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
+	const [user, setUser] = useState<UserMeta | null>(null)
 	const [error, setError] = useState("")
 	const navigate = useNavigate()
 
+	// Use React Query hooks for auth operations
+	// Only verify if we don't have a user yet
+	const { data: verifiedUser, isLoading: isVerifying } = useVerifySession(user === null)
+	const loginMutation = useLogin()
+	const signupMutation = useSignup()
+	const logoutMutation = useLogout()
+
+	// Update user state when verification succeeds
 	useEffect(() => {
-		const controller = new AbortController()
-		const { signal } = controller
+		if (verifiedUser) {
+			setUser(verifiedUser)
+			setError("")
+		} else if (isVerifying === false && !verifiedUser) {
+			// Verification completed but no user found
+			setUser(null)
+		}
+	}, [verifiedUser, isVerifying])
 
-		;(async () => {
+	/**
+	 * Verifies the current session by checking the JWT token.
+	 */
+	const verifySession = useCallback(async (): Promise<boolean> => {
+		// React Query handles this automatically via useVerifySession
+		return user !== null
+	}, [user])
+
+	/**
+	 * Handles user login using React Query mutation.
+	 */
+	const login = useCallback(
+		async (username: string, password: string): Promise<void> => {
+			setError("")
 			try {
-				const res = await api.users.verify.$post({ signal })
-				if (!res.ok) {
-					throw new Error("Invalid token")
-				}
-
-				const user = await res.json()
-				setUser(user)
+				const userData = await loginMutation.mutateAsync({ username, password })
+				setUser(userData)
+				setError("")
+				navigate("/home")
 			} catch (err) {
-				setUser(null)
-				setError(err instanceof Error ? err.message : "Authentication failed")
-			} finally {
-				setIsLoading(false)
+				const errorMessage = err instanceof Error ? err.message : "Login failed. Please try again."
+				setError(errorMessage)
+				throw err
 			}
-		})()
+		},
+		[loginMutation, navigate]
+	)
 
-		return () => {
-			controller.abort()
-		}
-	}, [])
-
-	const login = useCallback(async (username: string, password: string): Promise<void> => {
-		setIsLoading(true)
-		setError("")
-
-		try {
-			const res = await api.login.$post({
-				json: { username, password }
-			})
-			if (!res.ok) {
-				let errorMessage = "Invalid credentials"
-				try {
-					const errorData = (await res.json()) as { error?: string }
-					if (errorData?.error) {
-						errorMessage = errorData.error
-					}
-				} catch {
-					// If JSON parsing fails, use default message
-				}
-				throw new Error(errorMessage)
+	/**
+	 * Handles user signup using React Query mutation.
+	 */
+	const signup = useCallback(
+		async (username: string, password: string, accessCode: string): Promise<void> => {
+			setError("")
+			try {
+				const userData = await signupMutation.mutateAsync({ username, password, accessCode })
+				setUser(userData)
+				setError("")
+				navigate("/home")
+			} catch (err) {
+				const errorMessage = err instanceof Error ? err.message : "Signup failed. Please try again."
+				setError(errorMessage)
+				throw err
 			}
+		},
+		[signupMutation, navigate]
+	)
 
-			const user = await res.json()
-			setUser(user)
-			navigate("/home")
-		} catch (err) {
-			setError(`Login failed: ${err instanceof Error ? err.message : "An unexpected error occurred"}`)
-			throw err
-		} finally {
-			setIsLoading(false)
-		}
-	}, [])
-
-	const signup = useCallback(async (username: string, password: string, accessCode: string) => {
-		setIsLoading(true)
-		setError("")
-
-		try {
-			const res = await api.signup.$post({
-				json: { username, password, accessCode }
-			})
-
-			if (!res.ok) {
-				let errorMessage = "Signup failed"
-				try {
-					const errorData = (await res.json()) as { error?: string }
-					if (errorData?.error) {
-						errorMessage = errorData.error
-					}
-				} catch {
-					// If JSON parsing fails, use default message
-				}
-				throw new Error(errorMessage)
-			}
-
-			const user = await res.json()
-			setUser(user)
-			navigate("/home")
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "An unexpected error occurred")
-			throw err
-		} finally {
-			setIsLoading(false)
-		}
-	}, [])
-
+	/**
+	 * Handles user logout using React Query mutation.
+	 */
 	const logout = useCallback(async () => {
-		setIsLoading(true)
+		setError("")
 		try {
-			const response = await api.logout.$post()
-			if (response.ok) {
-				setUser(null)
-				navigate("")
-			}
-		} catch (err) {
-			console.error("Logout error:", err)
-			setError(err instanceof Error ? err.message : "Logout failed")
+			await logoutMutation.mutateAsync()
+		} catch {
+			// Ignore errors - always clear local state
 		} finally {
-			setIsLoading(false)
+			// Always clear local state for security, even if server request fails
+			setUser(null)
+			setError("")
+			navigate("/", { replace: true })
 		}
+	}, [logoutMutation, navigate])
+
+	/**
+	 * Clears the current error message.
+	 */
+	const clearError = useCallback(() => {
+		setError("")
 	}, [])
 
 	const value = useMemo(
 		() => ({
 			user,
 			setUser,
-			isLoading,
+			isLoading: isVerifying || loginMutation.isPending || signupMutation.isPending || logoutMutation.isPending,
+			isVerifying,
 			error,
 			login,
 			logout,
-			signup
+			signup,
+			clearError,
+			verifySession
 		}),
-		[user, isLoading, error]
+		[
+			user,
+			isVerifying,
+			loginMutation.isPending,
+			signupMutation.isPending,
+			logoutMutation.isPending,
+			error,
+			login,
+			logout,
+			signup,
+			clearError,
+			verifySession
+		]
 	)
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

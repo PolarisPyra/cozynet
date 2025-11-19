@@ -1,1 +1,1 @@
-export type { UserMeta as User } from "@/api/types/jwt";
+// UserMeta is exported directly from @/server/types/jwt - import it directly instead of using aliases

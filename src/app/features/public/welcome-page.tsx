@@ -24,10 +24,20 @@ export const WelcomeContent = () => (
 )
 
 const WelcomePage = () => {
-	const { user } = useAuth()
+	const { user, isLoading } = useAuth()
 
+	// Don't redirect while still loading - prevents redirect loops
+	if (isLoading) {
+		return (
+			<div className="bg-background z-10 flex min-h-screen items-center justify-center p-4">
+				<div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+			</div>
+		)
+	}
+
+	// Only redirect if user is authenticated
 	return user ? (
-		<Navigate to="/home" />
+		<Navigate to="/home" replace />
 	) : (
 		<>
 			<div className="bg-background z-10 flex min-h-screen items-center justify-center p-4">
