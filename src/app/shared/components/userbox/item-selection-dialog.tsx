@@ -100,7 +100,7 @@ export function ItemSelectionDialog({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-h-[90vh] max-w-4xl">
+			<DialogContent className="flex max-h-[90vh] max-w-[calc(100%-2rem)] flex-col overflow-hidden sm:max-w-[calc(100%-3rem)] lg:max-w-4xl">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 				</DialogHeader>
@@ -121,22 +121,22 @@ export function ItemSelectionDialog({
 				</div>
 
 				{/* Items Grid */}
-				<div>
-					<div className="grid grid-cols-2 gap-3 p-2 sm:grid-cols-3 lg:grid-cols-4">
+				<div className="min-h-0 flex-1 overflow-y-auto">
+					<div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
 						{paginatedItems.map(item => (
 							<div
 								key={item.id}
 								className={cn(
-									"bg-card flex h-[180px] flex-col rounded-sm border-2 p-3 text-center",
+									"bg-card flex h-[160px] flex-col rounded-sm border-2 p-2 text-center sm:h-[180px] sm:p-3",
 									selectedId === item.id ? "border-primary" : "border-border",
 									item.locked && !onUnlock && "cursor-not-allowed opacity-60"
 								)}
 							>
-								<p className="mb-2 line-clamp-2 h-8 overflow-hidden text-xs font-medium">{item.name}</p>
+								<p className="mb-1 line-clamp-2 h-7 overflow-hidden text-xs font-medium sm:mb-2 sm:h-8">{item.name}</p>
 								<div
 									onClick={() => !item.locked && handleSelect(item.id)}
 									className={cn(
-										"relative flex h-20 w-full items-center justify-center overflow-hidden",
+										"relative flex h-16 w-full items-center justify-center overflow-hidden sm:h-20",
 										!item.locked && "cursor-pointer"
 									)}
 								>
@@ -157,7 +157,7 @@ export function ItemSelectionDialog({
 									{item.locked && onUnlock ? (
 										<button
 											onClick={e => handleUnlock(item.id, e)}
-											className="bg-primary hover:bg-primary/90 text-primary-foreground flex w-full items-center justify-center gap-1 rounded-sm px-2 py-1.5 text-xs font-medium"
+											className="bg-primary hover:bg-primary/90 text-primary-foreground flex w-full items-center justify-center gap-1 rounded-sm px-2 py-1 text-xs font-medium sm:py-1.5"
 											title="Click to unlock item"
 										>
 											<LockOpen className="h-3 w-3" />
@@ -176,11 +176,11 @@ export function ItemSelectionDialog({
 					totalPages={totalPages}
 					onPageChange={setCurrentPage}
 					showKeyboardHints={true}
-					className="border-border border-t pt-4"
+					className="border-border shrink-0 border-t pt-3 sm:pt-4"
 				/>
 
 				{/* Action Button */}
-				<div className="mt-4">
+				<div className="mt-3 shrink-0 sm:mt-4">
 					<Button variant="secondary" onClick={handleConfirm} disabled={selectedId === null} className="w-full">
 						OK
 					</Button>

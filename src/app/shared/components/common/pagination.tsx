@@ -48,7 +48,7 @@ export const Pagination: React.FC<PaginationProps> = ({
 					</Button>
 				</div>
 				{showKeyboardHints && (
-					<div className="text-muted-foreground flex items-center gap-3 text-xs">
+					<div className="text-muted-foreground hidden items-center gap-3 text-xs sm:flex">
 						<div className="flex items-center gap-1">
 							<kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium select-none">
 								←
