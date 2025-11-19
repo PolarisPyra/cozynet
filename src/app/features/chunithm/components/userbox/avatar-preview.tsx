@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 
-import { useCurrentAvatar } from "@/app/features/chunithm/hooks/userbox/avatar"
+import { useCurrentAvatar, useSearchAvatarItems, AvatarSlot } from "@/app/features/chunithm/hooks/userbox/avatar"
+import { useAvatarPending } from "@/app/features/chunithm/components/userbox/avatar-pending-context"
 import { CDN } from "@/app/shared/utils/constants"
 
 const staticPath = `${CDN}/chunithm/avatarStatic`
@@ -10,6 +11,27 @@ const maybeImg = (path?: string) => (path && path.trim() && !path.endsWith("/") 
 
 export function AvatarPreview() {
 	const { data: currentAvatar } = useCurrentAvatar()
+	const { pendingSelections } = useAvatarPending()
+	// Fetch all items to resolve pending IDs
+	const { data: allItemsData } = useSearchAvatarItems({ category: null, locked: null })
+	const allItems = allItemsData?.items ?? []
+
+	// Create optimistic avatar by merging currentAvatar with pending selections
+	const optimisticAvatar = useMemo(() => {
+		if (!currentAvatar) return null
+
+		const optimistic = { ...currentAvatar }
+
+		// Replace slots with pending selections if they exist
+		Object.entries(pendingSelections).forEach(([slot, id]) => {
+			const item = allItems.find(item => item.avatarAccessoryId === id)
+			if (item) {
+				optimistic[slot as AvatarSlot] = item
+			}
+		})
+
+		return optimistic
+	}, [currentAvatar, pendingSelections, allItems])
 
 	const avatarImages = useMemo(() => {
 		const defaultImages = {
@@ -26,17 +48,18 @@ export function AvatarPreview() {
 			skinfootR: `${staticPath}/CHU_UI_Avatar_Tex_01400001.webp`
 		}
 
-		if (!currentAvatar) return defaultImages
+		const avatar = optimisticAvatar || currentAvatar
+		if (!avatar) return defaultImages
 
 		return {
 			...defaultImages,
-			back: currentAvatar.back?.imagePath ? `${nonStaticPath}/${currentAvatar.back.imagePath}` : defaultImages.back,
-			wear: currentAvatar.wear?.imagePath ? `${nonStaticPath}/${currentAvatar.wear.imagePath}` : defaultImages.wear,
-			head: currentAvatar.head?.imagePath ? `${nonStaticPath}/${currentAvatar.head.imagePath}` : defaultImages.head,
-			item: currentAvatar.item?.imagePath ? `${nonStaticPath}/${currentAvatar.item.imagePath}` : defaultImages.item,
-			face: currentAvatar.face?.imagePath ? `${nonStaticPath}/${currentAvatar.face.imagePath}` : defaultImages.face
+			back: avatar.back?.imagePath ? `${nonStaticPath}/${avatar.back.imagePath}` : defaultImages.back,
+			wear: avatar.wear?.imagePath ? `${nonStaticPath}/${avatar.wear.imagePath}` : defaultImages.wear,
+			head: avatar.head?.imagePath ? `${nonStaticPath}/${avatar.head.imagePath}` : defaultImages.head,
+			item: avatar.item?.imagePath ? `${nonStaticPath}/${avatar.item.imagePath}` : defaultImages.item,
+			face: avatar.face?.imagePath ? `${nonStaticPath}/${avatar.face.imagePath}` : defaultImages.face
 		}
-	}, [currentAvatar])
+	}, [optimisticAvatar, currentAvatar])
 
 	return (
 		<div className="bg-card border-border rounded-sm border pb-2">

@@ -1,8 +1,9 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Shirt } from "lucide-react"
 import { toast } from "sonner"
 
+import { useAvatarPending } from "@/app/features/chunithm/components/userbox/avatar-pending-context"
 import {
 	AvatarSlot,
 	useCurrentAvatar,
@@ -39,20 +40,38 @@ export function AvatarAccessories() {
 	const [selectedSlot, setSelectedSlot] = useState<AvatarSlot | "all">("all") // Default to "all"
 	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null) // null = all, false = unlocked, true = locked
 
+	const { pendingSelections, setPendingSelections } = useAvatarPending()
 	const { data: currentAvatar } = useCurrentAvatar()
 	const { data: searchResults } = useSearchAvatarItems({
 		category: selectedSlot === "all" ? null : getCategoryForSlot(selectedSlot),
 		locked: lockedFilter
 	})
+	// Fetch all items to resolve pending IDs for display
+	const { data: allItemsData } = useSearchAvatarItems({ category: null, locked: null })
 	const { mutate: equipAvatarItem } = useEquipAvatarItem()
 	const { mutate: unlockAvatarItem } = useUnlockAvatarItem()
 
 	const items = searchResults?.items ?? []
-	const currentItem = selectedSlot !== "all" ? currentAvatar?.[selectedSlot] : undefined
+	const allItems = allItemsData?.items ?? []
+	const hasPendingSelections = Object.keys(pendingSelections).length > 0
 
-	const handleEquip = (id: number) => {
-		// Find the item to get its slot information
-		const selectedItem = items.find(item => item.avatarAccessoryId === id)
+	// Get current item, preferring pending selection over current avatar
+	const currentItem = useMemo(() => {
+		if (selectedSlot === "all") return undefined
+		const pendingId = pendingSelections[selectedSlot]
+		if (pendingId) {
+			return (
+				allItems.find(item => item.avatarAccessoryId === pendingId) ||
+				items.find(item => item.avatarAccessoryId === pendingId)
+			)
+		}
+		return currentAvatar?.[selectedSlot]
+	}, [selectedSlot, pendingSelections, allItems, items, currentAvatar])
+
+	const handleSelect = (id: number) => {
+		// Find the item to get its slot information - check both items and allItems
+		const selectedItem =
+			items.find(item => item.avatarAccessoryId === id) || allItems.find(item => item.avatarAccessoryId === id)
 
 		if (!selectedItem) {
 			toast.error("Item not found")
@@ -61,16 +80,55 @@ export function AvatarAccessories() {
 
 		const itemSlot = selectedItem.slot as AvatarSlot
 
-		equipAvatarItem(
-			{ avatarAccessoryId: id, slot: itemSlot },
-			{
-				onSuccess: () => {
-					toast.success(`${SLOT_LABELS[itemSlot]} equipped successfully!`)
-					setIsDialogOpen(false)
-				},
-				onError: () => toast.error(`Failed to equip ${SLOT_LABELS[itemSlot].toLowerCase()}`)
-			}
-		)
+		// If a specific slot was selected, use that; otherwise use the item's slot
+		const targetSlot = selectedSlot !== "all" ? selectedSlot : itemSlot
+
+		// Store the selection temporarily (this will update the preview immediately)
+		setPendingSelections(prev => ({
+			...prev,
+			[targetSlot]: id
+		}))
+
+		setIsDialogOpen(false)
+	}
+
+	const handleSave = () => {
+		if (!hasPendingSelections) {
+			toast.error("No changes to save")
+			return
+		}
+
+		// Submit all pending selections
+		const savePromises = Object.entries(pendingSelections).map(([slot, id]) => {
+			return new Promise<void>((resolve, reject) => {
+				equipAvatarItem(
+					{ avatarAccessoryId: id, slot: slot as AvatarSlot },
+					{
+						onSuccess: () => {
+							toast.success(`${SLOT_LABELS[slot as AvatarSlot]} equipped successfully!`)
+							resolve()
+						},
+						onError: () => {
+							toast.error(`Failed to equip ${SLOT_LABELS[slot as AvatarSlot].toLowerCase()}`)
+							reject()
+						}
+					}
+				)
+			})
+		})
+
+		Promise.all(savePromises)
+			.then(() => {
+				setPendingSelections({})
+			})
+			.catch(() => {
+				// Errors are already handled in individual callbacks
+			})
+	}
+
+	const handleEquip = (id: number) => {
+		// This now just stores the selection, doesn't submit
+		handleSelect(id)
 	}
 
 	const handleUnlock = (id: number) => {
@@ -92,7 +150,13 @@ export function AvatarAccessories() {
 					{/* All Avatar Slots */}
 					<div className="mb-2 grid grid-cols-3 gap-2">
 						{SLOT_ORDER.map(slot => {
-							const avatarPart = currentAvatar?.[slot]
+							// Get the item to display - prefer pending selection, then current avatar
+							const pendingId = pendingSelections[slot]
+							const displayItem = pendingId
+								? allItems.find(item => item.avatarAccessoryId === pendingId)
+								: currentAvatar?.[slot]
+							const avatarPart = displayItem || currentAvatar?.[slot]
+
 							return (
 								<div
 									key={slot}
@@ -123,9 +187,20 @@ export function AvatarAccessories() {
 						})}
 					</div>
 
-					<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
-						Change
-					</Button>
+					<div className="mt-auto flex gap-2">
+						<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="flex-1">
+							Change
+						</Button>
+						<Button
+							size="sm"
+							variant="default"
+							onClick={handleSave}
+							disabled={!hasPendingSelections}
+							className="flex-1"
+						>
+							Save
+						</Button>
+					</div>
 				</div>
 			</div>
 

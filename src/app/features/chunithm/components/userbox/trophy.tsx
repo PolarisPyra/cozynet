@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Trophy as TrophyIcon } from "lucide-react"
 import { toast } from "sonner"
@@ -9,6 +9,7 @@ import {
 	useSearchTrophies,
 	useUnlockTrophy
 } from "@/app/features/chunithm/hooks/userbox/trophy"
+import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -44,28 +45,78 @@ export function Trophy() {
 	const [selectedSlot, setSelectedSlot] = useState<"main" | "sub1" | "sub2">("main")
 	const [rareTypeFilter, setRareTypeFilter] = useState<number | null>(null)
 	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
+	const { trophy: pendingTrophies, setTrophy } = useUserboxPending()
 	const { data: currentTrophies } = useCurrentTrophies()
 	const { data: searchResults } = useSearchTrophies({ locked: lockedFilter, rareType: rareTypeFilter })
 	const { mutate: equipTrophy } = useEquipTrophy()
 	const { mutate: unlockTrophy } = useUnlockTrophy()
 
 	const items = searchResults?.items ?? []
+	const hasPendingSelections = Object.keys(pendingTrophies).length > 0
 
-	const mainTrophy = currentTrophies?.find(t => t.slot === "main")
-	const sub1Trophy = currentTrophies?.find(t => t.slot === "sub1")
-	const sub2Trophy = currentTrophies?.find(t => t.slot === "sub2")
+	// Get display trophies - prefer pending selections, then current
+	const displayTrophies = useMemo(() => {
+		const mainTrophy = currentTrophies?.find(t => t.slot === "main")
+		const sub1Trophy = currentTrophies?.find(t => t.slot === "sub1")
+		const sub2Trophy = currentTrophies?.find(t => t.slot === "sub2")
+
+		return {
+			main: pendingTrophies.main
+				? items.find(item => item.trophyId === pendingTrophies.main) || mainTrophy
+				: mainTrophy,
+			sub1: pendingTrophies.sub1
+				? items.find(item => item.trophyId === pendingTrophies.sub1) || sub1Trophy
+				: sub1Trophy,
+			sub2: pendingTrophies.sub2
+				? items.find(item => item.trophyId === pendingTrophies.sub2) || sub2Trophy
+				: sub2Trophy
+		}
+	}, [pendingTrophies, items, currentTrophies])
+
+	const handleSelect = (id: number) => {
+		setTrophy(prev => ({
+			...prev,
+			[selectedSlot]: id
+		}))
+		setIsDialogOpen(false)
+	}
+
+	const handleSave = () => {
+		if (!hasPendingSelections) {
+			toast.error("No changes to save")
+			return
+		}
+
+		// Submit all pending trophy changes
+		const savePromises = Object.entries(pendingTrophies).map(([slot, id]) => {
+			return new Promise<void>((resolve, reject) => {
+				equipTrophy(
+					{ trophyId: id, slot: slot as "main" | "sub1" | "sub2" },
+					{
+						onSuccess: () => {
+							toast.success(`Trophy equipped to ${slot} slot!`)
+							resolve()
+						},
+						onError: () => {
+							toast.error(`Failed to equip trophy to ${slot} slot`)
+							reject()
+						}
+					}
+				)
+			})
+		})
+
+		Promise.all(savePromises)
+			.then(() => {
+				setTrophy({})
+			})
+			.catch(() => {
+				// Errors are already handled in individual callbacks
+			})
+	}
 
 	const handleEquip = (id: number) => {
-		equipTrophy(
-			{ trophyId: id, slot: selectedSlot },
-			{
-				onSuccess: () => {
-					toast.success(`Trophy equipped to ${selectedSlot} slot!`)
-					setIsDialogOpen(false)
-				},
-				onError: () => toast.error("Failed to equip trophy")
-			}
-		)
+		handleSelect(id)
 	}
 
 	const handleUnlock = (id: number) => {
@@ -96,10 +147,10 @@ export function Trophy() {
 				<div className="flex flex-1 flex-col p-2">
 					<div className="mb-2 flex flex-1 flex-col items-center justify-center gap-1.5">
 						{[
-							{ trophy: mainTrophy, label: "Main" },
-							{ trophy: sub1Trophy, label: "Sub 1" },
-							{ trophy: sub2Trophy, label: "Sub 2" }
-						].map(({ trophy, label }, idx) => {
+							{ trophy: displayTrophies.main, label: "Main", slot: "main" as const },
+							{ trophy: displayTrophies.sub1, label: "Sub 1", slot: "sub1" as const },
+							{ trophy: displayTrophies.sub2, label: "Sub 2", slot: "sub2" as const }
+						].map(({ trophy, label, slot }, idx) => {
 							const imageUrl = getTrophyImageUrl(trophy)
 							// Don't show text overlay if trophy has a custom image (like KOP)
 							const backgroundImage = trophy ? honorBackgrounds[trophy.trophyRareType] : null
@@ -130,9 +181,20 @@ export function Trophy() {
 						})}
 					</div>
 
-					<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
-						Change
-					</Button>
+					<div className="mt-auto flex gap-2">
+						<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="flex-1">
+							Change
+						</Button>
+						<Button
+							size="sm"
+							variant="default"
+							onClick={handleSave}
+							disabled={!hasPendingSelections}
+							className="flex-1"
+						>
+							Save
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -155,7 +217,7 @@ export function Trophy() {
 						locked: item.locked
 					}
 				})}
-				currentItemId={currentTrophies?.find(t => t.slot === selectedSlot)?.trophyId}
+				currentItemId={displayTrophies[selectedSlot]?.trophyId}
 				onSelect={handleEquip}
 				onUnlock={handleUnlock}
 				imageClassName="h-12 w-full"

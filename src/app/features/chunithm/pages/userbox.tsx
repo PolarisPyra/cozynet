@@ -1,4 +1,5 @@
 import { AvatarAccessories } from "@/app/features/chunithm/components/userbox/avatar-accessories"
+import { AvatarPendingProvider } from "@/app/features/chunithm/components/userbox/avatar-pending-context"
 import { AvatarPreview } from "@/app/features/chunithm/components/userbox/avatar-preview"
 import { Character } from "@/app/features/chunithm/components/userbox/character"
 import { MapIcon } from "@/app/features/chunithm/components/userbox/map-icon"
@@ -6,6 +7,7 @@ import { Nameplate } from "@/app/features/chunithm/components/userbox/nameplate"
 import { Stage } from "@/app/features/chunithm/components/userbox/stage"
 import { SystemVoice } from "@/app/features/chunithm/components/userbox/system-voice"
 import { Trophy } from "@/app/features/chunithm/components/userbox/trophy"
+import { UserboxPendingProvider } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import { useChunithmVersion } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
@@ -27,18 +29,22 @@ const ChunithmUserbox = () => {
 	return (
 		<Container>
 			<Header title={"Userbox"} />
-			<Body className="mx-auto flex max-w-7xl flex-col gap-4">
-				<AvatarPreview />
-				<div className="grid auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-					<AvatarAccessories />
-					<Nameplate />
-					<Trophy />
-					<SystemVoice />
-					<MapIcon />
-					<Character />
-					<Stage />
-				</div>
-			</Body>
+			<AvatarPendingProvider>
+				<UserboxPendingProvider>
+					<Body className="mx-auto flex max-w-7xl flex-col gap-4">
+						<AvatarPreview />
+						<div className="grid auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+							<AvatarAccessories />
+							<Nameplate />
+							<Trophy />
+							<SystemVoice />
+							<MapIcon />
+							<Character />
+							<Stage />
+						</div>
+					</Body>
+				</UserboxPendingProvider>
+			</AvatarPendingProvider>
 		</Container>
 	)
 }

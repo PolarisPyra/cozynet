@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Image } from "lucide-react"
 import { toast } from "sonner"
@@ -9,6 +9,7 @@ import {
 	useSearchStages,
 	useUnlockStage
 } from "@/app/features/chunithm/hooks/userbox/stage"
+import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -17,21 +18,44 @@ import { CDN } from "@/app/shared/utils/constants"
 export function Stage() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
+	const { stage: pendingStage, setStage } = useUserboxPending()
 	const { data: currentStage } = useCurrentStage()
 	const { data: searchResults } = useSearchStages({ locked: lockedFilter })
 	const { mutate: equipStage } = useEquipStage()
 	const { mutate: unlockStage } = useUnlockStage()
 
 	const items = searchResults?.items ?? []
+	const hasPendingSelection = pendingStage !== null
 
-	const handleEquip = (id: number) => {
-		equipStage(id, {
+	const displayItem = useMemo(() => {
+		if (pendingStage) {
+			return items.find(item => item.stageId === pendingStage) || currentStage
+		}
+		return currentStage
+	}, [pendingStage, items, currentStage])
+
+	const handleSelect = (id: number) => {
+		setStage(id)
+		setIsDialogOpen(false)
+	}
+
+	const handleSave = () => {
+		if (!pendingStage) {
+			toast.error("No changes to save")
+			return
+		}
+
+		equipStage(pendingStage, {
 			onSuccess: () => {
 				toast.success("Stage equipped successfully!")
-				setIsDialogOpen(false)
+				setStage(null)
 			},
 			onError: () => toast.error("Failed to equip stage")
 		})
+	}
+
+	const handleEquip = (id: number) => {
+		handleSelect(id)
 	}
 
 	const handleUnlock = (id: number) => {
@@ -53,14 +77,14 @@ export function Stage() {
 					<div className="bg-muted/50 mb-1 overflow-hidden rounded-sm px-2 py-1">
 						<div className="marquee-container">
 							<span className="marquee-text text-primary text-xs whitespace-nowrap">
-								{currentStage?.label || "None"}
+								{displayItem?.label || "None"}
 							</span>
 						</div>
 					</div>
 					<div className="mb-1 flex flex-1 items-center justify-center">
-						{currentStage?.imagePath ? (
+						{displayItem?.imagePath ? (
 							<img
-								src={`${CDN}/chunithm/stage/${currentStage.imagePath}`}
+								src={`${CDN}/chunithm/stage/${displayItem.imagePath}`}
 								alt="Stage"
 								className="h-24 w-full max-w-[200px] rounded-sm object-cover"
 							/>
@@ -70,9 +94,20 @@ export function Stage() {
 							</div>
 						)}
 					</div>
-					<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
-						Change
-					</Button>
+					<div className="mt-auto flex gap-2">
+						<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="flex-1">
+							Change
+						</Button>
+						<Button
+							size="sm"
+							variant="default"
+							onClick={handleSave}
+							disabled={!hasPendingSelection}
+							className="flex-1"
+						>
+							Save
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -86,7 +121,7 @@ export function Stage() {
 					imageUrl: `${CDN}/chunithm/stage/${item.imagePath}`,
 					locked: item.locked
 				}))}
-				currentItemId={currentStage?.stageId}
+				currentItemId={displayItem?.stageId}
 				onSelect={handleEquip}
 				onUnlock={handleUnlock}
 				imageClassName="h-16 w-full"
