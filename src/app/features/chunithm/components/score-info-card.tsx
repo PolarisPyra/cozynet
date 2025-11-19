@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { MoreHorizontal, Star } from "lucide-react"
+import { Medal, Star } from "lucide-react"
 
 import { ChunithmAchievementBadges } from "@/app/features/chunithm/components/achievement-badges"
 import { useChunithmVersion } from "@/app/features/chunithm/hooks"
@@ -160,10 +160,10 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 					)}
 					<Badge
 						variant="secondary"
-						className="hover:bg-muted h-6 cursor-pointer rounded-sm px-1.5"
+						className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"
 						onClick={() => setIsDialogOpen(true)}
 					>
-						<MoreHorizontal className="h-4 w-4" />
+						<Medal className="h-4 w-4" />
 					</Badge>
 				</div>
 			</div>

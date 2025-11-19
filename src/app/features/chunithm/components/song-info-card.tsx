@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { ArrowLeft, MoreHorizontal, Star } from "lucide-react"
+import { ArrowLeft, Medal, Star } from "lucide-react"
 
 import { useScoreLeaderboard } from "@/app/features/chunithm/hooks/use-score-leaderboard"
 import { CardImage } from "@/app/shared/components/common/card-image"
@@ -96,10 +96,10 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 					</Badge>
 					<Badge
 						variant="secondary"
-						className="hover:bg-muted h-6 cursor-pointer rounded-sm px-1.5"
+						className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"
 						onClick={() => setIsDialogOpen(true)}
 					>
-						<MoreHorizontal className="h-4 w-4" />
+						<Medal className="h-4 w-4" />
 					</Badge>
 				</div>
 			)}
@@ -156,7 +156,7 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 									<Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBackToSelection}>
 										<ArrowLeft className="h-4 w-4" />
 									</Button>
-									<div>
+									<div className="flex flex-col gap-1">
 										<DialogTitle>Song Leaderboard</DialogTitle>
 										<DialogDescription>{song.title}</DialogDescription>
 									</div>
@@ -168,9 +168,9 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 									<Spinner />
 								</div>
 							) : leaderboardData ? (
-								<div className="space-y-3 py-4">
+								<div className="space-y-3 pb-4">
 									{leaderboardData.chart && (
-										<div className="mb-4">
+										<div className="-mt-2 mb-2">
 											<Badge
 												variant="outline"
 												className={`${chunithmBadgeColors(selectedChartId)} rounded-sm border-2 px-3 py-1 text-sm font-bold`}

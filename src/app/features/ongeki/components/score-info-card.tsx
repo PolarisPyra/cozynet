@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { MoreHorizontal } from "lucide-react"
+import { Medal } from "lucide-react"
 
 import { OngekiAchievementBadges } from "@/app/features/ongeki/components/achievement-badges"
 import { useScoreLeaderboard } from "@/app/features/ongeki/hooks/use-score-leaderboard"
@@ -185,10 +185,10 @@ export function OngekiScoreInfoCard({
 					)}
 					<Badge
 						variant="secondary"
-						className="hover:bg-muted h-6 cursor-pointer rounded-sm px-1.5"
+						className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"
 						onClick={() => setIsDialogOpen(true)}
 					>
-						<MoreHorizontal className="h-4 w-4" />
+						<Medal className="h-4 w-4" />
 					</Badge>
 				</div>
 			</div>
