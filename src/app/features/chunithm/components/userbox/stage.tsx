@@ -70,7 +70,7 @@ export function Stage() {
 							</div>
 						)}
 					</div>
-					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
+					<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
 						Change
 					</Button>
 				</div>

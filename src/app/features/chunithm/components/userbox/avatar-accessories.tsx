@@ -90,7 +90,7 @@ export function AvatarAccessories() {
 				</div>
 				<div className="flex flex-1 flex-col p-2">
 					{/* All Avatar Slots */}
-					<div className="grid grid-cols-3 gap-2 mb-2">
+					<div className="mb-2 grid grid-cols-3 gap-2">
 						{SLOT_ORDER.map(slot => {
 							const avatarPart = currentAvatar?.[slot]
 							return (
