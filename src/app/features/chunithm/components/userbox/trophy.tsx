@@ -3,13 +3,14 @@ import { useMemo, useState } from "react"
 import { Trophy as TrophyIcon } from "lucide-react"
 import { toast } from "sonner"
 
+import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import {
+	TrophyItem,
 	useCurrentTrophies,
 	useEquipTrophy,
 	useSearchTrophies,
 	useUnlockTrophy
 } from "@/app/features/chunithm/hooks/userbox/trophy"
-import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -67,9 +68,7 @@ export function Trophy() {
 			sub1: pendingTrophies.sub1
 				? items.find(item => item.trophyId === pendingTrophies.sub1) || sub1Trophy
 				: sub1Trophy,
-			sub2: pendingTrophies.sub2
-				? items.find(item => item.trophyId === pendingTrophies.sub2) || sub2Trophy
-				: sub2Trophy
+			sub2: pendingTrophies.sub2 ? items.find(item => item.trophyId === pendingTrophies.sub2) || sub2Trophy : sub2Trophy
 		}
 	}, [pendingTrophies, items, currentTrophies])
 
@@ -128,9 +127,9 @@ export function Trophy() {
 		})
 	}
 
-	const getTrophyImageUrl = (trophy: typeof mainTrophy) => {
+	const getTrophyImageUrl = (trophy: TrophyItem | undefined) => {
 		if (!trophy) return null
-		const backgroundImage = honorBackgrounds[trophy.trophyRareType]
+		const backgroundImage = honorBackgrounds[trophy.trophyRareType as TrophyRareType]
 		return backgroundImage && backgroundImage.trim() !== ""
 			? `${CDN}/chunithm/honorBackgrounds/${backgroundImage}`
 			: trophy.imagePath && trophy.imagePath.trim() !== ""
@@ -150,10 +149,10 @@ export function Trophy() {
 							{ trophy: displayTrophies.main, label: "Main", slot: "main" as const },
 							{ trophy: displayTrophies.sub1, label: "Sub 1", slot: "sub1" as const },
 							{ trophy: displayTrophies.sub2, label: "Sub 2", slot: "sub2" as const }
-						].map(({ trophy, label, slot }, idx) => {
+						].map(({ trophy, label }, idx) => {
 							const imageUrl = getTrophyImageUrl(trophy)
 							// Don't show text overlay if trophy has a custom image (like KOP)
-							const backgroundImage = trophy ? honorBackgrounds[trophy.trophyRareType] : null
+							const backgroundImage = trophy ? honorBackgrounds[trophy.trophyRareType as TrophyRareType] : null
 							const hasCustomImage = trophy && trophy.imagePath && (!backgroundImage || backgroundImage.trim() === "")
 							return (
 								<div key={idx} className="flex flex-col gap-1">
@@ -244,12 +243,27 @@ export function Trophy() {
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value="all">All Types</SelectItem>
-										<SelectItem value="0">Normal</SelectItem>
-										<SelectItem value="1">Bronze</SelectItem>
-										<SelectItem value="2">Silver</SelectItem>
-										<SelectItem value="3">Gold</SelectItem>
-										<SelectItem value="5">Platinum</SelectItem>
-										<SelectItem value="7">Rainbow</SelectItem>
+										<SelectItem value={TrophyRareType.Normal.toString()}>Normal</SelectItem>
+										<SelectItem value={TrophyRareType.Bronze.toString()}>Bronze</SelectItem>
+										<SelectItem value={TrophyRareType.Silver.toString()}>Silver</SelectItem>
+										<SelectItem value={TrophyRareType.Gold.toString()}>Gold</SelectItem>
+										<SelectItem value={TrophyRareType.Gold2.toString()}>Gold+</SelectItem>
+										<SelectItem value={TrophyRareType.Platinum.toString()}>Platinum</SelectItem>
+										<SelectItem value={TrophyRareType.Platinum2.toString()}>Platinum+</SelectItem>
+										<SelectItem value={TrophyRareType.Rainbow.toString()}>Rainbow</SelectItem>
+										<SelectItem value={TrophyRareType.Staff.toString()}>Staff</SelectItem>
+										<SelectItem value={TrophyRareType.Ongeki.toString()}>Ongeki</SelectItem>
+										<SelectItem value={TrophyRareType.Maimai.toString()}>Maimai</SelectItem>
+										<SelectItem value={TrophyRareType.Duals.toString()}>Duals</SelectItem>
+										<SelectItem value={TrophyRareType.Idori.toString()}>Idori</SelectItem>
+										<SelectItem value={TrophyRareType.Pheonix_g.toString()}>Phoenix</SelectItem>
+										<SelectItem value={TrophyRareType.Pheonix_p.toString()}>Phoenix+</SelectItem>
+										<SelectItem value={TrophyRareType.Pheonix_r.toString()}>Phoenix++</SelectItem>
+										<SelectItem value={TrophyRareType.Lamp.toString()}>Spirit</SelectItem>
+										<SelectItem value={TrophyRareType.Lamp2.toString()}>Tribute</SelectItem>
+										<SelectItem value={TrophyRareType.Lamp3.toString()}>Legend</SelectItem>
+										<SelectItem value={TrophyRareType.Kop.toString()}>KOP Finalist</SelectItem>
+										<SelectItem value={TrophyRareType.Kop2.toString()}>KOP Champion</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
