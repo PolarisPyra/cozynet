@@ -48,12 +48,12 @@ export function Character() {
 	return (
 		<>
 			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
-				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-4 py-3">
+				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-3 py-2">
 					<span className="text-primary text-sm font-semibold">Character</span>
 				</div>
-				<div className="flex flex-1 flex-col p-4 text-center">
-					<p className="mb-3 min-h-[20px] truncate text-sm font-medium">{currentCharacter?.label || "None"}</p>
-					<div className="mb-auto flex flex-1 items-center justify-center">
+				<div className="flex flex-1 flex-col p-2 text-center">
+					<p className="mb-1 min-h-[20px] truncate text-sm font-medium">{currentCharacter?.label || "None"}</p>
+					<div className="flex items-center justify-center mb-1">
 						{currentCharacter?.imagePath && !imageError ? (
 							<img
 								src={`${CDN}/chunithm/characters/${currentCharacter.imagePath}`}
@@ -67,7 +67,7 @@ export function Character() {
 							</div>
 						)}
 					</div>
-					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-4 w-full">
+					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
 						Change
 					</Button>
 				</div>

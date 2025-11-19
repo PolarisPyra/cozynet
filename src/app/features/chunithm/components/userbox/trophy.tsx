@@ -90,11 +90,11 @@ export function Trophy() {
 	return (
 		<>
 			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
-				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-4 py-3">
+				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-3 py-2">
 					<span className="text-primary text-sm font-semibold">Trophy</span>
 				</div>
-				<div className="flex flex-1 flex-col p-4">
-					<div className="mb-auto flex flex-col gap-3">
+				<div className="flex flex-1 flex-col p-2">
+					<div className="flex flex-col gap-1.5 mb-2">
 						{[
 							{ trophy: mainTrophy, label: "Main" },
 							{ trophy: sub1Trophy, label: "Sub 1" },
@@ -130,7 +130,7 @@ export function Trophy() {
 						})}
 					</div>
 
-					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-4 w-full">
+					<Button size="sm" variant="secondary" onClick={() => setIsDialogOpen(true)} className="mt-auto w-full">
 						Change
 					</Button>
 				</div>

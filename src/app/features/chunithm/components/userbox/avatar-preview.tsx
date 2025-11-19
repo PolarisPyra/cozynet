@@ -50,10 +50,10 @@ export function AvatarPreview() {
 	}, [currentAvatar])
 
 	return (
-		<div className="bg-card border-border rounded-sm border p-3">
-			<h3 className="text-foreground mb-2 text-center text-sm font-semibold">Current Avatar</h3>
-			<div className="flex items-center justify-center" style={{ minHeight: "250px" }}>
-				<div className="avatar_group" style={{ display: "flex", justifyContent: "center", transform: "scale(0.85)" }}>
+		<div className="bg-card border-border rounded-sm border p-2">
+			<h3 className="text-foreground mb-1 text-center text-sm font-semibold">Current Avatar</h3>
+			<div className="flex items-center justify-center overflow-hidden" style={{ height: "140px" }}>
+				<div className="avatar_group" style={{ display: "flex", justifyContent: "center", transform: "scale(0.5)" }}>
 					<div className="avatar_base">
 						<div className="avatar_back">{maybeImg(avatarImages.back)}</div>
 						<div className="avatar_wear">{maybeImg(avatarImages.wear)}</div>
