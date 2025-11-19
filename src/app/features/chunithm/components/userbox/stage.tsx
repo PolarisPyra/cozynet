@@ -50,8 +50,14 @@ export function Stage() {
 					<span className="text-primary text-sm font-semibold">Stage</span>
 				</div>
 				<div className="flex flex-1 flex-col p-2 text-center">
-					<p className="mb-1 min-h-[20px] truncate text-sm font-medium">{currentStage?.label || "None"}</p>
-					<div className="flex items-center justify-center mb-1">
+					<div className="bg-muted/50 mb-1 overflow-hidden rounded-sm px-2 py-1">
+						<div className="marquee-container">
+							<span className="marquee-text text-primary text-xs whitespace-nowrap">
+								{currentStage?.label || "None"}
+							</span>
+						</div>
+					</div>
+					<div className="mb-1 flex flex-1 items-center justify-center">
 						{currentStage?.imagePath ? (
 							<img
 								src={`${CDN}/chunithm/stage/${currentStage.imagePath}`}
