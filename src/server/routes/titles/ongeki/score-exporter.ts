@@ -27,7 +27,7 @@ interface BatchManualScore {
 		miss: number
 	}
 	optional?: {
-		maxCombo: number
+		maxCombo?: number
 		fast?: number
 		slow?: number
 		damage?: number
@@ -65,7 +65,6 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
                 p.musicId,
                 p.level,
                 p.techScore,
-                p.battleScore,
                 p.maxCombo,
                 p.judgeCriticalBreak,
                 p.judgeBreak,
@@ -104,7 +103,6 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 				musicId,
 				level,
 				techScore,
-				battleScore,
 				maxCombo,
 				judgeCriticalBreak,
 				judgeBreak,
@@ -186,17 +184,10 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 				}
 			}
 
-			const optional: any = {}
-			if (maxCombo !== null) {
-				optional.maxCombo = maxCombo
-			}
-			if (battleScore !== null) {
-				optional.battleScore = battleScore
-			}
-
+			const optional: BatchManualScore["optional"] = {}
 			// Note: timing data (fast/slow) is not currently available in our database schema
 			// These would need to be calculated from judge data if we want to include them
-
+			if (maxCombo !== null) optional.maxCombo = maxCombo
 			if (damageCount !== null) optional.damage = damageCount
 			if (bellCount !== null) optional.bellCount = bellCount
 			if (totalBellCount !== null) optional.totalBellCount = totalBellCount
