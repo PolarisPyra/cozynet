@@ -1,5 +1,3 @@
-import { parse } from "date-fns"
-import { fromZonedTime, toZonedTime } from "date-fns-tz"
 import { Hono } from "hono"
 import type { RowDataPacket } from "mysql2"
 
@@ -61,7 +59,8 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 
 		const [playlogResults] = await db.execute<RowDataPacket[]>(
 			`SELECT
-                p.userPlayDate,
+				-- UNIX_TIMESTAMP returns seconds, Tachi do be needing milliseconds
+                UNIX_TIMESTAMP(p.userPlayDate)*1000 as timeAchieved,
                 p.musicId,
                 p.level,
                 p.techScore,
@@ -81,7 +80,7 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
             FROM ongeki_score_playlog p
             WHERE user = ?
             GROUP BY p.id
-            ORDER BY p.userPlayDate DESC`,
+            ORDER BY timeAchieved DESC`,
 			[userId]
 		)
 
@@ -99,7 +98,7 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 
 		for (const log of playlogResults) {
 			const {
-				userPlayDate,
+				timeAchieved,
 				musicId,
 				level,
 				techScore,
@@ -159,20 +158,8 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 				platinumScore,
 				identifier: musicId.toString(),
 				matchType: "inGameID",
-				difficulty: TACHI_DIFFICULTIES[level]
-			}
-
-			// Fix date parsing - ensure userPlayDate is a string
-			if (userPlayDate && typeof userPlayDate === "string") {
-				try {
-					tachiScore.timeAchieved = fromZonedTime(
-						parse(userPlayDate, "yyyy-MM-dd HH:mm:ss", toZonedTime(new Date(), "Asia/Tokyo")),
-						"Asia/Tokyo"
-					).valueOf()
-				} catch (error) {
-					// If date parsing fails, skip this field
-					console.warn(`Failed to parse date: ${userPlayDate}`)
-				}
+				difficulty: TACHI_DIFFICULTIES[level],
+				timeAchieved
 			}
 
 			if (judgeCriticalBreak !== null && judgeBreak !== null && judgeHit !== null && judgeMiss !== null) {
