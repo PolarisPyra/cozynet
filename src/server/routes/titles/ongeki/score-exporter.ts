@@ -158,7 +158,7 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 			}
 
 			const tachiScore: BatchManualScore = {
-				score: techScore,
+				score: Math.min(techScore, 1010000),
 				noteLamp,
 				bellLamp,
 				platinumScore,
