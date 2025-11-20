@@ -151,6 +151,12 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 				bellLamp = "FULL BELL"
 			}
 
+			// LUNATIC stored as level 10
+			let difficulty = TACHI_DIFFICULTIES[level]
+			if (level == 10) {
+				difficulty = "LUNATIC"
+			}
+
 			const tachiScore: BatchManualScore = {
 				score: techScore,
 				noteLamp,
@@ -158,7 +164,7 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 				platinumScore,
 				identifier: musicId.toString(),
 				matchType: "inGameID",
-				difficulty: TACHI_DIFFICULTIES[level],
+				difficulty,
 				timeAchieved
 			}
 
