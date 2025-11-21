@@ -38,7 +38,7 @@ async function getCurrentMapicon(userId: number, version: number): Promise<Mapic
             ON dwp.user = ?
         WHERE cpd.user = ? 
           AND cpd.version = ?
-          AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
+          AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)
       `,
 		[userId, userId, userId, version]
 	)
@@ -162,7 +162,7 @@ const routes = new Hono()
 				LEFT JOIN cozynet_web_permissions dwp
 					ON dwp.user = ?
 				${whereClause}
-					AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
+					AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)
 				ORDER BY 
 					locked DESC,
 					dsm.mapIconId DESC

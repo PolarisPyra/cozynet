@@ -55,7 +55,7 @@ const routes = new Hono()
                 LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
                 WHERE cpd.version = ?
 				  AND dst.version = ?
-				  AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)
+				  AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)
                 `,
 				[userId, userId, version, version]
 			)
@@ -195,7 +195,7 @@ const routes = new Hono()
                     LEFT JOIN chuni_static_opts cso ON dst.opt = cso.id
                     LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
                     WHERE dst.version = ?
-                        AND (dwp.status = 1 OR cso.name = 'A000' OR cso.name IS NULL)${additionalWhere}
+                        AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)${additionalWhere}
                     ORDER BY
                         locked ASC,
                         dst.trophyId DESC

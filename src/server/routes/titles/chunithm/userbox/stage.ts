@@ -37,12 +37,14 @@ async function getCurrentStage(userId: number, version: number): Promise<StageIt
             AND cii.itemKind = 13
         LEFT JOIN chuni_static_opts cso
             ON dsn.opt = cso.id
+        LEFT JOIN cozynet_web_permissions dwp
+            ON dwp.user = ?
         WHERE cpd.user = ?
             AND cpd.version = ?
-            AND (cso.name != 'A000' OR cso.name IS NULL)
+            AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
             AND dsn.name != 'Linked VERSE'
         `,
-		[version, userId, userId, version]
+		[version, userId, userId, userId, version]
 	)
 	return result
 }
@@ -158,15 +160,17 @@ const routes = new Hono()
                     AND cpd.version = ?
                 LEFT JOIN chuni_static_opts cso
                     ON dsn.opt = cso.id
+                LEFT JOIN cozynet_web_permissions dwp
+                    ON dwp.user = ?
                 ${whereClause}
-                    AND (cso.name != 'A000' OR cso.name IS NULL)
+                    AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
                     AND dsn.name != 'Linked VERSE'
                 ORDER BY
                     locked DESC,
                     dsn.stageId DESC
                 `
 
-				params.unshift(userId, version, userId, userId, version)
+				params.unshift(userId, version, userId, userId, version, userId)
 				const [items] = await db.execute<(StageItem & { total_count: number } & RowDataPacket)[]>(query, params)
 				const totalCount = items.length > 0 ? items[0].total_count : 0
 
