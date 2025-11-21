@@ -3,11 +3,12 @@ import { useState } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/app/shared/components/ui/button"
-import { useOngekiVersion, useUnlockAllItems, useUnlockSpecificItem } from "@/app/features/ongeki/hooks"
+import { useOngekiVersion, useUnlockAllCards, useUnlockAllItems, useUnlockSpecificItem } from "@/app/features/ongeki/hooks"
 
 const ItemManagement = () => {
 	const version = useOngekiVersion()
 
+	const { mutate: unlockAllCards } = useUnlockAllCards()
 	const { mutate: unlockAllItems } = useUnlockAllItems()
 	const { mutate: unlockSpecificItem } = useUnlockSpecificItem()
 
@@ -16,6 +17,24 @@ const ItemManagement = () => {
 		items: false,
 		specific: false
 	})
+
+	const handleUnlockAllCards = async () => {
+		if (!version) return
+
+		setIsUnlocking(prev => ({ ...prev, cards: true }))
+		try {
+			unlockAllCards(Number(version), {
+				onSuccess: () => {
+					toast.success("Cards unlocked successfully!")
+				},
+				onError: () => {
+					toast.error("Failed to unlock cards")
+				}
+			})
+		} finally {
+			setIsUnlocking(prev => ({ ...prev, cards: false }))
+		}
+	}
 
 	const handleUnlockAllItems = async () => {
 		if (!version) return
@@ -68,8 +87,11 @@ const ItemManagement = () => {
 				<Button onClick={() => handleUnlockSpecificItem(19)} variant="custom" disabled={isUnlocking.specific}>
 					{isUnlocking.specific ? "Unlocking..." : "Unlock attachments"}
 				</Button>
+				<Button onClick={handleUnlockAllCards} variant="custom" disabled={isUnlocking.cards}>
+					{isUnlocking.cards ? "Unlocking..." : "Unlock Cards"}
+				</Button>
 			</div>
-			<Button onClick={handleUnlockAllItems} variant="custom" disabled={isUnlocking.items}>
+			<Button onClick={handleUnlockAllItems} variant="custom" disabled={isUnlocking.items} className="w-full text-lg py-6">
 				{isUnlocking.items ? "Unlocking..." : "Unlock all items"}
 			</Button>
 		</div>
