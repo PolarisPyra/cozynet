@@ -5,6 +5,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2"
 
 import { DB } from "@/app/shared/types/db"
 import { loginSchema, signupSchema } from "@/app/shared/types/validation/auth"
+
 import { db } from "../db"
 import { validateJson } from "../middleware/validator"
 import { clearCookie, signAndSetCookie } from "../utils/cookie"
