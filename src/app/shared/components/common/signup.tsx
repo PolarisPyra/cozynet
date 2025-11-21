@@ -7,8 +7,8 @@ import { z } from "zod"
 
 import { Button } from "@/app/shared/components/ui/button"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
-import { turnstile } from "@/app/shared/utils/constants"
 import { signupSchema } from "@/app/shared/types/validation/auth"
+import { turnstile } from "@/app/shared/utils/constants"
 
 type FormData = z.infer<typeof signupSchema>
 type FormErrors = Partial<Record<keyof FormData, string[]>>
@@ -46,7 +46,9 @@ export function SignUpContent() {
 			// Form is valid, proceed with submission
 			try {
 				refTurnstile.current?.reset()
-				await signup(formData.username, formData.password, formData.accessCode)
+				// Use validated values from schema
+				const validated = signupSchema.parse(formData)
+				await signup(validated.username, validated.password, validated.accessCode)
 				toast.success("Account created successfully!")
 			} catch (err) {
 				const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred"
@@ -63,8 +65,6 @@ export function SignUpContent() {
 		const newErrors = validateForm(updatedFormData)
 		setErrors(newErrors)
 	}
-
-	const isAccessCodeValid = /^\d{20}$/.test(formData.accessCode.trim())
 
 	return (
 		<div className="bg-card border-border mx-4 w-full max-w-md rounded-sm border p-8 shadow-sm">
@@ -115,9 +115,6 @@ export function SignUpContent() {
 						name="accessCode"
 						id="accessCode"
 						className="text-foreground placeholder:text-muted-foreground bg-background border-border focus-visible:ring-primary focus-visible:ring-offset-background mt-1 block w-full rounded-sm border px-4 py-3 transition duration-300 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-						inputMode="numeric"
-						pattern="\\d*"
-						maxLength={20}
 						placeholder="Enter your access code"
 						value={formData.accessCode}
 						onChange={handleChange}
@@ -132,7 +129,11 @@ export function SignUpContent() {
 				<Button
 					type="submit"
 					disabled={
-						!canSubmit || isLoading || !formData.username.trim() || !formData.password.trim() || !isAccessCodeValid
+						!canSubmit ||
+						isLoading ||
+						!formData.username.trim() ||
+						!formData.password.trim() ||
+						!formData.accessCode.trim()
 					}
 					variant="custom"
 					className="block w-full transform text-center transition duration-300 hover:scale-105 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
