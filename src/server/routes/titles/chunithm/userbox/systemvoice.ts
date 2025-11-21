@@ -41,7 +41,7 @@ async function getCurrentSystemVoice(userId: number, version: number): Promise<S
 		LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
 		LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
 		WHERE cpd.user = ? AND cpd.version = ? AND dssv.version = ?
-		AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)
+		AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
 		LIMIT 1
 		`,
 		[userId, userId, version, version]
@@ -146,7 +146,7 @@ const routes = new Hono()
 			LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
 			LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
 			WHERE dssv.version = ?
-			AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)${additionalWhere}
+			AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)${additionalWhere}
 			`,
 				[userId, userId, version]
 			)
@@ -177,7 +177,7 @@ const routes = new Hono()
 			LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
 			LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
 			WHERE dssv.version = ?
-			AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)${additionalWhere}
+			AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)${additionalWhere}
 			ORDER BY
 				locked DESC,
 				dssv.systemVoiceId DESC

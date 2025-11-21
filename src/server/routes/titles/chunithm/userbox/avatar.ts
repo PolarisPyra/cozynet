@@ -65,7 +65,7 @@ AND (
     (csa.category = 5 AND csa.avatarAccessoryId = cpd.avatarItem) OR
     (csa.category = 7 AND csa.avatarAccessoryId = cpd.avatarBack)
 )
-AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)
+AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
 		ORDER BY csa.category
       	`,
 		[userId, userId, version, userId, version]
@@ -231,7 +231,7 @@ const routes = new Hono()
 					csa.category IN (${placeholders})
 					${locked !== null ? `AND (cii.user IS ${locked ? "NULL" : "NOT NULL"})` : ""}
 				)
-				AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)
+				AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
 				ORDER BY
 					sort_current,
 					locked DESC,
@@ -351,7 +351,7 @@ const routes = new Hono()
 				ON dwp.user = ?
 				WHERE csa.avatarAccessoryId = ?
 				AND csa.version = ?
-				AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name = 'A000' OR cso.name IS NULL)
+				AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
 				`,
 				[userId, userId, id, version]
 			)
