@@ -1,4 +1,4 @@
-import { ChevronsUpDown, CreditCard, KeySquare, LayoutDashboard, LogOut, SettingsIcon, UserCog } from "lucide-react"
+import { Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon, UserCog } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { useAdmin } from "@/app/features/admin/hooks"
@@ -81,11 +81,18 @@ export function NavUser({
 										Admin
 									</DropdownMenuLabel>
 									<DropdownMenuItem
-										onClick={() => navigate("/admin")}
+										onClick={() => navigate("/admin/keychip-generator")}
 										className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 									>
-										<LayoutDashboard className="text-primary" />
-										Dashboard
+										<KeySquare className="text-primary" />
+										Keychip Generator
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => navigate("/admin/arcade-ownership")}
+										className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+									>
+										<Building2 className="text-primary" />
+										Arcade Ownership
 									</DropdownMenuItem>
 									<DropdownMenuItem
 										onClick={() => navigate("/admin/cards")}

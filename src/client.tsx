@@ -34,6 +34,8 @@ const CardsPage = React.lazy(() => import("./app/features/account/pages/cards"))
 const KeychipPage = React.lazy(() => import("./app/features/account/pages/keychip"))
 const AdminDashboard = React.lazy(() => import("./app/features/admin/pages/admin-dashboard"))
 const AdminCardManagement = React.lazy(() => import("./app/features/admin/pages/card-management"))
+const AdminKeychipGenerator = React.lazy(() => import("./app/features/admin/pages/admin-keychip-generator"))
+const AdminArcadeOwnership = React.lazy(() => import("./app/features/admin/pages/admin-arcade-ownership"))
 const ChunithmAllSongs = React.lazy(() => import("./app/features/chunithm/pages/allsongs"))
 const ChunithmFavorites = React.lazy(() => import("./app/features/chunithm/pages/favorites"))
 const ChunithmLeaderboard = React.lazy(() => import("./app/features/chunithm/pages/leaderboard"))
@@ -79,6 +81,8 @@ const app = (
 									<Route path="/home" element={<ServerNews />} />
 									<Route path="/admin" element={<AdminDashboard />} />
 									<Route path="/admin/cards" element={<AdminCardManagement />} />
+									<Route path="/admin/keychip-generator" element={<AdminKeychipGenerator />} />
+									<Route path="/admin/arcade-ownership" element={<AdminArcadeOwnership />} />
 									<Route path="/account" element={<Account />} />
 									<Route path="/cards" element={<CardsPage />} />
 									<Route path="/keychip" element={<KeychipPage />} />

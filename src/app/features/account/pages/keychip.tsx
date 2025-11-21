@@ -126,13 +126,16 @@ const KeychipPage = () => {
 		}))
 	}
 
-	const formatKeychipId = (keychipId: string, hidden: boolean) => {
+	/**
+	 * Formats keychip ID for display: A69E01A85421811 -> A69E-01A85421811
+	 * This is purely for frontend display - server stores raw format
+	 */
+	const formatKeychipId = (keychipId: string, hidden: boolean): string => {
 		if (hidden) {
 			// Display as: A69E-****** (first 4 chars, dash, then masked)
 			return keychipId.substring(0, 4) + "-******"
 		}
-		// Format: A69E01A97462352 (15 chars: 4-2-1-8)
-		// Display as: A69E-01A36924818 (single dash after prefix)
+		// Format: A69E01A85421811 -> A69E-01A85421811 (add dash after E for display)
 		return keychipId.substring(0, 4) + "-" + keychipId.substring(4)
 	}
 

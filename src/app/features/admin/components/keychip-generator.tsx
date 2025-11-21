@@ -3,11 +3,17 @@ import { useState } from "react"
 import { ChevronDown, Loader2, Shuffle } from "lucide-react"
 import { toast } from "sonner"
 
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/shared/components/ui/command"
+import { Button } from "@/app/shared/components/ui/button"
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList
+} from "@/app/shared/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
 import { api } from "@/app/shared/utils"
-
-import { Button } from "@/app/shared/components/ui/button"
 
 const gameOptions = [
 	{ value: "aime", label: "Sega (Aime card)" },
@@ -45,6 +51,16 @@ export const KeychipGenerator = function () {
 		setOpenDropdown(false)
 	}
 
+	/**
+	 * Formats keychip ID for display: A69E01A85421811 -> A69E-01A85421811
+	 * This is purely for frontend display - server stores raw format
+	 */
+	const formatKeychipIdForDisplay = (keychipId: string): string => {
+		if (!keychipId) return ""
+		// Format: A69E01A85421811 -> A69E-01A85421811 (add dash after E for display)
+		return keychipId.substring(0, 4) + "-" + keychipId.substring(4)
+	}
+
 	const generateRandomSerial = function () {
 		let uniqueNumbers = ""
 		while (uniqueNumbers.length < 4) {
@@ -52,6 +68,7 @@ export const KeychipGenerator = function () {
 			if (!uniqueNumbers.includes(digit.toString())) uniqueNumbers += digit
 		}
 		const randomNumbers = Math.floor(1000 + Math.random() * 9000)
+		// Store raw format (no hyphen) - server expects this format
 		const randomSerial = `A69E01A${uniqueNumbers}${randomNumbers}`
 
 		setFormData(data => ({
@@ -65,6 +82,7 @@ export const KeychipGenerator = function () {
 		setIsLoading(true)
 
 		try {
+			// formData already contains raw format (no hyphens), send directly
 			const response = await api.admin.keychip.generate.$post({
 				json: formData
 			})
@@ -166,9 +184,15 @@ export const KeychipGenerator = function () {
 						type="text"
 						placeholder={showNamcoPcbId ? "Enter Namco PCBID" : "Enter Aime Card"}
 						name={showNamcoPcbId ? "namcopcbid" : "aimecard"}
-						value={showNamcoPcbId ? formData.namcopcbid : formData.aimecard}
+						value={
+							showNamcoPcbId
+								? formData.namcopcbid
+								: formData.aimecard
+									? formatKeychipIdForDisplay(formData.aimecard)
+									: ""
+						}
 						onChange={handleChange}
-						className="bg-background text-foreground border-input w-full rounded border p-2"
+						className="bg-background text-foreground border-input w-full rounded border p-2 font-mono"
 						required
 						readOnly
 					/>
