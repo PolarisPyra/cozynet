@@ -18,7 +18,7 @@ type Arcade = {
 	nickname?: string
 }
 
-const ArcadeName = () => {
+export function ArcadeName() {
 	const { data: currentArcade, isLoading } = useCurrentArcade()
 	const { mutate: updateArcadeName, isPending } = useUpdateArcadeName()
 
@@ -204,4 +204,3 @@ const ArcadeName = () => {
 	)
 }
 
-export default ArcadeName

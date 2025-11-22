@@ -1,8 +1,7 @@
 import { useState } from "react"
 
-import { Edit2, Gamepad2, Hash, Palette, Save, User, X } from "lucide-react"
+import { Gamepad2, Hash, Palette, User } from "lucide-react"
 import { HexColorPicker } from "react-colorful"
-import { toast } from "sonner"
 
 import Header from "@/app/shared/components/common/header"
 import Spinner from "@/app/shared/components/common/spinner"
@@ -10,13 +9,11 @@ import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Button } from "@/app/shared/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/shared/components/ui/card"
-import { Input } from "@/app/shared/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
-import { useProfileVersions, useUpdateUsername } from "@/app/shared/hooks/users"
+import { useProfileVersions } from "@/app/shared/hooks/users"
 import { ChunithmVersions, MaimaiDxVersions, OngekiVersions } from "@/app/shared/utils/enums"
 
-// Types
 interface GameProfile {
 	version: number
 	userName: string | null
@@ -28,7 +25,6 @@ interface ProfileData {
 	maimaidx: GameProfile[]
 }
 
-// Config
 const GAMES = [
 	{
 		key: "chunithm",
@@ -72,84 +68,10 @@ const DEFAULT_COLOR = "#ef4444"
 const STORAGE_KEY = "profile-banner-color"
 
 const isValidHex = (v: string) => /^#[0-9A-Fa-f]{6}$/.test(v)
-
 const getVersionName = (versions: Record<number, string>, version: number) => versions[version] ?? `Version ${version}`
-
 const getStoredColor = () => {
 	const stored = localStorage.getItem(STORAGE_KEY)
 	return stored && isValidHex(stored) ? stored : DEFAULT_COLOR
-}
-
-// Components
-function EditableUsername({ username }: { username: string }) {
-	const [editing, setEditing] = useState(false)
-	const [value, setValue] = useState(username)
-	const { mutate, isPending } = useUpdateUsername()
-
-	const save = () => {
-		const trimmed = value.trim()
-		if (!trimmed) return toast.error("Username cannot be empty")
-		if (trimmed === username) return setEditing(false)
-
-		mutate(
-			{ username: trimmed },
-			{
-				onSuccess: data => {
-					setValue(data.username)
-					setEditing(false)
-					toast.success("Username updated")
-				},
-				onError: (err: Error) => toast.error(err.message || "Update failed")
-			}
-		)
-	}
-
-	const cancel = () => {
-		setValue(username)
-		setEditing(false)
-	}
-
-	if (editing) {
-		return (
-			<form
-				onSubmit={e => {
-					e.preventDefault()
-					save()
-				}}
-				className="flex items-center gap-2"
-			>
-				<Input
-					value={value}
-					onChange={e => setValue(e.target.value)}
-					onKeyDown={e => e.key === "Escape" && cancel()}
-					disabled={isPending}
-					maxLength={50}
-					autoFocus
-					className="h-9 max-w-xs"
-				/>
-				<Button size="icon" variant="ghost" type="submit" disabled={isPending}>
-					{isPending ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-				</Button>
-				<Button size="icon" variant="ghost" type="button" onClick={cancel} disabled={isPending}>
-					<X className="h-4 w-4" />
-				</Button>
-			</form>
-		)
-	}
-
-	return (
-		<div className="flex items-center gap-2">
-			<span className="text-xl font-semibold sm:text-2xl">{username}</span>
-			<Button
-				size="icon"
-				variant="ghost"
-				onClick={() => setEditing(true)}
-				className="text-muted-foreground h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
-			>
-				<Edit2 className="h-4 w-4" />
-			</Button>
-		</div>
-	)
 }
 
 function ColorPicker({
@@ -192,7 +114,6 @@ function ColorPicker({
 
 function ProfileHeader({ user }: { user: { username: string; userId: number; permissions?: number } }) {
 	const [color, setColor] = useState(getStoredColor)
-
 	const saveColor = () => localStorage.setItem(STORAGE_KEY, color)
 
 	return (
@@ -201,26 +122,30 @@ function ProfileHeader({ user }: { user: { username: string; userId: number; per
 				<ColorPicker color={color} onChange={setColor} onClose={saveColor} />
 			</div>
 			<CardContent className="group relative px-4 pb-20">
-				<div className="flex items-end gap-4">
-					<Avatar className="-mt-12 h-24 w-24 border-4 sm:-mt-16 sm:h-28 sm:w-28" style={{ borderColor: color }}>
-						<AvatarFallback className="bg-muted text-muted-foreground">
+				<div className="flex justify-start pt-2">
+					<Avatar
+						className="-mt-12 h-24 w-24 rounded-3xl border-4 sm:-mt-16 sm:h-28 sm:w-28 [&>span]:rounded-3xl"
+						style={{ borderColor: color }}
+					>
+						<AvatarFallback className="bg-muted text-muted-foreground rounded-3xl">
 							<User className="h-12 w-12 sm:h-14 sm:w-14" />
 						</AvatarFallback>
 					</Avatar>
-					<div className="flex-1 pr-32">
-						<EditableUsername username={user.username} />
-					</div>
 				</div>
-				<div className="absolute right-4 bottom-4 flex items-center gap-2">
-					<Badge variant="secondary" className="h-6 gap-0 rounded-sm font-mono text-xs">
-						<Hash className="-mr-0.5 h-3 w-3" />
-						{user.userId}
-					</Badge>
-					{user.permissions !== undefined && (
-						<Badge variant="secondary" className="h-6 rounded-sm text-xs">
-							{user.permissions === 2 ? "Admin" : "User"}
+				<div className="border-border my-6 border-t" />
+				<div className="flex items-center justify-between gap-4">
+					<span className="text-xl font-semibold sm:text-2xl">{user.username}</span>
+					<div className="flex items-center gap-2">
+						<Badge variant="secondary" className="h-6 gap-0 rounded-sm font-mono text-xs">
+							<Hash className="-mr-0.5 h-3 w-3" />
+							{user.userId}
 						</Badge>
-					)}
+						{user.permissions !== undefined && (
+							<Badge variant="secondary" className="h-6 rounded-sm text-xs">
+								{user.permissions === 2 ? "Admin" : "User"}
+							</Badge>
+						)}
+					</div>
 				</div>
 			</CardContent>
 		</Card>
@@ -230,14 +155,12 @@ function ProfileHeader({ user }: { user: { username: string; userId: number; per
 function GameProfiles() {
 	const { data, isLoading } = useProfileVersions() as { data: ProfileData | undefined; isLoading: boolean }
 
-	if (isLoading) {
+	if (isLoading)
 		return (
 			<div className="flex justify-center py-12">
 				<Spinner className="h-8 w-8" />
 			</div>
 		)
-	}
-
 	if (!data) return null
 
 	const sections = GAMES.map(game => ({ ...game, profiles: game.getData(data) })).filter(s => s.profiles.length > 0)

@@ -4,25 +4,26 @@ import { api } from "@/app/shared/utils"
 
 import { useAuth } from "../auth/use-auth"
 
-interface UpdateUsernameVariables {
-	username: string
+interface UpdatePasswordVariables {
+	currentPassword: string
+	newPassword: string
 }
 
-export function useUpdateUsername() {
+export function useUpdatePassword() {
 	const { setUser } = useAuth()
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: async ({ username }: UpdateUsernameVariables) => {
-			const response = await api.common.profile.username.$post({
-				json: { username }
+		mutationFn: async ({ currentPassword, newPassword }: UpdatePasswordVariables) => {
+			const response = await api.common.profile.password.$post({
+				json: { currentPassword, newPassword }
 			})
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}))
 				const errorMessage =
 					(errorData as { message?: string; error?: string }).message ||
 					(errorData as { message?: string; error?: string }).error ||
-					"Failed to update username"
+					"Failed to update password"
 				throw new Error(errorMessage)
 			}
 			return await response.json()

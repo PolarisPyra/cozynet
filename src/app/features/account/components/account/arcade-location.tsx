@@ -38,7 +38,7 @@ const getStatesForCountry = (country: string | null): State[] => {
 	return result.sort((a, b) => a.state.localeCompare(b.state))
 }
 
-const ArcadeLocation = () => {
+export function ArcadeLocation() {
 	const { data: currentArcade, isLoading } = useCurrentArcade()
 	const { mutate: updateArcadeLocation, isPending } = useUpdateArcadeLocation()
 
@@ -103,7 +103,6 @@ const ArcadeLocation = () => {
 				) : null}
 			</div>
 
-			{/* No Arcade Assigned */}
 			{!isLoading && (!currentArcade || currentArcade.length === 0) ? (
 				<div className="rounded-sm border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
 					<div className="flex items-start gap-3">
@@ -128,7 +127,6 @@ const ArcadeLocation = () => {
 				</div>
 			) : (
 				<div>
-					{/* Arcade Select */}
 					<div className="mb-4">
 						<label className="text-primary block pb-2 text-sm font-medium">Select Arcade</label>
 						<Popover open={openArcade} onOpenChange={setOpenArcade}>
@@ -174,7 +172,6 @@ const ArcadeLocation = () => {
 						</Popover>
 					</div>
 
-					{/* Country Select */}
 					<div className="mb-4">
 						<label className="text-primary block pb-2 text-sm font-medium">Country</label>
 						<Popover open={openCountry} onOpenChange={setOpenCountry}>
@@ -219,7 +216,6 @@ const ArcadeLocation = () => {
 						</Popover>
 					</div>
 
-					{/* State Select */}
 					<div className="mb-4">
 						<label className="text-primary block pb-2 text-sm font-medium">State / Region</label>
 						<Popover open={openState} onOpenChange={setOpenState}>
@@ -263,7 +259,6 @@ const ArcadeLocation = () => {
 						</Popover>
 					</div>
 
-					{/* Submit Button */}
 					<div className="pt-4">
 						<Button
 							variant="custom"
@@ -288,4 +283,3 @@ const ArcadeLocation = () => {
 	)
 }
 
-export default ArcadeLocation
