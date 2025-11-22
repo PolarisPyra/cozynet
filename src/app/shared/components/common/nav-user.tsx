@@ -1,5 +1,6 @@
-import { Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon, UserCog } from "lucide-react"
 import { useEffect, useState } from "react"
+
+import { Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon, UserCog } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { useAdmin } from "@/app/features/admin/hooks"
@@ -83,7 +84,7 @@ export function NavUser({
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
 							size="lg"
-							className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer border-t ring-0 focus-visible:ring-0 focus-visible:outline-none rounded-none"
+							className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer rounded-none border-t ring-0 focus-visible:ring-0 focus-visible:outline-none"
 							style={{ borderTopColor: bannerColor, borderTopWidth: "1px" }}
 						>
 							<Avatar className="bg-background h-8 w-8 rounded-sm">
@@ -173,8 +174,15 @@ export function NavUser({
 						<DropdownMenuSeparator className="bg-border" />
 						<DropdownMenuGroup>
 							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
-								Game Settings
+								Settings
 							</DropdownMenuLabel>
+							<DropdownMenuItem
+								onClick={() => navigate("/account")}
+								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+							>
+								<UserCog className="text-primary" />
+								Account
+							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => navigate("/chunithm/settings")}
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
@@ -195,16 +203,6 @@ export function NavUser({
 							>
 								<SettingsIcon className="text-primary" />
 								Maimai DX
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator className="bg-border" />
-						<DropdownMenuGroup>
-							<DropdownMenuItem
-								onClick={() => navigate("/account")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<UserCog className="text-primary" />
-								Account Settings
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator className="bg-border" />
