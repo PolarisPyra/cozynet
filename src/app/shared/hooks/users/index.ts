@@ -8,6 +8,7 @@ import {
 } from "./use-arcade"
 import { useCurrentUser } from "./use-current-user"
 import { useProfileVersions } from "./use-profile-versions"
+import { useUpdateUsername } from "./use-update-username"
 
 export {
 	useCurrentUser,
@@ -17,5 +18,6 @@ export {
 	useCurrentArcade,
 	useUpdateArcadeLocation,
 	useUpdateArcadeName,
-	useProfileVersions
+	useProfileVersions,
+	useUpdateUsername
 }

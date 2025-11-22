@@ -1,13 +1,16 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
-import { User } from "lucide-react"
+import { Edit2, Save, User, X } from "lucide-react"
+import { toast } from "sonner"
 
 import Header from "@/app/shared/components/common/header"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Badge } from "@/app/shared/components/ui/badge"
+import { Button } from "@/app/shared/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/shared/components/ui/card"
+import { Input } from "@/app/shared/components/ui/input"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
-import { useProfileVersions } from "@/app/shared/hooks/users"
+import { useProfileVersions, useUpdateUsername } from "@/app/shared/hooks/users"
 import { ChunithmVersions, MaimaiDxVersions, OngekiVersions } from "@/app/shared/utils/enums"
 
 // Types
@@ -79,6 +82,105 @@ const InfoField = ({ label, children, mono }: InfoFieldProps) => (
 		<div className={`text-foreground text-base ${mono ? "font-mono" : ""}`}>{children}</div>
 	</div>
 )
+
+// Editable username field
+interface EditableUsernameFieldProps {
+	username: string
+}
+
+const EditableUsernameField = ({ username }: EditableUsernameFieldProps) => {
+	const [isEditing, setIsEditing] = useState(false)
+	const [editValue, setEditValue] = useState(username)
+	const { mutate: updateUsername, isPending } = useUpdateUsername()
+
+	const handleSave = () => {
+		if (!editValue.trim()) {
+			toast.error("Username cannot be empty")
+			return
+		}
+		if (editValue === username) {
+			setIsEditing(false)
+			return
+		}
+
+		updateUsername(
+			{ username: editValue.trim() },
+			{
+				onSuccess: data => {
+					setEditValue(data.username)
+					setIsEditing(false)
+					toast.success("Username updated successfully")
+				},
+				onError: (error: Error) => {
+					toast.error(error.message || "Failed to update username")
+				}
+			}
+		)
+	}
+
+	const handleCancel = () => {
+		setEditValue(username)
+		setIsEditing(false)
+	}
+
+	if (isEditing) {
+		return (
+			<div className="space-y-1">
+				<label className="text-muted-foreground text-sm font-medium">Username</label>
+				<div className="flex items-center gap-2">
+					<Input
+						value={editValue}
+						onChange={e => setEditValue(e.target.value)}
+						onKeyDown={e => {
+							if (e.key === "Enter") {
+								e.preventDefault()
+								handleSave()
+							} else if (e.key === "Escape") {
+								handleCancel()
+							}
+						}}
+						disabled={isPending}
+						className="flex-1"
+						maxLength={50}
+						autoFocus
+					/>
+					<div className="flex items-center gap-0.5">
+						<Button
+							size="icon"
+							variant="ghost"
+							onClick={handleSave}
+							disabled={isPending || !editValue.trim() || editValue === username}
+							className="h-9 w-9"
+						>
+							<Save className="h-4 w-4" />
+						</Button>
+						<Button size="icon" variant="ghost" onClick={handleCancel} disabled={isPending} className="h-9 w-9">
+							<X className="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
+			</div>
+		)
+	}
+
+	return (
+		<div className="space-y-1">
+			<label className="text-muted-foreground text-sm font-medium">Username</label>
+			<div className="flex items-center gap-1.5">
+				<span className="text-foreground text-base">{username}</span>
+				<Button
+					size="icon"
+					variant="ghost"
+					onClick={() => setIsEditing(true)}
+					className="h-8 w-8 shrink-0"
+					aria-label="Edit username"
+				>
+					<Edit2 className="h-4 w-4" />
+				</Button>
+			</div>
+		</div>
+	)
+}
 
 // Game profile components
 interface GameProfileRowProps {
@@ -216,12 +318,7 @@ const PersonalInfoCard = ({ user }: PersonalInfoCardProps) => (
 		icon={<User className="h-5 w-5" />}
 	>
 		<div className="grid gap-4 sm:grid-cols-2">
-			<InfoField label="Username">{user.username}</InfoField>
-			{user.aimeCardId && (
-				<InfoField label="Aime Card ID" mono>
-					{user.aimeCardId}
-				</InfoField>
-			)}
+			<EditableUsernameField username={user.username} />
 			<InfoField label="Permissions">
 				<Badge variant="secondary">{getPermissionLabel(user.permissions)}</Badge>
 			</InfoField>

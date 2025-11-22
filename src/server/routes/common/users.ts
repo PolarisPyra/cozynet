@@ -4,9 +4,12 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2"
 import { z } from "zod"
 
 import { DB } from "@/app/shared/types"
+import { usernameSchema } from "@/app/shared/types/validation/auth"
 import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
+import { signAndSetCookie } from "@/server/utils/cookie"
 import { rethrowWithMessage } from "@/server/utils/error"
+import { getUserGameVersions } from "@/server/utils/versions"
 
 const UserRoutes = new Hono()
 	.post("/verify", async c => {
@@ -136,6 +139,73 @@ const UserRoutes = new Hono()
 			} catch (error) {
 				if (error instanceof HTTPException) throw error
 				throw rethrowWithMessage("Failed to unbind card", error)
+			}
+		}
+	)
+	.post(
+		"/username",
+		validateJson(
+			z.object({
+				username: usernameSchema
+			})
+		),
+		async c => {
+			const conn = await db.getConnection()
+			try {
+				await conn.beginTransaction()
+
+				const { userId, aimeCardId } = c.payload
+				const { username } = await c.req.json()
+
+				if (!userId) throw new HTTPException(403)
+
+				// Check if username is already taken by another user
+				const [existingUsers] = await conn.execute<(DB.AimeUser & RowDataPacket)[]>(
+					"SELECT * FROM aime_user WHERE username = ? AND id != ?",
+					[username, userId]
+				)
+
+				if (existingUsers.length > 0) {
+					throw new HTTPException(409, { message: "Username already exists" })
+				}
+
+				// Update username
+				const [result] = await conn.execute<ResultSetHeader>("UPDATE aime_user SET username = ? WHERE id = ?", [
+					username,
+					userId
+				])
+
+				if (result.affectedRows === 0) {
+					throw new HTTPException(404, { message: "User not found" })
+				}
+
+				// Refresh the JWT token with updated user data
+				const [users] = await conn.execute<(DB.AimeUser & RowDataPacket)[]>("SELECT * FROM aime_user WHERE id = ?", [
+					userId
+				])
+				const user = users[0]
+
+				const [cards] = await conn.execute<(DB.AimeCard & RowDataPacket)[]>(
+					"SELECT * FROM aime_card WHERE access_code = ?",
+					[aimeCardId]
+				)
+				const card = cards[0]
+
+				if (!user || !card) {
+					throw new HTTPException(404)
+				}
+
+				const versions = await getUserGameVersions(userId, conn)
+				const cookieResult = await signAndSetCookie(c, user, card, versions)
+
+				await conn.commit()
+				return c.json(cookieResult)
+			} catch (error) {
+				await conn.rollback()
+				if (error instanceof HTTPException) throw error
+				throw rethrowWithMessage("Failed to update username", error)
+			} finally {
+				conn.release()
 			}
 		}
 	)
