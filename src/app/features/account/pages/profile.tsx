@@ -124,11 +124,11 @@ function ProfileHeader({ user }: { user: { username: string; userId: number; per
 			<CardContent className="group relative px-4 pb-20">
 				<div className="flex justify-start pt-2">
 					<Avatar
-						className="-mt-12 h-24 w-24 rounded-3xl border-4 sm:-mt-16 sm:h-28 sm:w-28 [&>span]:rounded-3xl"
+						className="-mt-16 h-16 w-16 rounded-md border-4 sm:-mt-16 sm:h-20 sm:w-20 [&>span]:rounded-md"
 						style={{ borderColor: color }}
 					>
-						<AvatarFallback className="bg-muted text-muted-foreground rounded-3xl">
-							<User className="h-12 w-12 sm:h-14 sm:w-14" />
+						<AvatarFallback className="bg-muted text-muted-foreground rounded-md">
+							<User className="h-8 w-8 sm:h-10 sm:w-10" />
 						</AvatarFallback>
 					</Avatar>
 				</div>
