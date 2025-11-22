@@ -1,4 +1,5 @@
 import { Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon, UserCog } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { useAdmin } from "@/app/features/admin/hooks"
@@ -16,6 +17,49 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/app/shared/components/ui/sidebar"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 
+const DEFAULT_BANNER_COLOR = "#ef4444"
+const BANNER_COLOR_KEY = "profile-banner-color"
+
+const isValidHex = (value: string): boolean => /^#[0-9A-Fa-f]{6}$/.test(value)
+
+const useBannerColor = (): string => {
+	const [bannerColor, setBannerColor] = useState<string>(() => {
+		if (typeof window === "undefined") return DEFAULT_BANNER_COLOR
+		const stored = localStorage.getItem(BANNER_COLOR_KEY)
+		return stored && isValidHex(stored) ? stored : DEFAULT_BANNER_COLOR
+	})
+
+	useEffect(() => {
+		const handleStorageChange = () => {
+			const stored = localStorage.getItem(BANNER_COLOR_KEY)
+			if (stored && isValidHex(stored)) {
+				setBannerColor(stored)
+			}
+		}
+
+		// Listen for storage events (from other tabs)
+		window.addEventListener("storage", handleStorageChange)
+		// Listen for custom events (from same tab)
+		window.addEventListener("bannerColorChange", handleStorageChange)
+
+		// Poll for changes in the same tab (since storage event doesn't fire in same tab)
+		const interval = setInterval(() => {
+			const stored = localStorage.getItem(BANNER_COLOR_KEY)
+			if (stored && isValidHex(stored) && stored !== bannerColor) {
+				setBannerColor(stored)
+			}
+		}, 100)
+
+		return () => {
+			window.removeEventListener("storage", handleStorageChange)
+			window.removeEventListener("bannerColorChange", handleStorageChange)
+			clearInterval(interval)
+		}
+	}, [bannerColor])
+
+	return bannerColor
+}
+
 export function NavUser({
 	user
 }: {
@@ -30,6 +74,7 @@ export function NavUser({
 	const navigate = useNavigate()
 	const { data: systemAdmin } = useAdmin()
 	const adminPerms = hasAdminAccess(systemAdmin)
+	const bannerColor = useBannerColor()
 
 	return (
 		<SidebarMenu>
@@ -38,7 +83,8 @@ export function NavUser({
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
 							size="lg"
-							className="border-sidebar-border/50 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer border-t ring-0 focus-visible:ring-0 focus-visible:outline-none"
+							className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer border-t ring-0 focus-visible:ring-0 focus-visible:outline-none rounded-none"
+							style={{ borderTopColor: bannerColor, borderTopWidth: "1px" }}
 						>
 							<Avatar className="bg-background h-8 w-8 rounded-sm">
 								<AvatarImage src={user.avatar} alt={user.username} />

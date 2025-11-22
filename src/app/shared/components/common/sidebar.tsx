@@ -36,6 +36,46 @@ import { cn } from "@/app/shared/utils"
 
 import { NavUser } from "./nav-user"
 
+const DEFAULT_BANNER_COLOR = "#ef4444"
+const BANNER_COLOR_KEY = "profile-banner-color"
+
+const isValidHex = (value: string): boolean => /^#[0-9A-Fa-f]{6}$/.test(value)
+
+const useBannerColor = (): string => {
+	const [bannerColor, setBannerColor] = useState<string>(() => {
+		if (typeof window === "undefined") return DEFAULT_BANNER_COLOR
+		const stored = localStorage.getItem(BANNER_COLOR_KEY)
+		return stored && isValidHex(stored) ? stored : DEFAULT_BANNER_COLOR
+	})
+
+	useEffect(() => {
+		const handleStorageChange = () => {
+			const stored = localStorage.getItem(BANNER_COLOR_KEY)
+			if (stored && isValidHex(stored)) {
+				setBannerColor(stored)
+			}
+		}
+
+		window.addEventListener("storage", handleStorageChange)
+		window.addEventListener("bannerColorChange", handleStorageChange)
+
+		const interval = setInterval(() => {
+			const stored = localStorage.getItem(BANNER_COLOR_KEY)
+			if (stored && isValidHex(stored) && stored !== bannerColor) {
+				setBannerColor(stored)
+			}
+		}, 100)
+
+		return () => {
+			window.removeEventListener("storage", handleStorageChange)
+			window.removeEventListener("bannerColorChange", handleStorageChange)
+			clearInterval(interval)
+		}
+	}, [bannerColor])
+
+	return bannerColor
+}
+
 interface MenuItem {
 	name: string
 	href?: string
@@ -135,6 +175,7 @@ interface MenuItemProps {
 	isExpanded: (name: string) => boolean
 	onToggle: (name: string) => void
 	currentPath: string
+	bannerColor?: string
 }
 
 const MenuItemComponent = React.memo(function MenuItemComponent({
@@ -142,7 +183,8 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 	depth = 0,
 	isExpanded,
 	onToggle,
-	currentPath
+	currentPath,
+	bannerColor
 }: MenuItemProps) {
 	const { name, href, icon: Icon, children } = item
 	const hasChildren = children && children.length > 0
@@ -155,6 +197,8 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 		}
 		return Icon
 	}, [hasChildren, Icon, isOpen])
+
+	const borderColor = isActive && bannerColor ? bannerColor : undefined
 
 	const buttonContent = (
 		<>
@@ -181,6 +225,7 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 						isExpanded={isExpanded}
 						onToggle={onToggle}
 						currentPath={currentPath}
+						bannerColor={bannerColor}
 					/>
 				))}
 			</SidebarMenuSub>
@@ -203,7 +248,12 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 	return (
 		<SidebarMenuItem>
 			{href ? (
-				<SidebarMenuButton asChild isActive={isActive} className={cn(isActive && "border-primary border-l-2")}>
+				<SidebarMenuButton
+					asChild
+					isActive={isActive}
+					className={cn(isActive && "border-l-2", !borderColor && isActive && "border-primary")}
+					style={borderColor ? { borderLeftColor: borderColor } : undefined}
+				>
 					<Link to={href}>{buttonContent}</Link>
 				</SidebarMenuButton>
 			) : (
@@ -220,6 +270,7 @@ export function SidebarComponent() {
 	const { user } = useAuth()
 	const location = useLocation()
 	const { toggle, isExpanded } = useExpandedState()
+	const bannerColor = useBannerColor()
 
 	const userData = useMemo(() => {
 		if (!user) return null
@@ -249,6 +300,7 @@ export function SidebarComponent() {
 								isExpanded={isExpanded}
 								onToggle={toggle}
 								currentPath={location.pathname}
+								bannerColor={bannerColor}
 							/>
 						</SidebarGroupContent>
 					</SidebarGroup>
