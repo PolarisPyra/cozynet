@@ -20,7 +20,7 @@ export const Body = ({ className, children, ...props }: ContainerProps) => (
 
 export const FilterArea = ({ className, children, ...props }: ContainerProps) => (
 	<div
-		className={cn("border-border bg-background/95 flex-shrink-0 rounded-sm py-3 backdrop-blur-sm", className)}
+		className={cn("border-border bg-background/95 flex-shrink-0 rounded-sm px-4 py-3 backdrop-blur-sm", className)}
 		{...props}
 	>
 		{children}

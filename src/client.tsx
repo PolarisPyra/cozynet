@@ -30,6 +30,7 @@ import "./index.css"
 
 // Lazy-load large pages and feature components to reduce initial bundle size
 const Account = React.lazy(() => import("./app/features/account/pages/account"))
+const ProfilePage = React.lazy(() => import("./app/features/account/pages/profile"))
 const CardsPage = React.lazy(() => import("./app/features/account/pages/cards"))
 const KeychipPage = React.lazy(() => import("./app/features/account/pages/keychip"))
 const AdminDashboard = React.lazy(() => import("./app/features/admin/pages/admin-dashboard"))
@@ -79,6 +80,7 @@ const app = (
 									}
 								>
 									<Route path="/home" element={<ServerNews />} />
+									<Route path="/profile" element={<ProfilePage />} />
 									<Route path="/admin" element={<AdminDashboard />} />
 									<Route path="/admin/cards" element={<AdminCardManagement />} />
 									<Route path="/admin/keychip-generator" element={<AdminKeychipGenerator />} />

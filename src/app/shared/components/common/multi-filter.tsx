@@ -33,7 +33,7 @@ export const MultiFilter = ({ filters, filterValues, onFilterChange, onClearAll 
 						value={filterValues[filter.identifier] || "all"}
 						onValueChange={value => onFilterChange(filter.identifier, value)}
 					>
-						<SelectTrigger className="w-auto min-w-[100px] rounded-sm px-2">
+						<SelectTrigger className="w-auto min-w-[80px] rounded-sm px-2 text-sm sm:min-w-[100px]">
 							<SelectValue placeholder={filter.label}>
 								{(() => {
 									const selectedValue = filterValues[filter.identifier] || "all"

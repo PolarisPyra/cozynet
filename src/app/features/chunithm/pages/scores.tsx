@@ -1,19 +1,20 @@
 import { useState } from "react"
+
 import { toast } from "sonner"
 
 import ChunithmScoreInfoCard from "@/app/features/chunithm/components/score-info-card"
+import {
+	type ChunithmFilterValues,
+	getDefaultScoreFilterValues,
+	useNewScoreFiltering as useChunithmScoreFiltering,
+	useScoreExporter,
+	useScoreFilters
+} from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Button } from "@/app/shared/components/ui/button"
-import {
-    type ChunithmFilterValues,
-    getDefaultScoreFilterValues,
-	useScoreExporter,
-    useNewScoreFiltering as useChunithmScoreFiltering,
-    useScoreFilters
-} from "@/app/features/chunithm/hooks"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
 
@@ -87,14 +88,19 @@ const ChunithmScorePage = () => {
 			/>
 			<Body>
 				<FilterArea>
-					<div className="flex justify-between items-center">
+					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<MultiFilter
 							filters={scoreFilters}
 							filterValues={filterValues}
 							onFilterChange={handleFilterChange}
 							onClearAll={handleClearAll}
 						/>
-						<Button onClick={handleExportScores} variant="custom" disabled={isLoadingExport}>
+						<Button
+							onClick={handleExportScores}
+							variant="custom"
+							disabled={isLoadingExport}
+							className="w-full sm:w-auto"
+						>
 							{isLoadingExport ? "Exporting..." : "Export All Scores"}
 						</Button>
 					</div>

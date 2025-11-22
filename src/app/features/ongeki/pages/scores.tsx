@@ -1,11 +1,7 @@
 import { useState } from "react"
+
 import { toast } from "sonner"
 
-import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
-import Spinner from "@/app/shared/components/common/spinner"
-import { Button } from "@/app/shared/components/ui/button"
 import { OngekiScoreInfoCard } from "@/app/features/ongeki/components/score-info-card"
 import {
 	type MusicFilterValues,
@@ -15,6 +11,11 @@ import {
 	useOngekiVersion,
 	useScoreFilters
 } from "@/app/features/ongeki/hooks"
+import Header from "@/app/shared/components/common/header"
+import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
+import Spinner from "@/app/shared/components/common/spinner"
+import { Button } from "@/app/shared/components/ui/button"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
 
@@ -96,14 +97,19 @@ export function OngekiScorePage() {
 			/>
 			<Body>
 				<FilterArea>
-					<div className="flex justify-between items-center">
+					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<MultiFilter
 							filters={filters}
 							filterValues={filterValues}
 							onFilterChange={handleFilterChange}
 							onClearAll={handleClearAll}
 						/>
-						<Button onClick={handleExportScores} variant="custom" disabled={isLoadingExport}>
+						<Button
+							onClick={handleExportScores}
+							variant="custom"
+							disabled={isLoadingExport}
+							className="w-full sm:w-auto"
+						>
 							{isLoadingExport ? "Exporting..." : "Export All Scores"}
 						</Button>
 					</div>

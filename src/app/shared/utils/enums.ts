@@ -46,21 +46,36 @@ export const ChunithmVersions: Record<number, string> = {
 	15: "LUMINOUS",
 	16: "LUMINOUS PLUS",
 	17: "VERSE",
-	18: "XVERSE"
+	18: "X-VERSE"
 }
 
 export const MaimaiDxVersions: Record<number, string> = {
-	0: "maimai DX",
-	1: "maimai DX PLUS",
-	2: "maimai DX Splash",
-	3: "maimai DX Splash PLUS",
-	4: "maimai DX UNiVERSE",
-	5: "maimai DX UNiVERSE PLUS",
-	6: "maimai DX FESTiVAL",
-	7: "maimai DX FESTiVAL PLUS",
-	8: "maimai DX BUDDiES",
-	9: "maimai DX BUDDiES PLUS",
-	10: "maimai DX PRiSM"
+	0: "maimai",
+	1: "maimai PLUS",
+	2: "maimai GREEN",
+	3: "maimai GREEN PLUS",
+	4: "maimai ORANGE",
+	5: "maimai ORANGE PLUS",
+	6: "maimai PINK",
+	7: "maimai PINK PLUS",
+	8: "maimai MURASAKI",
+	9: "maimai MURASAKI PLUS",
+	10: "maimai MILK",
+	11: "maimai MILK PLUS",
+	12: "maimai FINALE",
+	13: "maimai DX",
+	14: "maimai DX PLUS",
+	15: "maimai DX Splash",
+	16: "maimai DX Splash PLUS",
+	17: "maimai DX UNiVERSE",
+	18: "maimai DX UNiVERSE PLUS",
+	19: "maimai DX FESTiVAL",
+	20: "maimai DX FESTiVAL PLUS",
+	21: "maimai DX BUDDiES",
+	22: "maimai DX BUDDiES PLUS",
+	23: "maimai DX PRiSM",
+	24: "maimai DX PRiSM PLUS",
+	25: "maimai DX CIRCLE"
 }
 
 export const OngekiVersions: Record<number, string> = {
