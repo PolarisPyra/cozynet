@@ -88,7 +88,7 @@ export function VersionManagement({
 				</Popover>
 			</div>
 
-			<Button onClick={handleUpdate} variant="custom" disabled={isUpdating || !selectedVersion}>
+			<Button onClick={handleUpdate} variant="outline" size="sm" disabled={isUpdating || !selectedVersion}>
 				{isUpdating ? updatingLabel : buttonLabel}
 			</Button>
 		</div>

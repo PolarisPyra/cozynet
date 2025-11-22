@@ -135,7 +135,8 @@ export function SignUpContent() {
 						!formData.password.trim() ||
 						!formData.accessCode.trim()
 					}
-					variant="custom"
+					variant="outline"
+					size="sm"
 					className="block w-full transform text-center transition duration-300 hover:scale-105 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{isLoading ? "Creating Account..." : "Create Account"}

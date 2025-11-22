@@ -143,9 +143,10 @@ const ArcadeOwnership = () => {
 
 			<Button
 				onClick={handleSubmit}
-				variant="custom"
+				variant="outline"
+				size="sm"
 				disabled={isPending || !selectedArcade || !selectedUser}
-				className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground w-full items-center justify-center gap-2 rounded-md border border-transparent p-3 font-semibold transition-colors disabled:cursor-not-allowed"
+				className="w-full"
 				aria-busy={isPending}
 			>
 				{isPending ? (

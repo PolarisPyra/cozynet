@@ -199,11 +199,12 @@ export const KeychipGenerator = function () {
 				</div>
 
 				<Button
-					variant="custom"
+					variant="outline"
+					size="sm"
 					type="button"
 					onClick={generateRandomSerial}
 					disabled={isLoading}
-					className="border-input bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground mt-4 flex w-full items-center justify-center gap-2 rounded-md border p-3 font-medium transition-colors disabled:cursor-not-allowed"
+					className="mt-4 w-full"
 					aria-busy={isLoading}
 				>
 					<Shuffle className="h-4 w-4" />
@@ -211,10 +212,11 @@ export const KeychipGenerator = function () {
 				</Button>
 
 				<Button
-					variant="custom"
+					variant="outline"
+					size="sm"
 					type="submit"
 					disabled={isLoading || !hasSerialId}
-					className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-transparent p-3 font-semibold transition-colors disabled:cursor-not-allowed"
+					className="mt-4 w-full"
 					aria-busy={isLoading}
 				>
 					{isLoading ? (

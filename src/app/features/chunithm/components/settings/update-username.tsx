@@ -61,7 +61,7 @@ const UpdateUsernameBox = () => {
 						maxLength={8}
 					/>
 				</div>
-				<Button variant="custom" disabled={isPending || !userName.trim()} className="w-full">
+				<Button variant="outline" size="sm" disabled={isPending || !userName.trim()} className="w-full">
 					{isPending ? "Updating..." : "Update Username"}
 				</Button>
 			</form>

@@ -176,11 +176,11 @@ const ChunithmGameOptions = () => {
 					You can export your existing options and import them at a later time.
 				</p>
 				<div className="flex gap-4">
-					<Button onClick={handleExport} variant="custom" className="flex items-center gap-2">
+					<Button onClick={handleExport} variant="outline" size="sm" className="flex items-center gap-2">
 						<Download className="h-4 w-4" />
 						Export
 					</Button>
-					<Button onClick={() => fileInputRef.current?.click()} variant="custom" className="flex items-center gap-2">
+					<Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm" className="flex items-center gap-2">
 						<Upload className="h-4 w-4" />
 						Import
 					</Button>
@@ -769,7 +769,7 @@ const ChunithmGameOptions = () => {
 
 			{/* Submit Button */}
 			<div className="flex justify-end">
-				<Button onClick={handleSubmit} variant="custom" disabled={isPending} className="px-8">
+				<Button onClick={handleSubmit} variant="outline" size="sm" disabled={isPending} className="px-8">
 					{isPending ? "Updating..." : "Update Options"}
 				</Button>
 			</div>

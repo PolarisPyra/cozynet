@@ -21,7 +21,8 @@ const SongManagement = () => {
 							}
 						})
 					}}
-					variant="custom"
+					variant="outline"
+					size="sm"
 					disabled={isUnlockingSongs}
 				>
 					{isUnlockingSongs ? "Unlocking..." : "Unlock All Songs"}
@@ -37,7 +38,8 @@ const SongManagement = () => {
 							}
 						})
 					}}
-					variant="custom"
+					variant="outline"
+					size="sm"
 					disabled={isLockingSongs}
 				>
 					{isLockingSongs ? "Locking..." : "Lock Songs"}

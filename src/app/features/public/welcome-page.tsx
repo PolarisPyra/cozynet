@@ -9,12 +9,12 @@ export const WelcomeContent = () => (
 		<h1 className="text-primary mb-8 text-center text-4xl font-bold">Welcome</h1>
 		<div className="flex flex-col gap-5">
 			<Link to="/login">
-				<Button variant="custom" className="w-full">
+				<Button variant="outline" size="sm" className="w-full">
 					Login
 				</Button>
 			</Link>
 			<Link to="/signup">
-				<Button variant="custom" className="w-full">
+				<Button variant="outline" size="sm" className="w-full">
 					Sign up
 				</Button>
 			</Link>

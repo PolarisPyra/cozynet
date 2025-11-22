@@ -97,7 +97,8 @@ const ChunithmScorePage = () => {
 						/>
 						<Button
 							onClick={handleExportScores}
-							variant="custom"
+							variant="outline"
+							size="sm"
 							disabled={isLoadingExport}
 							className="w-full sm:w-auto"
 						>

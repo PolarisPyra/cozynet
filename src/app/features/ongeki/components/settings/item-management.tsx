@@ -78,20 +78,20 @@ const ItemManagement = () => {
 		<div className="bg-card rounded-sm p-4 md:p-6">
 			<h2 className="text-primary mb-4 text-xl font-semibold">Item Management</h2>
 			<div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-				<Button onClick={() => handleUnlockSpecificItem(2)} variant="custom" disabled={isUnlocking.specific}>
+				<Button onClick={() => handleUnlockSpecificItem(2)} variant="outline" size="sm" disabled={isUnlocking.specific}>
 					{isUnlocking.specific ? "Unlocking..." : "Unlock nameplates"}
 				</Button>
-				<Button onClick={() => handleUnlockSpecificItem(17)} variant="custom" disabled={isUnlocking.specific}>
+				<Button onClick={() => handleUnlockSpecificItem(17)} variant="outline" size="sm" disabled={isUnlocking.specific}>
 					{isUnlocking.specific ? "Unlocking..." : "Unlock costumes"}
 				</Button>
-				<Button onClick={() => handleUnlockSpecificItem(19)} variant="custom" disabled={isUnlocking.specific}>
+				<Button onClick={() => handleUnlockSpecificItem(19)} variant="outline" size="sm" disabled={isUnlocking.specific}>
 					{isUnlocking.specific ? "Unlocking..." : "Unlock attachments"}
 				</Button>
-				<Button onClick={handleUnlockAllCards} variant="custom" disabled={isUnlocking.cards}>
+				<Button onClick={handleUnlockAllCards} variant="outline" size="sm" disabled={isUnlocking.cards}>
 					{isUnlocking.cards ? "Unlocking..." : "Unlock Cards"}
 				</Button>
 			</div>
-			<Button onClick={handleUnlockAllItems} variant="custom" disabled={isUnlocking.items} className="w-full text-lg py-6">
+			<Button onClick={handleUnlockAllItems} variant="outline" size="sm" disabled={isUnlocking.items} className="w-full">
 				{isUnlocking.items ? "Unlocking..." : "Unlock all items"}
 			</Button>
 		</div>

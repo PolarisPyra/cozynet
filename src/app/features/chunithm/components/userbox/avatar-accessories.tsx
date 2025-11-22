@@ -188,7 +188,7 @@ export function AvatarAccessories() {
 					</div>
 
 					<div className="mt-auto flex gap-2">
-						<Button size="sm" variant="custom" onClick={() => setIsDialogOpen(true)} className="flex-1">
+						<Button size="sm" variant="outline" onClick={() => setIsDialogOpen(true)} className="flex-1">
 							Change
 						</Button>
 						<Button

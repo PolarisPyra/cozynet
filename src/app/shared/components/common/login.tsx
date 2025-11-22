@@ -66,13 +66,14 @@ export const LoginContent = () => {
 				)}
 				<Button
 					disabled={!canSubmit || !username.trim() || !password.trim() || isLoading}
-					variant="custom"
+					variant="outline"
+					size="sm"
 					className="w-full"
 				>
 					{isLoading ? <Spinner size={24} /> : "Login"}
 				</Button>
 				<Link to="/">
-					<Button variant="custom" className="w-full">
+					<Button variant="outline" size="sm" className="w-full">
 						Back
 					</Button>
 				</Link>

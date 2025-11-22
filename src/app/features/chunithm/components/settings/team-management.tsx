@@ -95,7 +95,7 @@ const TeamManagement = () => {
 				</Popover>
 			</div>
 
-			<Button onClick={handleUpdateTeam} variant="custom" disabled={isUpdatingTeam || selectedTeamId === null}>
+			<Button onClick={handleUpdateTeam} variant="outline" size="sm" disabled={isUpdatingTeam || selectedTeamId === null}>
 				{isUpdatingTeam ? "Updating..." : "Update Team"}
 			</Button>
 
@@ -110,7 +110,7 @@ const TeamManagement = () => {
 						className="bg-background text-foreground placeholder:text-muted-foreground border-input w-full rounded-sm border p-3"
 					/>
 				</div>
-				<Button onClick={handleCreateTeam} variant="custom" disabled={isCreatingTeam || !newTeamName.trim()}>
+				<Button onClick={handleCreateTeam} variant="outline" size="sm" disabled={isCreatingTeam || !newTeamName.trim()}>
 					{isCreatingTeam ? "Creating..." : "Create Team"}
 				</Button>
 			</div>

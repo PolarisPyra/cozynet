@@ -5,7 +5,14 @@ import { toast } from "sonner"
 
 import Spinner from "@/app/shared/components/common/spinner"
 import { Button } from "@/app/shared/components/ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/shared/components/ui/command"
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList
+} from "@/app/shared/components/ui/command"
 import { Input } from "@/app/shared/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
 import { useCurrentArcade, useUpdateArcadeName } from "@/app/shared/hooks/users"
@@ -180,21 +187,15 @@ export function ArcadeName() {
 						</div>
 					</div>
 
-					<div className="pt-4">
-						<Button
-							variant="custom"
-							onClick={handleSubmit}
-							disabled={!canSubmit || isPending}
-							className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:border-muted/50 disabled:bg-muted disabled:text-muted-foreground w-full items-center justify-center gap-2 rounded-md border border-transparent p-3 font-semibold transition-colors disabled:cursor-not-allowed"
-							aria-busy={isPending}
-						>
+					<div className="pt-2">
+						<Button variant="outline" size="sm" onClick={handleSubmit} disabled={!canSubmit || isPending}>
 							{isPending ? (
 								<>
-									<Spinner size={16} className="mr-2" />
-									<span>Updating Name...</span>
+									<Spinner size={16} className="mr-2 h-4 w-4" />
+									Updating Name...
 								</>
 							) : (
-								<span>Update</span>
+								"Update"
 							)}
 						</Button>
 					</div>
@@ -203,4 +204,3 @@ export function ArcadeName() {
 		</div>
 	)
 }
-

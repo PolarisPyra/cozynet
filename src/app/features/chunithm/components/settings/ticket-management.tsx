@@ -18,7 +18,8 @@ const TicketManagement = () => {
 							onError: () => toast.error("Failed to enable tickets")
 						})
 					}}
-					variant="custom"
+					variant="outline"
+					size="sm"
 					disabled={isEnablingUnlimited}
 				>
 					{isEnablingUnlimited ? "Enabling..." : "Enable Unlimited Tickets"}
@@ -30,7 +31,8 @@ const TicketManagement = () => {
 							onError: () => toast.error("Failed to disable tickets")
 						})
 					}}
-					variant="custom"
+					variant="outline"
+					size="sm"
 					disabled={isDisablingUnlimited}
 				>
 					{isDisablingUnlimited ? "Disabling..." : "Disable Unlimited Tickets"}

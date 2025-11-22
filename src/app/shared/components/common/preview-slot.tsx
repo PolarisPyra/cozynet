@@ -62,7 +62,7 @@ export const PreviewSlot = <T extends BaseItem>({
 				/>
 			)}
 			{(onEquip || onUnlock) && (
-				<Button onClick={handleAction} disabled={!hasChanges} variant="custom">
+				<Button onClick={handleAction} disabled={!hasChanges} variant="outline" size="sm">
 					{item.locked ? "Unlock" : "Equip"}
 				</Button>
 			)}
