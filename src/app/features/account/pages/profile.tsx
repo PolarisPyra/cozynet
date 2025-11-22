@@ -140,7 +140,12 @@ function EditableUsername({ username }: { username: string }) {
 	return (
 		<div className="flex items-center gap-2">
 			<span className="text-xl font-semibold sm:text-2xl">{username}</span>
-			<Button size="icon" variant="ghost" onClick={() => setEditing(true)} className="text-muted-foreground h-8 w-8">
+			<Button
+				size="icon"
+				variant="ghost"
+				onClick={() => setEditing(true)}
+				className="text-muted-foreground h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+			>
 				<Edit2 className="h-4 w-4" />
 			</Button>
 		</div>
@@ -195,7 +200,7 @@ function ProfileHeader({ user }: { user: { username: string; userId: number; per
 			<div className="relative h-24 sm:h-32" style={{ backgroundColor: color }}>
 				<ColorPicker color={color} onChange={setColor} onClose={saveColor} />
 			</div>
-			<CardContent className="relative px-4 pb-20">
+			<CardContent className="group relative px-4 pb-20">
 				<div className="flex items-end gap-4">
 					<Avatar className="-mt-12 h-24 w-24 border-4 sm:-mt-16 sm:h-28 sm:w-28" style={{ borderColor: color }}>
 						<AvatarFallback className="bg-muted text-muted-foreground">
