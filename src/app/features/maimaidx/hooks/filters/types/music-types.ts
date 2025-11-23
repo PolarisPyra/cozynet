@@ -39,7 +39,4 @@ export interface UseMaimaiDxRatingFilteringParams extends UseFilteringParams {}
 
 export interface UseSongFilteringParams extends UseFilteringParams {}
 
-export interface UseScoreFilteringParams extends UseFilteringParams {
-	versionNum?: number | null
-	showAllScores?: boolean
-}
+export interface UseScoreFilteringParams extends UseFilteringParams {}

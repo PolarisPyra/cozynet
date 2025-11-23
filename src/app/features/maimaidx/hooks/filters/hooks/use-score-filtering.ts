@@ -1,23 +1,19 @@
 import { useMemo } from "react"
 
-import { useMaimaiDxScores } from "@/app/features/maimaidx/hooks"
+import { useMaimaiDxScores, useMaimaiDxVersion } from "@/app/features/maimaidx/hooks"
 import type { Mai2Playlog } from "@/app/shared/types"
 
 import { scoreFilters } from "../definitions/score-filters"
 import type { UseScoreFilteringParams } from "../types/music-types"
 
-/**
- * Hook for filtering MaimaiDX scores with search and multiple filters
- */
-export const useMaimaiDxScoreFiltering = ({
-	searchQuery,
-	filterValues,
-	versionNum,
-	showAllScores = false
-}: UseScoreFilteringParams) => {
+export const useMaimaiDxScoreFiltering = ({ searchQuery, filterValues }: UseScoreFilteringParams) => {
 	const { data: scores = [], isLoading } = useMaimaiDxScores()
+	const userVersion = useMaimaiDxVersion()
+	const version = userVersion ? Number(userVersion) : null
 
 	const filteredScores = useMemo(() => {
+		if (!scores) return []
+
 		const normalizedQuery = searchQuery.trim().toLowerCase()
 
 		// Group scores by musicId + level and get best achievement for each
@@ -37,32 +33,46 @@ export const useMaimaiDxScoreFiltering = ({
 
 		const bestScores = Array.from(bestScoresMap.values())
 
-		return bestScores
-			.filter((score: Mai2Playlog) => {
-				// Apply search filter
-				if (normalizedQuery) {
-					const matchesSearch = score.title?.toLowerCase().includes(normalizedQuery)
-					if (!matchesSearch) return false
+		return bestScores.filter((score: Mai2Playlog) => {
+			// Apply search query filter
+			if (normalizedQuery && score.title && !score.title.toLowerCase().includes(normalizedQuery)) {
+				return false
+			}
+
+			// Apply version filter: include scores from current version (based on songVersion)
+			const versionFilterValue = filterValues?.["version"] || "current"
+			if (versionFilterValue === "current" && version != null && score.songVersion) {
+				if (score.songVersion !== version) return false
+			}
+
+			// Apply all other filters
+			return scoreFilters.every(filter => {
+				// Skip version filter as it's handled above
+				if (filter.identifier === "version") {
+					return true
 				}
 
-				// Apply version filter
-				if (versionNum && score.songVersion) {
-					const versionMatch = showAllScores ? score.songVersion <= versionNum : score.songVersion === versionNum
-					if (!versionMatch) return false
+				const value = filterValues?.[filter.identifier]
+
+				// Handle required filters with default values
+				if (filter.isRequired && value === undefined) {
+					const firstOptionValue = filter.options?.[0]?.value
+					return filter.predicate(score, firstOptionValue)
 				}
 
-				// Apply all active filters
-				return scoreFilters.every(filter => {
-					const filterValue = filterValues[filter.identifier]
-					if (!filterValue || filterValue === "all") return true
-					return filter.predicate(score, filterValue)
-				})
+				// Skip filters that are not set (undefined values)
+				if (value === undefined) {
+					return true
+				}
+
+				return filter.predicate(score, value)
 			})
-			.sort((a, b) => (b.songVersion || 0) - (a.songVersion || 0))
-	}, [scores, searchQuery, filterValues, versionNum, showAllScores])
+		})
+	}, [scores, searchQuery, filterValues, version])
 
 	return {
 		filteredScores,
-		isLoading
+		isLoading,
+		version
 	}
 }
