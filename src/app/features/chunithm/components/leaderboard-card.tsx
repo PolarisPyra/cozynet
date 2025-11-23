@@ -1,10 +1,11 @@
 import { useChunithmVersion } from "@/app/features/chunithm/hooks"
+import { convertChunithmRating } from "@/app/shared/utils/profile-rating-utils"
 
 import { ChunithmRatingColors } from "./rating-colors"
 
 export const LeaderboardCard = function ({ score }: { score: LeaderboardPlayer }) {
 	const version = useChunithmVersion()
-	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
+	const ratingValue = convertChunithmRating(score.playerRating) ?? 0
 
 	return (
 		<div className="bg-card flex items-center justify-between rounded-sm border p-4">

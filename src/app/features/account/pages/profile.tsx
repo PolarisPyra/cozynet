@@ -3,6 +3,8 @@ import { useState } from "react"
 import { Gamepad2, Hash, Palette, User } from "lucide-react"
 import { HexColorPicker } from "react-colorful"
 
+import { ChunithmRatingColors } from "@/app/features/chunithm/components/rating-colors"
+import { OngekiRatingColors } from "@/app/features/ongeki/components/rating-colors"
 import Header from "@/app/shared/components/common/header"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
@@ -13,16 +15,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { useProfileVersions } from "@/app/shared/hooks/users"
 import { ChunithmVersions, MaimaiDxVersions, OngekiVersions } from "@/app/shared/utils/enums"
-
-interface GameProfile {
-	version: number
-	userName: string | null
-}
+import {
+	type ChunithmProfile,
+	type MaimaiProfile,
+	type OngekiProfile,
+	convertProfileRating
+} from "@/app/shared/utils/profile-rating-utils"
 
 interface ProfileData {
-	chunithm: GameProfile[]
-	ongeki: GameProfile[]
-	maimaidx: GameProfile[]
+	chunithm: ChunithmProfile[]
+	ongeki: OngekiProfile[]
+	maimaidx: MaimaiProfile[]
 }
 
 const GAMES = [
@@ -193,19 +196,37 @@ function GameProfiles() {
 						</CardHeader>
 						<div className={`h-1 ${color}`} />
 						<CardContent className="space-y-2 p-3 sm:p-4">
-							{profiles.map(p => (
-								<div
-									key={p.version}
-									className="bg-muted/50 flex flex-col gap-1.5 rounded-md p-2.5 sm:flex-row sm:items-center sm:justify-between"
-								>
-									<span className="truncate text-sm font-medium">{getVersionName(versions, p.version)}</span>
-									{p.userName && (
-										<Badge variant="secondary" className="h-6 rounded-sm font-mono text-xs">
-											{p.userName}
-										</Badge>
-									)}
-								</div>
-							))}
+							{profiles.map(profile => {
+								const { rating, decimals } = convertProfileRating(key, profile, profile.version)
+								const versionName = getVersionName(versions, profile.version)
+
+								return (
+									<div
+										key={profile.version}
+										className="bg-muted/50 flex flex-col gap-1.5 rounded-md p-2.5 sm:flex-row sm:items-center sm:justify-between"
+									>
+										<div className="flex items-center gap-2">
+											<span className="truncate text-sm font-medium">{versionName}</span>
+											{rating !== null &&
+												rating !== undefined &&
+												(key === "chunithm" || key === "chunithmnew" ? (
+													<ChunithmRatingColors rating={rating} version={profile.version} />
+												) : key === "ongeki" ? (
+													<OngekiRatingColors rating={rating} version={profile.version} decimals={decimals} />
+												) : key === "maimai" || key === "maimaidx" ? (
+													<span className="text-foreground text-sm font-bold tabular-nums">
+														{decimals > 0 ? rating.toFixed(decimals) : rating.toString()}
+													</span>
+												) : null)}
+										</div>
+										{profile.userName && (
+											<Badge variant="secondary" className="h-6 rounded-sm font-mono text-xs">
+												{profile.userName}
+											</Badge>
+										)}
+									</div>
+								)
+							})}
 						</CardContent>
 					</Card>
 				))}

@@ -7,6 +7,7 @@ import Spinner from "@/app/shared/components/common/spinner"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
+import { convertOngekiRating } from "@/app/shared/utils/profile-rating-utils"
 import { formatOngekiProfileDate } from "@/app/shared/utils/ongeki"
 
 interface StatRowProps {
@@ -88,11 +89,9 @@ const OngekiProfile = () => {
 
 	const playerRating = useMemo(() => {
 		if (!profile) return 0
-		if (isRefreshOrAbove) {
-			return profile.newPlayerRating ? profile.newPlayerRating / 1000 : 0
-		}
-		return profile.playerRating ? profile.playerRating / 100 : 0
-	}, [profile, isRefreshOrAbove])
+		const { rating } = convertOngekiRating(profile.playerRating, profile.newPlayerRating, version)
+		return rating ?? 0
+	}, [profile, version])
 
 	const ratingColor = useOngekiRatingColor(playerRating)
 

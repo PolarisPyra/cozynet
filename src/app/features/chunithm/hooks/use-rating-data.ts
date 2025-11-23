@@ -5,6 +5,7 @@ import {
 	useUserRatingBaseNewList,
 	useUserRatingBaseNextList
 } from "@/app/features/chunithm/hooks"
+import { convertChunithmRating } from "@/app/shared/utils/profile-rating-utils"
 
 const useRatingData = (activeTab: string = "base") => {
 	// Fetch player rating and highest rating from single endpoint
@@ -51,8 +52,8 @@ const useRatingData = (activeTab: string = "base") => {
 		}
 	}
 
-	const playerRatingValue = (ratingData[0]?.playerRating ?? 0) / 100
-	const highestRatingValue = (ratingData[0]?.highestRating ?? 0) / 100
+	const playerRatingValue = convertChunithmRating(ratingData[0]?.playerRating ?? null) ?? 0
+	const highestRatingValue = convertChunithmRating(ratingData[0]?.highestRating ?? null) ?? 0
 
 	return {
 		getActiveData,

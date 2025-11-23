@@ -6,6 +6,7 @@ import { Badge } from "@/app/shared/components/ui/badge"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { formatSqlDateToLocalParts } from "@/app/shared/utils/chunithm"
+import { convertChunithmRating } from "@/app/shared/utils/profile-rating-utils"
 import { getChunithmLogo } from "@/app/shared/utils/version-logos"
 
 // Shared components - consider moving to a shared location
@@ -107,7 +108,7 @@ const ChunithmProfile = () => {
 	const version = useChunithmVersion()
 	const { data: profile, isLoading } = useChunithmProfile()
 
-	const playerRating = profile?.playerRating ? profile.playerRating / 100 : 0
+	const playerRating = convertChunithmRating(profile?.playerRating ?? null) ?? 0
 	const ratingColor = useChunithmRatingColor(playerRating)
 
 	if (isLoading) return <LoadingState />

@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import { OngekiGekForceRating, OngekiRating } from "@/app/shared/utils/ongeki"
+import { convertOngekiScoreRating } from "@/app/shared/utils/profile-rating-utils"
 
 interface RatingInfoInput {
 	playerRating?: number | null
@@ -11,14 +12,17 @@ interface RatingInfoInput {
 	ongekiVersion?: number
 }
 
-export const useOngekiRatingInfo = function(input: RatingInfoInput) {
+export const useOngekiRatingInfo = function (input: RatingInfoInput) {
 	const isRefresh = (input.ongekiVersion ?? 8) >= 8
 
 	const calculatedRating = useMemo(() => {
+		// If we have a stored playerRating, convert it using the shared utility
 		if (input.playerRating && input.playerRating > 0) {
-			return isRefresh ? input.playerRating / 1000 : input.playerRating / 100
+			const { rating } = convertOngekiScoreRating(input.playerRating, isRefresh)
+			return rating
 		}
 
+		// Otherwise, calculate from techScore and level
 		if (input.techScore != null && input.level != null) {
 			return isRefresh
 				? OngekiGekForceRating(

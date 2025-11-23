@@ -41,8 +41,9 @@ export function OngekiLeaderboard() {
 	}))
 
 	const LeaderboardCard = ({ score }: { score: LeaderboardPlayer }) => {
-		const ratingValue =
-			isRefreshOrAbove && score.newPlayerRating !== null ? score.newPlayerRating / 1000 : score.playerRating / 100
+		const playerRatingToUse = isRefreshOrAbove && score.newPlayerRating !== null ? score.newPlayerRating : score.playerRating
+		const { rating: ratingValue, decimals } = convertOngekiScoreRating(playerRatingToUse, isRefreshOrAbove)
+		const displayRating = ratingValue ?? 0
 
 		return (
 			<div className="bg-card flex items-center justify-between rounded-sm border p-4 transition-colors">
@@ -52,7 +53,7 @@ export function OngekiLeaderboard() {
 						<div className="text-foreground font-medium">{score.userName}</div>
 						<div className="flex items-center gap-2">
 							<span className="text-muted-foreground text-sm">Rating:</span>
-							<OngekiRatingColors rating={ratingValue} version={version} decimals={isRefreshOrAbove ? 3 : 2} />
+							<OngekiRatingColors rating={displayRating} version={version} decimals={decimals} />
 						</div>
 					</div>
 				</div>

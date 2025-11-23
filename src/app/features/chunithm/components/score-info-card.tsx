@@ -19,6 +19,7 @@ import {
 	getChunithmGrade,
 	levelToStars
 } from "@/app/shared/utils/chunithm"
+import { convertChunithmScoreRating } from "@/app/shared/utils/profile-rating-utils"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
 import { getChunithmLogo } from "@/app/shared/utils/version-logos"
@@ -32,7 +33,7 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 
 	const appearedLogo = getChunithmLogo.getLogo(score.songVersion)
 	const scoreVersionLogo = getChunithmLogo.getLogo(score.version)
-	const ratingValue = score.playerRating ? score.playerRating / 100 : 0
+	const ratingValue = convertChunithmScoreRating(score.playerRating)
 	const isWorldsEnd = score.chartId === 5
 	const starCount = levelToStars(score.level)
 

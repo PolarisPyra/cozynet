@@ -10,6 +10,7 @@ import {
 	useUserRatingBaseNextList
 } from "@/app/features/ongeki/hooks"
 import { useUserNewRatingBasePScoreList } from "@/app/features/ongeki/hooks/use-new-rating"
+import { convertOngekiRating } from "@/app/shared/utils/profile-rating-utils"
 
 const useOngekiRatingData = (version: number, activeTab: string = "base") => {
 	const isRefreshOrAbove = version >= 8
@@ -74,15 +75,20 @@ const useOngekiRatingData = (version: number, activeTab: string = "base") => {
 		}
 	}
 
-	const playerRatingValue = isRefreshOrAbove
-		? (newPlayerRating[0]?.newPlayerRating ?? 0) / 1000
-		: (playerRating[0]?.playerRating ?? 0) / 100
+	const playerRatingData = convertOngekiRating(
+		playerRating[0]?.playerRating ?? null,
+		newPlayerRating[0]?.newPlayerRating ?? null,
+		version
+	)
+	const highestRatingData = convertOngekiRating(
+		playerRating[0]?.highestRating ?? null,
+		newPlayerRating[0]?.newHighestRating ?? null,
+		version
+	)
 
-	const highestRatingValue = isRefreshOrAbove
-		? (newPlayerRating[0]?.newHighestRating ?? 0) / 1000
-		: (playerRating[0]?.highestRating ?? 0) / 100
-
-	const ratingDecimals = isRefreshOrAbove ? 3 : 2
+	const playerRatingValue = playerRatingData.rating ?? 0
+	const highestRatingValue = highestRatingData.rating ?? 0
+	const ratingDecimals = playerRatingData.decimals
 
 	return {
 		getActiveData,
