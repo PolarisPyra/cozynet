@@ -22,9 +22,6 @@ const calculateSongRating = (song: MaimaiRatingInput): MaimaiRatingWithCalculate
 	}
 }
 
-const calculateTotalRating = (songs: MaimaiRatingWithCalculated[]): number =>
-	songs.reduce((sum, song) => sum + song.rating, 0)
-
 const useMaimaiDxRatingData = (activeTab: string = "base") => {
 	const isBaseTab = activeTab === "base"
 	const isNewTab = activeTab === "new"
@@ -36,21 +33,14 @@ const useMaimaiDxRatingData = (activeTab: string = "base") => {
 	const baseRatings = baseSongs.map(calculateSongRating)
 	const newRatings = newSongs.map(calculateSongRating)
 
-	const b35rating = calculateTotalRating(baseRatings)
-	const b15rating = calculateTotalRating(newRatings)
-	const playerRating = b35rating + b15rating
-
-	const playerRatingValue = convertMaimaiRating(ratingData[0]?.playerRating ?? null) ?? 0
-	const highestRatingValue = convertMaimaiRating(ratingData[0]?.highestRating ?? null) ?? 0
+	const playerRatingValue = convertMaimaiRating(ratingData[0]?.playerRating ?? null)
+	const highestRatingValue = convertMaimaiRating(ratingData[0]?.highestRating ?? null)
 
 	return {
 		activeData: isNewTab ? newRatings : baseRatings,
 		isLoading: isNewTab ? isLoadingNew : isLoadingBase,
 		playerRatingValue,
-		highestRatingValue,
-		b35rating,
-		b15rating,
-		playerRating
+		highestRatingValue
 	}
 }
 

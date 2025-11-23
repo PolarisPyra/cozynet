@@ -1,25 +1,33 @@
-import { Card, CardContent } from "@/app/shared/components/ui/card"
+import { useMaimaiDxVersion } from "@/app/features/maimaidx/hooks"
 
 interface MaimaiRatingDisplayProps {
-	b35rating: number
-	b15rating: number
-	playerRating: number
+	playerRating: number | null
+	highestRating: number | null
 }
 
-export function MaimaiRatingDisplay({ b35rating, b15rating, playerRating }: MaimaiRatingDisplayProps) {
+export function MaimaiRatingDisplay({ playerRating, highestRating }: MaimaiRatingDisplayProps) {
+	const version = useMaimaiDxVersion()
+
 	return (
-		<Card className="rounded-sm">
-			<CardContent className="px-4 py-2">
-				<div className="flex items-center justify-between">
-					<span className="text-primary text-base font-medium">Rating:</span>
-					<div className="flex items-center gap-2">
-						<span className="text-muted-foreground text-xs font-medium tabular-nums">
-							{b35rating}+{b15rating}=
-						</span>
-						<span className="text-foreground text-lg font-bold tabular-nums">{playerRating}</span>
-					</div>
+		<div className="flex flex-col gap-1">
+			<div className="flex flex-col">
+				<div className="flex items-center gap-2">
+					<span className="font-bold">Player Rating:</span>
+					{playerRating !== null && playerRating !== undefined && version ? (
+						<span className="font-bold tabular-nums">{playerRating}</span>
+					) : (
+						<span className="font-bold">Loading...</span>
+					)}
 				</div>
-			</CardContent>
-		</Card>
+				<div className="flex items-center gap-2">
+					<span className="font-bold">Highest Rating:</span>
+					{highestRating !== null && highestRating !== undefined && version ? (
+						<span className="font-bold tabular-nums">{highestRating}</span>
+					) : (
+						<span className="font-bold">Loading...</span>
+					)}
+				</div>
+			</div>
+		</div>
 	)
 }

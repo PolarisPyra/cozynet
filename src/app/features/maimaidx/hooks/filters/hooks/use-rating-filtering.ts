@@ -14,8 +14,7 @@ export const useMaimaiDxRatingFiltering = ({ searchQuery, filterValues }: UseMai
 	const activeTab = filterValues.tab || "base"
 
 	// Pass activeTab to hook so it only fetches data for the active tab
-	const { activeData, isLoading, playerRatingValue, highestRatingValue, b35rating, b15rating, playerRating } =
-		useMaimaiDxRatingData(activeTab)
+	const { activeData, isLoading, playerRatingValue, highestRatingValue } = useMaimaiDxRatingData(activeTab)
 
 	const filteredRatings = useMemo(() => {
 		if (!activeData) return []
@@ -54,10 +53,7 @@ export const useMaimaiDxRatingFiltering = ({ searchQuery, filterValues }: UseMai
 		isLoading,
 		version,
 		playerRatingValue,
-		highestRatingValue,
-		b35rating,
-		b15rating,
-		playerRating
+		highestRatingValue
 	}
 }
 

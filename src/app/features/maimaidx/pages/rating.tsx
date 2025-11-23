@@ -1,29 +1,21 @@
 import { useState } from "react"
 
-import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
-import Spinner from "@/app/shared/components/common/spinner"
 import { MaimaiRatingDisplay } from "@/app/features/maimaidx/components/rating-display"
 import { MaimaiRatingInfoCard } from "@/app/features/maimaidx/components/rating-info-card"
-import { Card, CardContent } from "@/app/shared/components/ui/card"
 import {
 	getDefaultRatingFilterValues,
 	useMaimaiDxRatingFiltering,
 	useMaimaiDxVersion,
 	useRatingFilters
 } from "@/app/features/maimaidx/hooks"
+import Header from "@/app/shared/components/common/header"
+import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
+import Spinner from "@/app/shared/components/common/spinner"
+import { Card, CardContent } from "@/app/shared/components/ui/card"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
 import { maimaiDxBadgeColors } from "@/app/shared/utils/maimai"
-
-/**
- * MAIMAI DX Rating System:
- *
- * Rating = Best 35 (B35) + Best 15 (B15)
- * - Best 35: Top 35 all-time best scores
- * - Best 15: Top 15 all-time best scores
- */
 
 export function MaimaiDxRatingFrames() {
 	const [searchQuery, setSearchQuery] = useState("")
@@ -31,15 +23,7 @@ export function MaimaiDxRatingFrames() {
 
 	const version = useMaimaiDxVersion()
 	const filters = useRatingFilters()
-	const {
-		filteredRatings,
-		isLoading,
-		playerRatingValue,
-		highestRatingValue,
-		b35rating,
-		b15rating,
-		playerRating
-	} = useMaimaiDxRatingFiltering({
+	const { filteredRatings, isLoading, playerRatingValue, highestRatingValue } = useMaimaiDxRatingFiltering({
 		searchQuery,
 		filterValues
 	})
@@ -79,7 +63,11 @@ export function MaimaiDxRatingFrames() {
 				}}
 			/>
 			<Body>
-				<MaimaiRatingDisplay b35rating={b35rating} b15rating={b15rating} playerRating={playerRating} />
+				<Card className="rounded-sm">
+					<CardContent className="px-4 py-2">
+						<MaimaiRatingDisplay playerRating={playerRatingValue} highestRating={highestRatingValue} />
+					</CardContent>
+				</Card>
 				<FilterArea>
 					<div className="flex justify-start">
 						<MultiFilter
@@ -128,4 +116,3 @@ function NoVersionState() {
 }
 
 export default MaimaiDxRatingFrames
-
