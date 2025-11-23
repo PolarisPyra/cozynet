@@ -66,6 +66,23 @@ export type ChunithmRating = DB.ChuniProfileRating & {
 	isNewRecord?: number
 }
 
+export type MaimaiRating = {
+	musicId: number
+	level: number
+	version: number
+	achievement: number
+	deluxscoreMax: number | null
+	comboStatus: number | null
+	syncStatus: number | null
+	title: string
+	artist: string
+	genre: string
+	difficulty: number
+	jacketPath: string
+	userPlayDate: string | null
+	rating: number
+}
+
 export type OngekiRating = DB.OngekiProfileRating & {
 	score: number
 	level: number

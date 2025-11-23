@@ -1,4 +1,4 @@
-import type { BaseFilter, FilterValues, Mai2Playlog, Mai2StaticMusic, UseFilteringParams } from "@/app/shared/types"
+import type { BaseFilter, FilterValues, Mai2Playlog, Mai2StaticMusic, UseFilteringParams, MaimaiRating } from "@/app/shared/types"
 
 // ============================================================================
 // DATA TYPE PREDICATES
@@ -16,6 +16,10 @@ export const isMaimaiDxScore = (item: Mai2StaticMusic | Mai2Playlog): item is Ma
 // SPECIFIC FILTER TYPES (using shared types)
 // ============================================================================
 
+export interface RatingFilter<T = string> extends BaseFilter<T> {
+	predicate: (item: MaimaiRating, value: string) => boolean
+}
+
 export interface SongFilter extends BaseFilter {
 	predicate: (song: Mai2StaticMusic, value: string) => boolean
 }
@@ -25,11 +29,13 @@ export interface ScoreFilter extends BaseFilter {
 }
 
 // Generic filter type that can be used in components
-export type AnyFilter = SongFilter | ScoreFilter
+export type AnyFilter = SongFilter | ScoreFilter | RatingFilter
 
 // ============================================================================
 // HOOK PARAMETER TYPES (using shared types)
 // ============================================================================
+
+export interface UseMaimaiDxRatingFilteringParams extends UseFilteringParams {}
 
 export interface UseSongFilteringParams extends UseFilteringParams {}
 

@@ -157,3 +157,56 @@ export const formatMaimaiLevel = (chart: MaimaiChartData, isUtage: boolean): For
 
 	return { value: chart.difficulty.toFixed(1), isUtage }
 }
+
+/**
+ * CALCULATION FUNCTIONS
+ * Pure functions for business logic
+ */
+
+/**
+ * Calculates maimai rating from level and achievement (score)
+ *
+ * @param level - Chart level (e.g., 14.0 = 140)
+ * @param achievement - Achievement score (e.g., 1007500 for 100.7500%)
+ * @returns Rating value as integer
+ */
+export const calculateMaimaiRating = (level: number, achievement: number): number => {
+	const records: Array<{ achievement: number; offset: number }> = [
+		{ achievement: 0, offset: 0 },
+		{ achievement: 100000, offset: 16 },
+		{ achievement: 200000, offset: 32 },
+		{ achievement: 300000, offset: 48 },
+		{ achievement: 400000, offset: 64 },
+		{ achievement: 500000, offset: 80 },
+		{ achievement: 600000, offset: 96 },
+		{ achievement: 700000, offset: 112 },
+		{ achievement: 750000, offset: 120 },
+		{ achievement: 799999, offset: 128 },
+		{ achievement: 800000, offset: 136 },
+		{ achievement: 900000, offset: 152 },
+		{ achievement: 940000, offset: 168 },
+		{ achievement: 969999, offset: 176 },
+		{ achievement: 970000, offset: 200 },
+		{ achievement: 980000, offset: 203 },
+		{ achievement: 989999, offset: 206 },
+		{ achievement: 990000, offset: 208 },
+		{ achievement: 995000, offset: 211 },
+		{ achievement: 999999, offset: 214 },
+		{ achievement: 1000000, offset: 216 },
+		{ achievement: 1004999, offset: 222 },
+		{ achievement: 1005000, offset: 224 }
+	]
+
+	let offset = 0
+	const clampedAchievement = Math.min(achievement, records[22].achievement)
+
+	for (let i = 22; i >= 0; i--) {
+		if (records[i].achievement <= clampedAchievement) {
+			offset = records[i].offset
+			break
+		}
+	}
+
+	const scoreRate = level
+	return Math.floor((scoreRate * clampedAchievement * offset) / 100000000)
+}

@@ -7,6 +7,11 @@ import {
 	useScoreFilters,
 	useSongFilters
 } from "./filters"
+import {
+	getDefaultRatingFilterValues,
+	useMaimaiDxRatingFiltering,
+	useRatingFilters
+} from "./filters/hooks/use-rating-filtering"
 import { useMaimaiDxChartFilters } from "./use-filters"
 import { useMaimaiDxScores } from "./use-scores"
 import { useMaimaiDxSongs } from "./use-songs"
@@ -16,10 +21,13 @@ import { useMaimaiDxVersion, useMaimaiDxVersions, useUpdateMaimaiDxVersion } fro
 export {
 	getDefaultScoreFilterValues,
 	getDefaultSongFilterValues,
+	getDefaultRatingFilterValues,
 	useMaimaiDxScoreFiltering,
 	useMaimaiDxSongFiltering,
+	useMaimaiDxRatingFiltering,
 	useScoreFilters,
-	useSongFilters
+	useSongFilters,
+	useRatingFilters
 }
 
 // Export legacy hooks

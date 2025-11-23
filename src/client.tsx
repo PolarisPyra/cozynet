@@ -7,6 +7,7 @@ import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
 import { Toaster } from "@/app/shared/components/ui/sonner"
 
 import { MaimaiDxAllSongs } from "./app/features/maimaidx/pages/allsongs"
+import { MaimaiDxRatingFrames } from "./app/features/maimaidx/pages/rating"
 import { MaimaiDxScorePage } from "./app/features/maimaidx/pages/scores"
 import { MaimaiDxSettings } from "./app/features/maimaidx/pages/settings"
 import { OngekiAllSongs } from "./app/features/ongeki/pages/allsongs"
@@ -111,6 +112,7 @@ const app = (
 									<Route path="/ongeki/cards" element={<CardManagement />} />
 									<Route path="/ongeki/profile" element={<OngekiProfile />} />
 									<Route path="/maimaidx/scores" element={<MaimaiDxScorePage />} />
+									<Route path="/maimaidx/rating" element={<MaimaiDxRatingFrames />} />
 									<Route path="/maimaidx/settings" element={<MaimaiDxSettings />} />
 									<Route path="/maimaidx/allsongs" element={<MaimaiDxAllSongs />} />
 								</Route>

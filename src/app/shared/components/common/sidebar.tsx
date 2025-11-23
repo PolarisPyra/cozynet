@@ -129,7 +129,8 @@ const MENU_CONFIG: MenuItem[] = [
 				icon: Folder,
 				children: [
 					{ name: "Scores", href: "/maimaidx/scores", icon: NotepadText },
-					{ name: "All Songs", href: "/maimaidx/allsongs", icon: BoomBox }
+					{ name: "All Songs", href: "/maimaidx/allsongs", icon: BoomBox },
+					{ name: "Rating Frame", href: "/maimaidx/rating", icon: List }
 				]
 			}
 		]
