@@ -54,21 +54,21 @@ const ChunithmLeaderboard = () => {
 }
 
 const LoadingState = () => (
-	<div className="relative flex-1 overflow-auto">
+	<Container>
 		<Header title="Leaderboard" />
 		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
 			<Spinner size={24} />
 		</div>
-	</div>
+	</Container>
 )
 
 const NoVersionState = () => (
-	<div className="relative flex-1 overflow-auto">
+	<Container>
 		<Header title="Leaderboard" />
 		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
 			<p className="text-primary">Please set your Chunithm version in settings first</p>
 		</div>
-	</div>
+	</Container>
 )
 
 export default ChunithmLeaderboard
