@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Gamepad2, Hash, Palette, User } from "lucide-react"
 import { HexColorPicker } from "react-colorful"
 
 import { ChunithmRatingColors } from "@/app/features/chunithm/components/rating-colors"
 import { OngekiRatingColors } from "@/app/features/ongeki/components/rating-colors"
+import { useAccentColorContext } from "@/app/shared/components/accent-color-provider"
 import Header from "@/app/shared/components/common/header"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
@@ -67,15 +68,9 @@ const GAMES = [
 ] as const
 
 const CARD_CLASS = "overflow-hidden rounded-md !py-0 shadow-none"
-const DEFAULT_COLOR = "#ef4444"
-const STORAGE_KEY = "profile-banner-color"
 
 const isValidHex = (v: string) => /^#[0-9A-Fa-f]{6}$/.test(v)
 const getVersionName = (versions: Record<number, string>, version: number) => versions[version] ?? `Version ${version}`
-const getStoredColor = () => {
-	const stored = localStorage.getItem(STORAGE_KEY)
-	return stored && isValidHex(stored) ? stored : DEFAULT_COLOR
-}
 
 function ColorPicker({
 	color,
@@ -116,13 +111,22 @@ function ColorPicker({
 }
 
 function ProfileHeader({ user }: { user: { username: string; userId: number; permissions?: number } }) {
-	const [color, setColor] = useState(getStoredColor)
-	const saveColor = () => localStorage.setItem(STORAGE_KEY, color)
+	const { accentColor, setAccentColor } = useAccentColorContext()
+	const [color, setColor] = useState(accentColor)
+
+	useEffect(() => {
+		setColor(accentColor)
+	}, [accentColor])
+
+	const handleColorChange = (newColor: string) => {
+		setColor(newColor)
+		setAccentColor(newColor)
+	}
 
 	return (
 		<Card className={CARD_CLASS}>
 			<div className="relative h-24 sm:h-32" style={{ backgroundColor: color }}>
-				<ColorPicker color={color} onChange={setColor} onClose={saveColor} />
+				<ColorPicker color={color} onChange={handleColorChange} onClose={() => {}} />
 			</div>
 			<CardContent className="group relative px-4 pb-20">
 				<div className="flex justify-start pt-2">

@@ -1,5 +1,4 @@
-import { Menu } from "lucide-react"
-
+import { useAccentColor } from "@/app/shared/components/accent-color-provider"
 import { Button } from "@/app/shared/components/ui/button"
 import { Card, CardHeader, CardTitle } from "@/app/shared/components/ui/card"
 import { Separator } from "@/app/shared/components/ui/separator"
@@ -14,22 +13,19 @@ type HeaderProps = {
 }
 
 const Header = ({ title, searchProps }: HeaderProps) => {
+	const accentColor = useAccentColor()
+
 	return (
 		<div className="my-4">
+			<style>{`
+				[data-sidebar="trigger"] svg {
+					color: ${accentColor} !important;
+				}
+			`}</style>
 			<Card className="bg-background top-0 z-50 w-full gap-0 rounded-none border-b border-none py-0 shadow-none">
 				<CardHeader className="flex items-center justify-between gap-2 pr-4 pl-4 sm:pr-6 lg:pr-8">
 					<div className="flex min-w-0 items-center gap-2">
-						<Button
-							variant="ghost"
-							size="icon"
-							className="bg-background hover:bg-accent hover:text-accent-foreground flex-shrink-0 cursor-pointer transition-none"
-							asChild
-						>
-							<SidebarTrigger>
-								<Menu className="h-[1.2rem] w-[1.2rem]" />
-								<span className="sr-only">Toggle sidebar</span>
-							</SidebarTrigger>
-						</Button>
+						<SidebarTrigger className="bg-background hover:bg-accent hover:text-accent-foreground flex-shrink-0 cursor-pointer transition-none" />
 						<CardTitle className="hidden truncate border-none text-xl font-semibold sm:block sm:text-2xl">
 							{title}
 						</CardTitle>

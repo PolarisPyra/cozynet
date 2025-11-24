@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
+import { useAccentColor } from "@/app/shared/components/accent-color-provider"
 import {
 	Sidebar,
 	SidebarContent,
@@ -35,46 +36,6 @@ import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { cn } from "@/app/shared/utils"
 
 import { NavUser } from "./nav-user"
-
-const DEFAULT_BANNER_COLOR = "#ef4444"
-const BANNER_COLOR_KEY = "profile-banner-color"
-
-const isValidHex = (value: string): boolean => /^#[0-9A-Fa-f]{6}$/.test(value)
-
-const useBannerColor = (): string => {
-	const [bannerColor, setBannerColor] = useState<string>(() => {
-		if (typeof window === "undefined") return DEFAULT_BANNER_COLOR
-		const stored = localStorage.getItem(BANNER_COLOR_KEY)
-		return stored && isValidHex(stored) ? stored : DEFAULT_BANNER_COLOR
-	})
-
-	useEffect(() => {
-		const handleStorageChange = () => {
-			const stored = localStorage.getItem(BANNER_COLOR_KEY)
-			if (stored && isValidHex(stored)) {
-				setBannerColor(stored)
-			}
-		}
-
-		window.addEventListener("storage", handleStorageChange)
-		window.addEventListener("bannerColorChange", handleStorageChange)
-
-		const interval = setInterval(() => {
-			const stored = localStorage.getItem(BANNER_COLOR_KEY)
-			if (stored && isValidHex(stored) && stored !== bannerColor) {
-				setBannerColor(stored)
-			}
-		}, 100)
-
-		return () => {
-			window.removeEventListener("storage", handleStorageChange)
-			window.removeEventListener("bannerColorChange", handleStorageChange)
-			clearInterval(interval)
-		}
-	}, [bannerColor])
-
-	return bannerColor
-}
 
 interface MenuItem {
 	name: string
@@ -176,7 +137,7 @@ interface MenuItemProps {
 	isExpanded: (name: string) => boolean
 	onToggle: (name: string) => void
 	currentPath: string
-	bannerColor?: string
+	accentColor?: string
 }
 
 const MenuItemComponent = React.memo(function MenuItemComponent({
@@ -185,7 +146,7 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 	isExpanded,
 	onToggle,
 	currentPath,
-	bannerColor
+	accentColor: accentColorProp
 }: MenuItemProps) {
 	const { name, href, icon: Icon, children } = item
 	const hasChildren = children && children.length > 0
@@ -199,12 +160,24 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 		return Icon
 	}, [hasChildren, Icon, isOpen])
 
-	const borderColor = isActive && bannerColor ? bannerColor : undefined
+	const borderColor = isActive && accentColorProp ? accentColorProp : undefined
+	const iconColor = isActive && accentColorProp ? accentColorProp : undefined
+	const textColor = isActive && accentColorProp ? accentColorProp : undefined
 
 	const buttonContent = (
 		<>
-			{DisplayIcon && <DisplayIcon className={cn("size-4 shrink-0", isActive && "text-primary")} />}
-			<span className={cn("truncate", isActive && "text-primary")}>{name}</span>
+			{DisplayIcon && (
+				<DisplayIcon
+					className={cn("size-4 shrink-0", !iconColor && isActive && "text-primary")}
+					style={iconColor ? { color: iconColor } : undefined}
+				/>
+			)}
+			<span
+				className={cn("truncate font-medium", !textColor && isActive && "text-primary")}
+				style={textColor ? { color: textColor } : undefined}
+			>
+				{name}
+			</span>
 			{hasChildren && (
 				<ChevronRight
 					className={cn("ml-auto size-4 shrink-0 transition-transform duration-200", isOpen && "rotate-90")}
@@ -226,7 +199,7 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 						isExpanded={isExpanded}
 						onToggle={onToggle}
 						currentPath={currentPath}
-						bannerColor={bannerColor}
+						accentColor={accentColorProp}
 					/>
 				))}
 			</SidebarMenuSub>
@@ -237,7 +210,7 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 		return (
 			<SidebarMenu>
 				<SidebarMenuItem>
-					<SidebarMenuButton onClick={() => hasChildren && onToggle(name)} className="cursor-pointer">
+					<SidebarMenuButton onClick={() => hasChildren && onToggle(name)} className="cursor-pointer !font-normal">
 						{buttonContent}
 					</SidebarMenuButton>
 					{renderChildren()}
@@ -271,7 +244,7 @@ export function SidebarComponent() {
 	const { user } = useAuth()
 	const location = useLocation()
 	const { toggle, isExpanded } = useExpandedState()
-	const bannerColor = useBannerColor()
+	const accentColor = useAccentColor()
 
 	const userData = useMemo(() => {
 		if (!user) return null
@@ -301,7 +274,7 @@ export function SidebarComponent() {
 								isExpanded={isExpanded}
 								onToggle={toggle}
 								currentPath={location.pathname}
-								bannerColor={bannerColor}
+								accentColor={accentColor}
 							/>
 						</SidebarGroupContent>
 					</SidebarGroup>

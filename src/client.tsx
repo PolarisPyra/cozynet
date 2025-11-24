@@ -18,6 +18,7 @@ import { OngekiRivals } from "./app/features/ongeki/pages/rivals"
 import { OngekiScorePage } from "./app/features/ongeki/pages/scores"
 import { OngekiSettingsPage } from "./app/features/ongeki/pages/settings"
 import WelcomePage, { WelcomeContent } from "./app/features/public/welcome-page"
+import { AccentColorProvider } from "./app/shared/components/accent-color-provider"
 import { LoginContent } from "./app/shared/components/common/login"
 import { SidebarComponent } from "./app/shared/components/common/sidebar"
 import { SignUpContent } from "./app/shared/components/common/signup"
@@ -58,69 +59,71 @@ const app = (
 		<BrowserRouter>
 			<AuthProvider>
 				<ThemeProvider>
-					<Toaster />
-					<Suspense fallback={<div className="bg-background" />}>
-						<Routes>
-							<Route path="/" element={<WelcomePage />}>
-								<Route index element={<WelcomeContent />} />
-								<Route path="/signup" element={<SignUpContent />} />
-								<Route path="/login" element={<LoginContent />} />
-							</Route>
-							{/* Protected routes with sidebar */}
-							<Route element={<ProtectedRoute />}>
-								<Route
-									element={
-										<div className="bg-background text-foreground flex h-screen overflow-hidden">
-											<SidebarProvider>
-												<SidebarComponent />
-												<div className="flex flex-1 flex-col overflow-hidden">
-													<Outlet />
-												</div>
-											</SidebarProvider>
-										</div>
-									}
-								>
-									<Route path="/home" element={<ServerNews />} />
-									<Route path="/profile" element={<ProfilePage />} />
-									<Route path="/admin" element={<AdminDashboard />} />
-									<Route path="/admin/cards" element={<AdminCardManagement />} />
-									<Route path="/admin/keychip-generator" element={<AdminKeychipGenerator />} />
-									<Route path="/admin/arcade-ownership" element={<AdminArcadeOwnership />} />
-									<Route path="/account" element={<Account />} />
-									<Route path="/cards" element={<CardsPage />} />
-									<Route path="/keychip" element={<KeychipPage />} />
-
-									<Route path="/chunithm/settings" element={<ChunithmSettingsPage />} />
-									<Route path="/chunithm/userbox" element={<ChunithmUserbox />} />
-									<Route path="/chunithm/scores" element={<ChunithmScorePage />} />
-									<Route path="/chunithm/favorites" element={<ChunithmFavorites />} />
-									<Route path="/chunithm/leaderboard" element={<ChunithmLeaderboard />} />
-									<Route path="/chunithm/song-leaderboard/:musicId/:chartId" element={<ChunithmSongLeaderboard />} />
-									<Route path="/chunithm/allsongs" element={<ChunithmAllSongs />} />
-									<Route path="/chunithm/rivals" element={<ChunithmRivals />} />
-									<Route path="/chunithm/rating" element={<ChunithmRatingBaseList />} />
-									<Route path="/chunithm/profile" element={<ChunithmProfile />} />
-
-									<Route path="/ongeki/settings" element={<OngekiSettingsPage />} />
-									<Route path="/ongeki/userbox" element={<OngekiUserbox />} />
-									<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
-									<Route path="/ongeki/scores" element={<OngekiScorePage />} />
-									<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
-									<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
-									<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
-									<Route path="/ongeki/rivals" element={<OngekiRivals />} />
-									<Route path="/ongeki/cards" element={<CardManagement />} />
-									<Route path="/ongeki/profile" element={<OngekiProfile />} />
-									<Route path="/maimaidx/scores" element={<MaimaiDxScorePage />} />
-									<Route path="/maimaidx/rating" element={<MaimaiDxRatingFrames />} />
-									<Route path="/maimaidx/settings" element={<MaimaiDxSettings />} />
-									<Route path="/maimaidx/allsongs" element={<MaimaiDxAllSongs />} />
+					<AccentColorProvider>
+						<Toaster />
+						<Suspense fallback={<div className="bg-background" />}>
+							<Routes>
+								<Route path="/" element={<WelcomePage />}>
+									<Route index element={<WelcomeContent />} />
+									<Route path="/signup" element={<SignUpContent />} />
+									<Route path="/login" element={<LoginContent />} />
 								</Route>
-							</Route>
+								{/* Protected routes with sidebar */}
+								<Route element={<ProtectedRoute />}>
+									<Route
+										element={
+											<div className="bg-background text-foreground flex h-screen overflow-hidden">
+												<SidebarProvider>
+													<SidebarComponent />
+													<div className="flex flex-1 flex-col overflow-hidden">
+														<Outlet />
+													</div>
+												</SidebarProvider>
+											</div>
+										}
+									>
+										<Route path="/home" element={<ServerNews />} />
+										<Route path="/profile" element={<ProfilePage />} />
+										<Route path="/admin" element={<AdminDashboard />} />
+										<Route path="/admin/cards" element={<AdminCardManagement />} />
+										<Route path="/admin/keychip-generator" element={<AdminKeychipGenerator />} />
+										<Route path="/admin/arcade-ownership" element={<AdminArcadeOwnership />} />
+										<Route path="/account" element={<Account />} />
+										<Route path="/cards" element={<CardsPage />} />
+										<Route path="/keychip" element={<KeychipPage />} />
 
-							<Route path="*" element={<NotFound />} />
-						</Routes>
-					</Suspense>
+										<Route path="/chunithm/settings" element={<ChunithmSettingsPage />} />
+										<Route path="/chunithm/userbox" element={<ChunithmUserbox />} />
+										<Route path="/chunithm/scores" element={<ChunithmScorePage />} />
+										<Route path="/chunithm/favorites" element={<ChunithmFavorites />} />
+										<Route path="/chunithm/leaderboard" element={<ChunithmLeaderboard />} />
+										<Route path="/chunithm/song-leaderboard/:musicId/:chartId" element={<ChunithmSongLeaderboard />} />
+										<Route path="/chunithm/allsongs" element={<ChunithmAllSongs />} />
+										<Route path="/chunithm/rivals" element={<ChunithmRivals />} />
+										<Route path="/chunithm/rating" element={<ChunithmRatingBaseList />} />
+										<Route path="/chunithm/profile" element={<ChunithmProfile />} />
+
+										<Route path="/ongeki/settings" element={<OngekiSettingsPage />} />
+										<Route path="/ongeki/userbox" element={<OngekiUserbox />} />
+										<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
+										<Route path="/ongeki/scores" element={<OngekiScorePage />} />
+										<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
+										<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
+										<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
+										<Route path="/ongeki/rivals" element={<OngekiRivals />} />
+										<Route path="/ongeki/cards" element={<CardManagement />} />
+										<Route path="/ongeki/profile" element={<OngekiProfile />} />
+										<Route path="/maimaidx/scores" element={<MaimaiDxScorePage />} />
+										<Route path="/maimaidx/rating" element={<MaimaiDxRatingFrames />} />
+										<Route path="/maimaidx/settings" element={<MaimaiDxSettings />} />
+										<Route path="/maimaidx/allsongs" element={<MaimaiDxAllSongs />} />
+									</Route>
+								</Route>
+
+								<Route path="*" element={<NotFound />} />
+							</Routes>
+						</Suspense>
+					</AccentColorProvider>
 				</ThemeProvider>
 			</AuthProvider>
 		</BrowserRouter>

@@ -4,12 +4,19 @@ import { useCallback, useEffect } from "react"
 import { Moon, Sun } from "lucide-react"
 import { flushSync } from "react-dom"
 
+import { useAccentColor } from "@/app/shared/components/accent-color-provider"
 import { useTheme } from "@/app/shared/components/theme-provider"
 import { Button } from "@/app/shared/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/shared/components/ui/dropdown-menu"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger
+} from "@/app/shared/components/ui/dropdown-menu"
 
 export function ModeToggle() {
 	const { theme, setTheme } = useTheme()
+	const accentColor = useAccentColor()
 
 	useEffect(() => {
 		const root = document.documentElement as HTMLElement & { style: any }
@@ -112,8 +119,14 @@ export function ModeToggle() {
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="icon" className="hover:cursor-pointer">
-					<Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-					<Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+					<Sun
+						className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
+						style={{ color: accentColor }}
+					/>
+					<Moon
+						className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
+						style={{ color: accentColor }}
+					/>
 					<span className="sr-only">Toggle theme</span>
 				</Button>
 			</DropdownMenuTrigger>
