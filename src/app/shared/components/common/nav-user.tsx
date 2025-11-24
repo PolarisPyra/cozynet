@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon, UserCog } from "lucide-react"
+import { Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { useAdmin } from "@/app/features/admin/hooks"
@@ -180,7 +180,7 @@ export function NavUser({
 								onClick={() => navigate("/account")}
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 							>
-								<UserCog className="text-primary" />
+								<SettingsIcon className="text-primary" />
 								Account
 							</DropdownMenuItem>
 							<DropdownMenuItem
