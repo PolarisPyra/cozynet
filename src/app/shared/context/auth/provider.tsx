@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 
+import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 
 import { useLogin, useLogout, useSignup, useVerifySession } from "@/app/shared/hooks/auth"
@@ -20,24 +21,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 	const [user, setUser] = useState<UserMeta | null>(null)
 	const [error, setError] = useState("")
 	const navigate = useNavigate()
+	const queryClient = useQueryClient()
 
 	// Use React Query hooks for auth operations
-	// Only verify if we don't have a user yet
-	const { data: verifiedUser, isLoading: isVerifying } = useVerifySession(user === null)
+	// Always verify on mount to handle refreshes
+	const { data: verifiedUser, isLoading: isVerifying } = useVerifySession(true)
 	const loginMutation = useLogin()
 	const signupMutation = useSignup()
 	const logoutMutation = useLogout()
 
-	// Update user state when verification succeeds
+	// Sync verifiedUser to user state - use verifiedUser directly to avoid re-renders
 	useEffect(() => {
-		if (verifiedUser) {
-			setUser(verifiedUser)
-			setError("")
-		} else if (isVerifying === false && !verifiedUser) {
-			// Verification completed but no user found
-			setUser(null)
-		}
-	}, [verifiedUser, isVerifying])
+		setUser(verifiedUser ?? null)
+	}, [verifiedUser])
 
 	/**
 	 * Verifies the current session by checking the JWT token.
@@ -103,9 +99,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			// Always clear local state for security, even if server request fails
 			setUser(null)
 			setError("")
+			// Clear React Query cache to prevent stale auth data
+			queryClient.removeQueries({ queryKey: ["auth", "verify"] })
+			queryClient.setQueryData<UserMeta | null>(["auth", "verify"], null)
 			navigate("/", { replace: true })
 		}
-	}, [logoutMutation, navigate])
+	}, [logoutMutation, navigate, queryClient])
 
 	/**
 	 * Clears the current error message.
@@ -114,11 +113,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 		setError("")
 	}, [])
 
+	const isLoading = isVerifying || loginMutation.isPending || signupMutation.isPending || logoutMutation.isPending
+
 	const value = useMemo(
 		() => ({
-			user,
+			user: verifiedUser ?? user,
 			setUser,
-			isLoading: isVerifying || loginMutation.isPending || signupMutation.isPending || logoutMutation.isPending,
+			isLoading,
 			isVerifying,
 			error,
 			login,
@@ -127,19 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			clearError,
 			verifySession
 		}),
-		[
-			user,
-			isVerifying,
-			loginMutation.isPending,
-			signupMutation.isPending,
-			logoutMutation.isPending,
-			error,
-			login,
-			logout,
-			signup,
-			clearError,
-			verifySession
-		]
+		[verifiedUser, user, isLoading, isVerifying, error, login, logout, signup, clearError, verifySession]
 	)
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

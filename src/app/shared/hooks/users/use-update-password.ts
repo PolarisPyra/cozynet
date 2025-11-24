@@ -30,7 +30,7 @@ export function useUpdatePassword() {
 		},
 		onSuccess: async data => {
 			// Invalidate and refetch user data
-			await queryClient.invalidateQueries({ queryKey: ["verifySession"] })
+			await queryClient.invalidateQueries({ queryKey: ["auth", "verify"] })
 
 			// Update the user in auth context with the full user object from the server
 			// This includes the refreshed JWT token data

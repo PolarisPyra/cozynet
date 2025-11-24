@@ -14,7 +14,18 @@ declare module "hono" {
  */
 export const jwtPayloadMiddleware = (): MiddlewareHandler => {
 	return async (c, next) => {
-		c.payload = JSON.parse(c.get("jwtPayload").user) as UserMeta
+		try {
+			const jwtPayload = c.get("jwtPayload")
+			if (jwtPayload && jwtPayload.user) {
+				c.payload = JSON.parse(jwtPayload.user) as UserMeta
+			} else {
+				// If JWT payload is missing, set empty payload (will cause 401 in routes that require auth)
+				c.payload = {} as UserMeta
+			}
+		} catch (error) {
+			// If parsing fails, set empty payload
+			c.payload = {} as UserMeta
+		}
 		await next()
 	}
 }

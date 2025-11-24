@@ -17,6 +17,8 @@ export function useVerifySession(enabled = true) {
 		},
 		enabled,
 		retry: false,
-		staleTime: 5 * 60 * 1000 // 5 minutes
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		refetchOnWindowFocus: false, // Prevent refetch on rapid tab switches
+		refetchOnMount: true // Always refetch on mount for security
 	})
 }

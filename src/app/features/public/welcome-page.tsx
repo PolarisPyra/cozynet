@@ -1,4 +1,4 @@
-import { Link, Navigate, Outlet } from "react-router-dom"
+import { Link, Navigate, Outlet, useLocation } from "react-router-dom"
 
 // BgGame removed
 import { Button } from "@/app/shared/components/ui/button"
@@ -25,6 +25,7 @@ export const WelcomeContent = () => (
 
 const WelcomePage = () => {
 	const { user, isLoading } = useAuth()
+	const location = useLocation()
 
 	// Don't redirect while still loading - prevents redirect loops
 	if (isLoading) {
@@ -35,15 +36,17 @@ const WelcomePage = () => {
 		)
 	}
 
-	// Only redirect if user is authenticated
-	return user ? (
-		<Navigate to="/home" replace />
-	) : (
-		<>
-			<div className="bg-background z-10 flex min-h-screen items-center justify-center p-4">
-				<Outlet />
-			</div>
-		</>
+	// Only redirect authenticated users if they're actually on the root path
+	// This prevents redirecting users who are refreshing on protected routes
+	if (user && location.pathname === "/") {
+		return <Navigate to="/home" replace />
+	}
+
+	// Show welcome content for unauthenticated users
+	return (
+		<div className="bg-background z-10 flex min-h-screen items-center justify-center p-4">
+			<Outlet />
+		</div>
 	)
 }
 
