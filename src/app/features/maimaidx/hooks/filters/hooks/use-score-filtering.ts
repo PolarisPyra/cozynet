@@ -8,8 +8,7 @@ import type { UseScoreFilteringParams } from "../types/music-types"
 
 export const useMaimaiDxScoreFiltering = ({ searchQuery, filterValues }: UseScoreFilteringParams) => {
 	const { data: scores = [], isLoading } = useMaimaiDxScores()
-	const userVersion = useMaimaiDxVersion()
-	const version = userVersion ? Number(userVersion) : null
+	const version = useMaimaiDxVersion()
 
 	const filteredScores = useMemo(() => {
 		if (!scores) return []
@@ -39,19 +38,8 @@ export const useMaimaiDxScoreFiltering = ({ searchQuery, filterValues }: UseScor
 				return false
 			}
 
-			// Apply version filter: include scores from current version (based on songVersion)
-			const versionFilterValue = filterValues?.["version"] || "current"
-			if (versionFilterValue === "current" && version != null && score.songVersion) {
-				if (score.songVersion !== version) return false
-			}
-
-			// Apply all other filters
+			// Apply all active filters
 			return scoreFilters.every(filter => {
-				// Skip version filter as it's handled above
-				if (filter.identifier === "version") {
-					return true
-				}
-
 				const value = filterValues?.[filter.identifier]
 
 				// Handle required filters with default values
@@ -68,7 +56,7 @@ export const useMaimaiDxScoreFiltering = ({ searchQuery, filterValues }: UseScor
 				return filter.predicate(score, value)
 			})
 		})
-	}, [scores, searchQuery, filterValues, version])
+	}, [scores, searchQuery, filterValues])
 
 	return {
 		filteredScores,

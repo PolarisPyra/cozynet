@@ -7,6 +7,7 @@ import { Skeleton } from "@/app/shared/components/ui/skeleton"
 import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
 import { CDN } from "@/app/shared/utils/constants"
 import { Mai2Playlog } from "@/app/shared/types"
+import { formatLevel } from "@/app/shared/utils/format-level"
 import { getMaimaiDxGrade, maimaiDxBadgeColors } from "@/app/shared/utils/maimai"
 
 export type MaimaiDxScoreInfoCardProps = {
@@ -43,7 +44,7 @@ export function MaimaiDxScoreInfoCard({ score, className = "" }: MaimaiDxScoreIn
 						<span
 							className={`inline-block rounded-sm px-2.5 py-1 text-xs font-bold ${maimaiDxBadgeColors(score.level ?? 0)}`}
 						>
-							{score.difficulty ?? 0}
+							{formatLevel(score.difficulty)}
 						</span>
 					</div>
 				</div>

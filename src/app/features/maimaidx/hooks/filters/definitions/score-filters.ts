@@ -47,34 +47,13 @@ export const scoreLevelFilter: ScoreFilter = {
 }
 
 // ============================================================================
-// VERSION FILTER
-// ============================================================================
-
-/**
- * Filter scores by version
- */
-export const scoreVersionFilter: ScoreFilter = {
-	identifier: "version",
-	label: "Version",
-	options: [
-		{ label: "Current", value: "current" },
-		{ label: "All", value: "all" }
-	],
-	predicate: () => true // Version filtering is handled in the hook
-}
-
-// ============================================================================
 // EXPORT ALL FILTERS
 // ============================================================================
 
 /**
  * Array of all available score filters
  */
-export const scoreFilters: ScoreFilter[] = [scoreVersionFilter, scoreLevelFilter]
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
+export const scoreFilters: ScoreFilter[] = [scoreLevelFilter]
 
 /**
  * Get default filter values for scores
@@ -82,11 +61,7 @@ export const scoreFilters: ScoreFilter[] = [scoreVersionFilter, scoreLevelFilter
 export const getDefaultScoreFilterValues = (): FilterValues => {
 	const defaultValues: FilterValues = {}
 	scoreFilters.forEach(filter => {
-		if (filter.identifier === "version") {
-			defaultValues[filter.identifier] = "current"
-		} else {
-			defaultValues[filter.identifier] = "all"
-		}
+		defaultValues[filter.identifier] = "all"
 	})
 	return defaultValues
 }
