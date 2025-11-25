@@ -28,3 +28,22 @@ export const getChunithmLogo = {
 		return CHUNITHM_LOGOS[version] ?? null
 	}
 }
+
+const ONGEKI_LOGOS: Record<number, string> = {
+	[0]: `${CDN}/ongeki/logos/0.webp`, // O.N.G.E.K.I.
+	[1]: `${CDN}/ongeki/logos/1.webp`, // O.N.G.E.K.I. PLUS
+	[2]: `${CDN}/ongeki/logos/2.webp`, // SUMMER
+	[3]: `${CDN}/ongeki/logos/3.webp`, // SUMMER PLUS
+	[4]: `${CDN}/ongeki/logos/4.webp`, // R.E.D.
+	[5]: `${CDN}/ongeki/logos/5.webp`, // R.E.D. PLUS
+	[6]: `${CDN}/ongeki/logos/6.webp`, // bright
+	[7]: `${CDN}/ongeki/logos/7.webp`, // bright MEMORY
+	[8]: `${CDN}/ongeki/logos/8.webp` // Re:Refresh
+}
+
+export const getOngekiLogo = {
+	getLogo(version?: number | null): string | null {
+		if (version === null || version === undefined) return null
+		return ONGEKI_LOGOS[version] ?? null
+	}
+}

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Medal } from "lucide-react"
 
@@ -9,6 +9,7 @@ import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { OngekiPlaylog } from "@/app/shared/types"
 import { CDN } from "@/app/shared/utils/constants"
@@ -19,8 +20,33 @@ import {
 	formatOngekiScorePlaylogDate,
 	ongekiBadgeColors
 } from "@/app/shared/utils/ongeki"
+import { cn } from "@/app/shared/utils"
+import { getOngekiLogo } from "@/app/shared/utils/version-logos"
 
 import { OngekiRatingColors } from "./rating-colors"
+
+interface VersionLogoBadgeProps {
+	logoUrl: string | null
+	tooltip: string
+	alt: string
+}
+
+const VersionLogoBadge = ({ logoUrl, tooltip, alt }: VersionLogoBadgeProps) => {
+	if (!logoUrl) return null
+
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<Badge variant="secondary" className="h-6 rounded-sm p-1">
+					<img src={logoUrl} alt={alt} className="max-h-5 w-auto object-contain" />
+				</Badge>
+			</TooltipTrigger>
+			<TooltipContent>
+				<p>{tooltip}</p>
+			</TooltipContent>
+		</Tooltip>
+	)
+}
 
 interface PlatinumStarsProps {
 	count: number
@@ -87,9 +113,16 @@ export function OngekiScoreInfoCard({
 		isDialogOpen
 	)
 
+	const songVersionLogo = useMemo(() => {
+		return getOngekiLogo.getLogo(score.songVersion)
+	}, [score.songVersion])
+
 	return (
 		<div
-			className={`bg-card border-border flex h-full flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md ${className}`}
+			className={cn(
+				"bg-card border-border flex h-full flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md",
+				className
+			)}
 		>
 			<div className="flex flex-1 flex-col gap-3">
 				<div className="flex items-start justify-between gap-3">
@@ -184,6 +217,11 @@ export function OngekiScoreInfoCard({
 							New Battle Record
 						</Badge>
 					)}
+					<VersionLogoBadge
+						logoUrl={songVersionLogo}
+						tooltip="Version the song originated in"
+						alt={`Song version ${score.songVersion ?? "unknown"}`}
+					/>
 					<Badge
 						variant="secondary"
 						className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"

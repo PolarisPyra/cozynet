@@ -61,7 +61,8 @@ const OngekiProfileRoutes = new Hono()
                     csm.genre,
                     csm.jacketPath,
                     csm.noteCount,
-                    csm.artist
+                    csm.artist,
+                    ev.earliest_version as songVersion
                 FROM
                     ongeki_score_playlog csp
                 JOIN ongeki_profile_data d ON csp.user = d.user
@@ -69,6 +70,11 @@ const OngekiProfileRoutes = new Hono()
                     ON csp.musicId = csm.songId
                     AND csp.level = csm.chartId
                     AND csm.version = ?
+                INNER JOIN (
+                    SELECT songId, chartId, MIN(version) as earliest_version
+                    FROM ongeki_static_music
+                    GROUP BY songId, chartId
+                ) ev ON csm.songId = ev.songId AND csm.chartId = ev.chartId
                 JOIN aime_card a ON d.user = a.user
                 WHERE
                     a.user = ?

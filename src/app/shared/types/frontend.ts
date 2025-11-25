@@ -25,6 +25,7 @@ export type OngekiPlaylog = DB.OngekiScorePlaylog & {
 	platinumScoreStar: number | null
 	isTechNewRecord?: number | null
 	isBattleNewRecord?: number | null
+	songVersion?: number
 }
 
 export type Mai2Playlog = DB.Mai2Playlog & {
