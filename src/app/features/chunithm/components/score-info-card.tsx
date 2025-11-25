@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Medal, Star } from "lucide-react"
 
@@ -10,32 +10,64 @@ import { Leaderboard } from "@/app/shared/components/leaderboard"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { ChunithmPlaylog } from "@/app/shared/types"
+import { cn } from "@/app/shared/utils"
 import {
 	calculateChunithmRating,
 	chunithmBadgeColors,
+	convertRomVersionToVersion,
 	formatSqlDateToLocalParts,
 	getChunithmGrade,
 	levelToStars
 } from "@/app/shared/utils/chunithm"
-import { convertChunithmScoreRating } from "@/app/shared/utils/profile-rating-utils"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
+import { convertChunithmScoreRating } from "@/app/shared/utils/profile-rating-utils"
 import { getChunithmLogo } from "@/app/shared/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"
+
+interface VersionLogoBadgeProps {
+	logoUrl: string | null
+	tooltip: string
+	alt: string
+}
+
+const VersionLogoBadge = ({ logoUrl, tooltip, alt }: VersionLogoBadgeProps) => {
+	if (!logoUrl) return null
+
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<Badge variant="secondary" className="h-6 rounded-sm p-1">
+					<img src={logoUrl} alt={alt} className="max-h-5 w-auto object-contain" />
+				</Badge>
+			</TooltipTrigger>
+			<TooltipContent>
+				<p>{tooltip}</p>
+			</TooltipContent>
+		</Tooltip>
+	)
+}
 
 export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, className = "" }: ChunithmScoreInfoCardProps) {
 	const version = useChunithmVersion()
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const currentUser = useCurrentUser()
 
-	const appearedLogo = getChunithmLogo.getLogo(score.songVersion)
-	const scoreVersionLogo = getChunithmLogo.getLogo(score.version)
-	const ratingValue = convertChunithmScoreRating(score.playerRating)
-	const isWorldsEnd = score.chartId === 5
-	const starCount = levelToStars(score.level)
+	const { scoreVersionId, scoreVersionLogo, songVersionLogo, ratingValue, isWorldsEnd, starCount } = useMemo(() => {
+		const versionId = convertRomVersionToVersion(score.romVersion)
+		return {
+			scoreVersionId: versionId,
+			scoreVersionLogo: getChunithmLogo.getLogo(versionId),
+			songVersionLogo: getChunithmLogo.getLogo(score.songVersion),
+			ratingValue: convertChunithmScoreRating(score.playerRating),
+			isWorldsEnd: score.chartId === 5,
+			starCount: levelToStars(score.level)
+		}
+	}, [score.romVersion, score.songVersion, score.playerRating, score.chartId, score.level])
 
 	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
 		score.musicId ?? 0,
@@ -46,7 +78,10 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 
 	return (
 		<div
-			className={`bg-card border-border flex h-full flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md ${className}`}
+			className={cn(
+				"bg-card border-border flex h-full flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md",
+				className
+			)}
 		>
 			<div className="flex items-start justify-between gap-3">
 				<div className="flex min-w-0 flex-1 items-start gap-3">
@@ -62,9 +97,10 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 						</div>
 						<Badge
 							variant="outline"
-							className={`flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
+							className={cn(
+								"flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold",
 								levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : chunithmBadgeColors(score.chartId ?? 0)
-							}`}
+							)}
 						>
 							{score.level == null || !Number.isFinite(score.level) ? (
 								"?"
@@ -149,16 +185,16 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 							New Record
 						</Badge>
 					)}
-					{scoreVersionLogo && (
-						<Badge variant="secondary" className="h-6 rounded-sm p-1">
-							<img src={scoreVersionLogo} alt="Version Logo" className="max-h-5 w-auto object-contain" />
-						</Badge>
-					)}
-					{appearedLogo && (
-						<Badge variant="secondary" className="h-6 rounded-sm p-1">
-							<img src={appearedLogo} alt="Version Logo" className="max-h-5 w-auto object-contain" />
-						</Badge>
-					)}
+					<VersionLogoBadge
+						logoUrl={scoreVersionLogo}
+						tooltip="Version the score was set in"
+						alt={`Score version ${scoreVersionId ?? "unknown"}`}
+					/>
+					<VersionLogoBadge
+						logoUrl={songVersionLogo}
+						tooltip="Version the song originated in"
+						alt={`Song version ${score.songVersion ?? "unknown"}`}
+					/>
 					<Badge
 						variant="secondary"
 						className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"
@@ -179,7 +215,7 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 				chartBadgeClassName={chunithmBadgeColors(score.chartId ?? 0)}
 				totalScores={leaderboardData?.total ?? 0}
 				entries={leaderboardData?.leaderboard ?? []}
-				currentUserId={currentUser.id}
+				currentUserId={currentUser.userId}
 				renderRating={entry => {
 					const level = leaderboardData?.chart?.level ?? 0
 					if (level === 0 || !version) return null
