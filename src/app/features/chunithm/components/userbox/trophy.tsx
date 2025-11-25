@@ -4,6 +4,7 @@ import { Trophy as TrophyIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
+import { useChunithmVersion } from "@/app/features/chunithm/hooks/use-version"
 import {
 	TrophyItem,
 	useCurrentTrophies,
@@ -42,6 +43,8 @@ const honorBackgrounds: Record<TrophyRareType, string> = {
 }
 
 export function Trophy() {
+	const version = useChunithmVersion()
+	const isVerseOrAbove = version >= 17
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [selectedSlot, setSelectedSlot] = useState<"main" | "sub1" | "sub2">("main")
 	const [rareTypeFilter, setRareTypeFilter] = useState<number | null>(null)
@@ -73,6 +76,11 @@ export function Trophy() {
 	}, [pendingTrophies, items, currentTrophies])
 
 	const handleSelect = (id: number) => {
+		// Only allow main trophy if below VERSE version
+		if (!isVerseOrAbove && selectedSlot !== "main") {
+			toast.error("Sub trophies are only available in VERSE and above")
+			return
+		}
 		setTrophy(prev => ({
 			...prev,
 			[selectedSlot]: id
@@ -86,8 +94,13 @@ export function Trophy() {
 			return
 		}
 
+		// Filter out sub trophies if below VERSE version
+		const trophiesToSave = isVerseOrAbove
+			? pendingTrophies
+			: Object.fromEntries(Object.entries(pendingTrophies).filter(([slot]) => slot === "main"))
+
 		// Submit all pending trophy changes
-		const savePromises = Object.entries(pendingTrophies).map(([slot, id]) => {
+		const savePromises = Object.entries(trophiesToSave).map(([slot, id]) => {
 			return new Promise<void>((resolve, reject) => {
 				equipTrophy(
 					{ trophyId: id, slot: slot as "main" | "sub1" | "sub2" },
@@ -147,8 +160,12 @@ export function Trophy() {
 					<div className="mb-2 flex flex-1 flex-col items-center justify-center gap-1.5">
 						{[
 							{ trophy: displayTrophies.main, label: "Main", slot: "main" as const },
-							{ trophy: displayTrophies.sub1, label: "Sub 1", slot: "sub1" as const },
-							{ trophy: displayTrophies.sub2, label: "Sub 2", slot: "sub2" as const }
+							...(isVerseOrAbove
+								? [
+										{ trophy: displayTrophies.sub1, label: "Sub 1", slot: "sub1" as const },
+										{ trophy: displayTrophies.sub2, label: "Sub 2", slot: "sub2" as const }
+									]
+								: [])
 						].map(({ trophy, label }, idx) => {
 							const imageUrl = getTrophyImageUrl(trophy)
 							// Don't show text overlay if trophy has a custom image (like KOP)
@@ -228,8 +245,8 @@ export function Trophy() {
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="main">Main</SelectItem>
-								<SelectItem value="sub1">Sub 1</SelectItem>
-								<SelectItem value="sub2">Sub 2</SelectItem>
+								{isVerseOrAbove && <SelectItem value="sub1">Sub 1</SelectItem>}
+								{isVerseOrAbove && <SelectItem value="sub2">Sub 2</SelectItem>}
 							</SelectContent>
 						</Select>
 						<div className="flex gap-2">

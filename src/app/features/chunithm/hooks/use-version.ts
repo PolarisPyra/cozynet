@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { api } from "@/app/shared/utils"
 
@@ -26,6 +26,7 @@ export const useChunithmVersions = () => {
 
 export const useUpdateChunithmVersion = () => {
 	const { setUser } = useAuth()
+	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (version: number) => {
 			const response = await api.chunithm.cozynet.update.$post({
@@ -37,6 +38,9 @@ export const useUpdateChunithmVersion = () => {
 
 			const user = await response.json()
 			setUser(user)
+			// Invalidate and update the verify session query to ensure the new user data is used
+			queryClient.setQueryData(["auth", "verify"], user)
+			queryClient.invalidateQueries({ queryKey: ["auth", "verify"] })
 		}
 	})
 }

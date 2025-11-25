@@ -14,6 +14,7 @@ import { Body, Container } from "@/app/shared/pages/layout/layout"
 
 const ChunithmUserbox = () => {
 	const version = useChunithmVersion()
+	const isVerseOrAbove = version >= 17
 
 	if (!version) {
 		return (
@@ -40,7 +41,7 @@ const ChunithmUserbox = () => {
 							<SystemVoice />
 							<MapIcon />
 							<Character />
-							<Stage />
+							{isVerseOrAbove && <Stage />}
 						</div>
 					</Body>
 				</UserboxPendingProvider>

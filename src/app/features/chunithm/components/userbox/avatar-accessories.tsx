@@ -167,7 +167,7 @@ export function AvatarAccessories() {
 									}}
 								>
 									<div className="text-muted-foreground text-xs">{SLOT_LABELS[slot]}</div>
-									{avatarPart?.imagePath ? (
+									{avatarPart?.imagePath && (slot === AvatarSlot.SKIN || avatarPart?.label !== "ノーマル") ? (
 										<img
 											src={
 												avatarPart.imagePath.startsWith("http")

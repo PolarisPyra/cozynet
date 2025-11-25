@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 
-import { useCurrentAvatar, useSearchAvatarItems, AvatarSlot } from "@/app/features/chunithm/hooks/userbox/avatar"
 import { useAvatarPending } from "@/app/features/chunithm/components/userbox/avatar-pending-context"
+import { AvatarSlot, useCurrentAvatar, useSearchAvatarItems } from "@/app/features/chunithm/hooks/userbox/avatar"
 import { CDN } from "@/app/shared/utils/constants"
 
 const staticPath = `${CDN}/chunithm/avatarStatic`
@@ -53,11 +53,26 @@ export function AvatarPreview() {
 
 		return {
 			...defaultImages,
-			back: avatar.back?.imagePath ? `${nonStaticPath}/${avatar.back.imagePath}` : defaultImages.back,
-			wear: avatar.wear?.imagePath ? `${nonStaticPath}/${avatar.wear.imagePath}` : defaultImages.wear,
-			head: avatar.head?.imagePath ? `${nonStaticPath}/${avatar.head.imagePath}` : defaultImages.head,
-			item: avatar.item?.imagePath ? `${nonStaticPath}/${avatar.item.imagePath}` : defaultImages.item,
-			face: avatar.face?.imagePath ? `${nonStaticPath}/${avatar.face.imagePath}` : defaultImages.face
+			back:
+				avatar.back?.imagePath && avatar.back?.label !== "ノーマル"
+					? `${nonStaticPath}/${avatar.back.imagePath}`
+					: defaultImages.back,
+			wear:
+				avatar.wear?.imagePath && avatar.wear?.label !== "ノーマル"
+					? `${nonStaticPath}/${avatar.wear.imagePath}`
+					: defaultImages.wear,
+			head:
+				avatar.head?.imagePath && avatar.head?.label !== "ノーマル"
+					? `${nonStaticPath}/${avatar.head.imagePath}`
+					: defaultImages.head,
+			item:
+				avatar.item?.imagePath && avatar.item?.label !== "ノーマル"
+					? `${nonStaticPath}/${avatar.item.imagePath}`
+					: defaultImages.item,
+			face:
+				avatar.face?.imagePath && avatar.face?.label !== "ノーマル"
+					? `${nonStaticPath}/${avatar.face.imagePath}`
+					: defaultImages.face
 		}
 	}, [optimisticAvatar, currentAvatar])
 
