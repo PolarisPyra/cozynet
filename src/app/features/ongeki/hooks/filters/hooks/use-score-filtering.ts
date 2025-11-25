@@ -3,12 +3,11 @@ import { useMemo } from "react"
 import { useOngekiScores, useOngekiVersion } from "@/app/features/ongeki/hooks"
 
 import { scoreFilters } from "../definitions/score-filters"
-import type { MusicFilter, OngekiScore, UseMusicFilteringParams } from "../types/music-types"
+import type { UseMusicFilteringParams } from "../types/music-types"
 
 export const useOngekiScoreFiltering = ({ searchQuery, filterValues }: UseMusicFilteringParams) => {
 	const { data: scores = [], isLoading } = useOngekiScores()
 	const version = useOngekiVersion()
-	const isRefreshOrAbove = version ? Number(version) >= 8 : false
 
 	const filteredScores = useMemo(() => {
 		if (!scores) return []
@@ -16,14 +15,6 @@ export const useOngekiScoreFiltering = ({ searchQuery, filterValues }: UseMusicF
 		const normalizedQuery = searchQuery.trim().toLowerCase()
 
 		return scores.filter(score => {
-			// Filter by version (Refresh and above use platinum score star)
-			if (isRefreshOrAbove && score.platinumScoreStar === null) {
-				return false
-			}
-			if (!isRefreshOrAbove && score.platinumScoreStar !== null) {
-				return false
-			}
-
 			// Apply search query filter
 			if (normalizedQuery && score.title && !score.title.toLowerCase().includes(normalizedQuery)) {
 				return false
@@ -47,12 +38,11 @@ export const useOngekiScoreFiltering = ({ searchQuery, filterValues }: UseMusicF
 				return filter.predicate(score, value)
 			})
 		})
-	}, [scores, searchQuery, filterValues, isRefreshOrAbove])
+	}, [scores, searchQuery, filterValues])
 
 	return {
 		filteredScores,
 		isLoading,
-		isRefreshOrAbove,
 		version
 	}
 }

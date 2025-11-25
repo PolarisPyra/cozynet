@@ -12,7 +12,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { StaticMusic } from "@/app/shared/types"
 import { CDN } from "@/app/shared/utils/constants"
-import { OngekiGekForceRating, OngekiRating, formatOngekiLevel, ongekiBadgeColors } from "@/app/shared/utils/ongeki"
+import {
+	calculateOngekiGekForceRating,
+	calculateOngekiRating,
+	formatOngekiLevel,
+	ongekiBadgeColors
+} from "@/app/shared/utils/ongeki"
 
 import { OngekiRatingColors } from "./rating-colors"
 
@@ -187,14 +192,14 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 												const calculatedRating =
 													level > 0
 														? isRefresh
-															? OngekiGekForceRating(
+															? calculateOngekiGekForceRating(
 																	level,
 																	entry.score,
 																	entry.isFullCombo ?? 0,
 																	entry.isAllBreak ?? 0,
 																	entry.isFullBell ?? 0
 																) / 1000
-															: OngekiRating(level, entry.score) / 100
+															: calculateOngekiRating(level, entry.score) / 100
 														: null
 
 												return (

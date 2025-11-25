@@ -1,9 +1,9 @@
 import { Hono } from "hono"
 import type { RowDataPacket } from "mysql2"
 
+import { DB } from "@/app/shared/types"
 import { db } from "@/server/db"
 import { rethrowWithMessage } from "@/server/utils/error"
-import { DB } from "@/app/shared/types"
 
 const OngekiProfileRoutes = new Hono()
 	.get("", async c => {

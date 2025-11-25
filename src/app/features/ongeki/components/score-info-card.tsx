@@ -14,8 +14,8 @@ import { OngekiPlaylog } from "@/app/shared/types"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
 import {
-	OngekiGekForceRating,
-	OngekiRating,
+	calculateOngekiGekForceRating,
+	calculateOngekiRating,
 	formatOngekiScorePlaylogDate,
 	ongekiBadgeColors
 } from "@/app/shared/utils/ongeki"
@@ -76,7 +76,8 @@ export function OngekiScoreInfoCard({
 		isFullCombo: score.isFullCombo,
 		isAllBreak: score.isAllBreak,
 		isFullBell: score.isFullBell,
-		version: ongekiVersion
+		version: ongekiVersion,
+		platinumScoreStar: score.platinumScoreStar
 	})
 
 	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
@@ -203,19 +204,20 @@ export function OngekiScoreInfoCard({
 				chartBadgeClassName={ongekiBadgeColors(score.chartId ?? 0)}
 				totalScores={leaderboardData?.total ?? 0}
 				entries={leaderboardData?.leaderboard ?? []}
-				currentUserId={currentUser.id}
+				currentUserId={currentUser.userId}
 				renderRating={entry => {
 					const level = leaderboardData?.chart?.level ?? 0
 					if (level === 0) return null
+					const isRefresh = ongekiVersion >= 8
 					const entryRating = isRefresh
-						? OngekiGekForceRating(
+						? calculateOngekiGekForceRating(
 								level,
 								entry.score,
 								entry.isFullCombo ?? 0,
 								entry.isAllBreak ?? 0,
 								entry.isFullBell ?? 0
 							) / 1000
-						: OngekiRating(level, entry.score) / 100
+						: calculateOngekiRating(level, entry.score) / 100
 					return <OngekiRatingColors rating={entryRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
 				}}
 			/>

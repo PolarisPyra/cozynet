@@ -146,12 +146,6 @@ export const calculateOngekiRating = (level: number, score: number): number => {
 	return internalChartRating + Math.floor((score - 970000) / 200)
 }
 
-/**
- * LEGACY COMPATIBILITY - Alias for calculateOngekiRating
- * @deprecated Use calculateOngekiRating instead
- */
-export const OngekiRating = calculateOngekiRating
-
 export const calculateOngekiGekForceRating = (
 	level: number,
 	score: number,
@@ -177,12 +171,6 @@ export const calculateOngekiGekForceRating = (
 
 	return chartConstant + techScoreBonus + techRankBonus + clearBadgeBonus
 }
-
-/**
- * LEGACY COMPATIBILITY - Alias for calculateOngekiGekForceRating
- * @deprecated Use calculateOngekiGekForceRating instead
- */
-export const OngekiGekForceRating = calculateOngekiGekForceRating
 
 /**
  * PURE HELPER FUNCTIONS
