@@ -1,15 +1,13 @@
 import { useMemo } from "react"
 
 import { useChunithmScores, useChunithmVersion } from "@/app/features/chunithm/hooks"
-import { convertRomVersionToVersion } from "@/app/shared/utils/chunithm"
 
 import { scoreFilters } from "../definitions/score-filters"
 import type { UseChunithmFilteringParams } from "../types/music-types"
 
 export const useChunithmScoreFiltering = ({ searchQuery, filterValues }: UseChunithmFilteringParams) => {
 	const { data: scores = [], isLoading } = useChunithmScores()
-	const userVersion = useChunithmVersion()
-	const version = userVersion ? Number(userVersion) : null
+	const version = useChunithmVersion()
 
 	const filteredScores = useMemo(() => {
 		if (!scores) return []
@@ -22,20 +20,8 @@ export const useChunithmScoreFiltering = ({ searchQuery, filterValues }: UseChun
 				return false
 			}
 
-			// Apply version filter: include scores set on current version (based on romVersion)
-			const versionFilterValue = filterValues?.["version"] || "current"
-			if (versionFilterValue === "current" && version != null) {
-				const setVersion = convertRomVersionToVersion(score.romVersion)
-				if (setVersion !== version) return false
-			}
-
-			// Apply all other filters
+			// Apply all active filters
 			return scoreFilters.every(filter => {
-				// Skip version filter as it's handled above
-				if (filter.identifier === "version") {
-					return true
-				}
-
 				const value = filterValues?.[filter.identifier]
 
 				// Handle required filters with default values
@@ -52,7 +38,7 @@ export const useChunithmScoreFiltering = ({ searchQuery, filterValues }: UseChun
 				return filter.predicate(score, value)
 			})
 		})
-	}, [scores, searchQuery, filterValues, version])
+	}, [scores, searchQuery, filterValues])
 
 	return {
 		filteredScores,
