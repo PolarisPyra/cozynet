@@ -202,12 +202,6 @@ export const calculateChunithmRating = (level: number, score: number): number =>
 }
 
 /**
- * LEGACY COMPATIBILITY - Alias for calculateChunithmRating
- * @deprecated Use calculateChunithmRating instead
- */
-export const ChunitmRating = calculateChunithmRating
-
-/**
  * DATE/TIME FORMATTERS
  * Pure functions for temporal transformations
  */

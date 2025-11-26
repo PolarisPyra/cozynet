@@ -5,8 +5,8 @@ import type { DB } from "@/app/shared/types"
  *
  * Database storage formats:
  * - Chunithm: playerRating stored as integer (e.g., 1500 = 15.00)
- * - Ongeki (legacy): playerRating stored as integer (e.g., 1500 = 15.00)
- * - Ongeki (Refresh v8+): newPlayerRating stored as integer (e.g., 15000 = 15.000)
+ * - Ongeki (v<8): playerRating stored as integer (e.g., 1500 = 15.00)
+ * - Ongeki (v8+): newPlayerRating stored as integer (e.g., 15000 = 15.000)
  * - Maimai: playerRating stored as integer and displayed as-is (e.g., 3361 = 3361)
  */
 
@@ -51,13 +51,13 @@ export const convertChunithmRating = (playerRating: number | null | undefined): 
 
 /**
  * Converts Ongeki player rating from database format to display format
- * Handles both legacy (v<8) and Refresh (v8+) formats
+ * Handles both v<8 and v8+ formats
  *
- * Legacy: Database 1500 -> Display 15.00 (2 decimals)
- * Refresh: Database 15000 -> Display 15.000 (3 decimals)
+ * v<8: Database 1500 -> Display 15.00 (2 decimals)
+ * v8+: Database 15000 -> Display 15.000 (3 decimals)
  *
- * @param playerRating - Stored rating integer (legacy format)
- * @param newPlayerRating - Stored rating integer (Refresh format)
+ * @param playerRating - Stored rating integer (v<8 format)
+ * @param newPlayerRating - Stored rating integer (v8+ format)
  * @param version - Game version number
  * @returns Object with rating value and decimal places needed
  */
@@ -150,10 +150,10 @@ export const convertChunithmScoreRating = (playerRating: number | null | undefin
 
 /**
  * Converts score playlog rating to display format for Ongeki
- * Handles both legacy and Refresh formats
+ * Handles both v<8 and v8+ formats
  *
  * @param playerRating - Stored rating integer from playlog
- * @param isRefresh - Whether this is Refresh version (v8+)
+ * @param isRefresh - Whether this is v8+ version
  * @returns Object with rating value and decimal places needed
  */
 export const convertOngekiScoreRating = (

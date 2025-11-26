@@ -6,9 +6,9 @@ import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
 import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
-import { CDN } from "@/app/shared/utils/constants"
 import { ChunithmRating } from "@/app/shared/types"
-import { ChunitmRating, getChunithmGrade, levelToStars } from "@/app/shared/utils/chunithm"
+import { calculateChunithmRating, getChunithmGrade, levelToStars } from "@/app/shared/utils/chunithm"
+import { CDN } from "@/app/shared/utils/constants"
 import { getChunithmLogo } from "@/app/shared/utils/version-logos"
 
 import { ChunithmRatingColors } from "./rating-colors"
@@ -21,7 +21,7 @@ export const ChunithmRatingInfoCard = function ({
 }: ChunithmRatingInfoCardProps) {
 	const { imageLoaded, onImageLoad } = useImageLoading()
 	const rating = score
-	const calculatedRating = ChunitmRating(rating.level ?? 0, rating.score ?? 0) / 100
+	const calculatedRating = calculateChunithmRating(rating.level ?? 0, rating.score ?? 0) / 100
 	const logoUrl = getChunithmLogo.getLogo(rating.version)
 	const isWorldsEnd = rating.chartId === 5
 	const starCount = levelToStars(rating.level)
