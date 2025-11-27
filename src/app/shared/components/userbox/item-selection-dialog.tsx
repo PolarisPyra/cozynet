@@ -167,13 +167,14 @@ export function ItemSelectionDialog({
 				</div>
 
 				{/* Pagination Bottom */}
-				<Pagination
-					currentPage={currentPage}
-					totalPages={totalPages}
-					onPageChange={setCurrentPage}
-					showKeyboardHints={true}
-					className="border-border shrink-0 border-t pt-3 sm:pt-4"
-				/>
+				<div className="border-border shrink-0 border-t">
+					<Pagination
+						page={currentPage}
+						totalPages={totalPages}
+						total={filteredItems.length}
+						onPageChange={setCurrentPage}
+					/>
+				</div>
 
 				{/* Action Button */}
 				<div className="mt-3 shrink-0 sm:mt-4">
