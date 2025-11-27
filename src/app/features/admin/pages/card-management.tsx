@@ -9,7 +9,6 @@ import { hasAdminAccess } from "@/app/features/admin/utils"
 import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
-import { usePaginationKeyboard } from "@/app/shared/hooks/use-pagination-keyboard"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { DB } from "@/app/shared/types"
 import { api } from "@/app/shared/utils"
@@ -97,9 +96,6 @@ const CardManagement = () => {
 		const start = (page - 1) * ITEMS_PER_PAGE
 		return filteredCards.slice(start, start + ITEMS_PER_PAGE)
 	}, [filteredCards, page])
-
-	// Keyboard navigation for pagination
-	usePaginationKeyboard(totalPages, setPage, filteredCards.length > ITEMS_PER_PAGE)
 
 	// Prepare search items for the search component
 	const searchItems = useMemo(() => {

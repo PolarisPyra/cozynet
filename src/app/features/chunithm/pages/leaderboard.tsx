@@ -1,74 +1,81 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import LeaderboardCard from "@/app/features/chunithm/components/leaderboard-card"
-import Header from "@/app/shared/components/common/header"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
-import Spinner from "@/app/shared/components/common/spinner"
 import { useChunithmVersion, useLeaderboard } from "@/app/features/chunithm/hooks"
+import Header from "@/app/shared/components/common/header"
+import { Pagination } from "@/app/shared/components/common/pagination"
+import Spinner from "@/app/shared/components/common/spinner"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 
-const ChunithmLeaderboard = () => {
+export default function ChunithmLeaderboard() {
 	const version = useChunithmVersion()
-	const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useLeaderboard()
+	const { data: leaderboard = [], isLoading } = useLeaderboard()
 	const [searchQuery, setSearchQuery] = useState("")
 
-	// Filter out players with null userName or playerRating and convert to the expected type
-	const validLeaderboard = leaderboard
-		.filter(player => player.userName !== null && player.playerRating !== null)
-		.map(player => ({
-			userName: player.userName!,
-			playerRating: player.playerRating!,
-			rank: player.rank
-		}))
-
-	const filteredLeaderboard = validLeaderboard.filter(player =>
-		player.userName?.toLowerCase().includes(searchQuery.toLowerCase())
+	const valid = useMemo(
+		() =>
+			leaderboard
+				.filter(p => p.userName && p.playerRating !== null)
+				.map(p => ({ userName: p.userName!, playerRating: p.playerRating!, rank: p.rank })),
+		[leaderboard]
 	)
 
-	const searchItems = validLeaderboard.map(player => ({
-		id: player.rank,
-		title: player.userName || ""
-	}))
+	const filtered = useMemo(
+		() => valid.filter(p => p.userName.toLowerCase().includes(searchQuery.toLowerCase())),
+		[valid, searchQuery]
+	)
 
-	if (isLoadingLeaderboard) return <LoadingState />
-	if (!version) return <NoVersionState />
+	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery])
+
+	if (!version) {
+		return (
+			<Container>
+				<Header title="Leaderboard" />
+				<Body>
+					<div className="text-muted-foreground py-20 text-center">Set your version first</div>
+				</Body>
+			</Container>
+		)
+	}
+
+	if (isLoading) {
+		return (
+			<Container>
+				<Header title="Leaderboard" />
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
+			</Container>
+		)
+	}
 
 	return (
 		<Container>
 			<Header
 				title="Leaderboard"
 				searchProps={{
-					items: searchItems,
+					items: valid.slice(0, 100).map(p => ({ id: p.rank, title: p.userName })),
 					searchQuery,
 					onSearchChange: setSearchQuery,
-					placeholder: "Search players...",
-					emptyMessage: "No players found.",
+					placeholder: "Search...",
+					emptyMessage: "No players.",
 					groupLabel: "Players"
 				}}
 			/>
 			<Body>
-				<ResponsiveGrid items={filteredLeaderboard} CardComponent={LeaderboardCard} />
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{paged.map(player => (
+						<LeaderboardCard key={player.rank} score={player} />
+					))}
+				</div>
+
+				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No players found</div>}
+
+				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)
 }
-
-const LoadingState = () => (
-	<Container>
-		<Header title="Leaderboard" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<Spinner size={24} />
-		</div>
-	</Container>
-)
-
-const NoVersionState = () => (
-	<Container>
-		<Header title="Leaderboard" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">Please set your Chunithm version in settings first</p>
-		</div>
-	</Container>
-)
-
-export default ChunithmLeaderboard

@@ -6,7 +6,6 @@ import { Pagination } from "@/app/shared/components/common/pagination"
 import { Button } from "@/app/shared/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/shared/components/ui/dialog"
 import { Input } from "@/app/shared/components/ui/input"
-import { usePaginationKeyboard } from "@/app/shared/hooks/use-pagination-keyboard"
 import { cn } from "@/app/shared/utils"
 
 interface Item {
@@ -77,9 +76,6 @@ export function ItemSelectionDialog({
 		const start = (currentPage - 1) * itemsPerPage
 		return filteredItems.slice(start, start + itemsPerPage)
 	}, [filteredItems, currentPage])
-
-	// Enable keyboard navigation for pagination
-	usePaginationKeyboard(totalPages, setCurrentPage, totalPages > 1 && isOpen)
 
 	const handleSelect = (id: number) => {
 		setSelectedId(id)

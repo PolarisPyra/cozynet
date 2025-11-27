@@ -2,125 +2,95 @@ import { useMemo, useState } from "react"
 
 import { useSearchParams } from "react-router-dom"
 
+import { SongInfoCard } from "@/app/features/ongeki/components/song-info-card"
+import { songFilters, useOngekiSongs, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
+import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
-import { SongInfoCard } from "@/app/features/ongeki/components/song-info-card"
-import {
-	type MusicFilterValues,
-	getDefaultSongFilterValues,
-	useOngekiSongFiltering,
-	useSongFilters
-} from "@/app/features/ongeki/hooks"
+import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
-import { OngekiStaticMusic } from "@/app/shared/types"
+import type { FilterValues, OngekiStaticMusic } from "@/app/shared/types"
 import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
 
 export function OngekiAllSongs() {
 	const [searchParams, setSearchParams] = useSearchParams()
 	const searchQuery = searchParams.get("search") || ""
-	const [filterValues, setFilterValues] = useState<MusicFilterValues>(getDefaultSongFilterValues())
+	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(songFilters))
 
-	const filters = useSongFilters()
-	const { filteredSongs, isLoading, version } = useOngekiSongFiltering({
-		searchQuery,
-		filterValues
-	})
+	const version = useOngekiVersion()
+	const { data: songs, isLoading } = useOngekiSongs()
+	const filtered = useFiltering(songs || [], songFilters, searchQuery, filterValues)
 
-	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues(prev => ({
-			...prev,
-			[identifier]: value
-		}))
-	}
-
-	const handleClearAll = () => {
-		setFilterValues(getDefaultSongFilterValues())
-	}
-
-	const groupedSongs = useMemo(() => {
-		const songsMap = new Map<number, OngekiStaticMusic>()
-
-		filteredSongs.forEach(song => {
-			if (!song.level || !song.songId || !song.title) return
-
-			if (!songsMap.has(song.songId)) {
-				songsMap.set(song.songId, {
-					...song,
-					charts: []
-				})
-			}
-
-			songsMap.get(song.songId)!.charts.push({
-				chartId: song.chartId ?? null,
-				level: song.level
-			})
+	const grouped = useMemo(() => {
+		const map = new Map<number, OngekiStaticMusic>()
+		filtered.forEach((s: any) => {
+			if (!s.level || !s.songId || !s.title) return
+			if (!map.has(s.songId)) map.set(s.songId, { ...s, charts: [] })
+			map.get(s.songId)!.charts.push({ chartId: s.chartId ?? null, level: s.level })
 		})
+		return Array.from(map.values())
+	}, [filtered])
 
-		return Array.from(songsMap.values())
-	}, [filteredSongs])
-
-	if (isLoading) {
-		return (
-			<Container>
-				<Header title="All Songs" />
-				<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-					<Spinner />
-				</div>
-			</Container>
-		)
-	}
+	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(grouped, 20, [searchQuery, filterValues])
 
 	if (!version) {
 		return (
 			<Container>
 				<Header title="All Songs" />
-				<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-					<p className="text-primary">Please set your Ongeki version in settings first</p>
-				</div>
+				<Body>
+					<div className="text-muted-foreground py-20 text-center">Set your version in settings first</div>
+				</Body>
 			</Container>
 		)
 	}
 
-	const searchItems = groupedSongs
-		.filter(song => song.songId !== null)
-		.map(song => ({
-			id: song.songId as number,
-			title: song.title || ""
-		}))
+	if (isLoading) {
+		return (
+			<Container>
+				<Header title="All Songs" />
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
+			</Container>
+		)
+	}
 
 	return (
 		<Container>
 			<Header
 				title="All Songs"
 				searchProps={{
-					items: searchItems,
+					items: grouped.slice(0, 100).filter(s => s.songId).map(s => ({ id: s.songId as number, title: s.title || "" })),
 					searchQuery,
-					onSearchChange: value => setSearchParams({ search: value }),
-					placeholder: "Search songs...",
-					emptyMessage: "No songs found.",
+					onSearchChange: val => setSearchParams({ search: val }),
+					placeholder: "Search...",
+					emptyMessage: "No songs.",
 					groupLabel: "Songs"
 				}}
 			/>
 			<Body>
 				<FilterArea>
-					<div className="flex justify-start">
-						<MultiFilter
-							filters={filters}
-							filterValues={filterValues}
-							onFilterChange={handleFilterChange}
-							onClearAll={handleClearAll}
-						/>
-					</div>
+					<MultiFilter
+						filters={songFilters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(songFilters))}
+					/>
 				</FilterArea>
-				<ResponsiveGrid
-					items={groupedSongs}
-					levelColorBadge={ongekiBadgeColors}
-					loading={isLoading}
-					jacketArt="ongeki/jacket"
-					CardComponent={SongInfoCard}
-				/>
+
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{paged.map((song, idx) => (
+						<SongInfoCard key={idx} score={song} levelColorBadge={ongekiBadgeColors} jacketArt="ongeki/jacket" />
+					))}
+				</div>
+
+				{grouped.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
+
+				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)

@@ -1,84 +1,67 @@
-import { useMemo } from "react"
+import type { Filter } from "@/app/shared/hooks/use-filtering"
+import { LEVELS } from "@/app/shared/config/filter-options"
+import { LEVEL_CONFIGS } from "@/app/shared/utils/level-filter"
 
-import { useMaimaiDxScores } from "@/app/features/maimaidx/hooks"
-import { Mai2Playlog } from "@/app/shared/types"
-
-// Filter Types
-interface Filter {
-	id: string
-	label: string
-}
-
-// Chart Filter Types
-type ChartFilter = "normal" | "re-master" | "utage"
-
-// Score Filtering Types
-interface UseMaimaiDxScoreFilteringParams {
-	searchQuery: string
-	versionNum: number | null
-	showAllScores: boolean
-}
-
-// Chart Filter Configuration Hook
-const useMaimaiDxChartFilters = () => {
-	return useMemo(() => {
-		return [
-			{ id: "normal", label: "Normal" },
-			{ id: "re-master", label: "Re:MASTER" },
-			{ id: "utage", label: "協 Utage" }
-		]
-	}, [])
-}
-
-// Score Filtering Hook
-const useMaimaiDxScoreFiltering = ({ searchQuery, versionNum, showAllScores }: UseMaimaiDxScoreFilteringParams) => {
-	const { data: scores = [], isLoading } = useMaimaiDxScores()
-
-	const filteredScores = useMemo(() => {
-		const normalizedQuery = searchQuery.trim().toLowerCase()
-
-		// Group scores by musicId + level and get best achievement for each
-		const bestScoresMap = new Map<string, Mai2Playlog>()
-
-		scores.forEach((score: Mai2Playlog) => {
-			if (!score.musicId || !score.level) return
-
-			const key = `${score.musicId}-${score.level}`
-			const existing = bestScoresMap.get(key)
-
-			// Use integer comparison - achievement is stored as integer (e.g., 100_5000 for 100.5000%)
-			if (!existing || (score.achievement && existing.achievement && score.achievement > existing.achievement)) {
-				bestScoresMap.set(key, score)
-			}
-		})
-
-		const bestScores = Array.from(bestScoresMap.values())
-
-		return bestScores
-			.filter(score => {
-				// Filter by search query
-				if (normalizedQuery && score.title && !score.title.toLowerCase().includes(normalizedQuery)) {
-					return false
-				}
-
-				// Filter by version if available
-				if (versionNum && score.songVersion) {
-					return showAllScores ? score.songVersion <= versionNum : score.songVersion === versionNum
-				}
-
-				return true
-			})
-			.sort((a, b) => (b.songVersion || 0) - (a.songVersion || 0))
-	}, [scores, searchQuery, versionNum, showAllScores])
-
-	return {
-		filteredScores,
-		isLoading
+export const scoreFilters: Filter[] = [
+	{
+		identifier: "level",
+		label: "Level",
+		options: LEVELS,
+		predicate: (s, v) => (s.difficulty ? LEVEL_CONFIGS.MAIMAI(s.difficulty, v) : false)
 	}
-}
+]
 
-// Export individual hooks
-export { useMaimaiDxChartFilters, useMaimaiDxScoreFiltering }
+export const ratingFilters: Filter[] = [
+	{
+		identifier: "tab",
+		label: "Tab",
+		isRequired: true,
+		options: [
+			{ label: "Best 35", value: "base" },
+			{ label: "Best 15", value: "new" }
+		],
+		predicate: () => true
+	},
+	{
+		identifier: "level",
+		label: "Level",
+		options: LEVELS,
+		predicate: (r, v) => (r.difficulty ? LEVEL_CONFIGS.MAIMAI(r.difficulty, v) : false)
+	},
+	{
+		identifier: "achievement",
+		label: "Achievement",
+		options: [
+			{ label: "All", value: "all" },
+			{ label: "Full Combo", value: "fc" },
+			{ label: "All Perfect", value: "ap" },
+			{ label: "Full Sync", value: "fs" },
+			{ label: "Full Deluxe", value: "fdx" }
+		],
+		predicate: (r, v) => {
+			if (v === "fc") return r.comboStatus === 1 || r.comboStatus === 2
+			if (v === "ap") return r.comboStatus === 3 || r.comboStatus === 4
+			if (v === "fs") return r.syncStatus === 1 || r.syncStatus === 2
+			if (v === "fdx") return r.syncStatus === 3 || r.syncStatus === 4
+				return true
+		}
+	}
+]
 
-// Export types
-export type { Filter, ChartFilter, UseMaimaiDxScoreFilteringParams }
+export const songFilters: Filter[] = [
+	{
+		identifier: "level",
+		label: "Level",
+		options: LEVELS,
+		predicate: (s, v) => (s.difficulty ? LEVEL_CONFIGS.MAIMAI(s.difficulty, v) : false)
+	}
+]
+
+export const chartFilters = [
+	{ label: "All", value: "all" },
+	{ label: "BASIC", value: "0" },
+	{ label: "ADVANCED", value: "1" },
+	{ label: "EXPERT", value: "2" },
+	{ label: "MASTER", value: "3" },
+	{ label: "Re:MASTER", value: "4" }
+]

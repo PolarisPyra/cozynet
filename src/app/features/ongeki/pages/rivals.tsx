@@ -1,12 +1,13 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { toast } from "sonner"
 
+import { useAddRival, useOngekiVersion, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
+import { Pagination } from "@/app/shared/components/common/pagination"
 import { RivalInfoCard } from "@/app/shared/components/common/rival-info-card"
 import Spinner from "@/app/shared/components/common/spinner"
-import { useAddRival, useOngekiVersion, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "@/app/features/ongeki/hooks"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 
 export function OngekiRivals() {
@@ -19,52 +20,32 @@ export function OngekiRivals() {
 	const { mutate: addRival } = useAddRival()
 	const { mutate: removeRival } = useRemoveRival()
 
-	const filteredRivals = users.filter(user => user.username.toLowerCase().includes(searchQuery.toLowerCase()))
+	const filtered = useMemo(
+		() => users.filter(u => u.username.toLowerCase().includes(searchQuery.toLowerCase())),
+		[users, searchQuery]
+	)
 
-	const searchItems = users.map(user => ({
-		id: user.id,
-		title: user.username || ""
-	}))
+	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery])
 
-	const handleAddRival = (id: number) => {
-		if (rivalCount >= 3) {
-			toast.error("You can only have up to 3 rivals.")
-			return
-		}
-
-		addRival(id, {
-			onSuccess: () => {
-				toast.success("Rival added successfully!")
-			},
-			onError: () => {
-				toast.error("Failed to add rival")
-			}
-		})
+	const handleAdd = (id: number) => {
+		if (rivalCount >= 3) return toast.error("Max 3 rivals")
+		addRival(id, { onSuccess: () => toast.success("Added"), onError: () => toast.error("Failed") })
 	}
 
-	const handleRemoveRival = (id: number) => {
-		removeRival(id, {
-			onSuccess: () => {
-				toast.success("Rival removed successfully!")
-			},
-			onError: () => {
-				toast.error("Failed to remove rival")
-			}
-		})
+	const handleRemove = (id: number) => {
+		removeRival(id, { onSuccess: () => toast.success("Removed"), onError: () => toast.error("Failed") })
 	}
 
 	const isLoading = isLoadingRivals || isLoadingCount || isLoadingUsers
 
-	const RivalCard = ({ score }: { score: any }) => {
-		const isRival = rivalIds.includes(score.id)
+	if (!version) {
 		return (
-			<RivalInfoCard
-				user={score}
-				isRival={isRival}
-				onAddRival={handleAddRival}
-				onRemoveRival={handleRemoveRival}
-				rivalCount={rivalCount}
-			/>
+			<Container>
+				<Header title="Rivals" />
+				<Body>
+					<div className="text-muted-foreground py-20 text-center">Set your version first</div>
+				</Body>
+			</Container>
 		)
 	}
 
@@ -72,9 +53,11 @@ export function OngekiRivals() {
 		return (
 			<Container>
 				<Header title="Rivals" />
-				<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-					<Spinner />
-				</div>
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
 			</Container>
 		)
 	}
@@ -84,23 +67,32 @@ export function OngekiRivals() {
 			<Header
 				title={`Rivals ${rivalCount}/3`}
 				searchProps={{
-					items: searchItems,
+					items: users.slice(0, 100).map(u => ({ id: u.id, title: u.username })),
 					searchQuery,
 					onSearchChange: setSearchQuery,
-					placeholder: "Search users...",
-					emptyMessage: "No users found.",
+					placeholder: "Search...",
+					emptyMessage: "No users.",
 					groupLabel: "Users"
 				}}
 			/>
-			{version ? (
-				<Body>
-					<ResponsiveGrid items={filteredRivals} CardComponent={RivalCard} />
-				</Body>
-			) : (
-				<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-					<p className="text-primary">Please set your Ongeki version in settings first</p>
+			<Body>
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{paged.map(user => (
+						<RivalInfoCard
+							key={user.id}
+							user={user}
+							isRival={rivalIds.includes(user.id)}
+							onAddRival={handleAdd}
+							onRemoveRival={handleRemove}
+							rivalCount={rivalCount}
+						/>
+					))}
 				</div>
-			)}
+
+				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No users found</div>}
+
+				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+			</Body>
 		</Container>
 	)
 }

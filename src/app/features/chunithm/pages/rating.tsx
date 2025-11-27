@@ -1,131 +1,103 @@
 import { useEffect, useState } from "react"
 
 import ChunithmRatingInfoCard from "@/app/features/chunithm/components/rating-info-card"
+import { ratingFilters, useChunithmRatingData, useChunithmVersion } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
+import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
-import { getDefaultRatingFilterValues, useChunithmRatingFiltering, useChunithmVersion, useRatingFilters } from "@/app/features/chunithm/hooks"
-import { getRatingFilters } from "@/app/features/chunithm/hooks/filters/definitions/rating-filters"
+import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
 import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
 
-/**
- * CHUNITHM Rating System:
- *
- * Version < 17 (~LUMINOUS+):
- * - Rating = Best 30 (B30) + Recent 10
- * - Best 30: Top 30 all-time best scores
- * - Recent 10: 10 most recent high scores
- *
- * Version >= 17 (VERSE~):
- * - Rating = Best 30 (B30) + New 20 (N20)
- * - Best 30: Top 30 all-time best scores
- * - New 20: Top 20 scores from current version songs only
- * - No more "Recent 10" folder
- */
-
-const ChunithmRatingFrames = () => {
-	const [searchQuery, setSearchQuery] = useState("")
+export default function ChunithmRatingPage() {
 	const version = useChunithmVersion()
-	const ratingFilters = useRatingFilters(version || 0)
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultRatingFilterValues(version || 0))
+	const filters = ratingFilters(version || 0)
+	const [searchQuery, setSearchQuery] = useState("")
+	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(filters))
 
-	// Update filter values when version changes to ensure tab value is valid
+	const activeTab = filterValues.tab || "base"
+	const { getActiveData, getActiveLoading } = useChunithmRatingData(activeTab)
+	const data = getActiveData(activeTab)
+	const isLoading = getActiveLoading(activeTab)
+
+	const filtered = useFiltering(data || [], filters, searchQuery, filterValues)
+	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+
 	useEffect(() => {
 		if (version) {
-			const defaults = getDefaultRatingFilterValues(version)
-			const currentFilters = getRatingFilters(version)
-			// Only update if current tab is not valid for new version
-			const currentTab = filterValues.tab
-			const validTabs =
-				currentFilters
-					.find((f: { identifier: string }) => f.identifier === "tab")
-					?.options.map((o: { value: string }) => o.value) || []
-			if (currentTab && !validTabs.includes(currentTab)) {
-				setFilterValues(defaults)
+			const newFilters = ratingFilters(version)
+			const validTabs = newFilters.find(f => f.identifier === "tab")?.options.map(o => o.value) || []
+			if (filterValues.tab && !validTabs.includes(filterValues.tab)) {
+				setFilterValues(getDefaults(newFilters))
 			}
 		}
 	}, [version, filterValues.tab])
 
-	const { filteredRatings, isLoading } = useChunithmRatingFiltering({
-		searchQuery,
-		filterValues
-	})
-
-	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues(prev => ({ ...prev, [identifier]: value }))
+	if (!version) {
+		return (
+			<Container>
+				<Header title="Rating" />
+				<Body>
+					<div className="text-muted-foreground py-20 text-center">Set your version in settings first</div>
+				</Body>
+			</Container>
+		)
 	}
 
-	const handleClearAll = () => {
-		setFilterValues(getDefaultRatingFilterValues(version || 0))
+	if (isLoading) {
+		return (
+			<Container>
+				<Header title="Rating" />
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
+			</Container>
+		)
 	}
-
-	const searchItems = filteredRatings.map(rating => ({
-		id: rating.idx,
-		title: rating.title || ""
-	}))
-
-	if (isLoading) return <LoadingState />
-	if (!version) return <NoVersionState />
 
 	return (
 		<Container>
 			<Header
-				title="Chunithm Rating"
+				title="Rating"
 				searchProps={{
-					items: searchItems,
+					items: filtered.slice(0, 100).map((r, i) => ({ id: i, title: r.title || "" })),
 					searchQuery,
 					onSearchChange: setSearchQuery,
-					placeholder: "Search ratings...",
-					emptyMessage: "No ratings found.",
+					placeholder: "Search...",
+					emptyMessage: "No ratings.",
 					groupLabel: "Ratings"
 				}}
 			/>
 			<Body>
 				<FilterArea>
-					<div className="flex justify-start">
-						<MultiFilter
-							filters={ratingFilters}
-							filterValues={filterValues}
-							onFilterChange={handleFilterChange}
-							onClearAll={handleClearAll}
-						/>
-					</div>
-				</FilterArea>
-				{filteredRatings.length === 0 ? (
-					<div className="text-muted-foreground flex h-40 items-center justify-center">No songs found</div>
-				) : (
-					<ResponsiveGrid
-						items={filteredRatings}
-						loading={isLoading}
-						levelColorBadge={chunithmBadgeColors}
-						CardComponent={ChunithmRatingInfoCard}
-						isPotential={filterValues.tab === "potential"}
+					<MultiFilter
+						filters={filters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(filters))}
 					/>
-				)}
+				</FilterArea>
+
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{paged.map((rating, idx) => (
+						<ChunithmRatingInfoCard
+							key={idx}
+							score={rating}
+							levelColorBadge={chunithmBadgeColors}
+							isPotential={filterValues.tab === "potential"}
+						/>
+					))}
+				</div>
+
+				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
+
+				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)
 }
-
-const LoadingState = () => (
-	<div className="flex-1">
-		<Header title="Chunithm Rating" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<Spinner />
-		</div>
-	</div>
-)
-
-const NoVersionState = () => (
-	<div className="relative flex-1 overflow-auto">
-		<Header title="Chunithm Rating" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">Please set your Chunithm version in settings first</p>
-		</div>
-	</div>
-)
-
-export default ChunithmRatingFrames

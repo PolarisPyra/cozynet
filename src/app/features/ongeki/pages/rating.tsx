@@ -1,125 +1,102 @@
 import { useState } from "react"
 
-import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
-import Spinner from "@/app/shared/components/common/spinner"
 import { OngekiRatingDisplay } from "@/app/features/ongeki/components/rating-display"
 import { OngekiRatingInfoCard } from "@/app/features/ongeki/components/rating-info-card"
+import { ratingFilters, useOngekiRatingData, useOngekiVersion } from "@/app/features/ongeki/hooks"
+import Header from "@/app/shared/components/common/header"
+import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import { Pagination } from "@/app/shared/components/common/pagination"
+import Spinner from "@/app/shared/components/common/spinner"
 import { Card, CardContent } from "@/app/shared/components/ui/card"
-import {
-	getDefaultRatingFilterValues,
-	useOngekiRatingFiltering,
-	useOngekiVersion,
-	useRatingFilters
-} from "@/app/features/ongeki/hooks"
-import useOngekiRatingData from "@/app/features/ongeki/hooks/use-rating-data"
+import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
 import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
 
 export function OngekiRatingFrames() {
-	const [searchQuery, setSearchQuery] = useState("")
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultRatingFilterValues())
-
 	const version = useOngekiVersion()
-	const filters = useRatingFilters(version || 0)
-	const { playerRatingValue, highestRatingValue, ratingDecimals } = useOngekiRatingData(version || 0)
+	const filters = ratingFilters(version || 0)
+	const [searchQuery, setSearchQuery] = useState("")
+	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(filters))
 
-	const { filteredRatings, isLoading } = useOngekiRatingFiltering({
-		searchQuery,
-		filterValues
-	})
+	const activeTab = filterValues.category || "base"
+	const { getActiveData, getActiveLoading, playerRatingValue, highestRatingValue, ratingDecimals } = useOngekiRatingData(version || 0, activeTab)
+	const data = getActiveData(activeTab)
+	const isLoading = getActiveLoading(activeTab)
 
-	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues(prev => ({
-			...prev,
-			[identifier]: value
-		}))
+	const filtered = useFiltering(data || [], filters, searchQuery, filterValues)
+	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+
+	if (!version) {
+		return (
+			<Container>
+				<Header title="Rating" />
+				<Body>
+					<div className="text-muted-foreground py-20 text-center">Set your version in settings first</div>
+				</Body>
+			</Container>
+		)
 	}
 
-	const handleClearAll = () => {
-		setFilterValues(getDefaultRatingFilterValues())
+	if (isLoading) {
+		return (
+			<Container>
+				<Header title="Rating" />
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
+			</Container>
+		)
 	}
-
-	const searchItems = filteredRatings
-		.filter((rating): rating is typeof rating & { musicId: number } => rating.musicId !== null)
-		.map(rating => ({
-			id: rating.musicId,
-			title: rating.title || ""
-		}))
-
-	if (isLoading) return <LoadingState />
-	if (!version) return <NoVersionState />
 
 	return (
 		<Container>
 			<Header
-				title="Ongeki Rating"
+				title="Rating"
 				searchProps={{
-					items: searchItems,
+					items: filtered.slice(0, 100).map((r: any, i: number) => ({ id: i, title: r.title || "" })),
 					searchQuery,
 					onSearchChange: setSearchQuery,
-					placeholder: "Search ratings...",
-					emptyMessage: "No ratings found.",
+					placeholder: "Search...",
+					emptyMessage: "No ratings.",
 					groupLabel: "Ratings"
 				}}
 			/>
 			<Body>
-				<Card className="rounded-sm">
+				<Card className="mb-4 rounded-sm">
 					<CardContent className="px-4 py-2">
-						<OngekiRatingDisplay
-							playerRating={playerRatingValue}
-							highestRating={highestRatingValue}
-							ratingDecimals={ratingDecimals}
-						/>
+						<OngekiRatingDisplay playerRating={playerRatingValue} highestRating={highestRatingValue} ratingDecimals={ratingDecimals} />
 					</CardContent>
 				</Card>
+
 				<FilterArea>
-					<div className="flex justify-start">
-						<MultiFilter
-							filters={filters}
-							filterValues={filterValues}
-							onFilterChange={handleFilterChange}
-							onClearAll={handleClearAll}
-						/>
-					</div>
-				</FilterArea>
-				{filteredRatings.length === 0 ? (
-					<div className="text-muted-foreground flex h-40 items-center justify-center">No songs found</div>
-				) : (
-					<ResponsiveGrid
-						items={filteredRatings}
-						loading={isLoading}
-						levelColorBadge={ongekiBadgeColors}
-						ongekiVersion={version}
-						CardComponent={OngekiRatingInfoCard}
-						isRecommend={filterValues.category === "next"}
+					<MultiFilter
+						filters={filters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(filters))}
 					/>
-				)}
+				</FilterArea>
+
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{paged.map((rating: any, idx: number) => (
+						<OngekiRatingInfoCard
+							key={idx}
+							score={rating}
+							levelColorBadge={ongekiBadgeColors}
+							ongekiVersion={version}
+							isRecommend={filterValues.category === "next"}
+						/>
+					))}
+				</div>
+
+				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
+
+				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
 			</Body>
-		</Container>
-	)
-}
-
-function LoadingState() {
-	return (
-		<Container>
-			<Header title="Ongeki Rating" />
-			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-				<Spinner />
-			</div>
-		</Container>
-	)
-}
-
-function NoVersionState() {
-	return (
-		<Container>
-			<Header title="Ongeki Rating" />
-			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-				<p className="text-primary">Please set your Ongeki version in settings first</p>
-			</div>
 		</Container>
 	)
 }

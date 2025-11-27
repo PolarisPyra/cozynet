@@ -3,14 +3,15 @@ import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import FavoriteCard from "@/app/features/chunithm/components/favorite-card"
-import Header from "@/app/shared/components/common/header"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
-import Spinner from "@/app/shared/components/common/spinner"
 import { useAddFavorite, useChunithmSongs, useChunithmVersion, useFavorites, useRemoveFavorite } from "@/app/features/chunithm/hooks"
+import Header from "@/app/shared/components/common/header"
+import { Pagination } from "@/app/shared/components/common/pagination"
+import Spinner from "@/app/shared/components/common/spinner"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import type { DB } from "@/app/shared/types"
 
-const ChunithmFavorites = () => {
+export default function ChunithmFavorites() {
 	const version = useChunithmVersion()
 	const { data: songs = [], isLoading: isLoadingSongs } = useChunithmSongs()
 	const { data: favoriteSongIds = [], isLoading: isLoadingFavorites } = useFavorites()
@@ -18,91 +19,75 @@ const ChunithmFavorites = () => {
 	const { mutate: removeFavorite } = useRemoveFavorite()
 	const [searchQuery, setSearchQuery] = useState("")
 
-	const filteredSongs = useMemo(() => {
-		const normalizedQuery = searchQuery.trim().toLowerCase()
-
+	const filtered = useMemo(() => {
+		const q = searchQuery.trim().toLowerCase()
 		return songs
-			.filter((song: DB.ChuniStaticMusic) => song.chartId === 3) // Only MASTER difficulty
-			.filter((song: DB.ChuniStaticMusic) => song.songId !== null && song.title !== null && song.jacketPath !== null)
-			.filter((song: DB.ChuniStaticMusic) => {
-				if (!normalizedQuery) return true
-				return song.title?.toLowerCase().includes(normalizedQuery)
-			})
-			.map((song: DB.ChuniStaticMusic) => ({
-				...song,
-				songId: song.songId!,
-				title: song.title!,
-				jacketPath: song.jacketPath!
-			}))
+			.filter((s: DB.ChuniStaticMusic) => s.chartId === 3 && s.songId && s.title && s.jacketPath)
+			.filter((s: DB.ChuniStaticMusic) => !q || s.title?.toLowerCase().includes(q))
+			.map((s: DB.ChuniStaticMusic) => ({ ...s, songId: s.songId!, title: s.title!, jacketPath: s.jacketPath! }))
 	}, [songs, searchQuery])
 
-	const searchItems = filteredSongs.map((song) => ({
-		id: song.songId,
-		title: song.title
-	}))
+	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery])
 
-	const handleToggleFavorite = (songId: number) => {
-		const isFavorited = favoriteSongIds.some(fav => fav.favId === songId)
-
-		if (isFavorited) {
-			removeFavorite(songId, {
-				onSuccess: () => toast.success("Removed from favorites"),
-				onError: () => toast.error("Failed to remove from favorites")
-			})
+	const handleToggle = (songId: number) => {
+		const isFav = favoriteSongIds.some(f => f.favId === songId)
+		if (isFav) {
+			removeFavorite(songId, { onSuccess: () => toast.success("Removed"), onError: () => toast.error("Failed") })
 		} else {
-			addFavorite(songId, {
-				onSuccess: () => toast.success("Added to favorites"),
-				onError: () => toast.error("Failed to add to favorites")
-			})
+			addFavorite(songId, { onSuccess: () => toast.success("Added"), onError: () => toast.error("Failed") })
 		}
 	}
 
 	const isLoading = isLoadingSongs || isLoadingFavorites
 
-	if (isLoading) return <LoadingState />
-	if (!version) return <NoVersionState />
+	if (!version) {
+		return (
+			<Container>
+				<Header title="Favorites" />
+				<Body>
+					<div className="text-muted-foreground py-20 text-center">Set your version first</div>
+				</Body>
+			</Container>
+		)
+	}
+
+	if (isLoading) {
+		return (
+			<Container>
+				<Header title="Favorites" />
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
+			</Container>
+		)
+	}
 
 	return (
 		<Container>
 			<Header
 				title="Favorites"
 				searchProps={{
-					items: searchItems,
+					items: filtered.slice(0, 100).map(s => ({ id: s.songId, title: s.title })),
 					searchQuery,
 					onSearchChange: setSearchQuery,
-					placeholder: "Search songs...",
-					emptyMessage: "No songs found.",
+					placeholder: "Search...",
+					emptyMessage: "No songs.",
 					groupLabel: "Songs"
 				}}
 			/>
 			<Body>
-				<ResponsiveGrid
-					items={filteredSongs}
-					CardComponent={props => (
-						<FavoriteCard {...props} favoriteSongIds={favoriteSongIds} onToggleFavorite={handleToggleFavorite} />
-					)}
-				/>
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{paged.map(song => (
+						<FavoriteCard key={song.songId} score={song} favoriteSongIds={favoriteSongIds} onToggleFavorite={handleToggle} />
+					))}
+				</div>
+
+				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
+
+				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)
 }
-
-const LoadingState = () => (
-	<div className="relative flex-1 overflow-auto">
-		<Header title="Favorites" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<Spinner size={24} />
-		</div>
-	</div>
-)
-
-const NoVersionState = () => (
-	<div className="relative flex-1 overflow-auto">
-		<Header title="Favorites" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">Please set your Chunithm version in settings first</p>
-		</div>
-	</div>
-)
-
-export default ChunithmFavorites

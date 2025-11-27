@@ -1,9 +1,8 @@
-import { useMemo, useState } from "react"
+import { memo, useMemo, useState } from "react"
 
 import { Medal, Star } from "lucide-react"
 
 import { ChunithmAchievementBadges } from "@/app/features/chunithm/components/achievement-badges"
-import { useChunithmVersion } from "@/app/features/chunithm/hooks"
 import { useScoreLeaderboard } from "@/app/features/chunithm/hooks/use-score-leaderboard"
 import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
@@ -11,7 +10,6 @@ import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
-import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { ChunithmPlaylog } from "@/app/shared/types"
 import { cn } from "@/app/shared/utils"
 import {
@@ -35,7 +33,7 @@ interface VersionLogoBadgeProps {
 	alt: string
 }
 
-const VersionLogoBadge = ({ logoUrl, tooltip, alt }: VersionLogoBadgeProps) => {
+const VersionLogoBadge = memo(function VersionLogoBadge({ logoUrl, tooltip, alt }: VersionLogoBadgeProps) {
 	if (!logoUrl) return null
 
 	return (
@@ -50,12 +48,24 @@ const VersionLogoBadge = ({ logoUrl, tooltip, alt }: VersionLogoBadgeProps) => {
 			</TooltipContent>
 		</Tooltip>
 	)
+})
+
+export type ChunithmScoreInfoCardProps = {
+	score: ChunithmPlaylog
+	levelColorBadge?: (chartId?: number | undefined) => string
+	className?: string
+	version?: number
+	currentUserId?: number
 }
 
-export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, className = "" }: ChunithmScoreInfoCardProps) {
-	const version = useChunithmVersion()
+export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
+	score,
+	levelColorBadge,
+	className = "",
+	version,
+	currentUserId
+}: ChunithmScoreInfoCardProps) {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
-	const currentUser = useCurrentUser()
 
 	const { scoreVersionId, scoreVersionLogo, songVersionLogo, ratingValue, isWorldsEnd, starCount } = useMemo(() => {
 		const versionId = convertRomVersionToVersion(score.romVersion)
@@ -205,34 +215,30 @@ export const ChunithmScoreInfoCard = function ({ score, levelColorBadge, classNa
 				</div>
 			</div>
 
-			<Leaderboard
-				open={isDialogOpen}
-				onOpenChange={setIsDialogOpen}
-				title="Song Leaderboard"
-				description={score.title}
-				isLoading={isLoadingLeaderboard}
-				chartLevel={leaderboardData?.chart?.level}
-				chartBadgeClassName={chunithmBadgeColors(score.chartId ?? 0)}
-				totalScores={leaderboardData?.total ?? 0}
-				entries={leaderboardData?.leaderboard ?? []}
-				currentUserId={currentUser.userId}
-				renderRating={entry => {
-					const level = leaderboardData?.chart?.level ?? 0
-					if (level === 0 || !version) return null
-					const entryRating = calculateChunithmRating(level, entry.score) / 100
-					return <ChunithmRatingColors rating={entryRating} version={version} />
-				}}
-			/>
+			{isDialogOpen && (
+				<Leaderboard
+					open={isDialogOpen}
+					onOpenChange={setIsDialogOpen}
+					title="Song Leaderboard"
+					description={score.title}
+					isLoading={isLoadingLeaderboard}
+					chartLevel={leaderboardData?.chart?.level}
+					chartBadgeClassName={chunithmBadgeColors(score.chartId ?? 0)}
+					totalScores={leaderboardData?.total ?? 0}
+					entries={leaderboardData?.leaderboard ?? []}
+					currentUserId={currentUserId ?? 0}
+					renderRating={entry => {
+						const level = leaderboardData?.chart?.level ?? 0
+						if (level === 0 || !version) return null
+						const entryRating = calculateChunithmRating(level, entry.score) / 100
+						return <ChunithmRatingColors rating={entryRating} version={version} />
+					}}
+				/>
+			)}
 		</div>
 	)
-}
+})
 
 export default ChunithmScoreInfoCard
-
-export type ChunithmScoreInfoCardProps = {
-	score: ChunithmPlaylog
-	levelColorBadge?: (chartId?: number | undefined) => string
-	className?: string
-}
 
 export { formatSqlDateToLocalParts, getChunithmGrade } from "@/app/shared/utils/chunithm"

@@ -18,7 +18,6 @@ import {
 } from "@/app/shared/components/ui/dialog"
 import { Input } from "@/app/shared/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
-import { usePaginationKeyboard } from "@/app/shared/hooks/use-pagination-keyboard"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { api } from "@/app/shared/utils"
 
@@ -153,13 +152,9 @@ const KeychipPage = () => {
 		return allKeychips.slice(start, start + ITEMS_PER_PAGE)
 	}, [allKeychips, myKeychipsPage])
 
-	// Reset to page 1 when data changes
 	useEffect(() => {
 		setMyKeychipsPage(1)
 	}, [allKeychips.length])
-
-	// Keyboard navigation for pagination
-	usePaginationKeyboard(myKeychipsTotalPages, setMyKeychipsPage, allKeychips.length > ITEMS_PER_PAGE)
 
 	return (
 		<Container>

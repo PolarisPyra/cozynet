@@ -1,94 +1,74 @@
 import { useState } from "react"
 
+import { CardGallery } from "@/app/features/ongeki/components/cards/card-gallery"
+import { cardFilters, useOngekiCards } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import Spinner from "@/app/shared/components/common/spinner"
-import { CardGallery } from "@/app/features/ongeki/components/cards/card-gallery"
-import { getDefaultFilterValues, useCardFiltering, useCardFilters } from "@/app/features/ongeki/hooks"
+import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
 
 export function CardManagement() {
 	const [searchQuery, setSearchQuery] = useState("")
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaultFilterValues())
+	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(cardFilters))
 
-	const filters = useCardFilters()
-	const { filteredCards, isLoading, error } = useCardFiltering({
-		searchQuery,
-		filterValues
-	})
+	const { data, isLoading, error } = useOngekiCards()
+	const filtered = useFiltering(data?.cards || [], cardFilters, searchQuery, filterValues, "name")
 
-	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues(prev => ({
-			...prev,
-			[identifier]: value
-		}))
+	if (isLoading) {
+		return (
+			<Container>
+				<Header title="Cards" />
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
+			</Container>
+		)
 	}
 
-	const handleClearAll = () => {
-		setFilterValues(getDefaultFilterValues())
+	if (error) {
+		return (
+			<Container>
+				<Header title="Cards" />
+				<Body>
+					<div className="text-destructive py-20 text-center">Failed to load cards</div>
+				</Body>
+			</Container>
+		)
 	}
-
-	const searchItems = filteredCards.map(card => ({
-		id: card.cardId,
-		title: card.name || ""
-	}))
-
-	if (isLoading) return <LoadingState />
-	if (error) return <ErrorState />
 
 	return (
 		<Container>
 			<Header
 				title="Cards"
 				searchProps={{
-					items: searchItems,
+					items: filtered.slice(0, 100).map((c: any) => ({ id: c.cardId, title: c.name || "" })),
 					searchQuery,
 					onSearchChange: setSearchQuery,
-					placeholder: "Search cards...",
-					emptyMessage: "No cards found.",
+					placeholder: "Search...",
+					emptyMessage: "No cards.",
 					groupLabel: "Cards"
 				}}
 			/>
 			<Body>
 				<FilterArea>
-					<div className="flex justify-start">
-						<MultiFilter
-							filters={filters}
-							filterValues={filterValues}
-							onFilterChange={handleFilterChange}
-							onClearAll={handleClearAll}
-						/>
-					</div>
+					<MultiFilter
+						filters={cardFilters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(cardFilters))}
+					/>
 				</FilterArea>
-				{filteredCards.length === 0 ? (
-					<div className="text-muted-foreground flex h-40 items-center justify-center">No cards found</div>
+
+				{filtered.length === 0 ? (
+					<div className="text-muted-foreground py-20 text-center">No cards found</div>
 				) : (
-					<CardGallery cards={filteredCards} />
+					<CardGallery cards={filtered} />
 				)}
 			</Body>
-		</Container>
-	)
-}
-
-function LoadingState() {
-	return (
-		<Container>
-			<Header title="Cards" />
-			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-				<Spinner />
-			</div>
-		</Container>
-	)
-}
-
-function ErrorState() {
-	return (
-		<Container>
-			<Header title="Cards" />
-			<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-				<p className="text-destructive">Failed to load cards</p>
-			</div>
 		</Container>
 	)
 }

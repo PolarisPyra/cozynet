@@ -3,89 +3,75 @@ import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
 import SongInfoCard from "@/app/features/chunithm/components/song-info-card"
+import { songFilters, useChunithmSongs } from "@/app/features/chunithm/hooks"
+import useGroupedSongs from "@/app/features/chunithm/hooks/use-grouped-songs"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
+import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
-import {
-    type ChunithmFilterValues,
-    getDefaultSongFilterValues,
-    useChunithmSongFiltering,
-    useSongFilters
-} from "@/app/features/chunithm/hooks"
-import useGroupedSongs from "@/app/features/chunithm/hooks/use-grouped-songs"
+import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
+import type { FilterValues } from "@/app/shared/types"
 import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
 
-const ChunithmAllSongs = () => {
+export default function ChunithmAllSongs() {
 	const [searchParams, setSearchParams] = useSearchParams()
 	const searchQuery = searchParams.get("search") || ""
-	const [filterValues, setFilterValues] = useState<ChunithmFilterValues>(getDefaultSongFilterValues())
+	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(songFilters))
 
-	const songFilters = useSongFilters()
-	const { filteredSongs, isLoading } = useChunithmSongFiltering({ searchQuery, filterValues })
-	const groupedSongs = useGroupedSongs({ songs: filteredSongs })
+	const { data: songs, isLoading } = useChunithmSongs()
+	const filtered = useFiltering(songs || [], songFilters, searchQuery, filterValues)
+	const grouped = useGroupedSongs({ songs: filtered })
 
-	const handleFilterChange = (identifier: string, value: string) => {
-		setFilterValues(prev => ({ ...prev, [identifier]: value }))
+	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(grouped, 20, [searchQuery, filterValues])
+
+	if (isLoading) {
+		return (
+			<Container>
+				<Header title="All Songs" />
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
+			</Container>
+		)
 	}
-
-	const handleClearAll = () => {
-		setFilterValues(getDefaultSongFilterValues())
-	}
-
-	const searchItems = groupedSongs
-		.filter(song => song.songId !== null)
-		.map(song => ({
-			id: song.songId as number,
-			title: song.title || ""
-		}))
-
-	if (isLoading) return <LoadingState />
 
 	return (
 		<Container>
 			<Header
 				title="All Songs"
 				searchProps={{
-					items: searchItems,
+					items: grouped.slice(0, 100).filter(s => s.songId).map(s => ({ id: s.songId as number, title: s.title || "" })),
 					searchQuery,
-					onSearchChange: value => setSearchParams({ search: value }),
-					placeholder: "Search songs...",
-					emptyMessage: "No songs found.",
+					onSearchChange: val => setSearchParams({ search: val }),
+					placeholder: "Search...",
+					emptyMessage: "No songs.",
 					groupLabel: "Songs"
 				}}
 			/>
 			<Body>
 				<FilterArea>
-					<div className="flex justify-start">
-						<MultiFilter
-							filters={songFilters}
-							filterValues={filterValues}
-							onFilterChange={handleFilterChange}
-							onClearAll={handleClearAll}
-						/>
-					</div>
+					<MultiFilter
+						filters={songFilters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(songFilters))}
+					/>
 				</FilterArea>
-				<ResponsiveGrid
-					items={groupedSongs}
-					levelColorBadge={chunithmBadgeColors}
-					loading={isLoading}
-					jacketArt="chunithm/jacket"
-					CardComponent={SongInfoCard}
-				/>
+
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{paged.map((song, idx) => (
+						<SongInfoCard key={idx} score={song} levelColorBadge={chunithmBadgeColors} jacketArt="chunithm/jacket" />
+					))}
+				</div>
+
+				{grouped.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
+
+				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)
 }
-
-const LoadingState = () => (
-	<div className="relative flex-1 overflow-auto">
-		<Header title="All Songs" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<Spinner />
-		</div>
-	</div>
-)
-
-export default ChunithmAllSongs

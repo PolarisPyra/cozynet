@@ -1,80 +1,74 @@
 import RivalCard from "@/app/features/chunithm/components/rival-card"
-import Header from "@/app/shared/components/common/header"
-import ResponsiveGrid from "@/app/shared/components/common/responsive-grid"
-import Spinner from "@/app/shared/components/common/spinner"
 import { useChunithmVersion } from "@/app/features/chunithm/hooks"
 import useRivalsManagement from "@/app/features/chunithm/hooks/use-rivals-management"
+import Header from "@/app/shared/components/common/header"
+import { Pagination } from "@/app/shared/components/common/pagination"
+import Spinner from "@/app/shared/components/common/spinner"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 
-const ChunithmRivals = () => {
+export default function ChunithmRivals() {
 	const version = useChunithmVersion()
-	const {
-		rivalIds,
-		rivalCount,
-		users,
-		filteredRivals,
-		searchQuery,
-		setSearchQuery,
-		handleAddRival,
-		handleRemoveRival,
-		isLoading
-	} = useRivalsManagement()
+	const { rivalIds, rivalCount, users, filteredRivals, searchQuery, setSearchQuery, handleAddRival, handleRemoveRival, isLoading } =
+		useRivalsManagement()
 
-	const searchItems = users.map(user => ({
-		id: user.id,
-		title: user.username || ""
-	}))
+	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filteredRivals, 20, [searchQuery])
 
-	if (isLoading) return <LoadingState />
-	if (!version) return <NoVersionState />
+	if (!version) {
+		return (
+			<Container>
+				<Header title="Rivals" />
+				<Body>
+					<div className="text-muted-foreground py-20 text-center">Set your version first</div>
+				</Body>
+			</Container>
+		)
+	}
+
+	if (isLoading) {
+		return (
+			<Container>
+				<Header title="Rivals" />
+				<Body>
+					<div className="flex h-96 items-center justify-center">
+						<Spinner />
+					</div>
+				</Body>
+			</Container>
+		)
+	}
 
 	return (
 		<Container>
 			<Header
 				title={`Rivals ${rivalCount}/3`}
 				searchProps={{
-					items: searchItems,
+					items: users.slice(0, 100).map(u => ({ id: u.id, title: u.username || "" })),
 					searchQuery,
 					onSearchChange: setSearchQuery,
-					placeholder: "Search users...",
-					emptyMessage: "No users found.",
+					placeholder: "Search...",
+					emptyMessage: "No users.",
 					groupLabel: "Users"
 				}}
 			/>
 			<Body>
-				<ResponsiveGrid
-					items={filteredRivals}
-					CardComponent={props => (
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{paged.map(rival => (
 						<RivalCard
-							{...props}
+							key={rival.id}
+							score={rival}
 							rivalIds={rivalIds}
 							rivalCount={rivalCount}
 							onAddRival={handleAddRival}
 							onRemoveRival={handleRemoveRival}
 						/>
-					)}
-				/>
+					))}
+				</div>
+
+				{filteredRivals.length === 0 && <div className="text-muted-foreground py-20 text-center">No users found</div>}
+
+				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)
 }
-
-const LoadingState = () => (
-	<div className="relative flex-1 overflow-auto">
-		<Header title="Rivals" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<Spinner />
-		</div>
-	</div>
-)
-
-const NoVersionState = () => (
-	<div className="relative flex-1 overflow-auto">
-		<Header title="Rivals" />
-		<div className="flex h-[calc(100vh-64px)] items-center justify-center">
-			<p className="text-primary">Please set your Chunithm version in settings first</p>
-		</div>
-	</div>
-)
-
-export default ChunithmRivals
