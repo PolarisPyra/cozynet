@@ -152,8 +152,12 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 					<div className="flex flex-col items-end">
 						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
 						<div className="mt-0.5">
-							{ratingValue > 0 && version ? (
-								<ChunithmRatingColors rating={ratingValue} version={version} />
+							{ratingValue > 0 ? (
+								(version || scoreVersionId) ? (
+									<ChunithmRatingColors rating={ratingValue} version={version || scoreVersionId} />
+								) : (
+									<span className="text-foreground text-sm font-medium">{ratingValue.toFixed(2)}</span>
+								)
 							) : (
 								<span className="text-foreground text-sm font-medium">-</span>
 							)}
@@ -174,8 +178,8 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 			</div>
 
 			<Separator />
-			<div className="text-muted-foreground flex flex-col gap-2 pt-2.5 text-xs font-medium md:flex-row md:items-center md:justify-between md:gap-2 md:pt-0">
-				<div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs font-medium md:flex-nowrap">
+			<div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-2 text-xs font-medium">
+				<div className="flex flex-wrap items-center gap-2">
 					{score.userPlayDate ? (
 						<>
 							<Badge variant="secondary" className="h-6 rounded-sm">
@@ -189,7 +193,8 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 						"—"
 					)}
 				</div>
-				<div className="flex flex-nowrap items-center gap-1.5 md:ml-auto">
+				<div className="flex-1" />
+				<div className="flex flex-wrap items-center justify-end gap-1.5">
 					{score.isNewRecord === 1 && (
 						<Badge variant="secondary" className="h-6 rounded-sm font-bold uppercase">
 							New Record
@@ -241,4 +246,3 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 
 export default ChunithmScoreInfoCard
 
-export { formatSqlDateToLocalParts, getChunithmGrade } from "@/app/shared/utils/chunithm"
