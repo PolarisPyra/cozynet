@@ -1,8 +1,10 @@
 import type { Filter } from "@/app/shared/hooks/use-filtering"
 import { LEVELS } from "@/app/shared/config/filter-options"
 import { LEVEL_CONFIGS } from "@/app/shared/utils/level-filter"
+import type { Mai2Playlog, MaimaiRating } from "@/app/shared/types/frontend"
+import type { DB } from "@/app/shared/types"
 
-export const scoreFilters: Filter[] = [
+export const scoreFilters: Filter<Mai2Playlog>[] = [
 	{
 		identifier: "level",
 		label: "Level",
@@ -11,7 +13,7 @@ export const scoreFilters: Filter[] = [
 	}
 ]
 
-export const ratingFilters: Filter[] = [
+export const ratingFilters: Filter<MaimaiRating>[] = [
 	{
 		identifier: "tab",
 		label: "Tab",
@@ -48,7 +50,7 @@ export const ratingFilters: Filter[] = [
 	}
 ]
 
-export const songFilters: Filter[] = [
+export const songFilters: Filter<DB.Mai2StaticMusic>[] = [
 	{
 		identifier: "level",
 		label: "Level",

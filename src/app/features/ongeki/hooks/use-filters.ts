@@ -1,12 +1,14 @@
 import type { Filter } from "@/app/shared/hooks/use-filtering"
 import { LEVELS_ONGEKI } from "@/app/shared/config/filter-options"
 import { LEVEL_CONFIGS } from "@/app/shared/utils/level-filter"
+import type { OngekiPlaylog, OngekiRating } from "@/app/shared/types/frontend"
+import type { DB } from "@/app/shared/types"
 
 import ongekiSkills from "./ongekiSkill.json"
 
 const skillMap = new Map(ongekiSkills.map((s: any) => [s.id, s.category]))
 
-export const scoreFilters: Filter[] = [
+export const scoreFilters: Filter<OngekiPlaylog>[] = [
 	{
 		identifier: "level",
 		label: "Level",
@@ -26,7 +28,7 @@ export const scoreFilters: Filter[] = [
 	}
 ]
 
-export const ratingFilters = (version: number): Filter[] => [
+export const ratingFilters = (version: number): Filter<OngekiRating>[] => [
 	{
 		identifier: "category",
 		label: "Category",
@@ -65,7 +67,7 @@ export const ratingFilters = (version: number): Filter[] => [
 	}
 ]
 
-export const songFilters: Filter[] = [
+export const songFilters: Filter<DB.OngekiStaticMusic>[] = [
 	{
 		identifier: "level",
 		label: "Level",
@@ -98,7 +100,9 @@ export const songFilters: Filter[] = [
 	}
 ]
 
-export const cardFilters: Filter[] = [
+type OngekiCard = DB.OngekiUserCard & DB.OngekiStaticCards
+
+export const cardFilters: Filter<OngekiCard>[] = [
 	{
 		identifier: "rarity",
 		label: "Rarity",

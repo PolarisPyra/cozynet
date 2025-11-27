@@ -2,8 +2,10 @@ import type { Filter } from "@/app/shared/hooks/use-filtering"
 import { LEVELS, STARS } from "@/app/shared/config/filter-options"
 import { levelToStars } from "@/app/shared/utils/chunithm"
 import { LEVEL_CONFIGS } from "@/app/shared/utils/level-filter"
+import type { ChunithmPlaylog, ChunithmRating } from "@/app/shared/types/frontend"
+import type { DB } from "@/app/shared/types"
 
-export const scoreFilters: Filter[] = [
+export const scoreFilters: Filter<ChunithmPlaylog>[] = [
 	{
 		identifier: "level",
 		label: "Level",
@@ -26,7 +28,7 @@ export const scoreFilters: Filter[] = [
 	}
 ]
 
-export const ratingFilters = (version: number): Filter[] => [
+export const ratingFilters = (version: number): Filter<ChunithmRating>[] => [
 	{
 		identifier: "tab",
 		label: "Tab",
@@ -63,7 +65,7 @@ export const ratingFilters = (version: number): Filter[] => [
 	}
 ]
 
-export const songFilters: Filter[] = [
+export const songFilters: Filter<DB.ChuniStaticMusic>[] = [
 	{
 		identifier: "level",
 		label: "Level",

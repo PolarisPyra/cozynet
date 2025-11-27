@@ -31,7 +31,7 @@ export function useFiltering<T extends Record<string, unknown>>(
 	}, [data, filters, searchQuery, filterValues, searchField])
 }
 
-export function getDefaults(filters: Filter<unknown>[]): FilterValues {
+export function getDefaults<T = unknown>(filters: Filter<T>[]): FilterValues {
 	const values: FilterValues = {}
 	filters.forEach(f => (values[f.identifier] = f.options[0]?.value ?? "all"))
 	return values
