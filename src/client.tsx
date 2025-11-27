@@ -1,16 +1,14 @@
+// Initialize react-scan FIRST before anything else
+import { scan } from "react-scan"
+scan()
+
 import React, { Suspense } from "react"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRoot } from "react-dom/client"
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
-import { scan } from "react-scan"
 
 import { Toaster } from "@/app/shared/components/ui/sonner"
-
-// Initialize react-scan in development mode
-scan({
-	enabled: process.env.NODE_ENV === "development",
-})
 
 import { MaimaiDxAllSongs } from "./app/features/maimaidx/pages/allsongs"
 import { MaimaiDxRatingFrames } from "./app/features/maimaidx/pages/rating"
