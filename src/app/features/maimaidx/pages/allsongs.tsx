@@ -64,9 +64,8 @@ export function MaimaiDxAllSongs() {
 			<Header
 				title="All Songs"
 				searchProps={{
-					items: grouped.slice(0, 100).filter(s => s.songId).map(s => ({ id: s.songId as number, title: s.title || "" })),
-					searchQuery,
-					onSearchChange: val => setSearchParams({ search: val }),
+					items: grouped.filter(s => s.songId).map(s => ({ id: s.songId as number, title: s.title || "" })),
+					onSelect: val => setSearchParams({ search: val }),
 					placeholder: "Search...",
 					emptyMessage: "No songs.",
 					groupLabel: "Songs"

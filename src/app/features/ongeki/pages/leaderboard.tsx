@@ -57,9 +57,8 @@ export default function OngekiLeaderboard() {
 			<Header
 				title="Leaderboard"
 				searchProps={{
-					items: valid.slice(0, 100).map(p => ({ id: p.rank, title: p.userName })),
-					searchQuery,
-					onSearchChange: setSearchQuery,
+					items: valid.map(p => ({ id: p.rank, title: p.userName })),
+					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No players.",
 					groupLabel: "Players"

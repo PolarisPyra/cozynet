@@ -57,9 +57,8 @@ export function OngekiRatingFrames() {
 			<Header
 				title="Rating"
 				searchProps={{
-					items: filtered.slice(0, 100).map((r: any, i: number) => ({ id: i, title: r.title || "" })),
-					searchQuery,
-					onSearchChange: setSearchQuery,
+					items: filtered.map((r: any, i: number) => ({ id: i, title: r.title || "" })),
+					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No ratings.",
 					groupLabel: "Ratings"

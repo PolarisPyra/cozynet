@@ -69,9 +69,8 @@ export default function ChunithmFavorites() {
 			<Header
 				title="Favorites"
 				searchProps={{
-					items: filtered.slice(0, 100).map(s => ({ id: s.songId, title: s.title })),
-					searchQuery,
-					onSearchChange: setSearchQuery,
+					items: filtered.map(s => ({ id: s.songId, title: s.title })),
+					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No songs.",
 					groupLabel: "Songs"

@@ -20,10 +20,9 @@ export type SearchItem = {
 	title: string
 }
 
-export type SearchProps = DialogProps & {
+export type SearchProps = Omit<DialogProps, "open" | "onOpenChange"> & {
 	items?: SearchItem[]
-	searchQuery?: string
-	onSearchChange?: (value: string) => void
+	onSelect?: (value: string) => void
 	placeholder?: string
 	emptyMessage?: string
 	groupLabel?: string
@@ -31,17 +30,17 @@ export type SearchProps = DialogProps & {
 
 export const Search = ({
 	items = [],
-	searchQuery,
-	onSearchChange,
+	onSelect,
 	placeholder = "Search...",
 	emptyMessage = "No results found.",
 	groupLabel = "Results",
 	...props
 }: SearchProps) => {
 	const [open, setOpen] = React.useState(false)
+	const [search, setSearch] = React.useState("")
 
+	// Deduplicate items by title
 	const uniqueItems = React.useMemo(() => {
-		if (!items) return []
 		const seen = new Set<string>()
 		return items.filter(item => {
 			const title = item.title || ""
@@ -51,11 +50,34 @@ export const Search = ({
 		})
 	}, [items])
 
-	const runCommand = React.useCallback((command: () => unknown) => {
-		setOpen(false)
-		command()
-	}, [])
+	// Filter items based on search query
+	const filteredItems = React.useMemo(() => {
+		if (!search) return uniqueItems
+		const searchLower = search.toLowerCase()
+		return uniqueItems.filter(item => {
+			const title = item.title || ""
+			return title.toLowerCase().includes(searchLower)
+		})
+	}, [uniqueItems, search])
 
+	const displayedItems = filteredItems.slice(0, 10)
+	const remainingCount = filteredItems.length - 10
+
+	const handleSelect = React.useCallback(
+		(value: string) => {
+			setOpen(false)
+			setSearch("")
+			onSelect?.(value)
+		},
+		[onSelect]
+	)
+
+	// Reset search when dialog closes
+	React.useEffect(() => {
+		if (!open) setSearch("")
+	}, [open])
+
+	// Keyboard shortcut to open
 	React.useEffect(() => {
 		const down = (e: KeyboardEvent) => {
 			if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || e.key === "/") {
@@ -68,7 +90,7 @@ export const Search = ({
 					return
 				}
 				e.preventDefault()
-				setOpen(open => !open)
+				setOpen(prev => !prev)
 			}
 		}
 		document.addEventListener("keydown", down)
@@ -76,15 +98,13 @@ export const Search = ({
 	}, [])
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog open={open} onOpenChange={setOpen} {...props}>
 			<DialogTrigger asChild>
 				<Button
 					variant="outline"
 					className={cn(
 						"relative h-8 w-full justify-start pl-3 font-medium shadow-none hover:cursor-pointer sm:pr-12 md:w-48 lg:w-56 xl:w-64"
 					)}
-					onClick={() => setOpen(true)}
-					{...props}
 				>
 					<span className="hidden lg:inline-flex">{placeholder}</span>
 					<span className="inline-flex lg:hidden">Search...</span>
@@ -101,44 +121,34 @@ export const Search = ({
 				</DialogHeader>
 				<Command
 					className="**:data-[slot=command-input-wrapper]:bg-input/50 **:data-[slot=command-input-wrapper]:border-input rounded-none bg-transparent **:data-[slot=command-input]:!h-9 **:data-[slot=command-input]:py-0 **:data-[slot=command-input-wrapper]:mb-1.5 **:data-[slot=command-input-wrapper]:!h-9 **:data-[slot=command-input-wrapper]:rounded-sm **:data-[slot=command-input-wrapper]:border"
-					filter={(value, search, keywords) => {
-						const extendValue = value + " " + (keywords?.join(" ") || "")
-						if (extendValue.toLowerCase().includes(search.toLowerCase())) {
-							return 1
-						}
-						return 0
-					}}
+					shouldFilter={false}
 				>
-					<CommandInput
-						placeholder={placeholder}
-						{...(onSearchChange ? { value: searchQuery || "", onValueChange: onSearchChange } : {})}
-					/>
+					<CommandInput placeholder={placeholder} value={search} onValueChange={setSearch} />
 					<CommandList className="no-scrollbar bg-background min-h-80 scroll-pt-2 scroll-pb-1.5">
-						<CommandEmpty className="text-muted-foreground py-12 text-center text-sm">{emptyMessage}</CommandEmpty>
-						{uniqueItems && uniqueItems.length > 0 && (
+						{filteredItems.length === 0 && (
+							<CommandEmpty className="text-muted-foreground py-12 text-center text-sm">{emptyMessage}</CommandEmpty>
+						)}
+						{displayedItems.length > 0 && (
 							<CommandGroup
 								heading={groupLabel}
 								className="!p-0 [&_[cmdk-group-heading]]:scroll-mt-16 [&_[cmdk-group-heading]]:!p-3 [&_[cmdk-group-heading]]:!pb-1"
 							>
-								{uniqueItems.slice(0, 10).map(item => (
+								{displayedItems.map(item => (
 									<CommandMenuItem
 										key={item.id}
 										value={item.title || ""}
-										keywords={[(item.title || "").toLowerCase()]}
-										onSelect={() => {
-											runCommand(() => onSearchChange && onSearchChange(item.title || ""))
-										}}
+										onSelect={handleSelect}
 									>
 										<ArrowRight />
 										{item.title}
 									</CommandMenuItem>
 								))}
-								{uniqueItems.length > 10 && (
-									<CommandMenuItem disabled className="text-muted-foreground py-2 text-center">
-										<span className="text-xs">... and {uniqueItems.length - 10} more results</span>
-									</CommandMenuItem>
-								)}
 							</CommandGroup>
+						)}
+						{remainingCount > 0 && (
+							<div className="text-muted-foreground px-3 py-2 text-xs">
+								... and more
+							</div>
 						)}
 					</CommandList>
 				</Command>

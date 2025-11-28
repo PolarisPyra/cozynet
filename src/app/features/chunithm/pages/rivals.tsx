@@ -43,9 +43,8 @@ export default function ChunithmRivals() {
 			<Header
 				title={`Rivals ${rivalCount}/3`}
 				searchProps={{
-					items: users.slice(0, 100).map(u => ({ id: u.id, title: u.username || "" })),
-					searchQuery,
-					onSearchChange: setSearchQuery,
+					items: users.map(u => ({ id: u.id, title: u.username || "" })),
+					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No users.",
 					groupLabel: "Users"

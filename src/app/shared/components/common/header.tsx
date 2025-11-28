@@ -9,7 +9,7 @@ import { ModeToggle } from "./theme-switcher"
 
 type HeaderProps = {
 	title: string
-	searchProps?: Omit<SearchProps, "open" | "onOpenChange">
+	searchProps?: SearchProps
 }
 
 const Header = ({ title, searchProps }: HeaderProps) => {

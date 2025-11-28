@@ -45,9 +45,8 @@ export function CardManagement() {
 			<Header
 				title="Cards"
 				searchProps={{
-					items: filtered.slice(0, 100).map((c: any) => ({ id: c.cardId, title: c.name || "" })),
-					searchQuery,
-					onSearchChange: setSearchQuery,
+					items: filtered.map((c: any) => ({ id: c.cardId, title: c.name || "" })),
+					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No cards.",
 					groupLabel: "Cards"

@@ -128,8 +128,7 @@ const CardManagement = () => {
 				title="Card Management"
 				searchProps={{
 					items: searchItems,
-					searchQuery,
-					onSearchChange: value => setSearchParams({ search: value }),
+					onSelect: value => setSearchParams({ search: value }),
 					placeholder: "Search cards...",
 					emptyMessage: "No cards found.",
 					groupLabel: "Users"

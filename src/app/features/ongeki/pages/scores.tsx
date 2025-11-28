@@ -70,9 +70,8 @@ export function OngekiScorePage() {
 			<Header
 				title="Scores"
 				searchProps={{
-					items: filtered.slice(0, 100).map(s => ({ id: s.id, title: s.title || "" })),
-					searchQuery,
-					onSearchChange: setSearchQuery,
+					items: filtered.map(s => ({ id: s.id, title: s.title || "" })),
+					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No scores.",
 					groupLabel: "Scores"
