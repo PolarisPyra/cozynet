@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 
 import { MaimaiDxScoreInfoCard } from "@/app/features/maimaidx/components/score-info-card"
 import { scoreFilters, useMaimaiDxScores } from "@/app/features/maimaidx/hooks"
@@ -19,7 +19,13 @@ export function MaimaiDxScorePage() {
 	const { data: scores, isLoading } = useMaimaiDxScores()
 
 	const filtered = useFiltering(scores || [], scoreFilters, searchQuery, filterValues)
-	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+	
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+
+	const searchItems = useMemo(
+		() => (scores || []).map(s => ({ id: s.id, title: s.title || "" })),
+		[scores]
+	)
 
 	if (isLoading) {
 		return (
@@ -34,15 +40,20 @@ export function MaimaiDxScorePage() {
 		)
 	}
 
+	const showEmptyState = !isLoading && filtered.length === 0
+	const hasActiveFilters = searchQuery || Object.values(filterValues).some(
+		(v, i) => v !== Object.values(getDefaults(scoreFilters))[i]
+	)
+
 	return (
 		<Container>
 			<Header
 				title="Scores"
 				searchProps={{
-					items: filtered.map(s => ({ id: s.id, title: s.title || "" })),
+					items: searchItems,
 					onSelect: setSearchQuery,
-					placeholder: "Search...",
-					emptyMessage: "No scores.",
+					placeholder: "Search scores...",
+					emptyMessage: "No scores found.",
 					groupLabel: "Scores"
 				}}
 			/>
@@ -51,20 +62,44 @@ export function MaimaiDxScorePage() {
 					<MultiFilter
 						filters={scoreFilters}
 						filterValues={filterValues}
-						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
-						onClearAll={() => setFilterValues(getDefaults(scoreFilters))}
+						onFilterChange={(id, val) => {
+							setFilterValues(prev => ({ ...prev, [id]: val }))
+							setPage(1) // Reset to first page when filters change
+						}}
+						onClearAll={() => {
+							setFilterValues(getDefaults(scoreFilters))
+							setPage(1)
+						}}
 					/>
 				</FilterArea>
 
-				<CardGrid>
-					{paged.map(score => (
-						<MaimaiDxScoreInfoCard key={score.id} score={score} levelColorBadge={maimaiDxBadgeColors} />
-					))}
-				</CardGrid>
+				{showEmptyState ? (
+					<div className="text-muted-foreground py-20 text-center">
+						{hasActiveFilters 
+							? "No scores match your filters" 
+							: "No scores found"}
+					</div>
+				) : (
+					<>
+						<CardGrid>
+							{paged.map(score => (
+								<MaimaiDxScoreInfoCard 
+									key={score.id} 
+									score={score} 
+									levelColorBadge={maimaiDxBadgeColors} 
+								/>
+							))}
+						</CardGrid>
 
-				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No scores found</div>}
-
-				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+						{hasMore && (
+							<Pagination 
+								page={page} 
+								totalPages={totalPages} 
+								onPageChange={setPage} 
+							/>
+						)}
+					</>
+				)}
 			</Body>
 		</Container>
 	)

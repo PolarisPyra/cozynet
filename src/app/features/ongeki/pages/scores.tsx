@@ -1,9 +1,8 @@
-import { useState } from "react"
-
+import { useState, useMemo } from "react"
 import { toast } from "sonner"
 
 import { OngekiScoreInfoCard } from "@/app/features/ongeki/components/score-info-card"
-import { scoreFilters, useOngekiScoreExporter, useOngekiScores, useOngekiVersion } from "@/app/features/ongeki/hooks"
+import { scoreFilters, useOngekiScores, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import { Pagination } from "@/app/shared/components/common/pagination"
@@ -18,26 +17,48 @@ import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
 export function OngekiScorePage() {
 	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(scoreFilters))
+	const [isExporting, setIsExporting] = useState(false)
 
 	const version = useOngekiVersion()
 	const { data: scores, isLoading } = useOngekiScores()
-	const { data: exportData, isLoading: isLoadingExport, refetch: refetchExport } = useOngekiScoreExporter()
 
 	const filtered = useFiltering(scores || [], scoreFilters, searchQuery, filterValues)
-	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+	
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+
+	const searchItems = useMemo(
+		() => (scores || []).map(s => ({ id: s.id, title: s.title || "" })),
+		[scores]
+	)
 
 	const handleExport = async () => {
+		if (!scores || scores.length === 0) {
+			toast.error("No data to export")
+			return
+		}
+
+		setIsExporting(true)
 		try {
-			const result = exportData || (await refetchExport()).data
-			if (!result) return toast.error("No data")
-			const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" })
+			const dataToExport = scores
+			
+			const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { 
+				type: "application/json" 
+			})
+			const url = URL.createObjectURL(blob)
 			const a = document.createElement("a")
-			a.href = URL.createObjectURL(blob)
-			a.download = "ongeki_scores.json"
+			a.href = url
+			a.download = `ongeki_scores_${new Date().toISOString().split('T')[0]}.json`
+			document.body.appendChild(a)
 			a.click()
-			toast.success("Exported")
-		} catch {
-			toast.error("Export failed")
+			document.body.removeChild(a)
+			URL.revokeObjectURL(url)
+			
+			toast.success("Scores exported successfully")
+		} catch (error) {
+			console.error("Export error:", error)
+			toast.error("Failed to export scores")
+		} finally {
+			setIsExporting(false)
 		}
 	}
 
@@ -46,7 +67,9 @@ export function OngekiScorePage() {
 			<Container>
 				<Header title="Scores" />
 				<Body>
-					<div className="text-muted-foreground py-20 text-center">Set your version in settings first</div>
+					<div className="text-muted-foreground py-20 text-center">
+						Set your version in settings first
+					</div>
 				</Body>
 			</Container>
 		)
@@ -65,15 +88,20 @@ export function OngekiScorePage() {
 		)
 	}
 
+	const showEmptyState = !isLoading && filtered.length === 0
+	const hasActiveFilters = searchQuery || Object.values(filterValues).some(
+		(v, i) => v !== Object.values(getDefaults(scoreFilters))[i]
+	)
+
 	return (
 		<Container>
 			<Header
 				title="Scores"
 				searchProps={{
-					items: filtered.map(s => ({ id: s.id, title: s.title || "" })),
+					items: searchItems,
 					onSelect: setSearchQuery,
-					placeholder: "Search...",
-					emptyMessage: "No scores.",
+					placeholder: "Search scores...",
+					emptyMessage: "No scores found.",
 					groupLabel: "Scores"
 				}}
 			/>
@@ -83,24 +111,54 @@ export function OngekiScorePage() {
 						<MultiFilter
 							filters={scoreFilters}
 							filterValues={filterValues}
-							onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
-							onClearAll={() => setFilterValues(getDefaults(scoreFilters))}
+							onFilterChange={(id, val) => {
+								setFilterValues(prev => ({ ...prev, [id]: val }))
+								setPage(1) // Reset to first page when filters change
+							}}
+							onClearAll={() => {
+								setFilterValues(getDefaults(scoreFilters))
+								setPage(1)
+							}}
 						/>
-						<Button onClick={handleExport} variant="outline" size="sm" disabled={isLoadingExport}>
-							{isLoadingExport ? "..." : "Export"}
+						<Button 
+							onClick={handleExport} 
+							variant="outline" 
+							size="sm" 
+							disabled={isExporting || !scores || scores.length === 0}
+						>
+							{isExporting ? "Exporting..." : "Export JSON"}
 						</Button>
 					</div>
 				</FilterArea>
 
-				<CardGrid>
-					{paged.map(score => (
-						<OngekiScoreInfoCard key={score.id} score={score} levelColorBadge={ongekiBadgeColors} ongekiVersion={version} />
-					))}
-				</CardGrid>
+				{showEmptyState ? (
+					<div className="text-muted-foreground py-20 text-center">
+						{hasActiveFilters 
+							? "No scores match your filters" 
+							: "No scores found"}
+					</div>
+				) : (
+					<>
+						<CardGrid>
+							{paged.map(score => (
+								<OngekiScoreInfoCard 
+									key={score.id} 
+									score={score} 
+									levelColorBadge={ongekiBadgeColors} 
+									ongekiVersion={version} 
+								/>
+							))}
+						</CardGrid>
 
-				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No scores found</div>}
-
-				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+						{hasMore && (
+							<Pagination 
+								page={page} 
+								totalPages={totalPages} 
+								onPageChange={setPage} 
+							/>
+						)}
+					</>
+				)}
 			</Body>
 		</Container>
 	)
