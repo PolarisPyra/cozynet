@@ -6,7 +6,7 @@ import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
-import { Body, Container } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 
 export default function OngekiLeaderboard() {
 	const version = useOngekiVersion()
@@ -65,11 +65,11 @@ export default function OngekiLeaderboard() {
 				}}
 			/>
 			<Body>
-				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+				<CardGrid>
 					{paged.map(player => (
 						<LeaderboardCard key={player.rank} score={player} />
 					))}
-				</div>
+				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No players found</div>}
 

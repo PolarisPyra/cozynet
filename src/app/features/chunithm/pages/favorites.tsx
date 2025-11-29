@@ -8,7 +8,7 @@ import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
-import { Body, Container } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 import type { DB } from "@/app/shared/types"
 
 export default function ChunithmFavorites() {
@@ -77,11 +77,11 @@ export default function ChunithmFavorites() {
 				}}
 			/>
 			<Body>
-				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+				<CardGrid>
 					{paged.map(song => (
 						<FavoriteCard key={song.songId} score={song} favoriteSongIds={favoriteSongIds} onToggleFavorite={handleToggle} />
 					))}
-				</div>
+				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
 

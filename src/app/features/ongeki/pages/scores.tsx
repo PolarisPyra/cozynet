@@ -11,7 +11,7 @@ import Spinner from "@/app/shared/components/common/spinner"
 import { Button } from "@/app/shared/components/ui/button"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
-import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
 import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
 
@@ -92,11 +92,11 @@ export function OngekiScorePage() {
 					</div>
 				</FilterArea>
 
-				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+				<CardGrid>
 					{paged.map(score => (
 						<OngekiScoreInfoCard key={score.id} score={score} levelColorBadge={ongekiBadgeColors} ongekiVersion={version} />
 					))}
-				</div>
+				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No scores found</div>}
 

@@ -8,7 +8,7 @@ import { Pagination } from "@/app/shared/components/common/pagination"
 import { RivalInfoCard } from "@/app/shared/components/common/rival-info-card"
 import Spinner from "@/app/shared/components/common/spinner"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
-import { Body, Container } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 
 export function OngekiRivals() {
 	const [searchQuery, setSearchQuery] = useState("")
@@ -75,7 +75,7 @@ export function OngekiRivals() {
 				}}
 			/>
 			<Body>
-				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+				<CardGrid>
 					{paged.map(user => (
 						<RivalInfoCard
 							key={user.id}
@@ -86,7 +86,7 @@ export function OngekiRivals() {
 							rivalCount={rivalCount}
 						/>
 					))}
-				</div>
+				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No users found</div>}
 
