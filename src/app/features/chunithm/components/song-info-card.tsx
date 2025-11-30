@@ -8,11 +8,14 @@ import Spinner from "@/app/shared/components/common/spinner"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Button } from "@/app/shared/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/app/shared/components/ui/dialog"
+import { Separator } from "@/app/shared/components/ui/separator"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { StaticMusic } from "@/app/shared/types"
 import { chunithmBadgeColors, levelToStars } from "@/app/shared/utils/chunithm"
 import { CDN } from "@/app/shared/utils/constants"
 import { getChunithmLogo } from "@/app/shared/utils/version-logos"
+import { cn } from "@/app/shared/utils"
 
 export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: CardProps) {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -49,21 +52,21 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 	}
 
 	return (
-		<div className="bg-card border-border flex min-h-[180px] flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md">
-			<div className="flex items-start gap-3">
-				<CardImage src={`${CDN}/${jacketArt}/${song.jacketPath}`} alt={song.title ?? ""} width={72} height={72} />
+		<div className={cn("bg-card border-border flex min-h-[180px] flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md")}>
+			<div className="flex items-start gap-3 mb-2">
+				<CardImage src={`${CDN}/${jacketArt}/${song.jacketPath}`} alt={song.title ?? ""} width={72} height={72} className="w-16 h-16 rounded-md" />
 				<div className="min-w-0 flex-1">
-					<div className="text-foreground mb-1 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
+					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2 mb-1">
 						{song.title}
-					</div>
-					<div className="text-muted-foreground mb-0.5 line-clamp-1 text-[10px] sm:text-xs">
+					</h3>
+					<div className="text-muted-foreground mb-0.5 line-clamp-1 text-xs">
 						{song.artist || "Unknown"}
 					</div>
 					<div className="text-muted-foreground text-xs whitespace-nowrap">{song.genre || "N/A"}</div>
 				</div>
 			</div>
 
-			<div className="mt-3 flex min-h-[2rem] flex-wrap items-start gap-2">
+			<div className="flex min-h-[2rem] flex-wrap items-start gap-2 mb-2">
 				{(song.charts || []).map((c, idx) => {
 					const isWorldsEnd = c.chartId === 5
 					const starCount = levelToStars(c.level)
@@ -71,9 +74,10 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 						<Badge
 							key={`${String(c.chartId)}-${String(c.level)}-${idx}`}
 							variant="outline"
-							className={`flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
+							className={cn(
+								"inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold",
 								levelColorBadge ? levelColorBadge(c.chartId ?? undefined) : chunithmBadgeColors(c.chartId ?? 0)
-							}`}
+							)}
 						>
 							{isWorldsEnd ? (
 								<div className="flex items-center gap-0.5">
@@ -89,20 +93,31 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 				})}
 			</div>
 
-			{logoUrl && (
-				<div className="border-border/50 flex justify-end gap-2 border-t pt-2.5">
-					<Badge variant="secondary" className="h-6 rounded-sm p-1">
-						<img src={logoUrl} alt="Version Logo" className="max-h-5 w-auto object-contain" />
-					</Badge>
+			<Separator className="my-1.5" />
+
+			<div className="flex flex-col gap-1.5 min-w-0 w-full">
+				<div className="flex items-center gap-1.5 flex-wrap justify-end">
+					{logoUrl && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge variant="secondary" className="h-5 rounded-sm p-0.5">
+									<img src={logoUrl} alt="Version Logo" className="max-h-4 w-auto object-contain" />
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Version the song originated in</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
 					<Badge
 						variant="secondary"
-						className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"
+						className="hover:bg-muted/70 h-5 cursor-pointer rounded-md px-1 transition-colors flex-shrink-0"
 						onClick={() => setIsDialogOpen(true)}
 					>
-						<Medal className="h-4 w-4" />
+						<Medal className="h-3.5 w-3.5" />
 					</Badge>
 				</div>
-			)}
+			</div>
 
 			<Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
 				<DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
@@ -128,11 +143,12 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 											<span className="text-base font-semibold">{chartName}</span>
 											<Badge
 												variant="outline"
-												className={`flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${
+												className={cn(
+													"inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold",
 													levelColorBadge
 														? levelColorBadge(c.chartId ?? undefined)
 														: chunithmBadgeColors(c.chartId ?? 0)
-												}`}
+												)}
 											>
 												{isWorldsEnd ? (
 													<div className="flex items-center gap-0.5">
