@@ -189,7 +189,7 @@ export const SongInfoCard = function ({ score, levelColorBadge, jacketArt }: Car
 									) : (
 										<div className="space-y-2">
 											{leaderboardData.leaderboard.map((entry, index) => {
-												const isUserScore = entry.userId === currentUser.id
+												const isUserScore = entry.userId === currentUser.userId
 												const rank = index + 1
 												const getRankBgColor = () => {
 													if (rank === 1) return "bg-yellow-500"

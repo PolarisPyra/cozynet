@@ -200,7 +200,6 @@ export function OngekiScoreInfoCard({
 			<Separator className="my-1.5" />
 			{/* Footer */}
 			<div className="flex flex-col gap-1.5 min-w-0 w-full">
-				{/* Row 1: Date, Time, and Leaderboard Badge */}
 				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.userPlayDate ? (
 						<>
@@ -222,7 +221,6 @@ export function OngekiScoreInfoCard({
 						<Medal className="h-3.5 w-3.5" />
 					</Badge>
 				</div>
-				{/* Row 2: New Records */}
 				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.isTechNewRecord === 1 && (
 						<Badge
@@ -241,7 +239,6 @@ export function OngekiScoreInfoCard({
 						</Badge>
 					)}
 				</div>
-				{/* Row 3: Version Logo */}
 				<div className="flex items-center gap-1.5 flex-wrap">
 					<VersionLogoBadge
 						logoUrl={songVersionLogo}

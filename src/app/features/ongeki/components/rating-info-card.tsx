@@ -159,7 +159,6 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 				<>
 					<Separator className="my-1.5" />
 					<div className="flex flex-col gap-1.5 min-w-0 w-full">
-						{/* Row 1: Date and Time */}
 						<div className="flex items-center gap-1.5 flex-wrap">
 							{(() => {
 								const { date, time } = formatOngekiScorePlaylogDate(rating.userPlayDate)
@@ -175,7 +174,6 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 								)
 							})()}
 						</div>
-						{/* Row 2: New Records */}
 						{(rating.isTechNewRecord === 1 || rating.isBattleNewRecord === 1) && (
 							<div className="flex items-center gap-1.5 flex-wrap">
 								{rating.isTechNewRecord === 1 && (

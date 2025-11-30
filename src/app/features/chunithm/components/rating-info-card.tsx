@@ -121,7 +121,6 @@ export const ChunithmRatingInfoCard = function ({
 				<>
 					<Separator className="my-1.5" />
 					<div className="flex flex-col gap-1.5 min-w-0 w-full">
-						{/* Row 1: Date and Time */}
 						{!isPotential && rating.userPlayDate && (
 							<div className="flex items-center gap-1.5 flex-wrap">
 								<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
@@ -136,7 +135,6 @@ export const ChunithmRatingInfoCard = function ({
 								</Badge>
 							</div>
 						)}
-						{/* Row 2: New Record */}
 						{!isPotential && rating.isNewRecord === 1 && (
 							<div className="flex items-center gap-1.5 flex-wrap">
 								<Badge variant="secondary" className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap">
@@ -144,7 +142,6 @@ export const ChunithmRatingInfoCard = function ({
 								</Badge>
 							</div>
 						)}
-						{/* Row 3: Version Logo */}
 						{logoUrl && (
 							<div className="flex items-center gap-1.5 flex-wrap">
 								<Badge variant="secondary" className="h-5 rounded-sm p-0.5 flex-shrink-0">

@@ -191,7 +191,6 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 
 			{/* Footer */}
 			<div className="flex flex-col gap-1.5 min-w-0 w-full">
-				{/* Row 1: Date, Time, and Leaderboard Badge */}
 				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.userPlayDate ? (
 						<>
@@ -213,7 +212,6 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 						<Medal className="h-3.5 w-3.5" />
 					</Badge>
 				</div>
-				{/* Row 2: New Record */}
 				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.isNewRecord === 1 && (
 						<Badge variant="secondary" className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap">
@@ -221,7 +219,6 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 						</Badge>
 					)}
 				</div>
-				{/* Row 3: Version Logos */}
 				<div className="flex items-center gap-1.5 flex-wrap">
 					<VersionLogoBadge
 						logoUrl={scoreVersionLogo}

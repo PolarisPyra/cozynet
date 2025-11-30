@@ -181,7 +181,7 @@ export function SongInfoCard({ score, levelColorBadge, jacketArt }: CardProps) {
 											{leaderboardData.leaderboard.map((entry, index) => {
 												const isRefresh = ongekiVersion >= 8
 												const level = leaderboardData.chart?.level ?? 0
-												const isUserScore = entry.userId === currentUser.id
+												const isUserScore = entry.userId === currentUser.userId
 												const rank = index + 1
 												const getRankBgColor = () => {
 													if (rank === 1) return "bg-yellow-500"
