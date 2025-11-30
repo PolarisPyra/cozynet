@@ -37,8 +37,8 @@ const VersionLogoBadge = ({ logoUrl, tooltip, alt }: VersionLogoBadgeProps) => {
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<Badge variant="secondary" className="h-6 rounded-sm p-1">
-					<img src={logoUrl} alt={alt} className="max-h-5 w-auto object-contain" />
+				<Badge variant="secondary" className="h-5 rounded-sm p-0.5">
+					<img src={logoUrl} alt={alt} className="max-h-4 w-auto object-contain" />
 				</Badge>
 			</TooltipTrigger>
 			<TooltipContent>
@@ -120,91 +120,114 @@ export function OngekiScoreInfoCard({
 	return (
 		<div
 			className={cn(
-				"bg-card border-border flex h-full flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md",
+				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md",
 				className
 			)}
 		>
-			<div className="flex flex-1 flex-col gap-3">
-				<div className="flex items-start justify-between gap-3">
-					<div className="flex min-w-0 flex-1 items-start gap-3">
-						<CardImage src={`${CDN}/ongeki/jacket/${score.jacketPath}`} alt={score.title} width={72} height={72} />
-						<div className="min-w-0 flex-1">
-							<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
-								{score.title}
-							</div>
-							<span
-								className={`inline-block rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : "text-primary-foreground bg-primary"}`}
-							>
-								{formatLevel(score.level)}
-							</span>
-						</div>
-					</div>
+			{/* Top Section: Image, Title, Score */}
+			<div className="flex items-start gap-3 mb-2">
+				{/* Album Art */}
+				<div className="flex-shrink-0">
+					<CardImage src={`${CDN}/ongeki/jacket/${score.jacketPath}`} alt={score.title} width={72} height={72} className="w-16 h-16 rounded-md" />
+				</div>
 
-					<div className="flex flex-shrink-0 flex-col items-end gap-2">
-						<div className="flex flex-col items-end">
-							<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Tech Score</span>
-							{score.techScore != null ? (
-								score.techScore >= 1010000 ? (
-									<div className="flex flex-col items-end gap-0.5">
-										<span className="text-foreground text-base font-medium tabular-nums">1,010,000</span>
-										<span className="text-muted-foreground text-xs font-medium tabular-nums">
-											(AB+: +{(score.techScore - 1010000).toLocaleString()})
-										</span>
-									</div>
-								) : (
-									<span className="text-foreground text-base font-medium tabular-nums">
-										{score.techScore.toLocaleString()}
-									</span>
-								)
-							) : (
-								<span className="text-foreground text-base font-medium tabular-nums">-</span>
+				{/* Title and Info */}
+				<div className="flex-1 min-w-0 flex flex-col gap-1.5">
+					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
+						{score.title}
+					</h3>
+					<div className="flex items-center gap-2">
+						<span
+							className={cn(
+								"inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold",
+								levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : "text-primary-foreground bg-primary"
 							)}
-						</div>
-						<div className="flex flex-col items-end">
-							<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
-							<div className="mt-0.5">
-								{calculatedRating !== null ? (
-									<OngekiRatingColors rating={calculatedRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
-								) : (
-									<span className="text-foreground text-sm font-medium">-</span>
-								)}
-							</div>
-						</div>
+						>
+							{formatLevel(score.level)}
+						</span>
 					</div>
 				</div>
 
-				<div className="flex items-end justify-between">
-					<OngekiAchievementBadges
-						isFullCombo={score.isFullCombo ?? 0}
-						isAllBreak={score.isAllBreak ?? 0}
-						isFullBell={score.isFullBell ?? 0}
-						techScore={score.techScore ?? 0}
-					/>
-					<PlatinumStars count={score.platinumScoreStar ?? 0} />
+				{/* Score and Rating */}
+				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+					<div>
+						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							Tech Score
+						</div>
+						{score.techScore != null ? (
+							score.techScore >= 1010000 ? (
+								<div className="flex flex-col items-end gap-0.5">
+									<span className="text-foreground text-lg font-bold tabular-nums">1,010,000</span>
+									<span className="text-muted-foreground text-xs font-medium tabular-nums">
+										(AB+: +{(score.techScore - 1010000).toLocaleString()})
+									</span>
+								</div>
+							) : (
+								<span className="text-foreground text-lg font-bold tabular-nums">
+									{score.techScore.toLocaleString()}
+								</span>
+							)
+						) : (
+							<span className="text-foreground text-sm font-semibold tabular-nums">-</span>
+						)}
+					</div>
+					<div>
+						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							Rating
+						</div>
+						<div>
+							{calculatedRating !== null ? (
+								<OngekiRatingColors rating={calculatedRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
+							) : (
+								<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
+							)}
+						</div>
+					</div>
 				</div>
 			</div>
 
-			<Separator />
-			<div className="text-muted-foreground flex flex-col gap-2 text-xs font-medium md:flex-row md:items-center md:justify-between">
-				<div className="flex flex-wrap items-center gap-1.5">
+			{/* Achievement Badges */}
+			<div className="flex items-end justify-between gap-2 mb-2">
+				<OngekiAchievementBadges
+					isFullCombo={score.isFullCombo ?? 0}
+					isAllBreak={score.isAllBreak ?? 0}
+					isFullBell={score.isFullBell ?? 0}
+					techScore={score.techScore ?? 0}
+				/>
+				<PlatinumStars count={score.platinumScoreStar ?? 0} />
+			</div>
+
+			<Separator className="my-1.5" />
+			{/* Footer */}
+			<div className="flex flex-col gap-1.5 min-w-0 w-full">
+				{/* Row 1: Date, Time, and Leaderboard Badge */}
+				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.userPlayDate ? (
 						<>
-							<Badge variant="secondary" className="h-6 rounded-sm whitespace-nowrap">
+							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 								{formatOngekiScorePlaylogDate(score.userPlayDate).date}
 							</Badge>
-							<Badge variant="secondary" className="h-6 rounded-sm whitespace-nowrap">
+							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 								{formatOngekiScorePlaylogDate(score.userPlayDate).time}
 							</Badge>
 						</>
 					) : (
-						<span>—</span>
+						<span className="text-muted-foreground text-xs flex-shrink-0">—</span>
 					)}
+					<Badge
+						variant="secondary"
+						className="hover:bg-muted/70 h-5 cursor-pointer rounded-md px-1 transition-colors flex-shrink-0"
+						onClick={() => setIsDialogOpen(true)}
+					>
+						<Medal className="h-3.5 w-3.5" />
+					</Badge>
 				</div>
-				<div className="flex flex-wrap items-center gap-2 md:justify-end">
+				{/* Row 2: New Records */}
+				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.isTechNewRecord === 1 && (
 						<Badge
 							variant="secondary"
-							className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase"
+							className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap"
 						>
 							New Score Record
 						</Badge>
@@ -212,23 +235,19 @@ export function OngekiScoreInfoCard({
 					{score.isBattleNewRecord === 1 && (
 						<Badge
 							variant="secondary"
-							className="h-6 rounded-sm px-2 text-[10px] font-bold whitespace-nowrap uppercase"
+							className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap"
 						>
 							New Battle Record
 						</Badge>
 					)}
+				</div>
+				{/* Row 3: Version Logo */}
+				<div className="flex items-center gap-1.5 flex-wrap">
 					<VersionLogoBadge
 						logoUrl={songVersionLogo}
 						tooltip="Version the song originated in"
 						alt={`Song version ${score.songVersion ?? "unknown"}`}
 					/>
-					<Badge
-						variant="secondary"
-						className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"
-						onClick={() => setIsDialogOpen(true)}
-					>
-						<Medal className="h-4 w-4" />
-					</Badge>
 				</div>
 			</div>
 

@@ -8,7 +8,6 @@ import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
-import { Skeleton } from "@/app/shared/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { ChunithmPlaylog } from "@/app/shared/types"
 import { cn } from "@/app/shared/utils"
@@ -39,8 +38,8 @@ const VersionLogoBadge = memo(function VersionLogoBadge({ logoUrl, tooltip, alt 
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<Badge variant="secondary" className="h-6 rounded-sm p-1">
-					<img src={logoUrl} alt={alt} className="max-h-5 w-auto object-contain" />
+				<Badge variant="secondary" className="h-5 rounded-sm p-0.5">
+					<img src={logoUrl} alt={alt} className="max-h-4 w-auto object-contain" />
 				</Badge>
 			</TooltipTrigger>
 			<TooltipContent>
@@ -89,26 +88,33 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 	return (
 		<div
 			className={cn(
-				"bg-card border-border flex h-full flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md",
+				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md",
 				className
 			)}
 		>
-			<div className="flex items-start justify-between gap-3">
-				<div className="flex min-w-0 flex-1 items-start gap-3">
+			{/* Top Section: Image, Title, Score */}
+			<div className="flex items-start gap-3 mb-2">
+				{/* Album Art */}
+				<div className="flex-shrink-0">
 					<CardImage
 						src={`${CDN}/chunithm/jacket/${score.jacketPath}`}
 						alt={score.title ?? ""}
 						width={64}
 						height={64}
+						className="w-16 h-16 rounded-md"
 					/>
-					<div className="min-w-0 flex-1">
-						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
-							{score.title}
-						</div>
+				</div>
+
+				{/* Title and Info */}
+				<div className="flex-1 min-w-0 flex flex-col gap-1.5">
+					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
+						{score.title}
+					</h3>
+					<div className="flex items-center gap-2">
 						<Badge
 							variant="outline"
 							className={cn(
-								"flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold",
+								"inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold",
 								levelColorBadge ? levelColorBadge(score.chartId ?? undefined) : chunithmBadgeColors(score.chartId ?? 0)
 							)}
 						>
@@ -127,79 +133,96 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 					</div>
 				</div>
 
-				<div className="flex flex-shrink-0 flex-col items-end gap-2">
-					<div className="flex flex-col items-end">
-						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Score</span>
+				{/* Score and Rating */}
+				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+					<div>
+						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							Score
+						</div>
 						<div className="flex items-baseline gap-1.5">
-							<span className="text-foreground text-base font-medium tabular-nums">
+							<span className="text-foreground text-lg font-bold tabular-nums">
 								{score.score?.toLocaleString() ?? "-"}
 							</span>
-							<span className="text-foreground text-sm font-medium">{getChunithmGrade(score.score ?? 0)}</span>
-						</div>
-						<div className="mt-1 h-6">
-							{score.skillName ? (
-								<Badge
-									variant="secondary"
-									className="h-6 max-w-full overflow-hidden rounded-sm px-2 text-ellipsis whitespace-nowrap"
-								>
-									{score.skillName}
-								</Badge>
-							) : (
-								<Skeleton className="h-6 w-16 rounded-sm" />
-							)}
+							<span className="text-foreground text-xs font-semibold">{getChunithmGrade(score.score ?? 0)}</span>
 						</div>
 					</div>
-					<div className="flex flex-col items-end">
-						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Player Rating</span>
-						<div className="mt-0.5">
+					<div>
+						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							Rating
+						</div>
+						<div>
 							{ratingValue > 0 ? (
 								(version || scoreVersionId) ? (
 									<ChunithmRatingColors rating={ratingValue} version={version || scoreVersionId} />
 								) : (
-									<span className="text-foreground text-sm font-medium">{ratingValue.toFixed(2)}</span>
+									<span className="text-foreground text-sm font-semibold">{ratingValue.toFixed(2)}</span>
 								)
 							) : (
-								<span className="text-foreground text-sm font-medium">-</span>
+								<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
 							)}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div className="flex items-center">
-				<ChunithmAchievementBadges
-					isFullCombo={score.isFullCombo ?? 0}
-					isAllJustice={score.isAllJustice ?? 0}
-					isClear={score.isClear ?? 0}
-					fullChainKind={score.fullChainKind ?? 0}
-					score={score.score ?? 0}
-					skillId={score.skillId ?? 0}
-				/>
+			{/* Achievement Badges */}
+			<div className="flex flex-col gap-2 mb-2">
+				<div className="flex items-center gap-2">
+					<ChunithmAchievementBadges
+						isFullCombo={score.isFullCombo ?? 0}
+						isAllJustice={score.isAllJustice ?? 0}
+						isClear={score.isClear ?? 0}
+						fullChainKind={score.fullChainKind ?? 0}
+						score={score.score ?? 0}
+						skillId={score.skillId ?? 0}
+					/>
+				</div>
+				{score.skillName && (
+					<Badge
+						variant="secondary"
+						className="h-5 rounded-md px-2 text-xs w-fit"
+					>
+						{score.skillName}
+					</Badge>
+				)}
 			</div>
 
-			<Separator />
-			<div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-2 text-xs font-medium">
-				<div className="flex flex-wrap items-center gap-2">
+			<Separator className="my-1.5" />
+
+			{/* Footer */}
+			<div className="flex flex-col gap-1.5 min-w-0 w-full">
+				{/* Row 1: Date, Time, and Leaderboard Badge */}
+				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.userPlayDate ? (
 						<>
-							<Badge variant="secondary" className="h-6 rounded-sm">
+							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 								{formatSqlDateToLocalParts(score.userPlayDate).date}
 							</Badge>
-							<Badge variant="secondary" className="h-6 rounded-sm">
+							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 								{formatSqlDateToLocalParts(score.userPlayDate).time}
 							</Badge>
 						</>
 					) : (
-						"—"
+						<span className="text-muted-foreground text-xs flex-shrink-0">—</span>
 					)}
+					<Badge
+						variant="secondary"
+						className="hover:bg-muted/70 h-5 cursor-pointer rounded-md px-1 transition-colors flex-shrink-0"
+						onClick={() => setIsDialogOpen(true)}
+					>
+						<Medal className="h-3.5 w-3.5" />
+					</Badge>
 				</div>
-				<div className="flex-1" />
-				<div className="flex flex-wrap items-center justify-end gap-1.5">
+				{/* Row 2: New Record */}
+				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.isNewRecord === 1 && (
-						<Badge variant="secondary" className="h-6 rounded-sm font-bold uppercase">
+						<Badge variant="secondary" className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap">
 							New Record
 						</Badge>
 					)}
+				</div>
+				{/* Row 3: Version Logos */}
+				<div className="flex items-center gap-1.5 flex-wrap">
 					<VersionLogoBadge
 						logoUrl={scoreVersionLogo}
 						tooltip="Version the score was set in"
@@ -210,13 +233,6 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 						tooltip="Version the song originated in"
 						alt={`Song version ${score.songVersion ?? "unknown"}`}
 					/>
-					<Badge
-						variant="secondary"
-						className="hover:bg-muted/70 h-6 cursor-pointer rounded-sm px-1.5 transition-colors"
-						onClick={() => setIsDialogOpen(true)}
-					>
-						<Medal className="h-4 w-4" />
-					</Badge>
 				</div>
 			</div>
 
@@ -245,4 +261,5 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 })
 
 export default ChunithmScoreInfoCard
+
 

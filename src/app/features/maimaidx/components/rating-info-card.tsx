@@ -32,17 +32,19 @@ export function MaimaiRatingInfoCard({ score, levelColorBadge, className = "" }:
 
 	return (
 		<div
-			className={`bg-card border-border flex h-full flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md ${className}`}
+			className={`bg-card border-border flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md ${className}`}
 		>
-			<div className="flex items-start justify-between gap-3">
-				<div className="flex min-w-0 flex-1 items-start gap-3">
-					<div className="relative h-16 w-16 flex-shrink-0">
-						{!imageLoaded && <Skeleton className="absolute inset-0 rounded-sm" />}
+			{/* Top Section: Image, Title, Score */}
+			<div className="flex items-start gap-3 mb-2">
+				{/* Album Art */}
+				<div className="flex-shrink-0">
+					<div className="relative h-16 w-16">
+						{!imageLoaded && <Skeleton className="absolute inset-0 rounded-md" />}
 						<img
 							width={72}
 							height={72}
 							src={`${CDN}/maimaidx/jackets/${getJacketId(rating.musicId)}.jpg`}
-							className="h-16 w-16 flex-shrink-0 rounded-sm object-cover"
+							className="h-16 w-16 rounded-md object-cover"
 							alt={rating.title ?? ""}
 							onLoad={onImageLoad}
 							style={{ display: imageLoaded ? "block" : "none" }}
@@ -52,47 +54,57 @@ export function MaimaiRatingInfoCard({ score, levelColorBadge, className = "" }:
 							}}
 						/>
 					</div>
-					<div className="min-w-0 flex-1">
-						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
-							{rating.title}
-						</div>
+				</div>
+
+				{/* Title and Info */}
+				<div className="flex-1 min-w-0 flex flex-col gap-1.5">
+					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
+						{rating.title}
+					</h3>
+					<div className="flex items-center gap-2">
 						<span
-							className={`inline-block rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${levelColorBadge ? levelColorBadge(rating.level ?? undefined) : maimaiDxBadgeColors(rating.level ?? 0)}`}
+							className={`inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold ${levelColorBadge ? levelColorBadge(rating.level ?? undefined) : maimaiDxBadgeColors(rating.level ?? 0)}`}
 						>
 							{formatLevel(rating.difficulty)}
 						</span>
 					</div>
 				</div>
 
-				<div className="flex flex-shrink-0 flex-col items-end gap-1.5">
-					<div className="flex flex-col items-end">
-						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Achievement</span>
-						<span className="text-foreground text-base font-medium tabular-nums">
+				{/* Score and Rating */}
+				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+					<div>
+						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							Achievement
+						</div>
+						<span className="text-foreground text-lg font-bold tabular-nums">
 							{rating.achievement ? formatMaimaiDxAchievement(rating.achievement) : "-"}
 						</span>
 					</div>
-					<div className="flex flex-col items-end">
-						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Rating</span>
-						<span className="text-foreground text-sm font-bold tabular-nums">{rating.rating}</span>
+					<div>
+						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							Rating
+						</div>
+						<span className="text-foreground text-base font-semibold tabular-nums">{rating.rating}</span>
 					</div>
 				</div>
 			</div>
 
-			<div className="flex items-center">
+			<div className="flex items-center gap-2 mb-2">
 				<MaimaiAchievementBadges comboStatus={rating.comboStatus ?? 0} syncStatus={rating.syncStatus ?? 0} />
 			</div>
 
 			{rating.userPlayDate && (
 				<>
-					<Separator />
-					<div className="text-muted-foreground flex flex-col gap-2 pt-2.5 text-xs font-medium md:flex-row md:items-center md:justify-between md:pt-0">
-						<div className="flex items-center gap-2">
-							<Badge variant="secondary" className="h-6 rounded-sm">
+					<Separator className="my-1.5" />
+					<div className="flex flex-col gap-1.5 min-w-0 w-full">
+						{/* Row 1: Date and Time */}
+						<div className="flex items-center gap-1.5 flex-wrap">
+							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 								{DateTime.fromSQL(rating.userPlayDate ?? "", { zone: "Asia/Tokyo" })
 									.toLocal()
 									.toLocaleString(DateTime.DATE_SHORT)}
 							</Badge>
-							<Badge variant="secondary" className="h-6 rounded-sm">
+							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 								{DateTime.fromSQL(rating.userPlayDate, { zone: "Asia/Tokyo" })
 									.toLocal()
 									.toLocaleString(DateTime.TIME_SIMPLE)}

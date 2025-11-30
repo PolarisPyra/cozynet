@@ -25,7 +25,7 @@ export const FilterArea = ({ className, children, ...props }: LayoutProps) => (
 )
 
 export const CardGrid = ({ className, children, ...props }: LayoutProps) => (
-	<div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4", className)} {...props}>
+	<div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4", className)} {...props}>
 		{children}
 	</div>
 )

@@ -1,7 +1,7 @@
-import { Calendar, Clock } from "lucide-react"
 import { DateTime } from "luxon"
 
 import { MaimaiAchievementBadges } from "@/app/features/maimaidx/components/achievement-badges"
+import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
 import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
@@ -22,47 +22,58 @@ export function MaimaiDxScoreInfoCard({ score, className = "" }: MaimaiDxScoreIn
 
 	return (
 		<div
-			className={`bg-card border-border flex h-full flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md ${className}`}
+			className={`bg-card border-border flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md ${className}`}
 		>
-			<div className="flex items-start justify-between gap-3">
-				<div className="flex min-w-0 flex-1 items-start gap-3">
-					<div className="relative h-16 w-16 flex-shrink-0">
-						{!imageLoaded && <Skeleton className="absolute inset-0 rounded-sm" />}
+			{/* Top Section: Image, Title, Score */}
+			<div className="flex items-start gap-3 mb-2">
+				{/* Album Art */}
+				<div className="flex-shrink-0">
+					<div className="relative h-16 w-16">
+						{!imageLoaded && <Skeleton className="absolute inset-0 rounded-md" />}
 						<img
 							width={64}
 							height={64}
 							src={`${CDN}/maimaidx/jackets/${score.musicId}.jpg`}
-							className="h-16 w-16 rounded-sm object-cover"
+							className="h-16 w-16 rounded-md object-cover"
 							onLoad={onImageLoad}
 							style={{ display: imageLoaded ? "block" : "none" }}
 						/>
 					</div>
-					<div className="min-w-0 flex-1">
-						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
-							{score.title}
-						</div>
+				</div>
+
+				{/* Title and Info */}
+				<div className="flex-1 min-w-0 flex flex-col gap-1.5">
+					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
+						{score.title}
+					</h3>
+					<div className="flex items-center gap-2">
 						<span
-							className={`inline-block rounded-sm px-2.5 py-1 text-xs font-bold ${maimaiDxBadgeColors(score.level ?? 0)}`}
+							className={`inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold ${maimaiDxBadgeColors(score.level ?? 0)}`}
 						>
 							{formatLevel(score.difficulty)}
 						</span>
 					</div>
 				</div>
 
-				<div className="flex flex-shrink-0 flex-col items-end gap-1.5">
-					<div className="flex flex-col items-end">
-						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Achievement</span>
+				{/* Score and Rating */}
+				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+					<div>
+						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							Achievement
+						</div>
 						<div className="flex items-baseline gap-1.5">
-							<span className="text-foreground text-base font-medium tabular-nums">
+							<span className="text-foreground text-lg font-bold tabular-nums">
 								{((score.achievement ?? 0) / 10000).toFixed(4)}%
 							</span>
-							<span className="text-foreground text-sm font-medium">{grade}</span>
+							<span className="text-foreground text-xs font-semibold">{grade}</span>
 						</div>
 					</div>
 					{score.deluxscore !== null && score.deluxscore !== undefined && (
-						<div className="flex flex-col items-end">
-							<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">DX Score</span>
-							<span className="text-foreground text-base font-medium tabular-nums">
+						<div>
+							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+								DX Score
+							</div>
+							<span className="text-foreground text-base font-semibold tabular-nums">
 								{(score.deluxscore ?? 0).toLocaleString()}
 							</span>
 						</div>
@@ -70,29 +81,27 @@ export function MaimaiDxScoreInfoCard({ score, className = "" }: MaimaiDxScoreIn
 				</div>
 			</div>
 
-			<div className="flex items-center">
+			{/* Achievement Badges */}
+			<div className="flex items-center gap-2 mb-2">
 				<MaimaiAchievementBadges comboStatus={score.comboStatus ?? 0} syncStatus={score.syncStatus ?? 0} />
 			</div>
 
 			{score.userPlayDate && (
 				<>
-					<Separator />
-					<div className="text-muted-foreground flex items-center gap-3 pt-2.5 text-xs font-medium">
-						<div className="flex items-center gap-1.5">
-							<Calendar className="h-3.5 w-3.5" strokeWidth={2} />
-							<span className="leading-none">
+					<Separator className="my-1.5" />
+					<div className="flex flex-col gap-1.5 min-w-0 w-full">
+						{/* Row 1: Date and Time */}
+						<div className="flex items-center gap-1.5 flex-wrap">
+							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" })
 									.toLocal()
 									.toLocaleString(DateTime.DATE_SHORT)}
-							</span>
-						</div>
-						<div className="flex items-center gap-1.5">
-							<Clock className="h-3.5 w-3.5" strokeWidth={2} />
-							<span className="leading-none">
+							</Badge>
+							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 								{DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" })
 									.toLocal()
 									.toLocaleString(DateTime.TIME_SIMPLE)}
-							</span>
+							</Badge>
 						</div>
 					</div>
 				</>

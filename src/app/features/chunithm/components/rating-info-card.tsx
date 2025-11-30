@@ -34,28 +34,34 @@ export const ChunithmRatingInfoCard = function ({
 
 	return (
 		<div
-			className={`bg-card border-border relative flex flex-col gap-3 rounded-sm border p-4 shadow-sm transition-shadow hover:shadow-md ${className}`}
+			className={`bg-card border-border relative flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md ${className}`}
 		>
-			<div className="flex items-start justify-between gap-3">
-				<div className="flex min-w-0 flex-1 items-start gap-3">
-					<div className="relative h-16 w-16 flex-shrink-0">
-						{!imageLoaded && <Skeleton className="absolute inset-0 rounded-sm" />}
+			{/* Top Section: Image, Title, Score */}
+			<div className="flex items-start gap-3 mb-2">
+				{/* Album Art */}
+				<div className="flex-shrink-0">
+					<div className="relative h-16 w-16">
+						{!imageLoaded && <Skeleton className="absolute inset-0 rounded-md" />}
 						<img
 							width={72}
 							height={72}
 							src={`${CDN}/chunithm/jacket/${rating.jacketPath}`}
-							className="h-16 w-16 flex-shrink-0 rounded-sm object-cover"
+							className="h-16 w-16 rounded-md object-cover"
 							alt={rating.title ?? ""}
 							onLoad={onImageLoad}
 							style={{ display: imageLoaded ? "block" : "none" }}
 						/>
 					</div>
-					<div className="min-w-0 flex-1">
-						<div className="text-foreground mb-2 text-xs leading-tight font-bold whitespace-nowrap sm:text-sm md:text-base">
-							{rating.title}
-						</div>
+				</div>
+
+				{/* Title and Info */}
+				<div className="flex-1 min-w-0 flex flex-col gap-1.5">
+					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
+						{rating.title}
+					</h3>
+					<div className="flex items-center gap-2">
 						<span
-							className={`inline-flex min-h-[1.5rem] items-center rounded-sm border-2 px-2.5 py-1 text-xs font-bold ${levelColorBadge ? levelColorBadge(rating.chartId ?? undefined) : "text-primary-foreground bg-primary"}`}
+							className={`inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold ${levelColorBadge ? levelColorBadge(rating.chartId ?? undefined) : "text-primary-foreground bg-primary"}`}
 						>
 							{rating.level == null || !Number.isFinite(rating.level) ? (
 								"?"
@@ -72,21 +78,26 @@ export const ChunithmRatingInfoCard = function ({
 					</div>
 				</div>
 
-				<div className="flex flex-shrink-0 flex-col items-end gap-1.5">
+				{/* Score and Rating */}
+				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
 					{!isPotential && (
-						<div className="flex flex-col items-end">
-							<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Score</span>
+						<div>
+							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+								Score
+							</div>
 							<div className="flex items-baseline gap-1.5">
-								<span className="text-foreground text-base font-medium tabular-nums">
+								<span className="text-foreground text-lg font-bold tabular-nums">
 									{score.score?.toLocaleString() ?? "-"}
 								</span>
-								<span className="text-foreground text-sm font-medium">{getChunithmGrade(score.score ?? 0)}</span>
+								<span className="text-foreground text-xs font-semibold">{getChunithmGrade(score.score ?? 0)}</span>
 							</div>
 						</div>
 					)}
-					<div className="flex flex-col items-end">
-						<span className="text-foreground text-[10px] font-medium tracking-wide uppercase">Rating</span>
-						<div className="mt-0.5">
+					<div>
+						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							Rating
+						</div>
+						<div>
 							<ChunithmRatingColors rating={calculatedRating} version={rating.version} />
 						</div>
 					</div>
@@ -94,7 +105,7 @@ export const ChunithmRatingInfoCard = function ({
 			</div>
 
 			{!isPotential && (
-				<div className="flex items-center">
+				<div className="flex items-center gap-2 mb-2">
 					<ChunithmAchievementBadges
 						isFullCombo={rating.isFullCombo ?? 0}
 						isAllJustice={rating.isAllJustice ?? 0}
@@ -108,34 +119,39 @@ export const ChunithmRatingInfoCard = function ({
 
 			{(rating.userPlayDate || logoUrl || (!isPotential && rating.isNewRecord === 1)) && (
 				<>
-					<Separator />
-					<div className="text-muted-foreground flex flex-col gap-2 pt-2.5 text-xs font-medium md:flex-row md:items-center md:justify-between md:gap-0 md:pt-0">
+					<Separator className="my-1.5" />
+					<div className="flex flex-col gap-1.5 min-w-0 w-full">
+						{/* Row 1: Date and Time */}
 						{!isPotential && rating.userPlayDate && (
-							<div className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
-								<Badge variant="secondary" className="h-6 rounded-sm">
+							<div className="flex items-center gap-1.5 flex-wrap">
+								<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 									{DateTime.fromSQL(rating.userPlayDate ?? "", { zone: "Asia/Tokyo" })
 										.toLocal()
 										.toLocaleString(DateTime.DATE_SHORT)}
 								</Badge>
-								<Badge variant="secondary" className="h-6 rounded-sm">
+								<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
 									{DateTime.fromSQL(rating.userPlayDate, { zone: "Asia/Tokyo" })
 										.toLocal()
 										.toLocaleString(DateTime.TIME_SIMPLE)}
 								</Badge>
 							</div>
 						)}
-						<div className="flex flex-wrap items-center gap-2 md:ml-auto">
-							{!isPotential && rating.isNewRecord === 1 && (
-								<Badge variant="secondary" className="h-6 rounded-sm font-bold uppercase">
+						{/* Row 2: New Record */}
+						{!isPotential && rating.isNewRecord === 1 && (
+							<div className="flex items-center gap-1.5 flex-wrap">
+								<Badge variant="secondary" className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap">
 									New Record
 								</Badge>
-							)}
-							{logoUrl && (
-								<Badge variant="secondary" className="h-6 rounded-sm p-1">
-									<img src={logoUrl} alt={`Version ${rating.version}`} className="max-h-5 w-auto object-contain" />
+							</div>
+						)}
+						{/* Row 3: Version Logo */}
+						{logoUrl && (
+							<div className="flex items-center gap-1.5 flex-wrap">
+								<Badge variant="secondary" className="h-5 rounded-sm p-0.5 flex-shrink-0">
+									<img src={logoUrl} alt={`Version ${rating.version}`} className="max-h-4 w-auto object-contain" />
 								</Badge>
-							)}
-						</div>
+							</div>
+						)}
 					</div>
 				</>
 			)}
