@@ -148,7 +148,7 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 					</div>
 					<div>
 						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
-							Rating
+							Player Rating
 						</div>
 						<div>
 							{ratingValue > 0 ? (
