@@ -130,9 +130,10 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 						</div>
 						<div>
 							{calculatedRating !== null ? (
+								// Individual song scores always use old tier thresholds (16.0 for rainbow) regardless of version
 								<OngekiRatingColors
 									rating={calculatedRating}
-									version={rating.version ?? 0}
+									version={0}
 									decimals={isRefresh ? 3 : 2}
 								/>
 							) : (

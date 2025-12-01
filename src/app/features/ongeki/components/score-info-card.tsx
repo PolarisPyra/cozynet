@@ -177,7 +177,8 @@ export function OngekiScoreInfoCard({
 						</div>
 						<div>
 							{calculatedRating !== null ? (
-								<OngekiRatingColors rating={calculatedRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
+								// Individual song scores always use old tier thresholds (16.0 for rainbow) regardless of version
+								<OngekiRatingColors rating={calculatedRating} version={0} decimals={isRefresh ? 3 : 2} />
 							) : (
 								<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
 							)}
@@ -272,7 +273,8 @@ export function OngekiScoreInfoCard({
 								entry.isFullBell ?? 0
 							) / 1000
 						: calculateOngekiRating(level, entry.score) / 100
-					return <OngekiRatingColors rating={entryRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
+					// Individual song scores always use old tier thresholds (16.0 for rainbow) regardless of version
+					return <OngekiRatingColors rating={entryRating} version={0} decimals={isRefresh ? 3 : 2} />
 				}}
 			/>
 		</div>
