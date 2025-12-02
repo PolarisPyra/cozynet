@@ -1,12 +1,18 @@
+import { useMemo } from "react"
+
 import { OngekiAchievementBadges } from "@/app/features/ongeki/components/achievement-badges"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
-import { useOngekiRatingInfo } from "@/app/features/ongeki/hooks/use-rating-info"
 import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
 import { CDN } from "@/app/shared/utils/constants"
 import { OngekiRating } from "@/app/shared/types"
-import { formatOngekiScorePlaylogDate } from "@/app/shared/utils/ongeki"
+import {
+	calculateOngekiGekForceRating,
+	calculateOngekiRating,
+	calculateOngekiPlatinumRating,
+	formatOngekiScorePlaylogDate
+} from "@/app/shared/utils/ongeki"
 
 import { OngekiRatingColors } from "./rating-colors"
 
@@ -49,15 +55,29 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 	const { score, levelColorBadge, className = "", isRecommend = false, ongekiVersion, activeTab } = props
 	const rating = score
 
-	const { calculatedRating, isRefresh } = useOngekiRatingInfo({
-		playerRating: undefined,
-		techScore: rating.techScoreMax,
-		level: rating.level,
-		isFullCombo: rating.isFullCombo,
-		isAllBreak: rating.isAllBreake,
-		isFullBell: rating.isFullBell,
-		ongekiVersion
-	})
+	const isRefresh = (ongekiVersion ?? 8) >= 8
+
+	const calculatedRating = useMemo<number | null>(() => {
+		if (rating.techScoreMax != null && rating.level != null) {
+			return isRefresh
+				? calculateOngekiGekForceRating(
+						rating.level,
+						rating.techScoreMax,
+						rating.isFullCombo ?? 0,
+						rating.isAllBreake ?? 0,
+						rating.isFullBell ?? 0
+					) / 1000
+				: calculateOngekiRating(rating.level, rating.techScoreMax) / 100
+		}
+		return null
+	}, [rating.techScoreMax, rating.level, rating.isFullCombo, rating.isAllBreake, rating.isFullBell, isRefresh])
+
+	const calculatedPlatinumRating = useMemo<number | null>(() => {
+		if (rating.level != null && rating.platinumScoreStar != null) {
+			return calculateOngekiPlatinumRating(rating.level, rating.platinumScoreStar) / 1000
+		}
+		return null
+	}, [rating.level, rating.platinumScoreStar])
 
 	const formatLevel = (level?: number | null) => {
 		if (level == null) return "?"
@@ -133,7 +153,13 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 								P Rating
 							</div>
 							<div>
-								<span className="text-foreground text-lg font-bold tabular-nums">0.123</span>
+								{calculatedPlatinumRating !== null ? (
+									<span className="text-foreground text-lg font-bold tabular-nums">
+										{calculatedPlatinumRating.toFixed(3)}
+									</span>
+								) : (
+									<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
+								)}
 							</div>
 						</div>
 					) : (

@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { Star } from "lucide-react"
 import { DateTime } from "luxon"
 
@@ -21,7 +22,14 @@ export const ChunithmRatingInfoCard = function ({
 }: ChunithmRatingInfoCardProps) {
 	const { imageLoaded, onImageLoad } = useImageLoading()
 	const rating = score
-	const calculatedRating = calculateChunithmRating(rating.level ?? 0, rating.score ?? 0) / 100
+
+	const calculatedRating = useMemo<number | null>(() => {
+		if (rating.level != null && rating.score != null) {
+			return calculateChunithmRating(rating.level, rating.score) / 100
+		}
+		return null
+	}, [rating.level, rating.score])
+
 	const logoUrl = getChunithmLogo.getLogo(rating.version)
 	const isWorldsEnd = rating.chartId === 5
 	const starCount = levelToStars(rating.level)
@@ -98,7 +106,11 @@ export const ChunithmRatingInfoCard = function ({
 							Rating
 						</div>
 						<div>
-							<ChunithmRatingColors rating={calculatedRating} version={rating.version} />
+							{calculatedRating !== null ? (
+								<ChunithmRatingColors rating={calculatedRating} version={rating.version} />
+							) : (
+								<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
+							)}
 						</div>
 					</div>
 				</div>

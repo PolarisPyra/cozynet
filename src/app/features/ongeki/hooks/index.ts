@@ -10,7 +10,6 @@ export {
 	useUserNewRatingBaseNextBestList
 } from "./use-new-rating"
 export {
-	useHighestRating,
 	usePlayerRating,
 	useUserRatingBaseHotList,
 	useUserRatingBaseList,

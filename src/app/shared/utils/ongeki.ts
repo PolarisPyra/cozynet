@@ -173,6 +173,16 @@ export const calculateOngekiGekForceRating = (
 }
 
 /**
+ * Calculates Platinum Rating (P Rating) from platinum stars and level.
+ * Formula: platinumStars * level^2
+ */
+export const calculateOngekiPlatinumRating = (level: number, platinumStars: number): number => {
+	if (level == null || platinumStars == null) return 0
+	const clampedStars = Math.max(0, Math.min(platinumStars, 6))
+	return Math.floor(clampedStars * Math.pow(level, 2))
+}
+
+/**
  * PURE HELPER FUNCTIONS
  * Extracted calculation sub-steps for testability
  */

@@ -91,20 +91,3 @@ export const usePlayerRating = (enabled = true) => {
 	})
 }
 
-/**
- * Fetches and returns the player's highest achieved rating.
- */
-export const useHighestRating = (enabled = true) => {
-	return useQuery({
-		queryKey: ["highestRating"],
-		queryFn: async () => {
-			const response = await api.ongeki.rating.highestRating.$get()
-			if (!response.ok) {
-				throw new Error("Failed to fetch highest rating")
-			}
-
-			return await response.json()
-		},
-		enabled
-	})
-}
