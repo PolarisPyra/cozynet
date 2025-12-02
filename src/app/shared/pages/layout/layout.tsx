@@ -19,7 +19,7 @@ export const Body = ({ className, children, ...props }: LayoutProps) => (
 )
 
 export const FilterArea = ({ className, children, ...props }: LayoutProps) => (
-	<div className={cn("border-border flex-shrink-0 rounded-sm px-4 py-3 backdrop-blur-sm", className)} {...props}>
+	<div className={cn("border-border flex-shrink-0 rounded-sm py-3 backdrop-blur-sm", className)} {...props}>
 		{children}
 	</div>
 )
