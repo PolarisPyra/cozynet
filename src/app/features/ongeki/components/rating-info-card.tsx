@@ -41,11 +41,12 @@ export type OngekiRatingInfoCardProps = {
 	className?: string
 	isRecommend?: boolean
 	ongekiVersion?: number
+	activeTab?: string
 }
 
 export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 	const { imageLoaded, onImageLoad } = useImageLoading()
-	const { score, levelColorBadge, className = "", isRecommend = false, ongekiVersion } = props
+	const { score, levelColorBadge, className = "", isRecommend = false, ongekiVersion, activeTab } = props
 	const rating = score
 
 	const { calculatedRating, isRefresh } = useOngekiRatingInfo({
@@ -62,6 +63,8 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 		if (level == null) return "?"
 		return Number.isFinite(level) ? level.toFixed(1) : "?"
 	}
+
+	const isPScoreMode = activeTab === "pscore"
 
 	return (
 		<div
@@ -101,7 +104,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 
 				{/* Score and Rating */}
 				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
-					{!isRecommend && (
+					{!isRecommend && !isPScoreMode && (
 						<div>
 							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
 								Tech Score
@@ -124,23 +127,34 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 							)}
 						</div>
 					)}
-					<div>
-						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
-							Rating
-						</div>
+					{isPScoreMode ? (
 						<div>
-							{calculatedRating !== null ? (
-								// Individual song scores always use old tier thresholds (16.0 for rainbow) regardless of version
-								<OngekiRatingColors
-									rating={calculatedRating}
-									version={0}
-									decimals={isRefresh ? 3 : 2}
-								/>
-							) : (
-								<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
-							)}
+							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+								P Rating
+							</div>
+							<div>
+								<span className="text-foreground text-lg font-bold tabular-nums">0.123</span>
+							</div>
 						</div>
-					</div>
+					) : (
+						<div>
+							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+								Rating
+							</div>
+							<div>
+								{calculatedRating !== null ? (
+									// Individual song scores always use old tier thresholds (16.0 for rainbow) regardless of version
+									<OngekiRatingColors
+										rating={calculatedRating}
+										version={0}
+										decimals={isRefresh ? 3 : 2}
+									/>
+								) : (
+									<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
+								)}
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 

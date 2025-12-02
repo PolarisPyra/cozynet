@@ -26,7 +26,7 @@ export function OngekiRatingFrames() {
 	const isLoading = getActiveLoading(activeTab)
 
 	const filtered = useFiltering(data || [], filters, searchQuery, filterValues)
-	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
 
 	if (!version) {
 		return (
@@ -88,13 +88,14 @@ export function OngekiRatingFrames() {
 							levelColorBadge={ongekiBadgeColors}
 							ongekiVersion={version}
 							isRecommend={filterValues.category === "next"}
+							activeTab={activeTab}
 						/>
 					))}
 				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)
