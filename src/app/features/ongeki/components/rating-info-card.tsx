@@ -161,6 +161,18 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 									<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
 								)}
 							</div>
+							{rating.platinumScoreMax != null && rating.platinumScoreStar != null && (
+								<div className="mt-2">
+									<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+										P-Score
+									</div>
+									<div className="flex flex-col items-end gap-0.5">
+										<span className="text-foreground text-sm font-bold tabular-nums">
+											{rating.platinumScoreMax?.toLocaleString() ?? "-"}
+										</span>
+									</div>
+								</div>
+							)}
 						</div>
 					) : (
 						<div>
