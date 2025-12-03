@@ -150,7 +150,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 					{isPScoreMode ? (
 						<div>
 							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
-								P Rating
+								P-Rating
 							</div>
 							<div>
 								{calculatedPlatinumRating !== null ? (
