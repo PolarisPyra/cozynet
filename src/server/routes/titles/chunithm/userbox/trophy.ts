@@ -45,7 +45,7 @@ const routes = new Hono()
 						ELSE null
 					END as slot,
 					FALSE as locked
-                FROM cozynet_static_trophy dst
+                FROM cozynet_static_chuni_trophy dst
                 INNER JOIN chuni_profile_data cpd ON cpd.user = ? AND (
 						cpd.trophyId = dst.trophyId
 					OR  cpd.trophyIdSub1 = dst.trophyId
@@ -183,7 +183,7 @@ const routes = new Hono()
                             ELSE 0
                         END AS equipped,
                         COUNT(*) OVER() AS total_count
-                    FROM cozynet_static_trophy dst
+                    FROM cozynet_static_chuni_trophy dst
                     LEFT JOIN chuni_item_item cii
                         ON cii.itemId = dst.trophyId
                         AND cii.user = ?

@@ -26,7 +26,7 @@ async function getCurrentMapicon(userId: number, version: number): Promise<Mapic
               ELSE 0
           END AS locked
         FROM chuni_profile_data cpd
-        JOIN cozynet_static_map_icon dsm 
+        JOIN cozynet_static_chuni_map_icon dsm 
             ON dsm.mapIconId = cpd.mapIconId
         LEFT JOIN chuni_item_item cii 
             ON cii.itemId = dsm.mapIconId 
@@ -148,7 +148,7 @@ const routes = new Hono()
 						ELSE 0
 					END AS equipped,
 					COUNT(*) OVER() AS total_count
-				FROM cozynet_static_map_icon dsm
+				FROM cozynet_static_chuni_map_icon dsm
 				LEFT JOIN chuni_item_item cii 
 					ON cii.itemId = dsm.mapIconId 
 				AND cii.user = ?

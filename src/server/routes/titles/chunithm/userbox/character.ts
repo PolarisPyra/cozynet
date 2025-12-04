@@ -28,7 +28,7 @@ async function getCurrentCharacter(userId: number, version: number): Promise<Cha
             END AS locked,
             1 as equipped
         FROM chuni_profile_data cpd
-        JOIN cozynet_static_character dsn
+        JOIN cozynet_static_chuni_character dsn
             ON dsn.characterId = cpd.characterId
             AND dsn.version = ?
         LEFT JOIN chuni_item_character cic
@@ -150,7 +150,7 @@ const routes = new Hono()
                         ELSE 0
                     END AS equipped,
                     COUNT(*) OVER() AS total_count
-                FROM cozynet_static_character dsn
+                FROM cozynet_static_chuni_character dsn
                 LEFT JOIN chuni_item_character cic
                     ON cic.characterId = dsn.characterId
                     AND cic.user = ?

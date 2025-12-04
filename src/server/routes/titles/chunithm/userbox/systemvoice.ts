@@ -36,7 +36,7 @@ async function getCurrentSystemVoice(userId: number, version: number): Promise<S
 				ELSE 1
 			END as locked
 		FROM chuni_profile_data cpd
-		JOIN cozynet_static_system_voice dssv ON cpd.voiceId = dssv.systemVoiceId
+		JOIN cozynet_static_chuni_system_voice dssv ON cpd.voiceId = dssv.systemVoiceId
 		LEFT JOIN chuni_item_item cii ON cii.itemId = dssv.systemVoiceId AND cii.user = cpd.user AND cii.itemKind = 9
 		LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
 		LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
@@ -141,7 +141,7 @@ const routes = new Hono()
 			const [countResult] = await db.execute<({ total: number } & RowDataPacket)[]>(
 				`
 			SELECT COUNT(DISTINCT dssv.systemVoiceId) as total
-			FROM cozynet_static_system_voice dssv
+			FROM cozynet_static_chuni_system_voice dssv
 			LEFT JOIN chuni_item_item cii ON cii.itemId = dssv.systemVoiceId AND cii.user = ? AND cii.itemKind = 9
 			LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
 			LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
@@ -171,7 +171,7 @@ const routes = new Hono()
 					ELSE 1
 				END as sort_current,
 				COUNT(*) OVER() as total_count
-			FROM cozynet_static_system_voice dssv
+			FROM cozynet_static_chuni_system_voice dssv
 			LEFT JOIN chuni_item_item cii ON cii.itemId = dssv.systemVoiceId AND cii.user = ? AND cii.itemKind = 9
 			LEFT JOIN chuni_profile_data cpd ON cpd.user = ? AND cpd.version = ?
 			LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
@@ -220,7 +220,7 @@ const routes = new Hono()
 				// Check if systemvoice exists
 				const [systemvoiceResult] = await db.execute<RowDataPacket[]>(
 					`
-				SELECT systemVoiceId FROM cozynet_static_system_voice WHERE systemVoiceId = ?
+				SELECT systemVoiceId FROM cozynet_static_chuni_system_voice WHERE systemVoiceId = ?
 				`,
 					[id]
 				)
