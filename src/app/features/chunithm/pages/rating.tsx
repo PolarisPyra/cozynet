@@ -12,7 +12,11 @@ import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout
 import type { FilterValues } from "@/app/shared/types"
 import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
 
-export default function ChunithmRatingPage() {
+interface ChunithmRatingPageProps {
+	disablePagination?: boolean
+}
+
+export default function ChunithmRatingPage({ disablePagination = true }: ChunithmRatingPageProps = {}) {
 	const version = useChunithmVersion()
 	const filters = ratingFilters(version || 0)
 	const [searchQuery, setSearchQuery] = useState("")
@@ -24,7 +28,8 @@ export default function ChunithmRatingPage() {
 	const isLoading = getActiveLoading(activeTab)
 
 	const filtered = useFiltering(data || [], filters, searchQuery, filterValues)
-	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+	const pagination = usePagination(filtered, 20, [searchQuery, filterValues])
+	const displayItems = disablePagination ? filtered : pagination.paged
 
 	useEffect(() => {
 		if (version) {
@@ -83,7 +88,7 @@ export default function ChunithmRatingPage() {
 				</FilterArea>
 
 				<CardGrid>
-					{paged.map((rating, idx) => (
+					{displayItems.map((rating, idx) => (
 						<ChunithmRatingInfoCard
 							key={idx}
 							score={rating}
@@ -95,7 +100,9 @@ export default function ChunithmRatingPage() {
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+				{!disablePagination && (
+					<Pagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
+				)}
 			</Body>
 		</Container>
 	)

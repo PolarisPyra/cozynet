@@ -114,8 +114,8 @@ export function OngekiScoreInfoCard({
 	)
 
 	const songVersionLogo = useMemo(() => {
-		return getOngekiLogo.getLogo(score.songVersion)
-	}, [score.songVersion])
+		return getOngekiLogo.getLogo(score.earliest_version)
+	}, [score.earliest_version])
 
 	return (
 		<div
@@ -243,7 +243,7 @@ export function OngekiScoreInfoCard({
 					<VersionLogoBadge
 						logoUrl={songVersionLogo}
 						tooltip="Version the song originated in"
-						alt={`Song version ${score.songVersion ?? "unknown"}`}
+						alt={`Song version ${score.earliest_version ?? "unknown"}`}
 					/>
 				</div>
 			</div>

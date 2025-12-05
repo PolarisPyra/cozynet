@@ -62,7 +62,7 @@ const OngekiProfileRoutes = new Hono()
                     csm.jacketPath,
                     csm.noteCount,
                     csm.artist,
-                    ev.earliest_version as songVersion
+                    ev.earliest_version
                 FROM
                     ongeki_score_playlog csp
                 JOIN ongeki_profile_data d ON csp.user = d.user

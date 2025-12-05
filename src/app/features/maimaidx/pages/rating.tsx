@@ -14,7 +14,11 @@ import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout
 import type { FilterValues } from "@/app/shared/types"
 import { maimaiDxBadgeColors } from "@/app/shared/utils/maimai"
 
-export function MaimaiDxRatingFrames() {
+interface MaimaiDxRatingFramesProps {
+	disablePagination?: boolean
+}
+
+export function MaimaiDxRatingFrames({ disablePagination = true }: MaimaiDxRatingFramesProps = {}) {
 	const version = useMaimaiDxVersion()
 	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(ratingFilters))
@@ -23,7 +27,8 @@ export function MaimaiDxRatingFrames() {
 	const { activeData, isLoading, playerRatingValue, highestRatingValue } = useMaimaiDxRatingData(activeTab)
 
 	const filtered = useFiltering(activeData || [], ratingFilters, searchQuery, filterValues)
-	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+	const pagination = usePagination(filtered, 20, [searchQuery, filterValues])
+	const displayItems = disablePagination ? filtered : pagination.paged
 
 	if (!version) {
 		return (
@@ -78,14 +83,16 @@ export function MaimaiDxRatingFrames() {
 				</FilterArea>
 
 				<CardGrid>
-					{paged.map((rating: any, idx: number) => (
+					{displayItems.map((rating: any, idx: number) => (
 						<MaimaiRatingInfoCard key={idx} score={rating} levelColorBadge={maimaiDxBadgeColors} />
 					))}
 				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+				{!disablePagination && (
+					<Pagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
+				)}
 			</Body>
 		</Container>
 	)

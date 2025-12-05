@@ -21,7 +21,7 @@ const CHUNITHM_LOGOS: Record<number, string> = {
 	[17]: `${CDN}/chunithm/logos/17.webp`, // Verse
 	[18]: `${CDN}/chunithm/logos/18.webp` // XVerse
 }
-// ...existing code...
+
 export const getChunithmLogo = {
 	getLogo(version?: number | null): string | null {
 		if (version === null || version === undefined) return null

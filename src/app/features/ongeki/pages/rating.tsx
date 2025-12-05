@@ -14,7 +14,11 @@ import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout
 import type { FilterValues } from "@/app/shared/types"
 import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
 
-export function OngekiRatingFrames() {
+interface OngekiRatingFramesProps {
+	disablePagination?: boolean
+}
+
+export function OngekiRatingFrames({ disablePagination = true }: OngekiRatingFramesProps = {}) {
 	const version = useOngekiVersion()
 	const filters = ratingFilters(version || 0)
 	const [searchQuery, setSearchQuery] = useState("")
@@ -26,7 +30,8 @@ export function OngekiRatingFrames() {
 	const isLoading = getActiveLoading(activeTab)
 
 	const filtered = useFiltering(data || [], filters, searchQuery, filterValues)
-	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+	const pagination = usePagination(filtered, 20, [searchQuery, filterValues])
+	const displayItems = disablePagination ? filtered : pagination.paged
 
 	if (!version) {
 		return (
@@ -81,7 +86,7 @@ export function OngekiRatingFrames() {
 				</FilterArea>
 
 				<CardGrid>
-					{paged.map((rating: any, idx: number) => (
+					{displayItems.map((rating: any, idx: number) => (
 						<OngekiRatingInfoCard
 							key={idx}
 							score={rating}
@@ -95,7 +100,9 @@ export function OngekiRatingFrames() {
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+				{!disablePagination && (
+					<Pagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
+				)}
 			</Body>
 		</Container>
 	)
