@@ -4,19 +4,13 @@ import ChunithmRatingInfoCard from "@/app/features/chunithm/components/rating-in
 import { ratingFilters, useChunithmRatingData, useChunithmVersion } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
-import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
-import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
 import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
 
-interface ChunithmRatingPageProps {
-	disablePagination?: boolean
-}
-
-export default function ChunithmRatingPage({ disablePagination = true }: ChunithmRatingPageProps = {}) {
+export default function ChunithmRatingPage() {
 	const version = useChunithmVersion()
 	const filters = ratingFilters(version || 0)
 	const [searchQuery, setSearchQuery] = useState("")
@@ -28,8 +22,6 @@ export default function ChunithmRatingPage({ disablePagination = true }: Chunith
 	const isLoading = getActiveLoading(activeTab)
 
 	const filtered = useFiltering(data || [], filters, searchQuery, filterValues)
-	const pagination = usePagination(filtered, 20, [searchQuery, filterValues])
-	const displayItems = disablePagination ? filtered : pagination.paged
 
 	useEffect(() => {
 		if (version) {
@@ -88,7 +80,7 @@ export default function ChunithmRatingPage({ disablePagination = true }: Chunith
 				</FilterArea>
 
 				<CardGrid>
-					{displayItems.map((rating, idx) => (
+					{filtered.map((rating, idx) => (
 						<ChunithmRatingInfoCard
 							key={idx}
 							score={rating}
@@ -99,10 +91,6 @@ export default function ChunithmRatingPage({ disablePagination = true }: Chunith
 				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
-
-				{!disablePagination && (
-					<Pagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
-				)}
 			</Body>
 		</Container>
 	)

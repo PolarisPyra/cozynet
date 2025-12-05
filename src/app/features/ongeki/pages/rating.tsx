@@ -5,20 +5,14 @@ import { OngekiRatingInfoCard } from "@/app/features/ongeki/components/rating-in
 import { ratingFilters, useOngekiRatingData, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
-import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Card, CardContent } from "@/app/shared/components/ui/card"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
-import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
 import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
 
-interface OngekiRatingFramesProps {
-	disablePagination?: boolean
-}
-
-export function OngekiRatingFrames({ disablePagination = true }: OngekiRatingFramesProps = {}) {
+export function OngekiRatingFrames() {
 	const version = useOngekiVersion()
 	const filters = ratingFilters(version || 0)
 	const [searchQuery, setSearchQuery] = useState("")
@@ -30,8 +24,6 @@ export function OngekiRatingFrames({ disablePagination = true }: OngekiRatingFra
 	const isLoading = getActiveLoading(activeTab)
 
 	const filtered = useFiltering(data || [], filters, searchQuery, filterValues)
-	const pagination = usePagination(filtered, 20, [searchQuery, filterValues])
-	const displayItems = disablePagination ? filtered : pagination.paged
 
 	if (!version) {
 		return (
@@ -86,7 +78,7 @@ export function OngekiRatingFrames({ disablePagination = true }: OngekiRatingFra
 				</FilterArea>
 
 				<CardGrid>
-					{displayItems.map((rating: any, idx: number) => (
+					{filtered.map((rating: any, idx: number) => (
 						<OngekiRatingInfoCard
 							key={idx}
 							score={rating}
@@ -99,10 +91,6 @@ export function OngekiRatingFrames({ disablePagination = true }: OngekiRatingFra
 				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
-
-				{!disablePagination && (
-					<Pagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
-				)}
 			</Body>
 		</Container>
 	)
