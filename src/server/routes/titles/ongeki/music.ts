@@ -32,6 +32,7 @@ const OngekiStaticMusic = new Hono().get("music", async c => {
         LEFT JOIN ongeki_static_opt o ON m.opt = o.id
 		LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
 		WHERE (dwp.status = 1 OR o.isEnable = 1 OR o.name = 'A000' OR o.name IS NULL)
+			AND m.noteCount IS NOT NULL
         ORDER BY earliest.version DESC, m.id DESC`,
 			[version, userId]
 		)
