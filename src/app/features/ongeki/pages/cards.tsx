@@ -7,7 +7,7 @@ import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import Spinner from "@/app/shared/components/common/spinner"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, Container, FilterArea } from "@/app/shared/pages/layout/layout"
-import type { FilterValues } from "@/app/shared/types"
+import type { DB, FilterValues } from "@/app/shared/types"
 
 export function CardManagement() {
 	const [searchQuery, setSearchQuery] = useState("")
@@ -45,7 +45,7 @@ export function CardManagement() {
 			<Header
 				title="Cards"
 				searchProps={{
-					items: filtered.map((c: any) => ({ id: c.cardId, title: c.name || "" })),
+					items: filtered.map((c: DB.OngekiUserCard & DB.OngekiStaticCards) => ({ id: c.cardId, title: c.name || "" })),
 					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No cards.",

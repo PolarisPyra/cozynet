@@ -9,7 +9,7 @@ import Spinner from "@/app/shared/components/common/spinner"
 import { Card, CardContent } from "@/app/shared/components/ui/card"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
-import type { FilterValues } from "@/app/shared/types"
+import type { FilterValues, OngekiRating } from "@/app/shared/types"
 import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
 
 export function OngekiRatingFrames() {
@@ -54,7 +54,7 @@ export function OngekiRatingFrames() {
 			<Header
 				title="Rating"
 				searchProps={{
-					items: filtered.map((r: any, i: number) => ({ id: i, title: r.title || "" })),
+					items: filtered.map((r: OngekiRating, i: number) => ({ id: i, title: r.title || "" })),
 					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No ratings.",
@@ -78,7 +78,7 @@ export function OngekiRatingFrames() {
 				</FilterArea>
 
 				<CardGrid>
-					{filtered.map((rating: any, idx: number) => (
+					{filtered.map((rating: OngekiRating, idx: number) => (
 						<OngekiRatingInfoCard
 							key={idx}
 							score={rating}

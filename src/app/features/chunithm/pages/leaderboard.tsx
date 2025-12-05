@@ -26,7 +26,7 @@ export default function ChunithmLeaderboard() {
 		[valid, searchQuery]
 	)
 
-	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery])
 
 	if (!version) {
 		return (
@@ -73,7 +73,7 @@ export default function ChunithmLeaderboard() {
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No players found</div>}
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)

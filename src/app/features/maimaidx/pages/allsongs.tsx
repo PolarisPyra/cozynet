@@ -11,7 +11,7 @@ import Spinner from "@/app/shared/components/common/spinner"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
-import type { FilterValues, Mai2StaticMusic } from "@/app/shared/types"
+import type { DB, FilterValues, Mai2StaticMusic } from "@/app/shared/types"
 import { maimaiDxBadgeColors } from "@/app/shared/utils/maimai"
 
 export function MaimaiDxAllSongs() {
@@ -25,7 +25,7 @@ export function MaimaiDxAllSongs() {
 
 	const grouped = useMemo(() => {
 		const map = new Map<number, Mai2StaticMusic>()
-		filtered.forEach((s: any) => {
+		filtered.forEach((s: DB.Mai2StaticMusic) => {
 			if (s.difficulty == null || !s.songId || !s.title) return
 			if (!map.has(s.songId)) map.set(s.songId, { ...s, charts: [] })
 			map.get(s.songId)!.charts.push({ chartId: s.chartId ?? null, difficulty: s.difficulty, level: s.level })

@@ -24,7 +24,7 @@ export default function ChunithmAllSongs() {
 	const filtered = useFiltering(songs || [], songFilters, searchQuery, filterValues)
 	const grouped = useGroupedSongs({ songs: filtered })
 
-	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(grouped, 20, [searchQuery, filterValues])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(grouped, 20, [searchQuery, filterValues])
 
 	if (isLoading) {
 		return (
@@ -69,7 +69,7 @@ export default function ChunithmAllSongs() {
 
 				{grouped.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)

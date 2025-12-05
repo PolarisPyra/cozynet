@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/app/shared/components/ui/card"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
-import type { FilterValues } from "@/app/shared/types"
+import type { FilterValues, MaimaiRating } from "@/app/shared/types"
 import { maimaiDxBadgeColors } from "@/app/shared/utils/maimai"
 
 interface MaimaiDxRatingFramesProps {
@@ -59,7 +59,7 @@ export function MaimaiDxRatingFrames({ disablePagination = true }: MaimaiDxRatin
 			<Header
 				title="Rating"
 				searchProps={{
-					items: filtered.map((r: any, i: number) => ({ id: i, title: r.title || "" })),
+					items: filtered.map((r: MaimaiRating, i: number) => ({ id: i, title: r.title || "" })),
 					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No ratings.",
@@ -83,7 +83,7 @@ export function MaimaiDxRatingFrames({ disablePagination = true }: MaimaiDxRatin
 				</FilterArea>
 
 				<CardGrid>
-					{displayItems.map((rating: any, idx: number) => (
+					{displayItems.map((rating: MaimaiRating, idx: number) => (
 						<MaimaiRatingInfoCard key={idx} score={rating} levelColorBadge={maimaiDxBadgeColors} />
 					))}
 				</CardGrid>

@@ -7,7 +7,7 @@ import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import Spinner from "@/app/shared/components/common/spinner"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
-import type { FilterValues } from "@/app/shared/types"
+import type { FilterValues, ChunithmRating } from "@/app/shared/types"
 import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
 
 export default function ChunithmRatingPage() {
@@ -62,7 +62,7 @@ export default function ChunithmRatingPage() {
 			<Header
 				title="Rating"
 				searchProps={{
-					items: filtered.map((r, i) => ({ id: i, title: r.title || "" })),
+					items: filtered.map((r: ChunithmRating, i: number) => ({ id: i, title: r.title || "" })),
 					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No ratings.",
@@ -80,7 +80,7 @@ export default function ChunithmRatingPage() {
 				</FilterArea>
 
 				<CardGrid>
-					{filtered.map((rating, idx) => (
+					{filtered.map((rating: ChunithmRating, idx: number) => (
 						<ChunithmRatingInfoCard
 							key={idx}
 							score={rating}

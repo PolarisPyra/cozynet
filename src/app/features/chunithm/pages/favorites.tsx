@@ -27,7 +27,7 @@ export default function ChunithmFavorites() {
 			.map((s: DB.ChuniStaticMusic) => ({ ...s, songId: s.songId!, title: s.title!, jacketPath: s.jacketPath! }))
 	}, [songs, searchQuery])
 
-	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery])
 
 	const handleToggle = (songId: number) => {
 		const isFav = favoriteSongIds.some(f => f.favId === songId)
@@ -85,7 +85,7 @@ export default function ChunithmFavorites() {
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)

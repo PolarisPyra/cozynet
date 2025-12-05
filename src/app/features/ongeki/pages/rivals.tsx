@@ -25,7 +25,7 @@ export function OngekiRivals() {
 		[users, searchQuery]
 	)
 
-	const { page, setPage, totalPages, paged, total, hasMore } = usePagination(filtered, 20, [searchQuery])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery])
 
 	const handleAdd = (id: number) => {
 		if (rivalCount >= 3) return toast.error("Max 3 rivals")
@@ -90,7 +90,7 @@ export function OngekiRivals() {
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No users found</div>}
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />}
+				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)
