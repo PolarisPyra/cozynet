@@ -3,6 +3,39 @@
  * Pure, immutable data structures following Adapter Pattern
  */
 
+/**
+ * VERSION CONSTANTS
+ * Mapping of version IDs to version names
+ */
+export const MaimaiDxVersions: Record<number, string> = {
+	0: "maimai",
+	1: "maimai PLUS",
+	2: "maimai GREEN",
+	3: "maimai GREEN PLUS",
+	4: "maimai ORANGE",
+	5: "maimai ORANGE PLUS",
+	6: "maimai PINK",
+	7: "maimai PINK PLUS",
+	8: "maimai MURASAKI",
+	9: "maimai MURASAKI PLUS",
+	10: "maimai MILK",
+	11: "maimai MILK PLUS",
+	12: "maimai FINALE",
+	13: "maimai DX",
+	14: "maimai DX PLUS",
+	15: "maimai DX Splash",
+	16: "maimai DX Splash PLUS",
+	17: "maimai DX UNiVERSE",
+	18: "maimai DX UNiVERSE PLUS",
+	19: "maimai DX FESTiVAL",
+	20: "maimai DX FESTiVAL PLUS",
+	21: "maimai DX BUDDiES",
+	22: "maimai DX BUDDiES PLUS",
+	23: "maimai DX PRiSM",
+	24: "maimai DX PRiSM PLUS",
+	25: "maimai DX CIRCLE"
+}
+
 export enum MaimaiDxDifficulty {
 	Basic = 0,
 	Advanced = 1,

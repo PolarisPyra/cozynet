@@ -4,11 +4,11 @@ import { useQuery } from "@tanstack/react-query"
 import { CreditCard } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
-import { useAdmin } from "@/app/features/admin/hooks"
-import { hasAdminAccess } from "@/app/features/admin/utils"
+import { useIsAdmin } from "@/app/features/admin/hooks"
 import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { DB } from "@/app/shared/types"
 import { api } from "@/app/shared/utils"
@@ -16,8 +16,7 @@ import { api } from "@/app/shared/utils"
 const ITEMS_PER_PAGE = 20
 
 const CardManagement = () => {
-	const { data: systemAdmin, isLoading: isLoadingAdmin } = useAdmin()
-	const adminPerms = hasAdminAccess(systemAdmin)
+	const isAdmin = useIsAdmin()
 	const navigate = useNavigate()
 	const [searchParams, setSearchParams] = useSearchParams()
 	const [page, setPage] = useState(1)
@@ -33,7 +32,7 @@ const CardManagement = () => {
 			}
 			return await response.json()
 		},
-		enabled: adminPerms
+		enabled: isAdmin
 	})
 
 	const { data: usersData, isLoading: isLoadingUsers } = useQuery<{ users: Omit<DB.AimeUser, "password">[] }>({
@@ -45,14 +44,16 @@ const CardManagement = () => {
 			}
 			return await response.json()
 		},
-		enabled: adminPerms
+		enabled: isAdmin
 	})
 
+	const { isLoading: isLoadingAuth } = useAuth()
+
 	useEffect(() => {
-		if (!isLoadingAdmin && !adminPerms) {
+		if (!isLoadingAuth && !isAdmin) {
 			navigate("/home", { replace: true })
 		}
-	}, [systemAdmin, adminPerms, navigate, isLoadingAdmin])
+	}, [isAdmin, navigate, isLoadingAuth])
 
 	// Reset to page 1 when search changes
 	useEffect(() => {
@@ -107,7 +108,7 @@ const CardManagement = () => {
 			}))
 	}, [users])
 
-	if (isLoadingAdmin) {
+	if (isLoadingAuth) {
 		return (
 			<Container>
 				<Header title="Card Management" />
@@ -118,7 +119,7 @@ const CardManagement = () => {
 		)
 	}
 
-	if (!adminPerms) {
+	if (!isAdmin) {
 		return null
 	}
 

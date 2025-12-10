@@ -15,7 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/app/shared/component
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { useProfileVersions } from "@/app/shared/hooks/users"
-import { ChunithmVersions, MaimaiDxVersions, OngekiVersions } from "@/app/shared/utils/enums"
+import { ChunithmVersions } from "@/app/shared/utils/chunithm"
+import { MaimaiDxVersions } from "@/app/shared/utils/maimai"
+import { OngekiVersions } from "@/app/shared/utils/ongeki"
 import {
 	type ChunithmProfile,
 	type MaimaiProfile,

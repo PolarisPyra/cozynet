@@ -1,8 +1,7 @@
 import { Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
-import { useAdmin } from "@/app/features/admin/hooks"
-import { hasAdminAccess } from "@/app/features/admin/utils"
+import { useIsAdmin } from "@/app/features/admin/hooks"
 import { useAccentColor } from "@/app/shared/components/accent-color-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/shared/components/ui/avatar"
 import {
@@ -29,8 +28,7 @@ export function NavUser({
 	const { isMobile } = useSidebar()
 	const { logout } = useAuth()
 	const navigate = useNavigate()
-	const { data: systemAdmin } = useAdmin()
-	const adminPerms = hasAdminAccess(systemAdmin)
+	const isAdmin = useIsAdmin()
 	const accentColor = useAccentColor()
 
 	return (
@@ -77,7 +75,7 @@ export function NavUser({
 						</DropdownMenuLabel>
 
 						<DropdownMenuSeparator className="bg-border" />
-						{adminPerms && (
+						{isAdmin && (
 							<>
 								<DropdownMenuGroup>
 									<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">

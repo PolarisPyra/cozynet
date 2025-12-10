@@ -2,24 +2,23 @@ import { useEffect } from "react"
 
 import { useNavigate } from "react-router-dom"
 
-import { useAdmin } from "@/app/features/admin/hooks"
-import { hasAdminAccess } from "@/app/features/admin/utils"
+import { useIsAdmin } from "@/app/features/admin/hooks"
 import Header from "@/app/shared/components/common/header"
 import Spinner from "@/app/shared/components/common/spinner"
 import ArcadeOwnership from "@/app/shared/components/settings/arcade-ownership"
+import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 
 const AdminArcadeOwnership = () => {
-	const { data: systemAdmin, isLoading, isError } = useAdmin()
-	const adminPerms = hasAdminAccess(systemAdmin)
+	const isAdmin = useIsAdmin()
+	const { isLoading } = useAuth()
 	const navigate = useNavigate()
 
 	useEffect(() => {
-		if (!isLoading && !isError && systemAdmin !== undefined && !adminPerms) {
+		if (!isLoading && !isAdmin) {
 			navigate("/home", { replace: true })
 		}
-	}, [systemAdmin, adminPerms, navigate, isLoading, isError])
+	}, [isAdmin, navigate, isLoading])
 
-	// Show loading state while checking permissions
 	if (isLoading) {
 		return (
 			<div className="relative flex-1 overflow-auto">
@@ -31,20 +30,7 @@ const AdminArcadeOwnership = () => {
 		)
 	}
 
-	if (isError) {
-		return (
-			<div className="relative flex-1 overflow-auto">
-				<Header title="Arcade Ownership" />
-				<div className="mb-4 p-4 sm:px-6 sm:py-0">
-					<div className="bg-card text-card-foreground rounded-sm p-6">
-						<p className="text-muted-foreground">Failed to load admin permissions.</p>
-					</div>
-				</div>
-			</div>
-		)
-	}
-
-	if (!adminPerms) {
+	if (!isAdmin) {
 		return null
 	}
 

@@ -2,7 +2,7 @@ import { toast } from "sonner"
 
 import { VersionManagement } from "@/app/shared/components/common/version-management"
 import { useChunithmVersion, useChunithmVersions, useUpdateChunithmVersion } from "@/app/features/chunithm/hooks"
-import { ChunithmVersions } from "@/app/shared/utils/enums"
+import { ChunithmVersions } from "@/app/shared/utils/chunithm"
 
 const ChunithmVersionManager = () => {
 	const version = useChunithmVersion()

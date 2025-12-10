@@ -1,3 +1,1 @@
-import { useAdmin } from "./use-admin"
-
-export { useAdmin }
+export { useIsAdmin } from "./use-admin"

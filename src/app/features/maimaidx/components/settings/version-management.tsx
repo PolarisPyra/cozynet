@@ -2,7 +2,7 @@ import { toast } from "sonner"
 
 import { VersionManagement } from "@/app/shared/components/common/version-management"
 import { useMaimaiDxVersion, useMaimaiDxVersions, useUpdateMaimaiDxVersion } from "@/app/features/maimaidx/hooks"
-import { MaimaiDxVersions } from "@/app/shared/utils/enums"
+import { MaimaiDxVersions } from "@/app/shared/utils/maimai"
 
 export function MaimaiDxVersionManager() {
 	const version = useMaimaiDxVersion()

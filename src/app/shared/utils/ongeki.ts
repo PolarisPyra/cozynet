@@ -5,6 +5,22 @@ import { DateTime } from "luxon"
  * Pure, immutable data structures following Adapter Pattern
  */
 
+/**
+ * VERSION CONSTANTS
+ * Mapping of version IDs to version names
+ */
+export const OngekiVersions: Record<number, string> = {
+	0: "O.N.G.E.K.I.",
+	1: "O.N.G.E.K.I. PLUS",
+	2: "SUMMER",
+	3: "SUMMER PLUS",
+	4: "R.E.D.",
+	5: "R.E.D. PLUS",
+	6: "bright",
+	7: "bright MEMORY",
+	8: "Re:Fresh"
+}
+
 export enum OngekiDifficulty {
 	Basic = 0,
 	Advanced = 1,

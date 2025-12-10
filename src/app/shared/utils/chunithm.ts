@@ -2,6 +2,33 @@ import { DateTime } from "luxon"
 
 import { TrophyRareType } from "./enums"
 
+/**
+ * VERSION CONSTANTS
+ * Mapping of version IDs to version names
+ */
+export const ChunithmVersions: Record<number, string> = {
+	0: "CHUNITHM",
+	1: "CHUNITHM PLUS",
+	2: "AIR",
+	3: "AIR PLUS",
+	4: "STAR",
+	5: "STAR PLUS",
+	6: "AMAZON",
+	7: "AMAZON PLUS",
+	8: "CRYSTAL",
+	9: "CRYSTAL PLUS",
+	10: "PARADISE / LOST",
+	11: "NEW",
+	12: "NEW PLUS",
+	13: "SUN",
+	14: "SUN PLUS",
+	15: "LUMINOUS",
+	16: "LUMINOUS PLUS",
+	17: "VERSE",
+	18: "X-VERSE",
+	19: "X-VERSE-X"
+}
+
 export const enum ChunithmAvatarCategory {
 	WEAR = 1,
 	HEAD = 2,
