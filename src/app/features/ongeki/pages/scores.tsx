@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react"
+import { useMemo, useState } from "react"
+
 import { toast } from "sonner"
 
 import { OngekiScoreInfoCard } from "@/app/features/ongeki/components/score-info-card"
-import { scoreFilters, useOngekiScores, useOngekiVersion } from "@/app/features/ongeki/hooks"
+import { scoreFilters, useOngekiScoreExporter, useOngekiScores, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import { Pagination } from "@/app/shared/components/common/pagination"
@@ -21,38 +22,36 @@ export function OngekiScorePage() {
 
 	const version = useOngekiVersion()
 	const { data: scores, isLoading } = useOngekiScores()
+	const { refetch: fetchExport } = useOngekiScoreExporter()
 
 	const filtered = useFiltering(scores || [], scoreFilters, searchQuery, filterValues)
-	
+
 	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
 
-	const searchItems = useMemo(
-		() => (scores || []).map(s => ({ id: s.id, title: s.title || "" })),
-		[scores]
-	)
+	const searchItems = useMemo(() => (scores || []).map(s => ({ id: s.id, title: s.title || "" })), [scores])
 
 	const handleExport = async () => {
-		if (!scores || scores.length === 0) {
-			toast.error("No data to export")
-			return
-		}
-
 		setIsExporting(true)
 		try {
-			const dataToExport = scores
-			
-			const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { 
-				type: "application/json" 
+			const result = await fetchExport()
+
+			if (!result.data) {
+				toast.error("No data to export")
+				return
+			}
+
+			const blob = new Blob([JSON.stringify(result.data, null, 2)], {
+				type: "application/json"
 			})
 			const url = URL.createObjectURL(blob)
 			const a = document.createElement("a")
 			a.href = url
-			a.download = `ongeki_scores_${new Date().toISOString().split('T')[0]}.json`
+			a.download = `ongeki_kamai_export_${new Date().toISOString().split("T")[0]}.json`
 			document.body.appendChild(a)
 			a.click()
 			document.body.removeChild(a)
 			URL.revokeObjectURL(url)
-			
+
 			toast.success("Scores exported successfully")
 		} catch (error) {
 			console.error("Export error:", error)
@@ -67,9 +66,7 @@ export function OngekiScorePage() {
 			<Container>
 				<Header title="Scores" />
 				<Body>
-					<div className="text-muted-foreground py-20 text-center">
-						Set your version in settings first
-					</div>
+					<div className="text-muted-foreground py-20 text-center">Set your version in settings first</div>
 				</Body>
 			</Container>
 		)
@@ -89,9 +86,8 @@ export function OngekiScorePage() {
 	}
 
 	const showEmptyState = !isLoading && filtered.length === 0
-	const hasActiveFilters = searchQuery || Object.values(filterValues).some(
-		(v, i) => v !== Object.values(getDefaults(scoreFilters))[i]
-	)
+	const hasActiveFilters =
+		searchQuery || Object.values(filterValues).some((v, i) => v !== Object.values(getDefaults(scoreFilters))[i])
 
 	return (
 		<Container>
@@ -120,43 +116,30 @@ export function OngekiScorePage() {
 								setPage(1)
 							}}
 						/>
-						<Button 
-							onClick={handleExport} 
-							variant="outline" 
-							size="sm" 
-							disabled={isExporting || !scores || scores.length === 0}
-						>
-							{isExporting ? "Exporting..." : "Export JSON"}
+						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
+							{isExporting ? "Exporting..." : "Export for Kamai"}
 						</Button>
 					</div>
 				</FilterArea>
 
 				{showEmptyState ? (
 					<div className="text-muted-foreground py-20 text-center">
-						{hasActiveFilters 
-							? "No scores match your filters" 
-							: "No scores found"}
+						{hasActiveFilters ? "No scores match your filters" : "No scores found"}
 					</div>
 				) : (
 					<>
 						<CardGrid>
 							{paged.map(score => (
-								<OngekiScoreInfoCard 
-									key={score.id} 
-									score={score} 
-									levelColorBadge={ongekiBadgeColors} 
-									ongekiVersion={version} 
+								<OngekiScoreInfoCard
+									key={score.id}
+									score={score}
+									levelColorBadge={ongekiBadgeColors}
+									ongekiVersion={version}
 								/>
 							))}
 						</CardGrid>
 
-						{hasMore && (
-							<Pagination 
-								page={page} 
-								totalPages={totalPages} 
-								onPageChange={setPage} 
-							/>
-						)}
+						{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 					</>
 				)}
 			</Body>

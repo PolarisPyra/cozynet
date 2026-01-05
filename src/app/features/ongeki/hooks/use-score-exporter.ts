@@ -39,11 +39,6 @@ interface BatchManualImport {
 	}
 }
 
-interface KamaitachiExportResponse {
-	success: boolean
-	data: BatchManualImport
-}
-
 /**
  * Hook to fetch Ongeki score export data
  * @returns Query result with score export data
@@ -53,13 +48,12 @@ export const useOngekiScoreExporter = () => {
 		queryKey: ["ongeki", "score-exporter", "export"],
 		queryFn: async () => {
 			const response = await api.ongeki.scoreExporter.export.$get()
-			const data = (await response.json()) as KamaitachiExportResponse
 
 			if (!response.ok) {
 				throw new Error()
 			}
 
-			return data.data
+			return (await response.json()) as BatchManualImport
 		},
 		enabled: false // Only fetch when manually triggered
 	})

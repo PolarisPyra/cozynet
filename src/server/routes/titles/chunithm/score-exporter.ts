@@ -1,5 +1,3 @@
-import { parse } from "date-fns"
-import { fromZonedTime, toZonedTime } from "date-fns-tz"
 import { Hono } from "hono"
 import type { RowDataPacket } from "mysql2"
 
@@ -57,13 +55,28 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async c => {
 		const profile = profileResults.length > 0 ? profileResults[0] : null
 
 		const [playlogResults] = await db.execute<RowDataPacket[]>(
-			`SELECT romVersion, userPlayDate, musicId, level, score, maxCombo,
-				judgeGuilty, judgeAttack, judgeJustice, judgeCritical, judgeHeaven,
-				isFullCombo, isAllJustice, isClear, s.categoryId AS skillCategoryId
+			`SELECT
+				-- UNIX_TIMESTAMP returns seconds, Tachi do be needing milliseconds
+				UNIX_TIMESTAMP(p.userPlayDate)*1000 as timeAchieved,
+				p.romVersion,
+				p.musicId,
+				p.level,
+				p.score,
+				p.maxCombo,
+				p.judgeGuilty,
+				p.judgeAttack,
+				p.judgeJustice,
+				p.judgeCritical,
+				p.judgeHeaven,
+				p.isFullCombo,
+				p.isAllJustice,
+				p.isClear,
+				s.categoryId AS skillCategoryId
 			FROM chuni_score_playlog p
 			LEFT JOIN cozynet_static_chuni_skill s ON s.skillId = p.skillId
-			WHERE user = ?
-			GROUP BY p.id`,
+			WHERE p.user = ?
+			GROUP BY p.id
+			ORDER BY timeAchieved DESC`,
 			[userId]
 		)
 
@@ -82,8 +95,8 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async c => {
 
 		for (const log of playlogResults) {
 			const {
+				timeAchieved,
 				romVersion,
-				userPlayDate,
 				musicId,
 				level,
 				score,
@@ -152,14 +165,8 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async c => {
 				clearLamp,
 				identifier: musicId.toString(),
 				matchType: "inGameID",
-				difficulty: TACHI_DIFFICULTIES[level]
-			}
-
-			if (userPlayDate !== null) {
-				tachiScore.timeAchieved = fromZonedTime(
-					parse(userPlayDate, "yyyy-MM-dd HH:mm:ss", toZonedTime(new Date(), "Asia/Tokyo")),
-					"Asia/Tokyo"
-				).valueOf()
+				difficulty: TACHI_DIFFICULTIES[level],
+				timeAchieved: timeAchieved != null ? Number(timeAchieved) : undefined
 			}
 
 			if (judgeCritical !== null && judgeJustice !== null && judgeAttack !== null && judgeGuilty !== null) {
@@ -180,7 +187,7 @@ const ChunithmKamaitachiRoutes = new Hono().get("export", async c => {
 			tachiExport.scores.push(tachiScore)
 		}
 
-		return c.json({ success: true, data: tachiExport })
+		return c.json(tachiExport)
 	} catch (error) {
 		throw rethrowWithMessage("Failed to export data", error)
 	}

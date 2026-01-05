@@ -34,12 +34,6 @@ interface BatchManualImport {
 	}
 }
 
-interface KamaitachiExportResponse {
-	success: boolean
-	data: BatchManualImport
-	message?: string
-}
-
 /**
  * Hook to fetch score export data for Chunithm
  * Returns data in Kamaitachi-compatible format
@@ -49,13 +43,12 @@ export const useScoreExporter = () => {
 		queryKey: ["chunithm", "score-exporter", "export"],
 		queryFn: async () => {
 			const response = await api.chunithm.scoreExporter.export.$get()
-			const data = (await response.json()) as KamaitachiExportResponse
 
 			if (!response.ok) {
 				throw new Error()
 			}
 
-			return data.data
+			return (await response.json()) as BatchManualImport
 		},
 		enabled: false // Only fetch when manually triggered
 	})

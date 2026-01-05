@@ -192,7 +192,7 @@ const OngekiKamaitachiRoutes = new Hono().get("export", async c => {
 			tachiExport.scores.push(tachiScore)
 		}
 
-		return c.json({ success: true, data: tachiExport })
+		return c.json(tachiExport)
 	} catch (error) {
 		throw rethrowWithMessage("Failed to export data", error)
 	}

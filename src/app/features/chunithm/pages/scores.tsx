@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react"
+import { useMemo, useState } from "react"
+
 import { toast } from "sonner"
 
 import ChunithmScoreInfoCard from "@/app/features/chunithm/components/score-info-card"
-import { scoreFilters, useChunithmScores } from "@/app/features/chunithm/hooks"
+import { scoreFilters, useChunithmScores, useScoreExporter } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import { Pagination } from "@/app/shared/components/common/pagination"
@@ -20,39 +21,36 @@ export default function ChunithmScorePage() {
 	const [isExporting, setIsExporting] = useState(false)
 
 	const { data: scores, isLoading } = useChunithmScores()
+	const { refetch: fetchExport } = useScoreExporter()
 
 	const filtered = useFiltering(scores || [], scoreFilters, searchQuery, filterValues)
-	
+
 	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
 
-	const searchItems = useMemo(
-		() => (scores || []).map(s => ({ id: s.id, title: s.title || "" })),
-		[scores]
-	)
+	const searchItems = useMemo(() => (scores || []).map(s => ({ id: s.id, title: s.title || "" })), [scores])
 
 	const handleExport = async () => {
-		if (!scores || scores.length === 0) {
-			toast.error("No data to export")
-			return
-		}
-
 		setIsExporting(true)
 		try {
-		
-			const dataToExport = scores
-			
-			const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { 
-				type: "application/json" 
+			const result = await fetchExport()
+
+			if (!result.data) {
+				toast.error("No data to export")
+				return
+			}
+
+			const blob = new Blob([JSON.stringify(result.data, null, 2)], {
+				type: "application/json"
 			})
 			const url = URL.createObjectURL(blob)
 			const a = document.createElement("a")
 			a.href = url
-			a.download = `chunithm_scores_${new Date().toISOString().split('T')[0]}.json`
+			a.download = `chunithm_kamai_export_${new Date().toISOString().split("T")[0]}.json`
 			document.body.appendChild(a)
 			a.click()
 			document.body.removeChild(a)
 			URL.revokeObjectURL(url)
-			
+
 			toast.success("Scores exported successfully")
 		} catch (error) {
 			console.error("Export error:", error)
@@ -104,42 +102,27 @@ export default function ChunithmScorePage() {
 								setPage(1)
 							}}
 						/>
-						<Button 
-							onClick={handleExport} 
-							variant="outline" 
-							size="sm" 
-							disabled={isExporting || !scores || scores.length === 0}
-						>
-							{isExporting ? "Exporting..." : "Export JSON"}
+						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
+							{isExporting ? "Exporting..." : "Export for Kamai"}
 						</Button>
 					</div>
 				</FilterArea>
 
 				{showEmptyState ? (
 					<div className="text-muted-foreground py-20 text-center">
-						{searchQuery || Object.values(filterValues).some(v => v !== getDefaults(scoreFilters)[0]) 
-							? "No scores match your filters" 
+						{searchQuery || Object.values(filterValues).some(v => v !== getDefaults(scoreFilters)[0])
+							? "No scores match your filters"
 							: "No scores found"}
 					</div>
 				) : (
 					<>
 						<CardGrid>
 							{paged.map(score => (
-								<ChunithmScoreInfoCard 
-									key={score.id} 
-									score={score} 
-									levelColorBadge={chunithmBadgeColors} 
-								/>
+								<ChunithmScoreInfoCard key={score.id} score={score} levelColorBadge={chunithmBadgeColors} />
 							))}
 						</CardGrid>
 
-						{hasMore && (
-							<Pagination 
-								page={page} 
-								totalPages={totalPages} 
-								onPageChange={setPage} 
-							/>
-						)}
+						{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 					</>
 				)}
 			</Body>
