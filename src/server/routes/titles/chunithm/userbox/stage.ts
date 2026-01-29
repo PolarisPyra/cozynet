@@ -16,34 +16,62 @@ interface StageItem {
 }
 
 async function getCurrentStage(userId: number, version: number): Promise<StageItem[]> {
+	if (Number(version) === 19) {
+		const [result] = await db.execute<(StageItem & RowDataPacket)[]>(
+			`
+				SELECT
+					dsn.stageId,
+					dsn.imagePath,
+					dsn.name AS label,
+					CASE WHEN cii.user IS NULL THEN 1 ELSE 0 END AS locked,
+					1 AS equipped
+				FROM chuni_profile_data cpd
+				INNER JOIN cozynet_static_chuni_stages dsn
+					ON dsn.stageId = cpd.stageId
+					AND dsn.version IN (18, 19)
+				LEFT JOIN chuni_item_item cii
+					ON cii.itemId = dsn.stageId
+					AND cii.user = ?
+					AND cii.itemKind = 13
+				LEFT JOIN chuni_static_opts cso
+					ON dsn.opt = cso.id
+				LEFT JOIN cozynet_web_permissions dwp
+					ON dwp.user = ?
+				WHERE cpd.user = ?
+					AND cpd.version = ?
+					AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
+					AND dsn.name != 'Linked VERSE'
+			`,
+			[userId, userId, userId, version]
+		)
+		return result
+	}
+
 	const [result] = await db.execute<(StageItem & RowDataPacket)[]>(
 		`
-        SELECT
-            dsn.stageId,
-            dsn.imagePath,
-            dsn.name AS label,
-            CASE
-                WHEN cii.user IS NULL THEN 1
-                ELSE 0
-            END AS locked,
-            1 as equipped
-        FROM chuni_profile_data cpd
-        JOIN cozynet_static_chuni_stages dsn
-            ON dsn.stageId = cpd.stageId
-            AND dsn.version = ?
-        LEFT JOIN chuni_item_item cii
-            ON cii.itemId = dsn.stageId
-            AND cii.user = ?
-            AND cii.itemKind = 13
-        LEFT JOIN chuni_static_opts cso
-            ON dsn.opt = cso.id
-        LEFT JOIN cozynet_web_permissions dwp
-            ON dwp.user = ?
-        WHERE cpd.user = ?
-            AND cpd.version = ?
-            AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
-            AND dsn.name != 'Linked VERSE'
-        `,
+			SELECT
+				dsn.stageId,
+				dsn.imagePath,
+				dsn.name AS label,
+				CASE WHEN cii.user IS NULL THEN 1 ELSE 0 END AS locked,
+				1 AS equipped
+			FROM chuni_profile_data cpd
+			INNER JOIN cozynet_static_chuni_stages dsn
+				ON dsn.stageId = cpd.stageId
+				AND dsn.version = ?
+			LEFT JOIN chuni_item_item cii
+				ON cii.itemId = dsn.stageId
+				AND cii.user = ?
+				AND cii.itemKind = 13
+			LEFT JOIN chuni_static_opts cso
+				ON dsn.opt = cso.id
+			LEFT JOIN cozynet_web_permissions dwp
+				ON dwp.user = ?
+			WHERE cpd.user = ?
+				AND cpd.version = ?
+				AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
+				AND dsn.name != 'Linked VERSE'
+		`,
 		[version, userId, userId, userId, version]
 	)
 	return result
@@ -56,7 +84,6 @@ const routes = new Hono()
 			const version = versions.chunithm_version
 
 			const result = await getCurrentStage(userId, version)
-			// If no current stage, return null to indicate "no selection" instead of 404
 			if (result.length === 0) {
 				return c.json(null)
 			}
@@ -79,10 +106,14 @@ const routes = new Hono()
 				const version = versions.chunithm_version
 				const { stageId } = await c.req.json()
 
-				// Verify user owns the stage
 				const [ownership] = await db.execute<RowDataPacket[]>(
-					`SELECT 1 FROM chuni_item_item
-                    WHERE user = ? AND itemId = ? AND itemKind = 13`,
+					`
+						SELECT 1
+						FROM chuni_item_item
+						WHERE user = ?
+							AND itemId = ?
+							AND itemKind = 13
+					`,
 					[userId, stageId]
 				)
 
@@ -92,15 +123,16 @@ const routes = new Hono()
 					})
 				}
 
-				// Update profile
 				await db.execute<ResultSetHeader>(
-					`UPDATE chuni_profile_data
-                    SET stageId = ?
-                    WHERE user = ? AND version = ?`,
+					`
+						UPDATE chuni_profile_data
+						SET stageId = ?
+						WHERE user = ?
+							AND version = ?
+					`,
 					[stageId, userId, version]
 				)
 
-				// Get updated stage data
 				const result = await getCurrentStage(userId, version)
 				return c.json(result[0])
 			} catch (error) {
@@ -124,62 +156,277 @@ const routes = new Hono()
 				const { filter } = await c.req.json()
 				const { locked } = filter
 
-				let whereClause = "WHERE dsn.version = ?"
-				const params = [version]
+				if (Number(version) === 19) {
+					if (locked === true) {
+						const [items] = await db.execute<(StageItem & { total_count: number } & RowDataPacket)[]>(
+							`
+								SELECT
+									dsn.stageId,
+									dsn.imagePath,
+									dsn.name AS label,
+									CASE WHEN cii.user IS NULL THEN 1 ELSE 0 END AS locked,
+									CASE
+										WHEN cpd.stageId = dsn.stageId
+											AND cpd.user = ?
+											AND cpd.version = ?
+										THEN 1
+										ELSE 0
+									END AS equipped,
+									COUNT(*) OVER() AS total_count
+								FROM cozynet_static_chuni_stages dsn
+								LEFT JOIN chuni_item_item cii
+									ON cii.itemId = dsn.stageId
+									AND cii.user = ?
+									AND cii.itemKind = 13
+								LEFT JOIN chuni_profile_data cpd
+									ON cpd.stageId = dsn.stageId
+									AND cpd.user = ?
+									AND cpd.version = ?
+								LEFT JOIN chuni_static_opts cso
+									ON dsn.opt = cso.id
+								LEFT JOIN cozynet_web_permissions dwp
+									ON dwp.user = ?
+								WHERE dsn.version IN (18, 19)
+									AND cii.user IS NULL
+									AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
+									AND dsn.name != 'Linked VERSE'
+								ORDER BY
+									locked DESC,
+									dsn.stageId DESC
+							`,
+							[userId, version, userId, userId, version, userId]
+						)
+						const totalCount = items.length > 0 ? items[0].total_count : 0
+						return c.json({
+							items: items.map(({ total_count, ...item }) => item),
+							total: totalCount
+						})
+					}
+
+					if (locked === false) {
+						const [items] = await db.execute<(StageItem & { total_count: number } & RowDataPacket)[]>(
+							`
+								SELECT
+									dsn.stageId,
+									dsn.imagePath,
+									dsn.name AS label,
+									CASE WHEN cii.user IS NULL THEN 1 ELSE 0 END AS locked,
+									CASE
+										WHEN cpd.stageId = dsn.stageId
+											AND cpd.user = ?
+											AND cpd.version = ?
+										THEN 1
+										ELSE 0
+									END AS equipped,
+									COUNT(*) OVER() AS total_count
+								FROM cozynet_static_chuni_stages dsn
+								LEFT JOIN chuni_item_item cii
+									ON cii.itemId = dsn.stageId
+									AND cii.user = ?
+									AND cii.itemKind = 13
+								LEFT JOIN chuni_profile_data cpd
+									ON cpd.stageId = dsn.stageId
+									AND cpd.user = ?
+									AND cpd.version = ?
+								LEFT JOIN chuni_static_opts cso
+									ON dsn.opt = cso.id
+								LEFT JOIN cozynet_web_permissions dwp
+									ON dwp.user = ?
+								WHERE dsn.version IN (18, 19)
+									AND cii.user IS NOT NULL
+									AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
+									AND dsn.name != 'Linked VERSE'
+								ORDER BY
+									locked DESC,
+									dsn.stageId DESC
+							`,
+							[userId, version, userId, userId, version, userId]
+						)
+						const totalCount = items.length > 0 ? items[0].total_count : 0
+						return c.json({
+							items: items.map(({ total_count, ...item }) => item),
+							total: totalCount
+						})
+					}
+
+					const [items] = await db.execute<(StageItem & { total_count: number } & RowDataPacket)[]>(
+						`
+							SELECT
+								dsn.stageId,
+								dsn.imagePath,
+								dsn.name AS label,
+								CASE WHEN cii.user IS NULL THEN 1 ELSE 0 END AS locked,
+								CASE
+									WHEN cpd.stageId = dsn.stageId
+										AND cpd.user = ?
+										AND cpd.version = ?
+									THEN 1
+									ELSE 0
+								END AS equipped,
+								COUNT(*) OVER() AS total_count
+							FROM cozynet_static_chuni_stages dsn
+							LEFT JOIN chuni_item_item cii
+								ON cii.itemId = dsn.stageId
+								AND cii.user = ?
+								AND cii.itemKind = 13
+							LEFT JOIN chuni_profile_data cpd
+								ON cpd.stageId = dsn.stageId
+								AND cpd.user = ?
+								AND cpd.version = ?
+							LEFT JOIN chuni_static_opts cso
+								ON dsn.opt = cso.id
+							LEFT JOIN cozynet_web_permissions dwp
+								ON dwp.user = ?
+							WHERE dsn.version IN (18, 19)
+								AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
+								AND dsn.name != 'Linked VERSE'
+							ORDER BY
+								locked DESC,
+								dsn.stageId DESC
+						`,
+						[userId, version, userId, userId, version, userId]
+					)
+					const totalCount = items.length > 0 ? items[0].total_count : 0
+					return c.json({
+						items: items.map(({ total_count, ...item }) => item),
+						total: totalCount
+					})
+				}
 
 				if (locked === true) {
-					whereClause += " AND cii.user IS NULL"
-				} else if (locked === false) {
-					whereClause += " AND cii.user IS NOT NULL"
+					const [items] = await db.execute<(StageItem & { total_count: number } & RowDataPacket)[]>(
+						`
+							SELECT
+								dsn.stageId,
+								dsn.imagePath,
+								dsn.name AS label,
+								CASE WHEN cii.user IS NULL THEN 1 ELSE 0 END AS locked,
+								CASE
+									WHEN cpd.stageId = dsn.stageId
+										AND cpd.user = ?
+										AND cpd.version = ?
+									THEN 1
+									ELSE 0
+								END AS equipped,
+								COUNT(*) OVER() AS total_count
+							FROM cozynet_static_chuni_stages dsn
+							LEFT JOIN chuni_item_item cii
+								ON cii.itemId = dsn.stageId
+								AND cii.user = ?
+								AND cii.itemKind = 13
+							LEFT JOIN chuni_profile_data cpd
+								ON cpd.stageId = dsn.stageId
+								AND cpd.user = ?
+								AND cpd.version = ?
+							LEFT JOIN chuni_static_opts cso
+								ON dsn.opt = cso.id
+							LEFT JOIN cozynet_web_permissions dwp
+								ON dwp.user = ?
+							WHERE dsn.version = ?
+								AND cii.user IS NULL
+								AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
+								AND dsn.name != 'Linked VERSE'
+							ORDER BY
+								locked DESC,
+								dsn.stageId DESC
+						`,
+						[userId, version, userId, userId, version, userId, version]
+					)
+					const totalCount = items.length > 0 ? items[0].total_count : 0
+					return c.json({
+						items: items.map(({ total_count, ...item }) => item),
+						total: totalCount
+					})
 				}
 
-				const query = `
-                SELECT
-                    dsn.stageId,
-                    dsn.imagePath,
-                    dsn.name AS label,
-                    CASE
-                        WHEN cii.user IS NULL THEN 1
-                        ELSE 0
-                    END AS locked,
-                    CASE
-                        WHEN cpd.stageId = dsn.stageId
-                        AND cpd.user = ?
-                        AND cpd.version = ? THEN 1
-                        ELSE 0
-                    END AS equipped,
-                    COUNT(*) OVER() AS total_count
-                FROM cozynet_static_chuni_stages dsn
-                LEFT JOIN chuni_item_item cii
-                    ON cii.itemId = dsn.stageId
-                    AND cii.user = ?
-                    AND cii.itemKind = 13
-                LEFT JOIN chuni_profile_data cpd
-                    ON cpd.stageId = dsn.stageId
-                    AND cpd.user = ?
-                    AND cpd.version = ?
-                LEFT JOIN chuni_static_opts cso
-                    ON dsn.opt = cso.id
-                LEFT JOIN cozynet_web_permissions dwp
-                    ON dwp.user = ?
-                ${whereClause}
-                    AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
-                    AND dsn.name != 'Linked VERSE'
-                ORDER BY
-                    locked DESC,
-                    dsn.stageId DESC
-                `
+				if (locked === false) {
+					const [items] = await db.execute<(StageItem & { total_count: number } & RowDataPacket)[]>(
+						`
+							SELECT
+								dsn.stageId,
+								dsn.imagePath,
+								dsn.name AS label,
+								CASE WHEN cii.user IS NULL THEN 1 ELSE 0 END AS locked,
+								CASE
+									WHEN cpd.stageId = dsn.stageId
+										AND cpd.user = ?
+										AND cpd.version = ?
+									THEN 1
+									ELSE 0
+								END AS equipped,
+								COUNT(*) OVER() AS total_count
+							FROM cozynet_static_chuni_stages dsn
+							LEFT JOIN chuni_item_item cii
+								ON cii.itemId = dsn.stageId
+								AND cii.user = ?
+								AND cii.itemKind = 13
+							LEFT JOIN chuni_profile_data cpd
+								ON cpd.stageId = dsn.stageId
+								AND cpd.user = ?
+								AND cpd.version = ?
+							LEFT JOIN chuni_static_opts cso
+								ON dsn.opt = cso.id
+							LEFT JOIN cozynet_web_permissions dwp
+								ON dwp.user = ?
+							WHERE dsn.version = ?
+								AND cii.user IS NOT NULL
+								AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
+								AND dsn.name != 'Linked VERSE'
+							ORDER BY
+								locked DESC,
+								dsn.stageId DESC
+						`,
+						[userId, version, userId, userId, version, userId, version]
+					)
+					const totalCount = items.length > 0 ? items[0].total_count : 0
+					return c.json({
+						items: items.map(({ total_count, ...item }) => item),
+						total: totalCount
+					})
+				}
 
-				params.unshift(userId, version, userId, userId, version, userId)
-				const [items] = await db.execute<(StageItem & { total_count: number } & RowDataPacket)[]>(query, params)
+				const [items] = await db.execute<(StageItem & { total_count: number } & RowDataPacket)[]>(
+					`
+						SELECT
+							dsn.stageId,
+							dsn.imagePath,
+							dsn.name AS label,
+							CASE WHEN cii.user IS NULL THEN 1 ELSE 0 END AS locked,
+							CASE
+								WHEN cpd.stageId = dsn.stageId
+									AND cpd.user = ?
+									AND cpd.version = ?
+								THEN 1
+								ELSE 0
+							END AS equipped,
+							COUNT(*) OVER() AS total_count
+						FROM cozynet_static_chuni_stages dsn
+						LEFT JOIN chuni_item_item cii
+							ON cii.itemId = dsn.stageId
+							AND cii.user = ?
+							AND cii.itemKind = 13
+						LEFT JOIN chuni_profile_data cpd
+							ON cpd.stageId = dsn.stageId
+							AND cpd.user = ?
+							AND cpd.version = ?
+						LEFT JOIN chuni_static_opts cso
+							ON dsn.opt = cso.id
+						LEFT JOIN cozynet_web_permissions dwp
+							ON dwp.user = ?
+						WHERE dsn.version = ?
+							AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name != 'A000'))
+							AND dsn.name != 'Linked VERSE'
+						ORDER BY
+							locked DESC,
+							dsn.stageId DESC
+					`,
+					[userId, version, userId, userId, version, userId, version]
+				)
 				const totalCount = items.length > 0 ? items[0].total_count : 0
-
-				const result = {
+				return c.json({
 					items: items.map(({ total_count, ...item }) => item),
 					total: totalCount
-				}
-
-				return c.json(result)
+				})
 			} catch (error) {
 				throw rethrowWithMessage("Failed to search stages", error)
 			}
@@ -193,11 +440,12 @@ const routes = new Hono()
 				const { userId } = c.payload
 				const { stageId } = c.req.param()
 
-				// Add stage to user's inventory
 				await db.execute<ResultSetHeader>(
-					`INSERT IGNORE INTO chuni_item_item
-                    (user, itemId, itemKind, stock, isValid)
-                    VALUES (?, ?, 13, 1, 1)`,
+					`
+						INSERT IGNORE INTO chuni_item_item
+							(user, itemId, itemKind, stock, isValid)
+						VALUES (?, ?, 13, 1, 1)
+					`,
 					[userId, stageId]
 				)
 
