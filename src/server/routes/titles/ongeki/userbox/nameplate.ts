@@ -28,7 +28,7 @@ async function getCurrentNameplate(userId: number, version: number): Promise<Nam
             END AS locked,
             1 as equipped
         FROM ongeki_profile_data opd
-        JOIN cozynet_static_nameplate dsn
+        JOIN cozynet_static_ongeki_nameplates dsn
             ON dsn.nameplateId = opd.nameplateId
             AND dsn.version = ?
         LEFT JOIN ongeki_user_item oui
@@ -143,7 +143,7 @@ const routes = new Hono()
                         ELSE 0
                     END AS equipped,
                     COUNT(*) OVER() AS total_count
-                FROM cozynet_static_nameplate dsn
+                FROM cozynet_static_ongeki_nameplates dsn
                 LEFT JOIN ongeki_user_item oui
                     ON oui.itemId = dsn.nameplateId
                     AND oui.user = ?
