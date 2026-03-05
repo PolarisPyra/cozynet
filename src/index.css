@@ -266,6 +266,22 @@ video {
 	transform: translate(-100px, 0px);
 }
 
+/* フロント装飾 */
+.avatar_front {
+	display: block;
+	width: 272px;
+	height: 330px;
+	position: absolute;
+	overflow: hidden;
+	z-index: 111;
+	top: 0px;
+	left: 0px;
+}
+
+.avatar_front img {
+	transform: translate(0px, 0px);
+}
+
 /*
 ---break---
 */

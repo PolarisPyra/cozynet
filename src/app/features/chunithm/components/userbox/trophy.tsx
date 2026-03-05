@@ -27,6 +27,7 @@ const honorBackgrounds: Record<TrophyRareType, string> = {
 	[TrophyRareType.Platinum]: `honor_bg_platina.webp`,
 	[TrophyRareType.Platinum2]: `honor_bg_platina.webp`,
 	[TrophyRareType.Rainbow]: `honor_bg_rainbow.webp`,
+	[TrophyRareType.Ultima]: `honor_bg_ultima.webp`,
 	[TrophyRareType.Staff]: `honor_bg_staff.webp`,
 	[TrophyRareType.Ongeki]: `honor_bg_ongeki.webp`,
 	[TrophyRareType.Maimai]: `honor_bg_maimai.webp`,

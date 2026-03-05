@@ -32,7 +32,8 @@ const SLOT_ORDER: AvatarSlot[] = [
 	AvatarSlot.HEAD,
 	AvatarSlot.FACE,
 	AvatarSlot.ITEM,
-	AvatarSlot.SKIN
+	AvatarSlot.SKIN,
+	AvatarSlot.FRONT
 ]
 
 export function AvatarAccessories() {

@@ -7,6 +7,7 @@ export enum TrophyRareType {
 	Platinum = 5,
 	Platinum2 = 6,
 	Rainbow = 7,
+	Ultima = 8,
 	Staff = 9,
 	Ongeki = 10,
 	Maimai = 11,

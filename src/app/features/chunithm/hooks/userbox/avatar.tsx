@@ -18,6 +18,7 @@ type AvatarImages = {
 	head: string
 	face: string
 	item: string
+	front: string
 	faceStatic: string
 	skinfootL: string
 	skinfootR: string
@@ -34,6 +35,7 @@ const getInitialAvatarImages = (): AvatarImages => ({
 	head: "",
 	item: "",
 	face: "",
+	front: "",
 	faceStatic: `${staticPath}/CHU_UI_Avatar_Tex_Face.webp`,
 	skinfootL: `${staticPath}/CHU_UI_Avatar_Tex_01400001.webp`,
 	skinfootR: `${staticPath}/CHU_UI_Avatar_Tex_01400001.webp`
@@ -56,7 +58,10 @@ const updateImages = (avatarItems: AvatarItem[], initialImages: AvatarImages): A
 			: initialImages.item,
 		face: avatarItems.find(item => item.slot === "face")?.imagePath
 			? `${nonStaticPath}/${avatarItems.find(item => item.slot === "face")?.imagePath}`
-			: initialImages.face
+			: initialImages.face,
+		front: avatarItems.find(item => item.slot === "front")?.imagePath
+			? `${nonStaticPath}/${avatarItems.find(item => item.slot === "front")?.imagePath}`
+			: initialImages.front
 	}
 	return updatedImages
 }
@@ -203,7 +208,8 @@ const ALL_SEARCHABLE_SLOTS: AvatarSlot[] = [
 	AvatarSlot.HEAD,
 	AvatarSlot.FACE,
 	AvatarSlot.ITEM,
-	AvatarSlot.SKIN
+	AvatarSlot.SKIN,
+	AvatarSlot.FRONT
 ] as const
 
 export function useSearchAvatarItems(filters: { category: number | null; locked: boolean | null }) {

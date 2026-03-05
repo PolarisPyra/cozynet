@@ -43,6 +43,7 @@ export function AvatarPreview() {
 			head: "",
 			item: "",
 			face: "",
+			front: "",
 			faceStatic: `${staticPath}/CHU_UI_Avatar_Tex_Face.webp`,
 			skinfootL: `${staticPath}/CHU_UI_Avatar_Tex_01400001.webp`,
 			skinfootR: `${staticPath}/CHU_UI_Avatar_Tex_01400001.webp`
@@ -72,7 +73,11 @@ export function AvatarPreview() {
 			face:
 				avatar.face?.imagePath && avatar.face?.label !== "ノーマル"
 					? `${nonStaticPath}/${avatar.face.imagePath}`
-					: defaultImages.face
+					: defaultImages.face,
+			front:
+				avatar.front?.imagePath && avatar.front?.label !== "ノーマル"
+					? `${nonStaticPath}/${avatar.front.imagePath}`
+					: defaultImages.front
 		}
 	}, [optimisticAvatar, currentAvatar])
 
@@ -93,6 +98,7 @@ export function AvatarPreview() {
 						<div className="avatar_item_r">{maybeImg(avatarImages.item)}</div>
 						<div className="avatar_skinfoot_l">{maybeImg(avatarImages.skinfootL)}</div>
 						<div className="avatar_skinfoot_r">{maybeImg(avatarImages.skinfootR)}</div>
+						<div className="avatar_front">{maybeImg(avatarImages.front)}</div>
 					</div>
 				</div>
 			</div>

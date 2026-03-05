@@ -39,6 +39,7 @@ async function getCurrentAvatarItems(userId: number, version: number): Promise<A
 			WHEN 3 THEN 'face'
 			WHEN 4 THEN 'skin'
 			WHEN 5 THEN 'item'
+			WHEN 6 THEN 'front'
 			WHEN 7 THEN 'back'
 		END               AS slot,
 		CASE
@@ -63,6 +64,7 @@ AND (
     (csa.category = 3 AND csa.avatarAccessoryId = cpd.avatarFace) OR
     (csa.category = 4 AND csa.avatarAccessoryId = cpd.avatarSkin) OR
     (csa.category = 5 AND csa.avatarAccessoryId = cpd.avatarItem) OR
+    (csa.category = 6 AND csa.avatarAccessoryId = cpd.avatarFront) OR
     (csa.category = 7 AND csa.avatarAccessoryId = cpd.avatarBack)
 )
 AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
@@ -92,6 +94,7 @@ const routes = new Hono()
 			z.object({
 				[AvatarSlot.BACK]: validAvatarItemId,
 				[AvatarSlot.FACE]: validAvatarItemId,
+				[AvatarSlot.FRONT]: validAvatarItemId,
 				[AvatarSlot.HEAD]: validAvatarItemId,
 				[AvatarSlot.ITEM]: validAvatarItemId,
 				[AvatarSlot.SKIN]: validAvatarItemId,
@@ -102,10 +105,10 @@ const routes = new Hono()
 			try {
 				const { userId, versions } = c.payload
 				const version = versions.chunithm_version
-				const { back, face, head, item, skin, wear } = await c.req.json()
+				const { back, face, front, head, item, skin, wear } = await c.req.json()
 
 				// Validate able to update
-				const itemIds = [back, face, head, item, skin, wear].filter(id => id !== undefined && id !== null)
+				const itemIds = [back, face, front, head, item, skin, wear].filter(id => id !== undefined && id !== null)
 				if (itemIds.length === 0) {
 					throw new HTTPException(400, {
 						message: "At least one avatar item must be provided"
@@ -134,6 +137,7 @@ const routes = new Hono()
 					SET
 						avatarBack = COALESCE(?, avatarBack),
 						avatarFace = COALESCE(?, avatarFace),
+						avatarFront = COALESCE(?, avatarFront),
 						avatarHead = COALESCE(?, avatarHead),
 						avatarItem = COALESCE(?, avatarItem),
 						avatarSkin = COALESCE(?, avatarSkin),
@@ -141,7 +145,7 @@ const routes = new Hono()
 					WHERE user = ?
 					  AND version = ?
 				`,
-					[back ?? null, face ?? null, head ?? null, item ?? null, skin ?? null, wear ?? null, userId, version]
+					[back ?? null, face ?? null, front ?? null, head ?? null, item ?? null, skin ?? null, wear ?? null, userId, version]
 				)
 
 				if (result.affectedRows === 0) {
@@ -181,6 +185,7 @@ const routes = new Hono()
 					face: 3,
 					skin: 4,
 					item: 5,
+					front: 6,
 					back: 7
 				}
 				const categoryNumbers = slot.map((s: AvatarSlot) => categoryMap[s])
@@ -199,6 +204,7 @@ const routes = new Hono()
 						WHEN 3 THEN 'face'
 						WHEN 4 THEN 'skin'
 						WHEN 5 THEN 'item'
+						WHEN 6 THEN 'front'
 						WHEN 7 THEN 'back'
 					END               AS slot,
 					CASE
@@ -211,6 +217,7 @@ const routes = new Hono()
 							(csa.category = 3 AND cpd.avatarFace = csa.avatarAccessoryId) OR
 							(csa.category = 4 AND cpd.avatarSkin = csa.avatarAccessoryId) OR
 							(csa.category = 5 AND cpd.avatarItem = csa.avatarAccessoryId) OR
+							(csa.category = 6 AND cpd.avatarFront = csa.avatarAccessoryId) OR
 							(csa.category = 7 AND cpd.avatarBack = csa.avatarAccessoryId)
 						THEN 0
 						ELSE 1

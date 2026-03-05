@@ -7,7 +7,7 @@ export interface Filter<T = unknown> {
 	label: string
 	options: { label: string; value: string }[]
 	isRequired?: boolean
-	predicate: (item: T, value: string) => boolean
+	predicate: (item: T, value: string, values?: FilterValues) => boolean
 }
 
 export function useFiltering<T extends Record<string, unknown>>(
@@ -25,7 +25,7 @@ export function useFiltering<T extends Record<string, unknown>>(
 			if (q && !String(item[searchField] ?? "").toLowerCase().includes(q)) return false
 			return filters.every(f => {
 				const v = filterValues?.[f.identifier]
-				return v === undefined || v === "all" || f.predicate(item, v)
+				return v === undefined || v === "all" || f.predicate(item, v, filterValues)
 			})
 		})
 	}, [data, filters, searchQuery, filterValues, searchField])

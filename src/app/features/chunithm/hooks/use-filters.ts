@@ -47,21 +47,15 @@ export const ratingFilters = (version: number): Filter<ChunithmRating>[] => [
 		predicate: () => true
 	},
 	{
-		identifier: "level",
-		label: "Level",
-		options: LEVELS,
-		predicate: (r, v) => (!r.level || r.chartId === 5 ? false : LEVEL_CONFIGS.CHUNITHM(r.level, v))
-	},
-	{
-		identifier: "achievement",
-		label: "Achievement",
+		identifier: "sort",
+		label: "Sort",
 		options: [
-			{ label: "All", value: "all" },
-			{ label: "Full Combo", value: "fc" },
-			{ label: "All Justice", value: "aj" },
-			{ label: "Full Chain", value: "fch" }
+			{ label: "Default", value: "default" },
+			{ label: "Floor (Lowest Level)", value: "floor" },
+			{ label: "Ceiling (Highest Level)", value: "ceiling" }
 		],
-		predicate: (r, v) => (v === "fc" ? r.isFullCombo === 1 : v === "aj" ? r.isAllJustice === 1 : v === "fch" ? r.fullChain === 1 : true)
+		// Sorting is handled in the page component; this filter never excludes items.
+		predicate: () => true
 	}
 ]
 
