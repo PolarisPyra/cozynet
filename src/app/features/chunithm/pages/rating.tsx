@@ -8,18 +8,15 @@ import Spinner from "@/app/shared/components/common/spinner"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues, ChunithmRating } from "@/app/shared/types"
-import { LEVELS } from "@/app/shared/config/filter-options"
-import { LEVEL_CONFIGS } from "@/app/shared/utils/level-filter"
 import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
 
-const CHUNI_LEVEL_ORDER = LEVELS.filter(l => l.value !== "all").map(l => l.value)
-
-const getChuniLevelBucketIndex = (rating: ChunithmRating): number => {
-	// Treat invalid or WORLDS END charts as very high so they naturally fall to the ends
-	if (rating.level == null || !Number.isFinite(rating.level) || rating.chartId === 5) return Number.POSITIVE_INFINITY
-
-	const idx = CHUNI_LEVEL_ORDER.findIndex(value => LEVEL_CONFIGS.CHUNITHM(rating.level, value))
-	return idx === -1 ? Number.POSITIVE_INFINITY : idx
+const getLevelSortValue = (rating: ChunithmRating): number => {
+	// For normal charts use the numeric constant level directly.
+	// Treat missing levels or WORLDS END as very large so they fall to the end for "Floor" and to the front for "Ceiling".
+	if (rating.level == null || !Number.isFinite(rating.level) || rating.chartId === 5) {
+		return Number.POSITIVE_INFINITY
+	}
+	return rating.level
 }
 
 export default function ChunithmRatingPage() {
@@ -40,11 +37,11 @@ export default function ChunithmRatingPage() {
 		const sortMode = filterValues.sort || "default"
 
 		if (sortMode === "floor") {
-			// Lowest level first
-			list.sort((a, b) => getChuniLevelBucketIndex(a) - getChuniLevelBucketIndex(b))
+			// Strictly lowest level first
+			list.sort((a, b) => getLevelSortValue(a) - getLevelSortValue(b))
 		} else if (sortMode === "ceiling") {
-			// Highest level first
-			list.sort((a, b) => getChuniLevelBucketIndex(b) - getChuniLevelBucketIndex(a))
+			// Strictly highest level first
+			list.sort((a, b) => getLevelSortValue(b) - getLevelSortValue(a))
 		}
 
 		return list
