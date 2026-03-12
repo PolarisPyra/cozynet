@@ -35,9 +35,25 @@ export const KeychipGenerator = function () {
 	const hasSerialId = showNamcoPcbId ? !!formData.namcopcbid : !!formData.aimecard
 
 	const handleChange = function (e: { target: { name: string; value: string } }) {
+		const { name, value } = e.target
+		let normalized = value
+		if (name === "aimecard" || name === "namcopcbid") {
+			// Allow only A-Z, 0-9, and dash; user types dash manually. Max 15 chars excluding dash.
+			const filtered = value.toUpperCase().replace(/[^A-Z0-9-]/g, "")
+			let result = ""
+			let nonDashCount = 0
+			for (const c of filtered) {
+				if (c === "-") result += c
+				else if (nonDashCount < 15) {
+					result += c
+					nonDashCount++
+				}
+			}
+			normalized = result
+		}
 		setFormData({
 			...formData,
-			[e.target.name]: e.target.value
+			[name]: normalized
 		})
 	}
 
@@ -51,16 +67,6 @@ export const KeychipGenerator = function () {
 		setOpenDropdown(false)
 	}
 
-	/**
-	 * Formats keychip ID for display: A69E01A85421811 -> A69E-01A85421811
-	 * This is purely for frontend display - server stores raw format
-	 */
-	const formatKeychipIdForDisplay = (keychipId: string): string => {
-		if (!keychipId) return ""
-		// Format: A69E01A85421811 -> A69E-01A85421811 (add dash after E for display)
-		return keychipId.substring(0, 4) + "-" + keychipId.substring(4)
-	}
-
 	const generateRandomSerial = function () {
 		let uniqueNumbers = ""
 		while (uniqueNumbers.length < 4) {
@@ -68,8 +74,8 @@ export const KeychipGenerator = function () {
 			if (!uniqueNumbers.includes(digit.toString())) uniqueNumbers += digit
 		}
 		const randomNumbers = Math.floor(1000 + Math.random() * 9000)
-		// Store raw format (no hyphen) - server expects this format
-		const randomSerial = `A69E01A${uniqueNumbers}${randomNumbers}`
+		// Store with dash so it displays as A69E-01A... (dash stripped on submit)
+		const randomSerial = `A69E-01A${uniqueNumbers}${randomNumbers}`
 
 		setFormData(data => ({
 			...data,
@@ -82,9 +88,14 @@ export const KeychipGenerator = function () {
 		setIsLoading(true)
 
 		try {
-			// formData already contains raw format (no hyphens), send directly
+			// Server expects raw format (no hyphens); strip if user typed a dash
+			const payload = {
+				...formData,
+				aimecard: formData.aimecard.replace(/-/g, ""),
+				namcopcbid: formData.namcopcbid.replace(/-/g, "")
+			}
 			const response = await api.admin.keychip.generate.$post({
-				json: formData
+				json: payload
 			})
 
 			if (!response.ok) {
@@ -178,23 +189,16 @@ export const KeychipGenerator = function () {
 
 				<div>
 					<label className="text-primary mb-1 block text-sm font-medium">
-						{showNamcoPcbId ? "Namco PCBID" : "Aime Card"}
+						{showNamcoPcbId ? "Namco PCBID" : "Keychip ID"}
 					</label>
 					<input
 						type="text"
-						placeholder={showNamcoPcbId ? "Enter Namco PCBID" : "Enter Aime Card"}
+						placeholder={showNamcoPcbId ? "Enter Namco PCBID" : "Enter keychip ID"}
 						name={showNamcoPcbId ? "namcopcbid" : "aimecard"}
-						value={
-							showNamcoPcbId
-								? formData.namcopcbid
-								: formData.aimecard
-									? formatKeychipIdForDisplay(formData.aimecard)
-									: ""
-						}
+						value={showNamcoPcbId ? formData.namcopcbid : formData.aimecard}
 						onChange={handleChange}
 						className="bg-background text-foreground border-input w-full rounded border p-2 font-mono"
 						required
-						readOnly
 					/>
 				</div>
 
