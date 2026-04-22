@@ -58,7 +58,14 @@ const ChunithmProfileRoutes = new Hono()
 					music.artist,
 					ev.earliest_version as songVersion,
 					ls.name as skillName,
-					ls.categoryName
+					ls.categoryName,
+					CASE
+						WHEN ul.placeId IS NULL
+							AND ul.placeName IS NULL
+							AND ul.characterId IS NULL
+						THEN 1
+						ELSE 0
+					END AS isImported
 				FROM chuni_score_playlog ul
 				INNER JOIN (
 					SELECT songId, chartId, MAX(version) as latest_version

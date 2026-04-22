@@ -36,6 +36,7 @@ const OngekiProfileRoutes = new Hono()
                 SELECT
                     csp.id,
                     csp.userPlayDate,
+                    csp.version AS scoreVersion,
                     csp.maxCombo,
                     csp.isFullCombo,
                     csp.platinumScore,
@@ -62,27 +63,34 @@ const OngekiProfileRoutes = new Hono()
                     csm.jacketPath,
                     csm.noteCount,
                     csm.artist,
-                    ev.earliest_version
+                    sv.earliest_version,
+                    CASE
+                        WHEN csp.placeId IS NULL
+                            AND csp.placeName IS NULL
+                            AND csp.cardId1 IS NULL
+                            AND csp.cardId2 IS NULL
+                            AND csp.cardId3 IS NULL
+                        THEN 1
+                        ELSE 0
+                    END AS isImported
                 FROM
                     ongeki_score_playlog csp
-                JOIN ongeki_profile_data d ON csp.user = d.user
+                INNER JOIN (
+                    SELECT songId, chartId, MAX(version) as latest_version, MIN(version) as earliest_version
+                    FROM ongeki_static_music
+                    WHERE version <= ?
+                    GROUP BY songId, chartId
+                ) sv ON csp.musicId = sv.songId AND csp.level = sv.chartId
                 JOIN ongeki_static_music csm
                     ON csp.musicId = csm.songId
                     AND csp.level = csm.chartId
-                    AND csm.version = ?
-                INNER JOIN (
-                    SELECT songId, chartId, MIN(version) as earliest_version
-                    FROM ongeki_static_music
-                    GROUP BY songId, chartId
-                ) ev ON csm.songId = ev.songId AND csm.chartId = ev.chartId
-                JOIN aime_card a ON d.user = a.user
+                    AND csm.version = sv.latest_version
                 WHERE
-                    a.user = ?
-                    AND d.version = ?
+                    csp.user = ?
                 ORDER BY
                     csp.userPlayDate DESC;
                     `,
-				[version, userId, version]
+				[version, userId]
 			)
 			return c.json(results)
 		} catch (error) {

@@ -10,6 +10,7 @@ export type ChunithmPlaylog = DB.ChuniScorePlaylog & {
 	level?: number | null
 	songVersion?: number
 	skillName?: string | null
+	isImported?: number | null
 }
 
 export type OngekiPlaylog = DB.OngekiScorePlaylog & {
@@ -26,6 +27,8 @@ export type OngekiPlaylog = DB.OngekiScorePlaylog & {
 	isTechNewRecord?: number | null
 	isBattleNewRecord?: number | null
 	earliest_version?: number
+	scoreVersion?: number | null
+	isImported?: number | null
 }
 
 export type Mai2Playlog = DB.Mai2Playlog & {

@@ -8,22 +8,17 @@ interface ScoreRatingInput {
 	isFullCombo?: number
 	isAllBreak?: number
 	isFullBell?: number
+	scoreVersion?: number | null
 	version: number
 	platinumScoreStar?: number | null
 }
 
 export const useOngekiScoreRating = function (input: ScoreRatingInput) {
-	// Determine if this is Refresh based on platinumScoreStar presence, not user's version
-	// Scores with platinumScoreStar are from Refresh (v8+), scores without are pre-Refresh
-	const isRefresh = input.platinumScoreStar != null
+	const scoreVersion = input.scoreVersion ?? input.version
+	const isRefresh = scoreVersion >= 8
 
-	// If we have a stored playerRating, convert it using the shared utility
-	if (input.playerRating && input.playerRating > 0) {
-		const { rating } = convertOngekiScoreRating(input.playerRating, isRefresh)
-		return { calculatedRating: rating, isRefresh }
-	}
-
-	// Otherwise, calculate from techScore and level
+	// Prefer recalculating from score data so imported rows render consistently
+	// even if the stored playerRating format differs.
 	if (input.techScore != null && input.level != null) {
 		const calculatedRating = isRefresh
 			? calculateOngekiGekForceRating(
@@ -36,6 +31,11 @@ export const useOngekiScoreRating = function (input: ScoreRatingInput) {
 			: calculateOngekiRating(input.level, input.techScore) / 100
 
 		return { calculatedRating, isRefresh }
+	}
+
+	if (input.playerRating && input.playerRating > 0) {
+		const { rating } = convertOngekiScoreRating(input.playerRating, isRefresh)
+		return { calculatedRating: rating, isRefresh }
 	}
 
 	return { calculatedRating: null, isRefresh }

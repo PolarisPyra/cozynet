@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 
 import { toast } from "sonner"
 
+import { ChunithmKamaiImportDialog } from "@/app/features/chunithm/components/kamai-import-dialog"
 import ChunithmScoreInfoCard from "@/app/features/chunithm/components/score-info-card"
 import { scoreFilters, useChunithmScores, useScoreExporter } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
@@ -102,9 +103,12 @@ export default function ChunithmScorePage() {
 								setPage(1)
 							}}
 						/>
-						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
-							{isExporting ? "Exporting..." : "Export for Kamai"}
-						</Button>
+						<div className="flex flex-wrap gap-2">
+							<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
+								{isExporting ? "Exporting..." : "Export for Kamai"}
+							</Button>
+							<ChunithmKamaiImportDialog existingScores={scores || []} />
+						</div>
 					</div>
 				</FilterArea>
 

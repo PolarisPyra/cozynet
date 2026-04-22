@@ -17,6 +17,7 @@ export {
 	useUserRatingBaseNextList
 } from "./use-rating"
 export { useOngekiScoreExporter } from "./use-score-exporter"
+export { useOngekiScoreImporter } from "./use-score-importer"
 export { useOngekiRatingColor } from "./use-rating-colors"
 export { default as useOngekiRatingData } from "./use-rating-data"
 export { useAddRival, useRemoveRival, useRivalCount, useRivalUsers, useRivals } from "./use-rivals"

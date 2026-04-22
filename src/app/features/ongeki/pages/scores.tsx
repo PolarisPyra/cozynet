@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 
 import { toast } from "sonner"
 
+import { OngekiKamaiImportDialog } from "@/app/features/ongeki/components/kamai-import-dialog"
 import { OngekiScoreInfoCard } from "@/app/features/ongeki/components/score-info-card"
 import { scoreFilters, useOngekiScoreExporter, useOngekiScores, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
@@ -116,9 +117,12 @@ export function OngekiScorePage() {
 								setPage(1)
 							}}
 						/>
-						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
-							{isExporting ? "Exporting..." : "Export for Kamai"}
-						</Button>
+						<div className="flex flex-wrap gap-2">
+							<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
+								{isExporting ? "Exporting..." : "Export for Kamai"}
+							</Button>
+							<OngekiKamaiImportDialog existingScores={scores || []} />
+						</div>
 					</div>
 				</FilterArea>
 

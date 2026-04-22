@@ -102,6 +102,7 @@ export function OngekiScoreInfoCard({
 		isFullCombo: score.isFullCombo,
 		isAllBreak: score.isAllBreak,
 		isFullBell: score.isFullBell,
+		scoreVersion: score.scoreVersion,
 		version: ongekiVersion,
 		platinumScoreStar: score.platinumScoreStar
 	})
@@ -240,11 +241,17 @@ export function OngekiScoreInfoCard({
 					)}
 				</div>
 				<div className="flex items-center gap-1.5 flex-wrap">
-					<VersionLogoBadge
-						logoUrl={songVersionLogo}
-						tooltip="Version the song originated in"
-						alt={`Song version ${score.earliest_version ?? "unknown"}`}
-					/>
+					{score.isImported === 1 ? (
+						<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
+							Imported
+						</Badge>
+					) : (
+						<VersionLogoBadge
+							logoUrl={songVersionLogo}
+							tooltip="Version the song originated in"
+							alt={`Song version ${score.earliest_version ?? "unknown"}`}
+						/>
+					)}
 				</div>
 			</div>
 

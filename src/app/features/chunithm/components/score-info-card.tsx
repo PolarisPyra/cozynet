@@ -68,15 +68,17 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 
 	const { scoreVersionId, scoreVersionLogo, songVersionLogo, ratingValue, isWorldsEnd, starCount } = useMemo(() => {
 		const versionId = convertRomVersionToVersion(score.romVersion)
+		const calculatedRating =
+			score.score != null && score.level != null ? calculateChunithmRating(score.level, score.score) / 100 : null
 		return {
 			scoreVersionId: versionId,
 			scoreVersionLogo: getChunithmLogo.getLogo(versionId),
 			songVersionLogo: getChunithmLogo.getLogo(score.songVersion),
-			ratingValue: convertChunithmScoreRating(score.playerRating),
+			ratingValue: calculatedRating ?? convertChunithmScoreRating(score.playerRating),
 			isWorldsEnd: score.chartId === 5,
 			starCount: levelToStars(score.level)
 		}
-	}, [score.romVersion, score.songVersion, score.playerRating, score.chartId, score.level])
+	}, [score.romVersion, score.songVersion, score.playerRating, score.chartId, score.level, score.score])
 
 	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
 		score.musicId ?? 0,
@@ -220,11 +222,17 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 					)}
 				</div>
 				<div className="flex items-center gap-1.5 flex-wrap">
-					<VersionLogoBadge
-						logoUrl={scoreVersionLogo}
-						tooltip="Version the score was set in"
-						alt={`Score version ${scoreVersionId ?? "unknown"}`}
-					/>
+					{score.isImported === 1 ? (
+						<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
+							Imported
+						</Badge>
+					) : (
+						<VersionLogoBadge
+							logoUrl={scoreVersionLogo}
+							tooltip="Version the score was set in"
+							alt={`Score version ${scoreVersionId ?? "unknown"}`}
+						/>
+					)}
 					<VersionLogoBadge
 						logoUrl={songVersionLogo}
 						tooltip="Version the song originated in"
@@ -258,5 +266,4 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 })
 
 export default ChunithmScoreInfoCard
-
 
