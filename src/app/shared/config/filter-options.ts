@@ -23,7 +23,8 @@ export const LEVELS = [
 	{ label: "14", value: "14" },
 	{ label: "14+", value: "14+" },
 	{ label: "15", value: "15" },
-	{ label: "15+", value: "15+" }
+	{ label: "15+", value: "15+" },
+	{ label: "16", value: "16" }
 ]
 
 export const LEVELS_ONGEKI = [
@@ -62,4 +63,3 @@ export const STARS = [
 	{ label: "4 Star", value: "star4" },
 	{ label: "5 Star", value: "star5" }
 ]
-

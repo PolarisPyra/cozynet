@@ -44,14 +44,14 @@ type KamaiPbScore = {
 	game?: string
 	playtype?: string
 	songID?: number
-	timeAchieved?: number
+	timeAchieved?: number | null
 	scoreData?: {
 		score?: number
 		noteLamp?: OngekiKamaiImportScore["noteLamp"]
 		bellLamp?: OngekiKamaiImportScore["bellLamp"]
 		platinumScore?: number | null
 		platinumStars?: number | null
-		judgements?: OngekiKamaiImportScore["judgements"]
+		judgements?: Partial<OngekiKamaiImportScore["judgements"]>
 		optional?: {
 			maxCombo?: number
 			damage?: number | null
@@ -79,6 +79,32 @@ const getPreviewRowId = (
 
 const getExistingPlaylogKey = (score: OngekiPlaylog) =>
 	`${score.musicId ?? 0}:${score.chartId ?? score.level ?? -1}:${score.techScore ?? 0}`
+
+// Kamai PB exports may use null for missing play times. Omit the field so the
+// importer sends the optional shape expected by the backend schema.
+const sanitizeTimeAchieved = (value: unknown) => (typeof value === "number" ? value : undefined)
+
+const sanitizeJudgements = (value: unknown): OngekiKamaiImportScore["judgements"] | undefined => {
+	if (!value || typeof value !== "object") {
+		return undefined
+	}
+
+	const judgements = value as Partial<Record<keyof NonNullable<OngekiKamaiImportScore["judgements"]>, unknown>>
+	const keys: (keyof NonNullable<OngekiKamaiImportScore["judgements"]>)[] = ["cbreak", "break", "hit", "miss"]
+
+	// Some exports include an empty judgements object. Drop it entirely instead of
+	// forwarding a partial object that would fail request validation.
+	if (!keys.every(key => typeof judgements[key] === "number")) {
+		return undefined
+	}
+
+	return {
+		cbreak: judgements.cbreak as number,
+		break: judgements.break as number,
+		hit: judgements.hit as number,
+		miss: judgements.miss as number
+	}
+}
 
 const normalizeExportScores = (scores: unknown[]): OngekiKamaiImportScore[] => {
 	return scores.flatMap((raw, index) => {
@@ -119,8 +145,8 @@ const normalizeExportScores = (scores: unknown[]): OngekiKamaiImportScore[] => {
 				noteLamp: score.noteLamp ?? "LOSS",
 				bellLamp: score.bellLamp ?? "NONE",
 				platinumScore: score.platinumScore ?? null,
-				timeAchieved: score.timeAchieved,
-				judgements: score.judgements,
+				timeAchieved: sanitizeTimeAchieved(score.timeAchieved),
+				judgements: sanitizeJudgements(score.judgements),
 				maxCombo: score.optional?.maxCombo,
 				damage: score.optional?.damage ?? null,
 				bellCount: score.optional?.bellCount ?? null,
@@ -167,8 +193,8 @@ const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDefinitio
 				platinumScore: pb.scoreData?.platinumScore ?? null,
 				platinumScoreMax: chart?.data?.maxPlatScore ?? null,
 				platinumStars: pb.scoreData?.platinumStars ?? null,
-				timeAchieved: pb.timeAchieved,
-				judgements: pb.scoreData?.judgements,
+				timeAchieved: sanitizeTimeAchieved(pb.timeAchieved),
+				judgements: sanitizeJudgements(pb.scoreData?.judgements),
 				maxCombo: pb.scoreData?.optional?.maxCombo,
 				damage: pb.scoreData?.optional?.damage ?? null,
 				bellCount: pb.scoreData?.optional?.bellCount ?? null,
@@ -205,6 +231,7 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 	const [fileName, setFileName] = useState<string | null>(null)
 	const [parsedScores, setParsedScores] = useState<OngekiKamaiImportScore[]>([])
 	const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({})
+	const [onlyShowReadyRows, setOnlyShowReadyRows] = useState(false)
 
 	const { data: songs } = useOngekiSongs()
 	const importMutation = useOngekiScoreImporter()
@@ -253,6 +280,11 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 		[previewRows, selectedKeys]
 	)
 
+	const visiblePreviewRows = useMemo(
+		() => previewRows.filter(row => !onlyShowReadyRows || row.status === "ready"),
+		[previewRows, onlyShowReadyRows]
+	)
+
 	const summary = useMemo(
 		() => ({
 			ready: previewRows.filter(row => row.status === "ready").length,
@@ -268,6 +300,7 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 		setParsedScores([])
 		setSelectedKeys({})
 		setIsDragActive(false)
+		setOnlyShowReadyRows(false)
 		if (inputRef.current) {
 			inputRef.current.value = ""
 		}
@@ -401,9 +434,7 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 						<FileUp className="h-5 w-5" />
 					</div>
 					<p className="text-sm font-medium">{fileName ?? "Drag and drop a Kamai JSON here"}</p>
-					<p className="text-muted-foreground mt-1 text-xs">
-						or click to browse for `ongekiall.json` or an export file
-					</p>
+					<p className="text-muted-foreground mt-1 text-xs">or click and browse to upload</p>
 				</div>
 
 				{previewRows.length > 0 && (
@@ -419,21 +450,35 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 
 						<div className="rounded-lg border">
 							<div className="border-b px-4 py-3">
-								<p className="text-sm font-medium">Preview</p>
-								<p className="text-muted-foreground text-xs">Only checked rows with a ready status will be imported.</p>
+								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+									<div>
+										<p className="text-sm font-medium">Preview</p>
+										<p className="text-muted-foreground text-xs">
+											Only checked rows with a ready status will be imported.
+										</p>
+									</div>
+									<label className="flex items-center gap-2 text-xs font-medium">
+										<Checkbox checked={onlyShowReadyRows} onCheckedChange={checked => setOnlyShowReadyRows(checked === true)} />
+										Only show ready to import songs
+									</label>
+								</div>
 							</div>
 							<div className="h-80 overflow-y-auto">
 								<div className="divide-y">
-									{previewRows.map(row => (
+									{visiblePreviewRows.map(row => (
 										<label
 											key={row.id}
 											className={cn("flex items-start gap-3 px-4 py-3", row.status !== "ready" && "opacity-60")}
 										>
-											<Checkbox
-												checked={Boolean(selectedKeys[row.id])}
-												disabled={row.status !== "ready"}
-												onCheckedChange={checked => setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))}
-											/>
+											{row.status === "unknown-song" ? (
+												<div className="size-4 shrink-0" />
+											) : (
+												<Checkbox
+													checked={Boolean(selectedKeys[row.id])}
+													disabled={row.status !== "ready"}
+													onCheckedChange={checked => setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))}
+												/>
+											)}
 											<div className="min-w-0 flex-1">
 												<div className="flex flex-wrap items-center gap-2">
 													<p className="text-sm font-medium">{row.title ?? `Song ${row.musicId}`}</p>

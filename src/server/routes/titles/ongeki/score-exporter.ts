@@ -120,6 +120,21 @@ type ExecutableConnection = PoolConnection & {
 	execute: <T = unknown>(sql: string, values?: unknown[]) => Promise<[T, unknown]>
 }
 
+const normalizeNullableNumber = (value: unknown) => (value === null || value === undefined ? undefined : value)
+
+const normalizeOptionalJudgements = (value: unknown) => {
+	if (!value || typeof value !== "object") {
+		return undefined
+	}
+
+	const judgementRecord = value as Partial<Record<"cbreak" | "break" | "hit" | "miss", unknown>>
+	const requiredKeys = ["cbreak", "break", "hit", "miss"] as const
+
+	// Older Kamai exports can send an empty judgements object. Treat that the same
+	// as a missing optional field so validation does not reject the entire import.
+	return requiredKeys.every(key => typeof judgementRecord[key] === "number") ? judgementRecord : undefined
+}
+
 const ImportScoreSchema = z.object({
 	musicId: z.number().int().nonnegative(),
 	level: z.union([z.number().int().min(0).max(3), z.literal(10)]),
@@ -129,15 +144,19 @@ const ImportScoreSchema = z.object({
 	platinumScore: z.number().int().min(0).nullable().optional(),
 	platinumScoreMax: z.number().int().min(0).nullable().optional(),
 	platinumStars: z.number().int().min(0).nullable().optional(),
-	timeAchieved: z.number().int().nonnegative().optional(),
-	judgements: z
-		.object({
-			cbreak: z.number().int().min(0),
-			break: z.number().int().min(0),
-			hit: z.number().int().min(0),
-			miss: z.number().int().min(0)
-		})
-		.optional(),
+	// Kamai can emit null here; normalize it away so the field stays truly optional.
+	timeAchieved: z.preprocess(normalizeNullableNumber, z.number().int().nonnegative().optional()),
+	judgements: z.preprocess(
+		normalizeOptionalJudgements,
+		z
+			.object({
+				cbreak: z.number().int().min(0),
+				break: z.number().int().min(0),
+				hit: z.number().int().min(0),
+				miss: z.number().int().min(0)
+			})
+			.optional()
+	),
 	maxCombo: z.number().int().min(0).optional(),
 	damage: z.number().int().min(0).nullable().optional(),
 	bellCount: z.number().int().min(0).nullable().optional(),

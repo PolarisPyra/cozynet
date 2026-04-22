@@ -180,6 +180,7 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 	const [fileName, setFileName] = useState<string | null>(null)
 	const [parsedScores, setParsedScores] = useState<ChunithmKamaiImportScore[]>([])
 	const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({})
+	const [onlyShowReadyRows, setOnlyShowReadyRows] = useState(false)
 
 	const { data: songs } = useChunithmSongs()
 	const importMutation = useScoreImporter()
@@ -228,6 +229,11 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 		[previewRows, selectedKeys]
 	)
 
+	const visiblePreviewRows = useMemo(
+		() => previewRows.filter(row => !onlyShowReadyRows || row.status === "ready"),
+		[previewRows, onlyShowReadyRows]
+	)
+
 	const summary = useMemo(
 		() => ({
 			ready: previewRows.filter(row => row.status === "ready").length,
@@ -243,6 +249,7 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 		setParsedScores([])
 		setSelectedKeys({})
 		setIsDragActive(false)
+		setOnlyShowReadyRows(false)
 		if (inputRef.current) {
 			inputRef.current.value = ""
 		}
@@ -358,7 +365,7 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 						<FileUp className="h-5 w-5" />
 					</div>
 					<p className="text-sm font-medium">{fileName ?? "Drag and drop a Kamai JSON here"}</p>
-					<p className="text-muted-foreground mt-1 text-xs">or click to browse for `all.json` or an export file</p>
+					<p className="text-muted-foreground mt-1 text-xs">or click and browse to upload</p>
 				</div>
 
 				{previewRows.length > 0 && (
@@ -374,21 +381,35 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 
 						<div className="rounded-lg border">
 							<div className="border-b px-4 py-3">
-								<p className="text-sm font-medium">Preview</p>
-								<p className="text-muted-foreground text-xs">Only checked rows with a ready status will be imported.</p>
+								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+									<div>
+										<p className="text-sm font-medium">Preview</p>
+										<p className="text-muted-foreground text-xs">
+											Only checked rows with a ready status will be imported.
+										</p>
+									</div>
+									<label className="flex items-center gap-2 text-xs font-medium">
+										<Checkbox checked={onlyShowReadyRows} onCheckedChange={checked => setOnlyShowReadyRows(checked === true)} />
+										Only show ready to import songs
+									</label>
+								</div>
 							</div>
 							<div className="h-80 overflow-y-auto">
 								<div className="divide-y">
-									{previewRows.map(row => (
+									{visiblePreviewRows.map(row => (
 										<label
 											key={row.id}
 											className={cn("flex items-start gap-3 px-4 py-3", row.status !== "ready" && "opacity-60")}
 										>
-											<Checkbox
-												checked={Boolean(selectedKeys[row.id])}
-												disabled={row.status !== "ready"}
-												onCheckedChange={checked => setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))}
-											/>
+											{row.status === "unknown-song" ? (
+												<div className="size-4 shrink-0" />
+											) : (
+												<Checkbox
+													checked={Boolean(selectedKeys[row.id])}
+													disabled={row.status !== "ready"}
+													onCheckedChange={checked => setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))}
+												/>
+											)}
 											<div className="min-w-0 flex-1">
 												<div className="flex flex-wrap items-center gap-2">
 													<p className="text-sm font-medium">{row.title ?? `Song ${row.musicId}`}</p>
