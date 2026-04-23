@@ -68,13 +68,14 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 
 	const { scoreVersionId, scoreVersionLogo, songVersionLogo, ratingValue, isWorldsEnd, starCount } = useMemo(() => {
 		const versionId = convertRomVersionToVersion(score.romVersion)
+		const storedRating = convertChunithmScoreRating(score.playerRating)
 		const calculatedRating =
 			score.score != null && score.level != null ? calculateChunithmRating(score.level, score.score) / 100 : null
 		return {
 			scoreVersionId: versionId,
 			scoreVersionLogo: getChunithmLogo.getLogo(versionId),
 			songVersionLogo: getChunithmLogo.getLogo(score.songVersion),
-			ratingValue: calculatedRating ?? convertChunithmScoreRating(score.playerRating),
+			ratingValue: storedRating || calculatedRating || 0,
 			isWorldsEnd: score.chartId === 5,
 			starCount: levelToStars(score.level)
 		}
@@ -95,7 +96,7 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 			)}
 		>
 			{/* Top Section: Image, Title, Score */}
-			<div className="flex items-start gap-3 mb-2">
+			<div className="mb-2 flex items-start gap-3">
 				{/* Album Art */}
 				<div className="flex-shrink-0">
 					<CardImage
@@ -103,13 +104,13 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 						alt={score.title ?? ""}
 						width={64}
 						height={64}
-						className="w-16 h-16 rounded-md"
+						className="h-16 w-16 rounded-md"
 					/>
 				</div>
 
 				{/* Title and Info */}
-				<div className="flex-1 min-w-0 flex flex-col gap-1.5">
-					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
+				<div className="flex min-w-0 flex-1 flex-col gap-1.5">
+					<h3 className="text-foreground line-clamp-2 text-base leading-snug font-semibold break-words">
 						{score.title}
 					</h3>
 					<div className="flex items-center gap-2">
@@ -136,11 +137,9 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 				</div>
 
 				{/* Score and Rating */}
-				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+				<div className="flex flex-shrink-0 flex-col items-end gap-2.5 text-right">
 					<div>
-						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
-							Score
-						</div>
+						<div className="text-muted-foreground mb-1 text-[10px] font-medium tracking-wider uppercase">Score</div>
 						<div className="flex items-baseline gap-1.5">
 							<span className="text-foreground text-lg font-bold tabular-nums">
 								{score.score?.toLocaleString() ?? "-"}
@@ -149,18 +148,18 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 						</div>
 					</div>
 					<div>
-						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+						<div className="text-muted-foreground mb-1 text-[10px] font-medium tracking-wider uppercase">
 							Player Rating
 						</div>
 						<div>
 							{ratingValue > 0 ? (
-								(version || scoreVersionId) ? (
+								version || scoreVersionId ? (
 									<ChunithmRatingColors rating={ratingValue} version={version || scoreVersionId} />
 								) : (
 									<span className="text-foreground text-sm font-semibold">{ratingValue.toFixed(2)}</span>
 								)
 							) : (
-								<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
+								<span className="text-foreground text-muted-foreground text-xs font-medium">-</span>
 							)}
 						</div>
 					</div>
@@ -168,7 +167,7 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 			</div>
 
 			{/* Achievement Badges */}
-			<div className="flex flex-col gap-2 mb-2">
+			<div className="mb-2 flex flex-col gap-2">
 				<div className="flex items-center gap-2">
 					<ChunithmAchievementBadges
 						isFullCombo={score.isFullCombo ?? 0}
@@ -180,10 +179,7 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 					/>
 				</div>
 				{score.skillName && (
-					<Badge
-						variant="secondary"
-						className="h-5 rounded-md px-2 text-xs w-fit"
-					>
+					<Badge variant="secondary" className="h-5 w-fit rounded-md px-2 text-xs">
 						{score.skillName}
 					</Badge>
 				)}
@@ -192,36 +188,39 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 			<Separator className="my-1.5" />
 
 			{/* Footer */}
-			<div className="flex flex-col gap-1.5 min-w-0 w-full">
-				<div className="flex items-center gap-1.5 flex-wrap">
+			<div className="flex w-full min-w-0 flex-col gap-1.5">
+				<div className="flex flex-wrap items-center gap-1.5">
 					{score.userPlayDate ? (
 						<>
-							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
+							<Badge variant="secondary" className="h-5 flex-shrink-0 rounded-md px-1.5 text-xs whitespace-nowrap">
 								{formatSqlDateToLocalParts(score.userPlayDate).date}
 							</Badge>
-							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
+							<Badge variant="secondary" className="h-5 flex-shrink-0 rounded-md px-1.5 text-xs whitespace-nowrap">
 								{formatSqlDateToLocalParts(score.userPlayDate).time}
 							</Badge>
 						</>
 					) : (
-						<span className="text-muted-foreground text-xs flex-shrink-0">—</span>
+						<span className="text-muted-foreground flex-shrink-0 text-xs">—</span>
 					)}
 					<Badge
 						variant="secondary"
-						className="hover:bg-muted/70 h-5 cursor-pointer rounded-md px-1 transition-colors flex-shrink-0"
+						className="hover:bg-muted/70 h-5 flex-shrink-0 cursor-pointer rounded-md px-1 transition-colors"
 						onClick={() => setIsDialogOpen(true)}
 					>
 						<Medal className="h-3.5 w-3.5" />
 					</Badge>
 				</div>
-				<div className="flex items-center gap-1.5 flex-wrap">
+				<div className="flex flex-wrap items-center gap-1.5">
 					{score.isNewRecord === 1 && (
-						<Badge variant="secondary" className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap">
+						<Badge
+							variant="secondary"
+							className="h-5 flex-shrink-0 rounded-md px-2 text-xs font-semibold whitespace-nowrap uppercase"
+						>
 							New Record
 						</Badge>
 					)}
 				</div>
-				<div className="flex items-center gap-1.5 flex-wrap">
+				<div className="flex flex-wrap items-center gap-1.5">
 					{score.isImported === 1 ? (
 						<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
 							Imported
@@ -266,4 +265,3 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 })
 
 export default ChunithmScoreInfoCard
-
