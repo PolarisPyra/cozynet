@@ -69,17 +69,15 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 	const { scoreVersionId, scoreVersionLogo, songVersionLogo, ratingValue, isWorldsEnd, starCount } = useMemo(() => {
 		const versionId = convertRomVersionToVersion(score.romVersion)
 		const storedRating = convertChunithmScoreRating(score.playerRating)
-		const calculatedRating =
-			score.score != null && score.level != null ? calculateChunithmRating(score.level, score.score) / 100 : null
 		return {
 			scoreVersionId: versionId,
 			scoreVersionLogo: getChunithmLogo.getLogo(versionId),
 			songVersionLogo: getChunithmLogo.getLogo(score.songVersion),
-			ratingValue: storedRating || calculatedRating || 0,
+			ratingValue: storedRating,
 			isWorldsEnd: score.chartId === 5,
 			starCount: levelToStars(score.level)
 		}
-	}, [score.romVersion, score.songVersion, score.playerRating, score.chartId, score.level, score.score])
+	}, [score.romVersion, score.songVersion, score.playerRating, score.chartId, score.level])
 
 	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
 		score.musicId ?? 0,
