@@ -86,8 +86,36 @@ type ExistingImportedScoreRow = RowDataPacket & {
 	techScore: number
 }
 
+type ExistingBestScoreRow = RowDataPacket & {
+	musicId: number
+	level: number
+	techScoreMax: number | null
+	maxComboCount: number | null
+	isFullBell: number | null
+	isFullCombo: number | null
+	isAllBreake: number | null
+	clearStatus: number | null
+	platinumScoreMax: number | null
+	platinumScoreStar: number | null
+}
+
 type StaticChartData = {
 	chartLevel: number
+}
+
+type BestUpsertData = {
+	musicId: number
+	level: number
+	playCount: number
+	techScoreMax: number
+	techScoreRank: number
+	maxComboCount: number
+	isFullBell: number
+	isFullCombo: number
+	isAllBreake: number
+	clearStatus: number
+	platinumScoreMax: number | null
+	platinumScoreStar: number | null
 }
 
 type ImportInsertRow = [
@@ -114,6 +142,22 @@ type ImportInsertRow = [
 	userPlayDate: string,
 	playDate: string,
 	version: number
+]
+
+type BestUpsertRow = [
+	userId: number,
+	musicId: number,
+	level: number,
+	playCount: number,
+	techScoreMax: number,
+	techScoreRank: number,
+	maxComboCount: number,
+	isFullBell: number,
+	isFullCombo: number,
+	isAllBreake: number,
+	clearStatus: number,
+	platinumScoreMax: number | null,
+	platinumScoreStar: number | null
 ]
 
 type ExecutableConnection = PoolConnection & {
@@ -176,6 +220,70 @@ const getImportedPlayDate = (timeAchieved?: number) => {
 }
 
 const getExistingScoreKey = (score: ExistingImportedScoreRow) => `${score.musicId}:${score.level}:${score.techScore}`
+
+const getOngekiTechScoreRank = (score: number) => {
+	if (score >= 1007500) return 12
+	if (score >= 1000000) return 11
+	if (score >= 990000) return 10
+	if (score >= 970000) return 9
+	if (score >= 940000) return 8
+	if (score >= 900000) return 7
+	if (score >= 850000) return 6
+	if (score >= 800000) return 5
+	if (score >= 750000) return 4
+	if (score >= 700000) return 3
+	if (score >= 500000) return 2
+	return 0
+}
+
+const maxNullableNumber = (left: number | null, right: number | null) => {
+	if (left === null) return right
+	if (right === null) return left
+	return Math.max(left, right)
+}
+
+const maxNullableZeroNumber = (left: number | null, right: number | null) => Math.max(left ?? 0, right ?? 0)
+
+const isOngekiBestUpdate = (current: ExistingBestScoreRow | undefined, next: BestUpsertData) => {
+	if (!current || current.techScoreMax == null) return true
+	if (next.techScoreMax > current.techScoreMax) return true
+	if (next.maxComboCount > (current.maxComboCount ?? 0)) return true
+	if (next.isFullBell > (current.isFullBell ?? 0)) return true
+	if (next.isFullCombo > (current.isFullCombo ?? 0)) return true
+	if (next.isAllBreake > (current.isAllBreake ?? 0)) return true
+	if (next.clearStatus > (current.clearStatus ?? 0)) return true
+	if (
+		next.platinumScoreMax != null &&
+		(current.platinumScoreMax == null || next.platinumScoreMax > current.platinumScoreMax)
+	) {
+		return true
+	}
+	if (next.platinumScoreStar != null && next.platinumScoreStar > (current.platinumScoreStar ?? 0)) return true
+
+	return false
+}
+
+const mergeOngekiBest = (current: BestUpsertData | undefined, next: BestUpsertData) => {
+	if (!current) {
+		return next
+	}
+
+	const techScoreMax = Math.max(current.techScoreMax, next.techScoreMax)
+
+	return {
+		...current,
+		playCount: Math.max(current.playCount, next.playCount),
+		techScoreMax,
+		techScoreRank: getOngekiTechScoreRank(techScoreMax),
+		maxComboCount: Math.max(current.maxComboCount, next.maxComboCount),
+		isFullBell: Math.max(current.isFullBell, next.isFullBell),
+		isFullCombo: Math.max(current.isFullCombo, next.isFullCombo),
+		isAllBreake: Math.max(current.isAllBreake, next.isAllBreake),
+		clearStatus: Math.max(current.clearStatus, next.clearStatus),
+		platinumScoreMax: maxNullableNumber(current.platinumScoreMax, next.platinumScoreMax),
+		platinumScoreStar: maxNullableZeroNumber(current.platinumScoreStar, next.platinumScoreStar)
+	}
+}
 
 const OngekiKamaitachiRoutes = new Hono()
 	.get("export", async c => {
@@ -372,8 +480,30 @@ const OngekiKamaitachiRoutes = new Hono()
 			)
 
 			const existingKeys = new Set(existingRows.map(getExistingScoreKey))
+
+			const [existingBestRows] = await conn.execute<ExistingBestScoreRow[]>(
+				`SELECT
+					musicId,
+					level,
+					techScoreMax,
+					maxComboCount,
+					isFullBell,
+					isFullCombo,
+					isAllBreake,
+					clearStatus,
+					platinumScoreMax,
+					platinumScoreStar
+				FROM ongeki_score_best
+				WHERE user = ?
+					AND musicId IN (${musicIdPlaceholders})
+					AND level IN (${chartIdPlaceholders})`,
+				[userId, ...musicIds, ...chartIds]
+			)
+
+			const existingBestMap = new Map(existingBestRows.map(row => [`${row.musicId}:${row.level}`, row]))
 			const seenImportKeys = new Set<string>()
 			const rowsToInsert: ImportInsertRow[] = []
+			const bestByChart = new Map<string, BestUpsertData>()
 			let duplicateCount = 0
 			let missingSongCount = 0
 
@@ -387,13 +517,6 @@ const OngekiKamaitachiRoutes = new Hono()
 					continue
 				}
 
-				if (existingKeys.has(duplicateKey) || seenImportKeys.has(duplicateKey)) {
-					duplicateCount += 1
-					continue
-				}
-
-				seenImportKeys.add(duplicateKey)
-
 				const isAllBreak = score.noteLamp === "ALL BREAK" || score.noteLamp === "ALL BREAK+" ? 1 : 0
 				const isFullCombo = isAllBreak === 1 || score.noteLamp === "FULL COMBO" ? 1 : 0
 				const isFullBell = score.bellLamp === "FULL BELL" ? 1 : 0
@@ -404,6 +527,32 @@ const OngekiKamaitachiRoutes = new Hono()
 								calculateOngekiGekForceRating(staticData.chartLevel, score.score, isFullCombo, isAllBreak, isFullBell)
 							)
 						: Math.floor(calculateOngekiRating(staticData.chartLevel, score.score) * 100)
+
+				const bestKey = `${score.musicId}:${score.level}`
+				bestByChart.set(
+					bestKey,
+					mergeOngekiBest(bestByChart.get(bestKey), {
+						musicId: score.musicId,
+						level: score.level,
+						playCount: 1,
+						techScoreMax: score.score,
+						techScoreRank: getOngekiTechScoreRank(score.score),
+						maxComboCount: score.maxCombo ?? 0,
+						isFullBell,
+						isFullCombo,
+						isAllBreake: isAllBreak,
+						clearStatus,
+						platinumScoreMax: score.platinumScore ?? null,
+						platinumScoreStar: score.platinumStars ?? null
+					})
+				)
+
+				if (existingKeys.has(duplicateKey) || seenImportKeys.has(duplicateKey)) {
+					duplicateCount += 1
+					continue
+				}
+
+				seenImportKeys.add(duplicateKey)
 
 				rowsToInsert.push([
 					userId,
@@ -432,9 +581,28 @@ const OngekiKamaitachiRoutes = new Hono()
 				])
 			}
 
-			if (rowsToInsert.length === 0) {
+			const rowsToUpsertBest: BestUpsertRow[] = [...bestByChart.values()]
+				.filter(best => isOngekiBestUpdate(existingBestMap.get(`${best.musicId}:${best.level}`), best))
+				.map(best => [
+					userId,
+					best.musicId,
+					best.level,
+					best.playCount,
+					best.techScoreMax,
+					best.techScoreRank,
+					best.maxComboCount,
+					best.isFullBell,
+					best.isFullCombo,
+					best.isAllBreake,
+					best.clearStatus,
+					best.platinumScoreMax,
+					best.platinumScoreStar
+				])
+
+			if (rowsToInsert.length === 0 && rowsToUpsertBest.length === 0) {
 				return c.json({
 					importedCount: 0,
+					bestUpdatedCount: 0,
 					duplicateCount,
 					missingSongCount,
 					skippedCount: duplicateCount + missingSongCount
@@ -443,15 +611,18 @@ const OngekiKamaitachiRoutes = new Hono()
 
 			await conn.beginTransaction()
 
-			const valuePlaceholders = rowsToInsert
-				.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-				.join(", ")
+			let importedCount = 0
 
-			const [result] = await conn.execute<ResultSetHeader>(
-				`INSERT INTO ongeki_score_playlog (
-					user,
-					musicId,
-					level,
+			if (rowsToInsert.length > 0) {
+				const valuePlaceholders = rowsToInsert
+					.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+					.join(", ")
+
+				const [result] = await conn.execute<ResultSetHeader>(
+					`INSERT INTO ongeki_score_playlog (
+						user,
+						musicId,
+						level,
 					clearStatus,
 					techScore,
 					maxCombo,
@@ -470,16 +641,73 @@ const OngekiKamaitachiRoutes = new Hono()
 					platinumScoreMax,
 					platinumScoreStar,
 					userPlayDate,
-					playDate,
-					version
-				) VALUES ${valuePlaceholders}`,
-				rowsToInsert.flat()
-			)
+						playDate,
+						version
+					) VALUES ${valuePlaceholders}`,
+					rowsToInsert.flat()
+				)
+
+				importedCount = result.affectedRows
+			}
+
+			let bestUpdatedCount = 0
+
+			if (rowsToUpsertBest.length > 0) {
+				const bestValuePlaceholders = rowsToUpsertBest
+					.map(() => "(?, ?, ?, ?, ?, ?, 0, 0, ?, 0, 0, ?, ?, ?, 0, ?, 0, ?, ?)")
+					.join(", ")
+
+				await conn.execute<ResultSetHeader>(
+					`INSERT INTO ongeki_score_best (
+						user,
+						musicId,
+						level,
+						playCount,
+						techScoreMax,
+						techScoreRank,
+						battleScoreMax,
+						battleScoreRank,
+						maxComboCount,
+						maxOverKill,
+						maxTeamOverKill,
+						isFullBell,
+						isFullCombo,
+						isAllBreake,
+						isLock,
+						clearStatus,
+						isStoryWatched,
+						platinumScoreMax,
+						platinumScoreStar
+					) VALUES ${bestValuePlaceholders}
+					ON DUPLICATE KEY UPDATE
+						playCount = GREATEST(ongeki_score_best.playCount, VALUES(playCount)),
+						techScoreRank = IF(VALUES(techScoreMax) > ongeki_score_best.techScoreMax, VALUES(techScoreRank), ongeki_score_best.techScoreRank),
+						techScoreMax = GREATEST(ongeki_score_best.techScoreMax, VALUES(techScoreMax)),
+						maxComboCount = GREATEST(ongeki_score_best.maxComboCount, VALUES(maxComboCount)),
+						isFullBell = GREATEST(ongeki_score_best.isFullBell, VALUES(isFullBell)),
+						isFullCombo = GREATEST(ongeki_score_best.isFullCombo, VALUES(isFullCombo)),
+						isAllBreake = GREATEST(ongeki_score_best.isAllBreake, VALUES(isAllBreake)),
+						clearStatus = GREATEST(ongeki_score_best.clearStatus, VALUES(clearStatus)),
+						platinumScoreMax = CASE
+							WHEN ongeki_score_best.platinumScoreMax IS NULL THEN VALUES(platinumScoreMax)
+							WHEN VALUES(platinumScoreMax) IS NULL THEN ongeki_score_best.platinumScoreMax
+							ELSE GREATEST(ongeki_score_best.platinumScoreMax, VALUES(platinumScoreMax))
+						END,
+						platinumScoreStar = CASE
+							WHEN VALUES(platinumScoreStar) > COALESCE(ongeki_score_best.platinumScoreStar, 0) THEN VALUES(platinumScoreStar)
+							ELSE ongeki_score_best.platinumScoreStar
+						END`,
+					rowsToUpsertBest.flat()
+				)
+
+				bestUpdatedCount = rowsToUpsertBest.length
+			}
 
 			await conn.commit()
 
 			return c.json({
-				importedCount: result.affectedRows,
+				importedCount,
+				bestUpdatedCount,
 				duplicateCount,
 				missingSongCount,
 				skippedCount: duplicateCount + missingSongCount

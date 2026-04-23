@@ -20,6 +20,7 @@ export type ChunithmKamaiImportScore = {
 
 type ChunithmKamaiImportResult = {
 	importedCount: number
+	bestUpdatedCount?: number
 	duplicateCount: number
 	missingSongCount: number
 	skippedCount: number
@@ -42,6 +43,7 @@ export function useScoreImporter() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["chunithm", "scores"] })
+			queryClient.invalidateQueries({ queryKey: ["chunithm", "rating"] })
 		}
 	})
 }

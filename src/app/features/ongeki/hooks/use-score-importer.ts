@@ -26,6 +26,7 @@ export type OngekiKamaiImportScore = {
 
 type OngekiKamaiImportResult = {
 	importedCount: number
+	bestUpdatedCount?: number
 	duplicateCount: number
 	missingSongCount: number
 	skippedCount: number
@@ -48,6 +49,7 @@ export function useOngekiScoreImporter() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["ongeki", "scores"] })
+			queryClient.invalidateQueries({ queryKey: ["ongeki", "rating"] })
 		}
 	})
 }

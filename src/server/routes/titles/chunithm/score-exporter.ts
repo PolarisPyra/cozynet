@@ -112,6 +112,19 @@ type StaticChartData = {
 	chartLevel: number
 }
 
+type BestUpsertData = {
+	musicId: number
+	level: number
+	playCount: number
+	scoreMax: number
+	missCount: number | null
+	maxComboCount: number | null
+	isFullCombo: number
+	isAllJustice: number
+	isSuccess: number
+	scoreRank: number
+}
+
 type ImportInsertRow = [
 	userId: number,
 	musicId: number,
@@ -132,6 +145,20 @@ type ImportInsertRow = [
 	userPlayDate: string,
 	playDate: string,
 	romVersion: string
+]
+
+type BestUpsertRow = [
+	userId: number,
+	musicId: number,
+	level: number,
+	playCount: number,
+	scoreMax: number,
+	missCount: number | null,
+	maxComboCount: number | null,
+	isFullCombo: number,
+	isAllJustice: number,
+	isSuccess: number,
+	scoreRank: number
 ]
 
 type ExecutableConnection = PoolConnection & {
@@ -170,6 +197,46 @@ const getImportedPlayDate = (timeAchieved?: number) => {
 
 const getExistingScoreKey = (score: { musicId: number; level: number; score: number; timeAchieved: number | null }) =>
 	`${score.musicId}:${score.level}:${score.score}:${score.timeAchieved ?? 0}`
+
+const getChunithmScoreRank = (score: number) => {
+	if (score >= 1009000) return 13
+	if (score >= 1007500) return 12
+	if (score >= 1005000) return 11
+	if (score >= 1000000) return 10
+	if (score >= 990000) return 9
+	if (score >= 975000) return 8
+	if (score >= 950000) return 7
+	if (score >= 925000) return 6
+	if (score >= 900000) return 5
+	if (score >= 800000) return 4
+	if (score >= 700000) return 3
+	if (score >= 600000) return 2
+	if (score >= 500000) return 1
+	return 0
+}
+
+const mergeChunithmBest = (current: BestUpsertData | undefined, next: BestUpsertData) => {
+	if (!current) {
+		return next
+	}
+
+	return {
+		...current,
+		playCount: Math.max(current.playCount, next.playCount),
+		scoreMax: Math.max(current.scoreMax, next.scoreMax),
+		scoreRank: getChunithmScoreRank(Math.max(current.scoreMax, next.scoreMax)),
+		missCount:
+			current.missCount === null
+				? next.missCount
+				: next.missCount === null
+					? current.missCount
+					: Math.min(current.missCount, next.missCount),
+		maxComboCount: Math.max(current.maxComboCount ?? 0, next.maxComboCount ?? 0),
+		isFullCombo: Math.max(current.isFullCombo, next.isFullCombo),
+		isAllJustice: Math.max(current.isAllJustice, next.isAllJustice),
+		isSuccess: Math.max(current.isSuccess, next.isSuccess)
+	}
+}
 
 const ChunithmKamaitachiRoutes = new Hono()
 	.get("export", async c => {
@@ -374,6 +441,7 @@ const ChunithmKamaitachiRoutes = new Hono()
 			const existingKeys = new Set(existingRows.map(getExistingScoreKey))
 			const seenImportKeys = new Set<string>()
 			const rowsToInsert: ImportInsertRow[] = []
+			const bestByChart = new Map<string, BestUpsertData>()
 			let duplicateCount = 0
 			let missingSongCount = 0
 
@@ -387,18 +455,35 @@ const ChunithmKamaitachiRoutes = new Hono()
 					continue
 				}
 
+				const isAllJustice = score.noteLamp === "ALL JUSTICE" || score.noteLamp === "ALL JUSTICE CRITICAL" ? 1 : 0
+				const isFullCombo = isAllJustice === 1 || score.noteLamp === "FULL COMBO" ? 1 : 0
+				const isClear = score.clearLamp === "FAILED" ? 0 : 1
+				const skillId = IMPORT_CLEAR_LAMP_TO_SKILL_ID[score.clearLamp] ?? null
+				const playerRating = Math.floor(calculateChunithmRating(staticData.chartLevel, score.score) * 100)
+
+				const bestKey = `${score.musicId}:${score.level}`
+				bestByChart.set(
+					bestKey,
+					mergeChunithmBest(bestByChart.get(bestKey), {
+						musicId: score.musicId,
+						level: score.level,
+						playCount: 1,
+						scoreMax: score.score,
+						missCount: score.judgements?.miss ?? null,
+						maxComboCount: score.maxCombo ?? null,
+						isFullCombo,
+						isAllJustice,
+						isSuccess: isClear,
+						scoreRank: getChunithmScoreRank(score.score)
+					})
+				)
+
 				if (existingKeys.has(duplicateKey) || seenImportKeys.has(duplicateKey)) {
 					duplicateCount += 1
 					continue
 				}
 
 				seenImportKeys.add(duplicateKey)
-
-				const isAllJustice = score.noteLamp === "ALL JUSTICE" || score.noteLamp === "ALL JUSTICE CRITICAL" ? 1 : 0
-				const isFullCombo = isAllJustice === 1 || score.noteLamp === "FULL COMBO" ? 1 : 0
-				const isClear = score.clearLamp === "FAILED" ? 0 : 1
-				const skillId = IMPORT_CLEAR_LAMP_TO_SKILL_ID[score.clearLamp] ?? null
-				const playerRating = Math.floor(calculateChunithmRating(staticData.chartLevel, score.score) * 100)
 
 				rowsToInsert.push([
 					userId,
@@ -423,9 +508,24 @@ const ChunithmKamaitachiRoutes = new Hono()
 				])
 			}
 
-			if (rowsToInsert.length === 0) {
+			const rowsToUpsertBest: BestUpsertRow[] = [...bestByChart.values()].map(best => [
+				userId,
+				best.musicId,
+				best.level,
+				best.playCount,
+				best.scoreMax,
+				best.missCount,
+				best.maxComboCount,
+				best.isFullCombo,
+				best.isAllJustice,
+				best.isSuccess,
+				best.scoreRank
+			])
+
+			if (rowsToInsert.length === 0 && rowsToUpsertBest.length === 0) {
 				return c.json({
 					importedCount: 0,
+					bestUpdatedCount: 0,
 					duplicateCount,
 					missingSongCount,
 					skippedCount: duplicateCount + missingSongCount
@@ -434,12 +534,15 @@ const ChunithmKamaitachiRoutes = new Hono()
 
 			await conn.beginTransaction()
 
-			const valuePlaceholders = rowsToInsert
-				.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-				.join(", ")
+			let importedCount = 0
 
-			const [result] = await conn.execute<ResultSetHeader>(
-				`INSERT INTO chuni_score_playlog (
+			if (rowsToInsert.length > 0) {
+				const valuePlaceholders = rowsToInsert
+					.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+					.join(", ")
+
+				const [result] = await conn.execute<ResultSetHeader>(
+					`INSERT INTO chuni_score_playlog (
 					user,
 					musicId,
 					level,
@@ -460,13 +563,55 @@ const ChunithmKamaitachiRoutes = new Hono()
 					playDate,
 					romVersion
 				) VALUES ${valuePlaceholders}`,
-				rowsToInsert.flat()
-			)
+					rowsToInsert.flat()
+				)
+
+				importedCount = result.affectedRows
+			}
+
+			let bestUpdatedCount = 0
+
+			if (rowsToUpsertBest.length > 0) {
+				const bestValuePlaceholders = rowsToUpsertBest.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", ")
+
+				await conn.execute<ResultSetHeader>(
+					`INSERT INTO chuni_score_best (
+						user,
+						musicId,
+						level,
+						playCount,
+						scoreMax,
+						missCount,
+						maxComboCount,
+						isFullCombo,
+						isAllJustice,
+						isSuccess,
+						scoreRank
+					) VALUES ${bestValuePlaceholders}
+					ON DUPLICATE KEY UPDATE
+						playCount = GREATEST(COALESCE(chuni_score_best.playCount, 0), VALUES(playCount)),
+						scoreRank = IF(VALUES(scoreMax) > COALESCE(chuni_score_best.scoreMax, 0), VALUES(scoreRank), chuni_score_best.scoreRank),
+						scoreMax = GREATEST(COALESCE(chuni_score_best.scoreMax, 0), VALUES(scoreMax)),
+						missCount = CASE
+							WHEN chuni_score_best.missCount IS NULL THEN VALUES(missCount)
+							WHEN VALUES(missCount) IS NULL THEN chuni_score_best.missCount
+							ELSE LEAST(chuni_score_best.missCount, VALUES(missCount))
+						END,
+						maxComboCount = GREATEST(COALESCE(chuni_score_best.maxComboCount, 0), COALESCE(VALUES(maxComboCount), 0)),
+						isFullCombo = GREATEST(COALESCE(chuni_score_best.isFullCombo, 0), VALUES(isFullCombo)),
+						isAllJustice = GREATEST(COALESCE(chuni_score_best.isAllJustice, 0), VALUES(isAllJustice)),
+						isSuccess = GREATEST(COALESCE(chuni_score_best.isSuccess, 0), VALUES(isSuccess))`,
+					rowsToUpsertBest.flat()
+				)
+
+				bestUpdatedCount = rowsToUpsertBest.length
+			}
 
 			await conn.commit()
 
 			return c.json({
-				importedCount: result.affectedRows,
+				importedCount,
+				bestUpdatedCount,
 				duplicateCount,
 				missingSongCount,
 				skippedCount: duplicateCount + missingSongCount

@@ -16,6 +16,7 @@ import {
 	DialogTitle,
 	DialogTrigger
 } from "@/app/shared/components/ui/dialog"
+import { Input } from "@/app/shared/components/ui/input"
 import type { DB, OngekiPlaylog } from "@/app/shared/types"
 import { cn } from "@/app/shared/utils"
 import { formatLevel } from "@/app/shared/utils/format-level"
@@ -27,7 +28,29 @@ type ImportedScorePreview = OngekiKamaiImportScore & {
 	id: string
 	title: string | null
 	chartLevel: number | null
-	status: "ready" | "duplicate" | "unknown-song" | "duplicate-in-file"
+	status: "ready" | "best-update" | "duplicate" | "unknown-song" | "duplicate-in-file"
+}
+
+type OngekiExistingScore = OngekiPlaylog & {
+	bestTechScoreMax?: number | null
+	bestMaxComboCount?: number | null
+	bestIsFullBell?: number | null
+	bestIsFullCombo?: number | null
+	bestIsAllBreake?: number | null
+	bestClearStatus?: number | null
+	bestPlatinumScoreMax?: number | null
+	bestPlatinumScoreStar?: number | null
+}
+
+type ExistingBestScore = {
+	techScoreMax: number | null
+	maxComboCount: number | null
+	isFullBell: number | null
+	isFullCombo: number | null
+	isAllBreake: number | null
+	clearStatus: number | null
+	platinumScoreMax: number | null
+	platinumScoreStar: number | null
 }
 
 type KamaiChartDefinition = {
@@ -79,6 +102,27 @@ const getPreviewRowId = (
 
 const getExistingPlaylogKey = (score: OngekiPlaylog) =>
 	`${score.musicId ?? 0}:${score.chartId ?? score.level ?? -1}:${score.techScore ?? 0}`
+
+const isImportableStatus = (status: ImportedScorePreview["status"]) => status === "ready" || status === "best-update"
+
+const isScoreBestUpdate = (score: OngekiKamaiImportScore, best?: ExistingBestScore) => {
+	const isAllBreake = score.noteLamp === "ALL BREAK" || score.noteLamp === "ALL BREAK+" ? 1 : 0
+	const isFullCombo = isAllBreake === 1 || score.noteLamp === "FULL COMBO" ? 1 : 0
+	const isFullBell = score.bellLamp === "FULL BELL" ? 1 : 0
+	const clearStatus = score.noteLamp === "LOSS" ? 0 : 1
+	if (!best || best.techScoreMax == null) return true
+	if (score.score > best.techScoreMax) return true
+	if (score.maxCombo != null && score.maxCombo > (best.maxComboCount ?? 0)) return true
+	if (isFullBell > (best.isFullBell ?? 0)) return true
+	if (isFullCombo > (best.isFullCombo ?? 0)) return true
+	if (isAllBreake > (best.isAllBreake ?? 0)) return true
+	if (clearStatus > (best.clearStatus ?? 0)) return true
+	if (score.platinumScore != null && (best.platinumScoreMax == null || score.platinumScore > best.platinumScoreMax))
+		return true
+	if (score.platinumStars != null && score.platinumStars > (best.platinumScoreStar ?? 0)) return true
+
+	return false
+}
 
 // Kamai PB exports may use null for missing play times. Omit the field so the
 // importer sends the optional shape expected by the backend schema.
@@ -224,7 +268,7 @@ const parseKamaiFile = (content: string): OngekiKamaiImportScore[] => {
 	throw new Error("Unsupported Kamai JSON format")
 }
 
-export function OngekiKamaiImportDialog({ existingScores }: { existingScores: OngekiPlaylog[] }) {
+export function OngekiKamaiImportDialog({ existingScores }: { existingScores: OngekiExistingScore[] }) {
 	const inputRef = useRef<HTMLInputElement | null>(null)
 	const [open, setOpen] = useState(false)
 	const [isDragActive, setIsDragActive] = useState(false)
@@ -232,6 +276,9 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 	const [parsedScores, setParsedScores] = useState<OngekiKamaiImportScore[]>([])
 	const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({})
 	const [onlyShowReadyRows, setOnlyShowReadyRows] = useState(false)
+	const [kamaiUsername, setKamaiUsername] = useState("")
+	const [lastFetchedKamaiUsername, setLastFetchedKamaiUsername] = useState<string | null>(null)
+	const [isFetchingKamai, setIsFetchingKamai] = useState(false)
 
 	const { data: songs } = useOngekiSongs()
 	const importMutation = useOngekiScoreImporter()
@@ -241,6 +288,31 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 	}, [songs])
 
 	const existingScoreKeys = useMemo(() => new Set(existingScores.map(getExistingPlaylogKey)), [existingScores])
+
+	const existingBestMap = useMemo(() => {
+		const bestMap = new Map<string, ExistingBestScore>()
+
+		for (const score of existingScores) {
+			const musicId = score.musicId ?? 0
+			const chartId = score.chartId ?? score.level ?? -1
+			const key = `${musicId}:${chartId}`
+
+			if (!bestMap.has(key)) {
+				bestMap.set(key, {
+					techScoreMax: score.bestTechScoreMax ?? null,
+					maxComboCount: score.bestMaxComboCount ?? null,
+					isFullBell: score.bestIsFullBell ?? null,
+					isFullCombo: score.bestIsFullCombo ?? null,
+					isAllBreake: score.bestIsAllBreake ?? null,
+					clearStatus: score.bestClearStatus ?? null,
+					platinumScoreMax: score.bestPlatinumScoreMax ?? null,
+					platinumScoreStar: score.bestPlatinumScoreStar ?? null
+				})
+			}
+		}
+
+		return bestMap
+	}, [existingScores])
 
 	const previewRows = useMemo<ImportedScorePreview[]>(() => {
 		const fileSeenKeys = new Set<string>()
@@ -253,7 +325,9 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 			if (!song) {
 				status = "unknown-song"
 			} else if (existingScoreKeys.has(duplicateKey)) {
-				status = "duplicate"
+				status = isScoreBestUpdate(score, existingBestMap.get(`${score.musicId}:${score.level}`))
+					? "best-update"
+					: "duplicate"
 			} else if (fileSeenKeys.has(duplicateKey)) {
 				status = "duplicate-in-file"
 			}
@@ -268,26 +342,27 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 				status
 			}
 		})
-	}, [existingScoreKeys, parsedScores, songMap])
+	}, [existingBestMap, existingScoreKeys, parsedScores, songMap])
 
 	useEffect(() => {
-		const defaults = Object.fromEntries(previewRows.map(row => [row.id, row.status === "ready"]))
+		const defaults = Object.fromEntries(previewRows.map(row => [row.id, isImportableStatus(row.status)]))
 		setSelectedKeys(defaults)
 	}, [previewRows])
 
 	const selectedRows = useMemo(
-		() => previewRows.filter(row => row.status === "ready" && selectedKeys[row.id]),
+		() => previewRows.filter(row => isImportableStatus(row.status) && selectedKeys[row.id]),
 		[previewRows, selectedKeys]
 	)
 
 	const visiblePreviewRows = useMemo(
-		() => previewRows.filter(row => !onlyShowReadyRows || row.status === "ready"),
+		() => previewRows.filter(row => !onlyShowReadyRows || isImportableStatus(row.status)),
 		[previewRows, onlyShowReadyRows]
 	)
 
 	const summary = useMemo(
 		() => ({
 			ready: previewRows.filter(row => row.status === "ready").length,
+			bestUpdate: previewRows.filter(row => row.status === "best-update").length,
 			duplicate: previewRows.filter(row => row.status === "duplicate").length,
 			duplicateInFile: previewRows.filter(row => row.status === "duplicate-in-file").length,
 			unknownSong: previewRows.filter(row => row.status === "unknown-song").length
@@ -295,12 +370,25 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 		[previewRows]
 	)
 
+	const getPreviewTextClassName = (status: ImportedScorePreview["status"]) =>
+		isImportableStatus(status) ? "text-foreground" : "text-muted-foreground"
+
+	const getPreviewMetaClassName = (status: ImportedScorePreview["status"]) =>
+		isImportableStatus(status) ? "text-foreground" : "text-muted-foreground"
+
+	const normalizedKamaiUsername = kamaiUsername.trim()
+	const shouldFetchFromKamai =
+		normalizedKamaiUsername.length > 0 && normalizedKamaiUsername !== lastFetchedKamaiUsername
+
 	const resetState = () => {
 		setFileName(null)
 		setParsedScores([])
 		setSelectedKeys({})
 		setIsDragActive(false)
 		setOnlyShowReadyRows(false)
+		setKamaiUsername("")
+		setLastFetchedKamaiUsername(null)
+		setIsFetchingKamai(false)
 		if (inputRef.current) {
 			inputRef.current.value = ""
 		}
@@ -318,6 +406,8 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 
 			setFileName(file.name)
 			setParsedScores(scores)
+			setKamaiUsername("")
+			setLastFetchedKamaiUsername(null)
 		} catch (error) {
 			console.error("Import parse error:", error)
 			toast.error("Failed to read the Kamai JSON file")
@@ -328,6 +418,48 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 		const file = event.target.files?.[0]
 		if (!file) return
 		await handleFile(file)
+	}
+
+	const handleFetchFromKamai = async () => {
+		if (!normalizedKamaiUsername) {
+			toast.error("Enter a Kamai username")
+			return
+		}
+
+		setIsFetchingKamai(true)
+		try {
+			const response = await fetch(
+				`https://kamai.tachi.ac/api/v1/users/${encodeURIComponent(normalizedKamaiUsername)}/games/ongeki/Single/pbs/all`
+			)
+
+			if (!response.ok) {
+				throw new Error(`Kamai returned ${response.status}`)
+			}
+
+			const content = await response.text()
+			const scores = parseKamaiFile(content)
+
+			if (scores.length === 0) {
+				toast.error("No Ongeki scores found for that Kamai user")
+				return
+			}
+
+			setFileName(`Kamai: ${normalizedKamaiUsername}`)
+			setParsedScores(scores)
+			setLastFetchedKamaiUsername(normalizedKamaiUsername)
+			if (document.activeElement instanceof HTMLElement) {
+				document.activeElement.blur()
+			}
+			if (inputRef.current) {
+				inputRef.current.value = ""
+			}
+			toast.success(`Fetched ${scores.length} Ongeki score${scores.length === 1 ? "" : "s"}`)
+		} catch (error) {
+			console.error("Kamai fetch error:", error)
+			toast.error("Failed to fetch scores from Kamai")
+		} finally {
+			setIsFetchingKamai(false)
+		}
 	}
 
 	const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
@@ -364,12 +496,17 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 				}))
 			)
 
-			if (result.importedCount > 0 && result.skippedCount === 0) {
-				toast.success(`Imported ${result.importedCount} score${result.importedCount === 1 ? "" : "s"}`)
+			const bestUpdatedCount = result.bestUpdatedCount ?? 0
+			if ((result.importedCount > 0 || bestUpdatedCount > 0) && result.skippedCount === 0) {
+				toast.success(
+					`Imported ${result.importedCount} score${result.importedCount === 1 ? "" : "s"} and updated ${bestUpdatedCount} best record${bestUpdatedCount === 1 ? "" : "s"}`
+				)
 			} else if (result.importedCount > 0) {
 				toast.success(
-					`Imported ${result.importedCount} score${result.importedCount === 1 ? "" : "s"} and skipped ${result.skippedCount}`
+					`Imported ${result.importedCount} score${result.importedCount === 1 ? "" : "s"}, updated ${bestUpdatedCount} best record${bestUpdatedCount === 1 ? "" : "s"}, and skipped ${result.skippedCount}`
 				)
+			} else if (bestUpdatedCount > 0) {
+				toast.success(`Updated ${bestUpdatedCount} best record${bestUpdatedCount === 1 ? "" : "s"}`)
 			} else if (result.duplicateCount > 0 || result.missingSongCount > 0) {
 				toast.error(
 					`No scores imported. ${result.duplicateCount} duplicate${result.duplicateCount === 1 ? "" : "s"}, ${result.missingSongCount} missing song${result.missingSongCount === 1 ? "" : "s"}.`
@@ -384,6 +521,19 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 			toast.error("Failed to import scores")
 		}
 	}
+
+	const handlePrimaryAction = async () => {
+		if (shouldFetchFromKamai) {
+			await handleFetchFromKamai()
+			return
+		}
+
+		await handleImport()
+	}
+
+	const primaryButtonDisabled = shouldFetchFromKamai
+		? isFetchingKamai || importMutation.isPending
+		: selectedRows.length === 0 || importMutation.isPending || isFetchingKamai
 
 	return (
 		<Dialog
@@ -401,19 +551,22 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 					Import from Kamai
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="max-w-4xl">
+			<DialogContent
+				className="bg-background max-w-4xl rounded-lg !border-0 shadow-2xl outline-none focus:outline-none focus-visible:ring-0"
+				onInteractOutside={event => event.preventDefault()}
+			>
 				<DialogHeader>
 					<DialogTitle>Import from Kamai</DialogTitle>
 					<DialogDescription>
-						Upload a Kamai JSON file, review the appended Ongeki scores, and confirm which rows to import into your
-						`ongeki_score_playlog`.
+						Upload a Kamai JSON file, review the Ongeki scores, and confirm which rows to import into your
+						`ongeki_score_playlog` and `ongeki_score_best`.
 					</DialogDescription>
 				</DialogHeader>
 
 				<div
 					className={cn(
-						"border-border bg-muted/20 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-6 py-8 text-center transition-colors",
-						isDragActive && "border-primary bg-primary/5"
+						"bg-muted hover:bg-muted flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-lg px-6 py-8 text-center transition-colors",
+						isDragActive && "bg-accent"
 					)}
 					onClick={() => inputRef.current?.click()}
 					onDragOver={event => {
@@ -430,36 +583,65 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 						className="hidden"
 						onChange={handleInputChange}
 					/>
-					<div className="bg-background mb-3 rounded-full border p-3">
+					<div className="bg-background mb-3 rounded-full p-3 shadow-sm">
 						<FileUp className="h-5 w-5" />
 					</div>
 					<p className="text-sm font-medium">{fileName ?? "Drag and drop a Kamai JSON here"}</p>
 					<p className="text-muted-foreground mt-1 text-xs">or click and browse to upload</p>
 				</div>
 
+				<div className="space-y-2">
+					<Input
+						value={kamaiUsername}
+						onChange={event => setKamaiUsername(event.target.value)}
+						onKeyDown={event => {
+							if (event.key !== "Enter" || event.nativeEvent.isComposing || !shouldFetchFromKamai || isFetchingKamai)
+								return
+							event.preventDefault()
+							void handleFetchFromKamai()
+						}}
+						placeholder="Kamai player name"
+						name="ongeki-kamai-player"
+						autoComplete="new-password"
+						autoCapitalize="none"
+						autoCorrect="off"
+						spellCheck={false}
+						data-bwignore="true"
+						data-lpignore="true"
+						data-1p-ignore="true"
+						disabled={isFetchingKamai || importMutation.isPending}
+					/>
+					<p className="text-muted-foreground text-xs">
+						Enter your Kamai username to download scores instead of uploading a file.
+					</p>
+				</div>
+
 				{previewRows.length > 0 && (
 					<>
 						<div className="grid gap-2 text-sm sm:grid-cols-4">
-							<div className="bg-muted/40 rounded-md border px-3 py-2">Ready: {summary.ready}</div>
-							<div className="bg-muted/40 rounded-md border px-3 py-2">Selected: {selectedRows.length}</div>
-							<div className="bg-muted/40 rounded-md border px-3 py-2">
+							<div className="bg-muted rounded-md px-3 py-2">Ready: {summary.ready + summary.bestUpdate}</div>
+							<div className="bg-muted rounded-md px-3 py-2">Selected: {selectedRows.length}</div>
+							<div className="bg-muted rounded-md px-3 py-2">
 								Existing: {summary.duplicate + summary.duplicateInFile}
 							</div>
-							<div className="bg-muted/40 rounded-md border px-3 py-2">Unknown songs: {summary.unknownSong}</div>
+							<div className="bg-muted rounded-md px-3 py-2">Unknown songs: {summary.unknownSong}</div>
 						</div>
 
-						<div className="rounded-lg border">
-							<div className="border-b px-4 py-3">
+						<div className="bg-muted overflow-hidden rounded-lg">
+							<div className="px-4 py-3">
 								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 									<div>
 										<p className="text-sm font-medium">Preview</p>
 										<p className="text-muted-foreground text-xs">
-											Only checked rows with a ready status will be imported.
+											Checked ready rows append playlogs; checked best-update rows sync improved best records.
 										</p>
 									</div>
 									<label className="flex items-center gap-2 text-xs font-medium">
-										<Checkbox checked={onlyShowReadyRows} onCheckedChange={checked => setOnlyShowReadyRows(checked === true)} />
-										Only show ready to import songs
+										<Checkbox
+											checked={onlyShowReadyRows}
+											onCheckedChange={checked => setOnlyShowReadyRows(checked === true)}
+										/>
+										Only show importable songs
 									</label>
 								</div>
 							</div>
@@ -468,27 +650,34 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 									{visiblePreviewRows.map(row => (
 										<label
 											key={row.id}
-											className={cn("flex items-start gap-3 px-4 py-3", row.status !== "ready" && "opacity-60")}
+											className={cn(
+												"flex items-start gap-3 px-4 py-3 transition-colors",
+												isImportableStatus(row.status) && "bg-accent"
+											)}
 										>
-											{row.status === "unknown-song" ? (
+											{row.status === "unknown-song" || row.status === "duplicate-in-file" ? (
 												<div className="size-4 shrink-0" />
 											) : (
 												<Checkbox
 													checked={Boolean(selectedKeys[row.id])}
-													disabled={row.status !== "ready"}
-													onCheckedChange={checked => setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))}
+													disabled={!isImportableStatus(row.status)}
+													onCheckedChange={checked =>
+														setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))
+													}
 												/>
 											)}
 											<div className="min-w-0 flex-1">
 												<div className="flex flex-wrap items-center gap-2">
-													<p className="text-sm font-medium">{row.title ?? `Song ${row.musicId}`}</p>
-													<span className="text-muted-foreground text-xs">
+													<p className={cn("text-sm font-semibold", getPreviewTextClassName(row.status))}>
+														{row.title ?? `Song ${row.musicId}`}
+													</p>
+													<span className={cn("text-xs", getPreviewMetaClassName(row.status))}>
 														{getDifficultyFromOngekiChart(row.level)}
 														{row.chartLevel != null ? ` ${formatLevel(row.chartLevel)}` : ""}
 													</span>
-													<span className="text-muted-foreground text-xs">ID {row.musicId}</span>
+													<span className={cn("text-xs", getPreviewMetaClassName(row.status))}>ID {row.musicId}</span>
 												</div>
-												<div className="text-muted-foreground mt-1 flex flex-wrap gap-3 text-xs">
+												<div className={cn("mt-1 flex flex-wrap gap-3 text-xs", getPreviewMetaClassName(row.status))}>
 													<span>{row.score.toLocaleString()}</span>
 													<span>{row.noteLamp}</span>
 													<span>{row.bellLamp}</span>
@@ -502,7 +691,8 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 											</div>
 											<div className="text-xs font-medium">
 												{row.status === "ready" && <span className="text-emerald-600">Ready</span>}
-												{row.status === "duplicate" && <span className="text-amber-600">Already imported</span>}
+												{row.status === "best-update" && <span className="text-amber-600">Best update only</span>}
+												{row.status === "duplicate" && <span className="text-muted-foreground">Already synced</span>}
 												{row.status === "duplicate-in-file" && (
 													<span className="text-amber-600">Duplicate in file</span>
 												)}
@@ -517,11 +707,25 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 				)}
 
 				<DialogFooter>
-					<Button variant="outline" onClick={() => setOpen(false)} disabled={importMutation.isPending}>
+					<Button
+						variant="outline"
+						onClick={() => setOpen(false)}
+						disabled={importMutation.isPending || isFetchingKamai}
+					>
 						Cancel
 					</Button>
-					<Button onClick={handleImport} disabled={selectedRows.length === 0 || importMutation.isPending}>
-						{importMutation.isPending ? (
+					<Button onClick={handlePrimaryAction} disabled={primaryButtonDisabled}>
+						{isFetchingKamai ? (
+							<>
+								<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+								Fetching...
+							</>
+						) : shouldFetchFromKamai ? (
+							<>
+								<Download className="mr-1 h-4 w-4" />
+								Download
+							</>
+						) : importMutation.isPending ? (
 							<>
 								<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
 								Importing...

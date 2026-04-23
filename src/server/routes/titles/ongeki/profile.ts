@@ -56,6 +56,14 @@ const OngekiProfileRoutes = new Hono()
                     csp.cardId1,
                     csp.isTechNewRecord,
                     csp.isBattleNewRecord,
+                    best.techScoreMax as bestTechScoreMax,
+                    best.maxComboCount as bestMaxComboCount,
+                    best.isFullBell as bestIsFullBell,
+                    best.isFullCombo as bestIsFullCombo,
+                    best.isAllBreake as bestIsAllBreake,
+                    best.clearStatus as bestClearStatus,
+                    best.platinumScoreMax as bestPlatinumScoreMax,
+                    best.platinumScoreStar as bestPlatinumScoreStar,
                     csm.chartId,
                     csm.title,
                     csm.level,
@@ -75,6 +83,10 @@ const OngekiProfileRoutes = new Hono()
                     END AS isImported
                 FROM
                     ongeki_score_playlog csp
+                LEFT JOIN ongeki_score_best best
+                    ON best.user = csp.user
+                    AND best.musicId = csp.musicId
+                    AND best.level = csp.level
                 INNER JOIN (
                     SELECT songId, chartId, MAX(version) as latest_version, MIN(version) as earliest_version
                     FROM ongeki_static_music

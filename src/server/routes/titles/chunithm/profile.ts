@@ -50,6 +50,12 @@ const ChunithmProfileRoutes = new Hono()
 					ul.skillId,
 					ul.isNewRecord,
 					ul.fullChainKind,
+					best.scoreMax as bestScoreMax,
+					best.missCount as bestMissCount,
+					best.maxComboCount as bestMaxComboCount,
+					best.isFullCombo as bestIsFullCombo,
+					best.isAllJustice as bestIsAllJustice,
+					best.isSuccess as bestIsSuccess,
 					music.chartId,
 					music.title,
 					music.level,
@@ -67,6 +73,10 @@ const ChunithmProfileRoutes = new Hono()
 						ELSE 0
 					END AS isImported
 				FROM chuni_score_playlog ul
+				LEFT JOIN chuni_score_best best
+					ON best.user = ul.user
+					AND best.musicId = ul.musicId
+					AND best.level = ul.level
 				INNER JOIN (
 					SELECT songId, chartId, MAX(version) as latest_version
 					FROM chuni_static_music
