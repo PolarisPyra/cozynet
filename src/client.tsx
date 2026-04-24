@@ -9,6 +9,7 @@ import { Toaster } from "@/app/shared/components/ui/sonner"
 import { OngekiAllSongs } from "./app/features/ongeki/pages/allsongs"
 import { CardManagement } from "./app/features/ongeki/pages/cards"
 import OngekiLeaderboard from "./app/features/ongeki/pages/leaderboard"
+import { OngekiMultiplayer } from "./app/features/ongeki/pages/multiplayer"
 import { OngekiRatingFrames } from "./app/features/ongeki/pages/rating"
 import { OngekiRivals } from "./app/features/ongeki/pages/rivals"
 import { OngekiScorePage } from "./app/features/ongeki/pages/scores"
@@ -111,6 +112,7 @@ const app = (
 										<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
 										<Route path="/ongeki/song-leaderboard/:musicId/:chartId" element={<OngekiSongLeaderboard />} />
 										<Route path="/ongeki/rivals" element={<OngekiRivals />} />
+										<Route path="/ongeki/multiplayer" element={<OngekiMultiplayer />} />
 										<Route path="/ongeki/cards" element={<CardManagement />} />
 										<Route path="/ongeki/profile" element={<OngekiProfile />} />
 									</Route>

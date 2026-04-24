@@ -112,6 +112,12 @@ export default defineConfig(({ mode }) => {
 					changeOrigin: true,
 					secure: false,
 					rewrite: path => path
+				},
+				"/ws/party": {
+					target: env.ARTEMIS_WS_URL || env.ARTEMIS_BASE_URL || "http://localhost:8080",
+					changeOrigin: true,
+					secure: false,
+					ws: true
 				}
 			},
 			port: parseInt(env.CLIENT_PORT) || 3000,

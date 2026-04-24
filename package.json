@@ -13,7 +13,7 @@
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --write \"src/**/*.{ts,tsx}\"",
-		"test": "node -v"
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@hono/node-server": "1.19.4",
@@ -112,7 +112,8 @@
 		"tsx": "4.20.5",
 		"typescript": "5.7.3",
 		"typescript-eslint": "8.44.0",
-		"vite": "6.3.6"
+		"vite": "6.3.6",
+		"vitest": "^2.1.9"
 	},
 	"packageManager": "pnpm@10.18.0",
 	"prettier": {
