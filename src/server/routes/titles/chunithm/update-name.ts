@@ -10,7 +10,7 @@ const UsernameRoutes = new Hono().post(
 	"update",
 	validateJson(
 		z.object({
-			userName: z.string()
+			userName: z.string().trim().min(1).max(32)
 		})
 	),
 	async c => {

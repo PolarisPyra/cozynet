@@ -6,6 +6,7 @@ import type { UserMeta } from "@/server/types/jwt"
 interface LoginCredentials {
 	username: string
 	password: string
+	turnstileToken?: string
 }
 
 interface ApiErrorResponse {
@@ -23,9 +24,9 @@ const extractErrorMessage = async (response: Response): Promise<string> => {
 
 export function useLogin() {
 	return useMutation({
-		mutationFn: async ({ username, password }: LoginCredentials): Promise<UserMeta> => {
+		mutationFn: async ({ username, password, turnstileToken }: LoginCredentials): Promise<UserMeta> => {
 			const response = await api.login.$post({
-				json: { username, password }
+				json: { username, password, turnstileToken }
 			})
 
 			if (!response.ok) {

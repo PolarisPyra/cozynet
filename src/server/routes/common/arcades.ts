@@ -3,15 +3,21 @@ import { HTTPException } from "hono/http-exception"
 import type { ResultSetHeader, RowDataPacket } from "mysql2"
 import { z } from "zod"
 
+import { DB, UserRole } from "@/app/shared/types"
+import { arcadeNameSchema, arcadeNicknameSchema } from "@/app/shared/types/validation/auth"
 import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
-import { DB, UserRole } from "@/app/shared/types"
 
 const ArcadeRoutes = new Hono()
 
 	.get("list", async c => {
 		try {
+			const { permissions } = c.payload
+			if (permissions !== UserRole.Admin) {
+				throw new HTTPException(403, { message: "Admin permissions required" })
+			}
+
 			const [results] = await db.execute<(DB.Machine & RowDataPacket)[]>(
 				`SELECT
     m.id,
@@ -51,6 +57,9 @@ LEFT JOIN arcade_owner ao ON a.id = ao.arcade
 	.get("current", async c => {
 		try {
 			const { userId } = c.payload
+			if (!userId) {
+				throw new HTTPException(403)
+			}
 
 			const [results] = await db.execute<(DB.Machine & RowDataPacket)[]>(
 				`SELECT m.*, a.*, ao.*
@@ -69,6 +78,11 @@ LEFT JOIN arcade_owner ao ON a.id = ao.arcade
 
 	.get("users", async c => {
 		try {
+			const { permissions } = c.payload
+			if (permissions !== UserRole.Admin) {
+				throw new HTTPException(403, { message: "Admin permissions required" })
+			}
+
 			const [results] = await db.execute<(DB.AimeUser & RowDataPacket)[]>(
 				`SELECT au.*, ac.access_code
 					FROM aime_user au
@@ -83,15 +97,33 @@ LEFT JOIN arcade_owner ao ON a.id = ao.arcade
 		"update/location",
 		validateJson(
 			z.object({
-				arcade: z.number(),
-				country: z.string(),
-				state: z.string(),
-				regionId: z.number()
+				arcade: z.number().int().positive(),
+				country: z.string().trim().min(1).max(128),
+				state: z.string().trim().min(1).max(128),
+				regionId: z.number().int().nonnegative()
 			})
 		),
 		async c => {
 			try {
+				const { userId, permissions } = c.payload
 				const { arcade, country, state, regionId } = await c.req.json()
+
+				if (!userId) {
+					throw new HTTPException(403)
+				}
+
+				if (permissions !== UserRole.Admin) {
+					const [ownership] = await db.execute<({ count: number } & RowDataPacket)[]>(
+						"SELECT COUNT(*) as count FROM arcade_owner WHERE arcade = ? AND user = ?",
+						[arcade, userId]
+					)
+
+					if (!ownership?.[0]?.count) {
+						throw new HTTPException(403, {
+							message: "You do not have permission to update this arcade"
+						})
+					}
+				}
 
 				// Update location fields in the arcade table
 				const [update] = await db.execute<ResultSetHeader>(
@@ -117,11 +149,15 @@ LEFT JOIN arcade_owner ao ON a.id = ao.arcade
 	.post(
 		"update/name",
 		validateJson(
-			z.object({
-				arcade: z.number(),
-				name: z.string().min(1).max(255).optional(),
-				nickname: z.string().min(1).max(255).optional()
-			})
+			z
+				.object({
+					arcade: z.number().int().positive(),
+					name: arcadeNameSchema.optional(),
+					nickname: arcadeNicknameSchema.optional()
+				})
+				.refine(data => data.name !== undefined || data.nickname !== undefined, {
+					message: "At least one field must be provided"
+				})
 		),
 		async c => {
 			try {
@@ -165,8 +201,8 @@ LEFT JOIN arcade_owner ao ON a.id = ao.arcade
 		"update",
 		validateJson(
 			z.object({
-				arcade: z.number(),
-				user: z.number()
+				arcade: z.number().int().positive(),
+				user: z.number().int().positive()
 			})
 		),
 		async c => {

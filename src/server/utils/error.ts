@@ -8,6 +8,7 @@ export const rethrowWithMessage = (msg: string, error: any) => {
 	const httpException = error as HTTPException
 	const status = httpException?.status ?? 500
 	const cause = httpException?.stack ?? error
-	const message = `${msg}` + (httpException.message ? `: ${httpException.message}` : "")
+	const includeInnerMessage = status >= 400 && status < 500 && httpException?.message
+	const message = `${msg}` + (includeInnerMessage ? `: ${httpException.message}` : "")
 	return new HTTPException(status, { message, cause })
 }

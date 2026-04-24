@@ -14,16 +14,26 @@ export const LoginContent = () => {
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const [canSubmit, setCanSubmit] = useState(!turnstile)
+	const [turnstileToken, setTurnstileToken] = useState("")
 	const refTurnstile = useRef<TurnstileInstance>(null)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		try {
-			refTurnstile.current?.reset()
-			await login(username, password)
+			if (turnstile && !turnstileToken) {
+				throw new Error("Turnstile verification is required")
+			}
+
+			await login(username, password, turnstileToken || undefined)
 		} catch (err: any) {
 			const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred"
 			toast.error(errorMessage)
+		} finally {
+			if (turnstile) {
+				refTurnstile.current?.reset()
+				setTurnstileToken("")
+				setCanSubmit(false)
+			}
 		}
 	}
 
@@ -62,7 +72,23 @@ export const LoginContent = () => {
 					/>
 				</div>
 				{turnstile && (
-					<Turnstile id="turnstile-1" ref={refTurnstile} siteKey={turnstile} onSuccess={() => setCanSubmit(true)} />
+					<Turnstile
+						id="turnstile-1"
+						ref={refTurnstile}
+						siteKey={turnstile}
+						onSuccess={token => {
+							setTurnstileToken(token)
+							setCanSubmit(true)
+						}}
+						onExpire={() => {
+							setTurnstileToken("")
+							setCanSubmit(false)
+						}}
+						onError={() => {
+							setTurnstileToken("")
+							setCanSubmit(false)
+						}}
+					/>
 				)}
 				<Button
 					disabled={!canSubmit || !username.trim() || !password.trim() || isLoading}

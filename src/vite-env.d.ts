@@ -6,7 +6,7 @@ interface ClientEnv {
 	readonly CDN_URL: string
 	readonly BUILD_HASH: string
 	readonly BUILD_HASH: string
-	readonly CFTurnstileKey: string
+	readonly TURNSTILE_SITE_KEY: string
 	readonly BUILD_DATE_YEAR_MONTH_DAY: string
 	readonly BUILD_TIME_12_HOUR: string
 

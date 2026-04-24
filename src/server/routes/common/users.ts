@@ -4,6 +4,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2"
 import { z } from "zod"
 
 import { DB } from "@/app/shared/types"
+import { accessCodeSchema } from "@/app/shared/types/validation/auth"
 import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
@@ -36,7 +37,7 @@ const UserRoutes = new Hono()
 		"/cards/bind",
 		validateJson(
 			z.object({
-				accessCode: z.string().length(20)
+				accessCode: accessCodeSchema
 			})
 		),
 		async c => {
@@ -102,7 +103,7 @@ const UserRoutes = new Hono()
 		"/cards/unbind",
 		validateJson(
 			z.object({
-				accessCode: z.string().length(20)
+				accessCode: accessCodeSchema
 			})
 		),
 		async c => {

@@ -7,10 +7,10 @@ export interface AuthContextValue {
 	isLoading: boolean
 	isVerifying: boolean
 	error: string
-	login: (username: string, password: string) => Promise<void>
+	login: (username: string, password: string, turnstileToken?: string) => Promise<void>
 	logout: () => Promise<void>
 	setUser: (user: UserMeta | null) => void
-	signup: (username: string, password: string, accessCode: string) => Promise<void>
+	signup: (username: string, password: string, accessCode: string, turnstileToken?: string) => Promise<void>
 	clearError: () => void
 	verifySession: () => Promise<boolean>
 }

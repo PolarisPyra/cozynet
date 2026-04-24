@@ -41,6 +41,7 @@
 		"@tanstack/react-query-devtools": "5.90.1",
 		"@tanstack/react-virtual": "^3.13.23",
 		"@types/luxon": "^3.7.1",
+		"aes-js": "^3.1.2",
 		"argon2": "0.41.1",
 		"class-variance-authority": "0.7.1",
 		"clsx": "2.1.1",

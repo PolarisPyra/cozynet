@@ -46,7 +46,9 @@ const server = new Hono()
 		if (err instanceof HTTPException) {
 			return c.json({ error: err.message }, err.status)
 		}
-		return c.json({ error: err.message }, 500)
+
+		const isProduction = process.env.NODE_ENV === "production"
+		return c.json({ error: isProduction ? "Internal server error" : err.message }, 500)
 	})
 	.use(compress())
 

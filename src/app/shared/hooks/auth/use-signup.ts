@@ -7,6 +7,7 @@ interface SignupCredentials {
 	username: string
 	password: string
 	accessCode: string
+	turnstileToken?: string
 }
 
 interface ApiErrorResponse {
@@ -24,9 +25,9 @@ const extractErrorMessage = async (response: Response): Promise<string> => {
 
 export function useSignup() {
 	return useMutation({
-		mutationFn: async ({ username, password, accessCode }: SignupCredentials): Promise<UserMeta> => {
+		mutationFn: async ({ username, password, accessCode, turnstileToken }: SignupCredentials): Promise<UserMeta> => {
 			const response = await api.signup.$post({
-				json: { username, password, accessCode }
+				json: { username, password, accessCode, turnstileToken }
 			})
 
 			if (!response.ok) {

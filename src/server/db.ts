@@ -1,10 +1,19 @@
 import "dotenv/config"
-import type { Pool } from "mysql2/promise"
-import mysql from "mysql2/promise"
+import type { FieldPacket, QueryResult } from "mysql2"
+import { createPool, type Pool, type PoolConnection } from "mysql2/promise"
 
 const isProd = process.env.NODE_ENV === "production"
 
-export const db = mysql.createPool({
+export type ExecutableConnection = PoolConnection & {
+	execute: <T extends QueryResult = QueryResult>(sql: string, values?: unknown[]) => Promise<[T, FieldPacket[]]>
+}
+
+export type ExecutablePool = Pool & {
+	execute: <T extends QueryResult = QueryResult>(sql: string, values?: unknown[]) => Promise<[T, FieldPacket[]]>
+	getConnection: () => Promise<ExecutableConnection>
+}
+
+export const db = createPool({
 	host: isProd ? process.env.PROD_MYSQL_HOST : process.env.DEV_MYSQL_HOST,
 	user: isProd ? process.env.PROD_MYSQL_USERNAME : process.env.DEV_MYSQL_USERNAME,
 	password: isProd ? process.env.PROD_MYSQL_PASSWORD : process.env.DEV_MYSQL_PASSWORD,
@@ -15,8 +24,6 @@ export const db = mysql.createPool({
 	queueLimit: 100,
 	enableKeepAlive: true,
 	keepAliveInitialDelay: 0
-}) as Pool & {
-	execute: <T = any>(sql: string, values?: any[]) => Promise<[T[], any]>
-}
+}) as ExecutablePool
 
 export default db

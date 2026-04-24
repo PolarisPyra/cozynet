@@ -1,12 +1,10 @@
 // Initialize react-scan FIRST before anything else
-import { scan } from "react-scan"
-scan()
-
 import React, { Suspense } from "react"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRoot } from "react-dom/client"
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
+import { scan } from "react-scan"
 
 import { Toaster } from "@/app/shared/components/ui/sonner"
 
@@ -34,6 +32,8 @@ import { NotFound } from "./app/shared/pages/not-found"
 import { ProtectedRoute } from "./app/shared/utils/protected"
 import "./index.css"
 
+scan()
+
 // Lazy-load large pages and feature components to reduce initial bundle size
 const Account = React.lazy(() => import("./app/features/account/pages/account"))
 const ProfilePage = React.lazy(() => import("./app/features/account/pages/profile"))
@@ -41,6 +41,7 @@ const CardsPage = React.lazy(() => import("./app/features/account/pages/cards"))
 const KeychipPage = React.lazy(() => import("./app/features/account/pages/keychip"))
 const AdminDashboard = React.lazy(() => import("./app/features/admin/pages/admin-dashboard"))
 const AdminCardManagement = React.lazy(() => import("./app/features/admin/pages/card-management"))
+const AdminIcfEditor = React.lazy(() => import("./app/features/admin/pages/admin-icf-editor"))
 const AdminKeychipGenerator = React.lazy(() => import("./app/features/admin/pages/admin-keychip-generator"))
 const AdminArcadeOwnership = React.lazy(() => import("./app/features/admin/pages/admin-arcade-ownership"))
 const ChunithmAllSongs = React.lazy(() => import("./app/features/chunithm/pages/allsongs"))
@@ -90,6 +91,7 @@ const app = (
 										<Route path="/profile" element={<ProfilePage />} />
 										<Route path="/admin" element={<AdminDashboard />} />
 										<Route path="/admin/cards" element={<AdminCardManagement />} />
+										<Route path="/admin/icf" element={<AdminIcfEditor />} />
 										<Route path="/admin/keychip-generator" element={<AdminKeychipGenerator />} />
 										<Route path="/admin/arcade-ownership" element={<AdminArcadeOwnership />} />
 										<Route path="/account" element={<Account />} />

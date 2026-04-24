@@ -6,7 +6,7 @@ import { z } from "zod"
 
 import { DB } from "@/app/shared/types"
 import { passwordSchema, usernameSchema } from "@/app/shared/types/validation/auth"
-import { db } from "@/server/db"
+import { db, type ExecutableConnection } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { signAndSetCookie } from "@/server/utils/cookie"
 import { rethrowWithMessage } from "@/server/utils/error"
@@ -87,16 +87,16 @@ const ProfileRoutes = new Hono()
 			z.object({
 				username: usernameSchema
 			})
-		),
-		async c => {
-			const conn = await db.getConnection()
+			),
+			async c => {
+				const conn = (await db.getConnection()) as ExecutableConnection
 			try {
 				await conn.beginTransaction()
 
 				const { userId, aimeCardId } = c.payload
 				const { username } = await c.req.json()
 
-				if (!userId) throw new HTTPException(403)
+				if (!userId || !aimeCardId) throw new HTTPException(403)
 
 				// Check if username is already taken by another user
 				const [existingUsers] = await conn.execute<(DB.AimeUser & RowDataPacket)[]>(
@@ -155,16 +155,16 @@ const ProfileRoutes = new Hono()
 				currentPassword: z.string().min(1, "Current password is required"),
 				newPassword: passwordSchema
 			})
-		),
-		async c => {
-			const conn = await db.getConnection()
+			),
+			async c => {
+				const conn = (await db.getConnection()) as ExecutableConnection
 			try {
 				await conn.beginTransaction()
 
 				const { userId, aimeCardId } = c.payload
 				const { currentPassword, newPassword } = await c.req.json()
 
-				if (!userId) throw new HTTPException(403)
+				if (!userId || !aimeCardId) throw new HTTPException(403)
 
 				// Get user and verify current password
 				const [users] = await conn.execute<(DB.AimeUser & RowDataPacket)[]>("SELECT * FROM aime_user WHERE id = ?", [

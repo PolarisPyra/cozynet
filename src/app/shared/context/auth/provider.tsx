@@ -50,10 +50,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 	 * Handles user login using React Query mutation.
 	 */
 	const login = useCallback(
-		async (username: string, password: string): Promise<void> => {
+		async (username: string, password: string, turnstileToken?: string): Promise<void> => {
 			setError("")
 			try {
-				const userData = await loginMutation.mutateAsync({ username, password })
+				const userData = await loginMutation.mutateAsync({ username, password, turnstileToken })
 				setUser(userData)
 				setError("")
 				navigate("/home")
@@ -70,10 +70,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 	 * Handles user signup using React Query mutation.
 	 */
 	const signup = useCallback(
-		async (username: string, password: string, accessCode: string): Promise<void> => {
+		async (username: string, password: string, accessCode: string, turnstileToken?: string): Promise<void> => {
 			setError("")
 			try {
-				const userData = await signupMutation.mutateAsync({ username, password, accessCode })
+				const userData = await signupMutation.mutateAsync({ username, password, accessCode, turnstileToken })
 				setUser(userData)
 				setError("")
 				navigate("/home")

@@ -4,8 +4,9 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2"
 import { z } from "zod"
 
 import { DB } from "@/app/shared/types"
+import { keychipSerialSchema } from "@/app/shared/types/validation/auth"
 import { db } from "@/server/db"
-import { validateJson } from "@/server/middleware/validator"
+import { validateJson, validateParams } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
 
 const KeychipRoutes = new Hono()
@@ -91,8 +92,8 @@ const KeychipRoutes = new Hono()
 		"/rename",
 		validateJson(
 			z.object({
-				keychipId: z.string(),
-				placeName: z.string().max(20)
+				keychipId: keychipSerialSchema,
+				placeName: z.string().trim().min(1).max(20)
 			})
 		),
 		async c => {
@@ -130,52 +131,60 @@ const KeychipRoutes = new Hono()
 			}
 		}
 	)
-	.delete("/:id", async c => {
-		try {
-			const { userId } = c.payload
-			const machineId = parseInt(c.req.param("id"))
+	.delete(
+		"/:id",
+		validateParams(
+			z.object({
+				id: z.coerce.number().int().positive()
+			})
+		),
+		async c => {
+			try {
+				const { userId } = c.payload
+				const { id: machineId } = c.req.param()
 
-			if (!userId) throw new HTTPException(403)
+				if (!userId) throw new HTTPException(403)
 
-			// Verify user owns this keychip
-			const [machines] = await db.execute<(DB.Machine & RowDataPacket)[]>(
-				`SELECT m.* FROM machine m
+				// Verify user owns this keychip
+				const [machines] = await db.execute<(DB.Machine & RowDataPacket)[]>(
+					`SELECT m.* FROM machine m
 				INNER JOIN arcade_owner ao ON m.arcade = ao.arcade
 				WHERE m.id = ? AND ao.user = ?`,
-				[machineId, userId]
-			)
+					[machineId, userId]
+				)
 
-			if (machines.length === 0) {
-				throw new HTTPException(404, { message: "Keychip not found or not owned by you" })
+				if (machines.length === 0) {
+					throw new HTTPException(404, { message: "Keychip not found or not owned by you" })
+				}
+
+				const machine = machines[0]
+
+				// Delete machine
+				await db.execute<ResultSetHeader>("DELETE FROM machine WHERE id = ?", [machineId])
+
+				// Delete arcade ownership
+				await db.execute<ResultSetHeader>("DELETE FROM arcade_owner WHERE arcade = ?", [machine.arcade])
+
+				// Optionally delete arcade if no other machines
+				const [otherMachines] = await db.execute<RowDataPacket[]>("SELECT id FROM machine WHERE arcade = ?", [
+					machine.arcade
+				])
+				if (otherMachines.length === 0) {
+					await db.execute<ResultSetHeader>("DELETE FROM arcade WHERE id = ?", [machine.arcade])
+				}
+
+				return c.json({ success: true })
+			} catch (error) {
+				if (error instanceof HTTPException) throw error
+				throw rethrowWithMessage("Failed to remove keychip", error)
 			}
-
-			const machine = machines[0]
-
-			// Delete machine
-			await db.execute<ResultSetHeader>("DELETE FROM machine WHERE id = ?", [machineId])
-
-			// Delete arcade ownership
-			await db.execute<ResultSetHeader>("DELETE FROM arcade_owner WHERE arcade = ?", [machine.arcade])
-
-			// Optionally delete arcade if no other machines
-			const [otherMachines] = await db.execute<RowDataPacket[]>("SELECT id FROM machine WHERE arcade = ?", [
-				machine.arcade
-			])
-			if (otherMachines.length === 0) {
-				await db.execute<ResultSetHeader>("DELETE FROM arcade WHERE id = ?", [machine.arcade])
-			}
-
-			return c.json({ success: true })
-		} catch (error) {
-			if (error instanceof HTTPException) throw error
-			throw rethrowWithMessage("Failed to remove keychip", error)
 		}
-	})
+	)
 	.post(
 		"/add",
 		validateJson(
 			z.object({
-				keychipId: z.string()
+				keychipId: keychipSerialSchema
 			})
 		),
 		async c => {
@@ -222,7 +231,7 @@ const KeychipRoutes = new Hono()
 		"/delete",
 		validateJson(
 			z.object({
-				keychipId: z.string()
+				keychipId: keychipSerialSchema
 			})
 		),
 		async c => {

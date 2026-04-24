@@ -10,6 +10,7 @@ import { db } from "../db"
 import { validateJson } from "../middleware/validator"
 import { clearCookie, signAndSetCookie } from "../utils/cookie"
 import { rethrowWithMessage } from "../utils/error"
+import { verifyTurnstileToken } from "../utils/turnstile"
 import { getUserGameVersions } from "../utils/versions"
 
 /**
@@ -22,7 +23,9 @@ const UnprotectedRoutes = new Hono()
 		return c.json({ status: "ok" })
 	})
 	.post("/login", validateJson(loginSchema), async c => {
-		const { username, password } = await c.req.json()
+		const { username, password, turnstileToken } = await c.req.json()
+
+		await verifyTurnstileToken(turnstileToken, c.req.raw.headers)
 
 		const conn = await db.getConnection()
 		try {
@@ -85,7 +88,9 @@ const UnprotectedRoutes = new Hono()
 	})
 	.post("/signup", validateJson(signupSchema), async c => {
 		const body = await c.req.json()
-		const { username, password, accessCode } = body
+		const { username, password, accessCode, turnstileToken } = body
+
+		await verifyTurnstileToken(turnstileToken, c.req.raw.headers)
 
 		// NOTE:
 		//   Lots of separate queries here, could combine them with joins

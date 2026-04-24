@@ -1,13 +1,14 @@
 import { useEffect } from "react"
 
 import { TriangleAlert } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 import { KeychipGenerator } from "@/app/features/admin/components/keychip-generator"
 import { useIsAdmin } from "@/app/features/admin/hooks"
 import Header from "@/app/shared/components/common/header"
 import Spinner from "@/app/shared/components/common/spinner"
 import ArcadeOwnership from "@/app/shared/components/settings/arcade-ownership"
+import { Button } from "@/app/shared/components/ui/button"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 
 const AdminDashboard = () => {
@@ -56,6 +57,19 @@ const AdminDashboard = () => {
 						<h2 className="text-lg font-semibold text-red-500">Arcade Ownership</h2>
 					</div>
 					<ArcadeOwnership />
+				</div>
+
+				<div className="bg-card text-card-foreground space-y-6 rounded-sm p-6">
+					<div className="border-border flex items-center gap-2 border-b pb-3">
+						<TriangleAlert className="text-red-500" />
+						<h2 className="text-lg font-semibold text-red-500">ICF Editor</h2>
+					</div>
+					<p className="text-muted-foreground text-sm">
+						Browser-side ICF tool for import, entry rename, hex inspection, export.
+					</p>
+					<Button asChild variant="outline" className="w-fit">
+						<Link to="/admin/icf">Open ICF Editor</Link>
+					</Button>
 				</div>
 			</div>
 		</div>

@@ -21,7 +21,8 @@ export function SignUpContent() {
 		accessCode: ""
 	})
 	const [errors, setErrors] = useState<FormErrors>({})
-	const [canSubmit, setCanSubmit] = useState(false)
+	const [canSubmit, setCanSubmit] = useState(!turnstile)
+	const [turnstileToken, setTurnstileToken] = useState("")
 	const refTurnstile = useRef<TurnstileInstance>(null)
 
 	const validateForm = (data: FormData): FormErrors => {
@@ -45,14 +46,23 @@ export function SignUpContent() {
 		if (Object.keys(newErrors).length === 0) {
 			// Form is valid, proceed with submission
 			try {
-				refTurnstile.current?.reset()
+				if (turnstile && !turnstileToken) {
+					throw new Error("Turnstile verification is required")
+				}
+
 				// Use validated values from schema
 				const validated = signupSchema.parse(formData)
-				await signup(validated.username, validated.password, validated.accessCode)
+				await signup(validated.username, validated.password, validated.accessCode, turnstileToken || undefined)
 				toast.success("Account created successfully!")
 			} catch (err) {
 				const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred"
 				toast.error(errorMessage)
+			} finally {
+				if (turnstile) {
+					refTurnstile.current?.reset()
+					setTurnstileToken("")
+					setCanSubmit(false)
+				}
 			}
 		}
 	}
@@ -124,7 +134,25 @@ export function SignUpContent() {
 					)}
 				</div>
 
-				<Turnstile id="turnstile-1" ref={refTurnstile} siteKey={turnstile} onSuccess={() => setCanSubmit(true)} />
+				{turnstile && (
+					<Turnstile
+						id="turnstile-1"
+						ref={refTurnstile}
+						siteKey={turnstile}
+						onSuccess={token => {
+							setTurnstileToken(token)
+							setCanSubmit(true)
+						}}
+						onExpire={() => {
+							setTurnstileToken("")
+							setCanSubmit(false)
+						}}
+						onError={() => {
+							setTurnstileToken("")
+							setCanSubmit(false)
+						}}
+					/>
+				)}
 
 				<Button
 					type="submit"
