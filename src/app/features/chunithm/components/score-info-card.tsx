@@ -89,12 +89,12 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 	return (
 		<div
 			className={cn(
-				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md",
+				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-2.5 shadow-sm transition-all hover:shadow-md",
 				className
 			)}
 		>
 			{/* Top Section: Image, Title, Score */}
-			<div className="mb-2 flex items-start gap-3">
+			<div className="mb-1.5 flex items-start gap-3">
 				{/* Album Art */}
 				<div className="flex-shrink-0">
 					<CardImage
@@ -165,7 +165,7 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 			</div>
 
 			{/* Achievement Badges */}
-			<div className="mb-2 flex flex-col gap-2">
+			<div className="mb-1.5 flex flex-col gap-1.5">
 				<div className="flex items-center gap-2">
 					<ChunithmAchievementBadges
 						isFullCombo={score.isFullCombo ?? 0}
@@ -183,10 +183,10 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 				)}
 			</div>
 
-			<Separator className="my-1.5" />
+			<Separator className="my-1" />
 
 			{/* Footer */}
-			<div className="flex w-full min-w-0 flex-col gap-1.5">
+			<div className="flex w-full min-w-0 flex-col gap-1">
 				<div className="flex flex-wrap items-center gap-1.5">
 					{score.userPlayDate ? (
 						<>

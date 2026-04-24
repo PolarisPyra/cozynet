@@ -121,19 +121,25 @@ export function OngekiScoreInfoCard({
 	return (
 		<div
 			className={cn(
-				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md",
+				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-2.5 shadow-sm transition-all hover:shadow-md",
 				className
 			)}
 		>
 			{/* Top Section: Image, Title, Score */}
-			<div className="flex items-start gap-3 mb-2">
+			<div className="mb-1.5 flex items-start gap-3">
 				{/* Album Art */}
 				<div className="flex-shrink-0">
-					<CardImage src={`${CDN}/ongeki/jacket/${score.jacketPath}`} alt={score.title} width={72} height={72} className="w-16 h-16 rounded-md" />
+					<CardImage
+						src={`${CDN}/ongeki/jacket/${score.jacketPath}`}
+						alt={score.title}
+						width={64}
+						height={64}
+						className="h-16 w-16 rounded-md"
+					/>
 				</div>
 
 				{/* Title and Info */}
-				<div className="flex-1 min-w-0 flex flex-col gap-1.5">
+				<div className="flex min-w-0 flex-1 flex-col gap-1.5">
 					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
 						{score.title}
 					</h3>
@@ -188,19 +194,23 @@ export function OngekiScoreInfoCard({
 			</div>
 
 			{/* Achievement Badges */}
-			<div className="flex items-end justify-between gap-2 mb-2">
-				<OngekiAchievementBadges
-					isFullCombo={score.isFullCombo ?? 0}
-					isAllBreak={score.isAllBreak ?? 0}
-					isFullBell={score.isFullBell ?? 0}
-					techScore={score.techScore ?? 0}
-				/>
-				<PlatinumStars count={score.platinumScoreStar ?? 0} />
+			<div className="mb-1.5 flex flex-col gap-1.5">
+				<div className="flex items-center gap-2">
+					<OngekiAchievementBadges
+						isFullCombo={score.isFullCombo ?? 0}
+						isAllBreak={score.isAllBreak ?? 0}
+						isFullBell={score.isFullBell ?? 0}
+						techScore={score.techScore ?? 0}
+					/>
+				</div>
+				<div className="flex h-5 justify-end">
+					<PlatinumStars count={score.platinumScoreStar ?? 0} />
+				</div>
 			</div>
 
-			<Separator className="my-1.5" />
+			<Separator className="my-1" />
 			{/* Footer */}
-			<div className="flex flex-col gap-1.5 min-w-0 w-full">
+			<div className="flex min-w-0 w-full flex-col gap-1">
 				<div className="flex items-center gap-1.5 flex-wrap">
 					{score.userPlayDate ? (
 						<>
