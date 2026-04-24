@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 
+import { Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import { ChunithmKamaiImportDialog } from "@/app/features/chunithm/components/kamai-import-dialog"
@@ -105,7 +106,8 @@ export default function ChunithmScorePage() {
 						/>
 						<div className="flex flex-wrap gap-2">
 							<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
-								{isExporting ? "Exporting..." : "Export for Kamai"}
+								<Upload className="h-4 w-4" />
+								{isExporting ? "Exporting..." : "Export to Kamai"}
 							</Button>
 							<ChunithmKamaiImportDialog existingScores={scores || []} />
 						</div>

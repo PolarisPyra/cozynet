@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 
+import { Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import { OngekiKamaiImportDialog } from "@/app/features/ongeki/components/kamai-import-dialog"
@@ -119,7 +120,8 @@ export function OngekiScorePage() {
 						/>
 						<div className="flex flex-wrap gap-2">
 							<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
-								{isExporting ? "Exporting..." : "Export for Kamai"}
+								<Upload className="h-4 w-4" />
+								{isExporting ? "Exporting..." : "Export to Kamai"}
 							</Button>
 							<OngekiKamaiImportDialog existingScores={scores || []} />
 						</div>

@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react"
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
 
 import { Download, FileUp, LoaderCircle, Upload } from "lucide-react"
 import { DateTime } from "luxon"
@@ -213,7 +213,6 @@ const parseKamaiFile = (content: string): ChunithmKamaiImportScore[] => {
 export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: ChunithmExistingScore[] }) {
 	const inputRef = useRef<HTMLInputElement | null>(null)
 	const [open, setOpen] = useState(false)
-	const [isDragActive, setIsDragActive] = useState(false)
 	const [fileName, setFileName] = useState<string | null>(null)
 	const [parsedScores, setParsedScores] = useState<ChunithmKamaiImportScore[]>([])
 	const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({})
@@ -324,7 +323,6 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 		setFileName(null)
 		setParsedScores([])
 		setSelectedKeys({})
-		setIsDragActive(false)
 		setOnlyShowReadyRows(false)
 		setKamaiUsername("")
 		setLastFetchedKamaiUsername(null)
@@ -402,14 +400,6 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 		}
 	}
 
-	const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
-		event.preventDefault()
-		setIsDragActive(false)
-		const file = event.dataTransfer.files?.[0]
-		if (!file) return
-		await handleFile(file)
-	}
-
 	const handleImport = async () => {
 		if (selectedRows.length === 0) {
 			toast.error("Select at least one score to import")
@@ -477,25 +467,10 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 			>
 				<DialogHeader>
 					<DialogTitle>Import from Kamai</DialogTitle>
-					<DialogDescription>
-						Upload a Kamai JSON file, review the Chunithm scores, and confirm the ones to import into your
-						`chuni_score_playlog` and `chuni_score_best`.
-					</DialogDescription>
+					<DialogDescription>Choose a Kamai JSON file to upload.</DialogDescription>
 				</DialogHeader>
 
-				<div
-					className={cn(
-						"bg-muted hover:bg-muted flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-lg px-6 py-8 text-center transition-colors",
-						isDragActive && "bg-accent"
-					)}
-					onClick={() => inputRef.current?.click()}
-					onDragOver={event => {
-						event.preventDefault()
-						setIsDragActive(true)
-					}}
-					onDragLeave={() => setIsDragActive(false)}
-					onDrop={handleDrop}
-				>
+				<div className="border-border/70 bg-background/40 flex min-h-28 flex-col items-center justify-center rounded-lg border px-6 py-6 text-center">
 					<input
 						ref={inputRef}
 						type="file"
@@ -503,11 +478,17 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 						className="hidden"
 						onChange={handleInputChange}
 					/>
-					<div className="bg-background mb-3 rounded-full p-3 shadow-sm">
-						<FileUp className="h-5 w-5" />
-					</div>
-					<p className="text-sm font-medium">{fileName ?? "Drag and drop a Kamai JSON here"}</p>
-					<p className="text-muted-foreground mt-1 text-xs">or click and browse to upload</p>
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="border-primary/60 text-primary hover:bg-primary/10 gap-2 font-semibold"
+						onClick={() => inputRef.current?.click()}
+					>
+						<FileUp className="h-4 w-4" />
+						Choose Kamai JSON
+					</Button>
+					<p className="mt-3 text-sm font-medium">{fileName ?? "No file selected"}</p>
 				</div>
 
 				<div className="space-y-2">
