@@ -8,17 +8,18 @@ const INSTRUCTIONS: GameInstructions = {
 	downloadUrl: "https://gitea.tendokyu.moe/akanyan/mu3-mods/releases",
 	configFile: "mu3.ini",
 	configSection: "Party",
-	installPath: "%LocalAppData%\\STARTLINER\\data\\pkg\\local-Mu3Mods\\app\\BepInEx\\monomod\\",
 	notes: (
-		<>
+		<div className="flex flex-col gap-2">
 			<p>
-				<strong>Version matching:</strong> party play requires an exact match on both ROM version
-				(1.55 vs 1.52) and loaded OPT data. The bridge reads both from the game at runtime — no
-				per-session config needed — and Artemis enforces the match at lobby-join time. Cabinets with
-				different loaded content will see each other's lobbies grayed out with the Join button
-				disabled.
+				<strong>Version matching:</strong> ROM and OPT data must match exactly to play together.
 			</p>
-		</>
+			<p>
+				<strong>Troubleshooting:</strong> if the in-game matching tab shows{" "}
+				<strong>店内マッチングOFF</strong>, set Machine Group to{" "}
+				<code className="rounded bg-muted px-1">A</code> in the operator test menu and reboot — the
+				setting is read once at boot.
+			</p>
+		</div>
 	)
 }
 
