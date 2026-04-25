@@ -8,17 +8,14 @@ import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Card, CardContent } from "@/app/shared/components/ui/card"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { FilterValues, MaimaiRating } from "@/app/shared/types"
 import { maimaiDxBadgeColors } from "@/app/shared/utils/maimai"
 
-interface MaimaiDxRatingFramesProps {
-	disablePagination?: boolean
-}
-
-export function MaimaiDxRatingFrames({ disablePagination = true }: MaimaiDxRatingFramesProps = {}) {
+export function MaimaiDxRatingFrames() {
 	const version = useMaimaiDxVersion()
 	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(ratingFilters))
@@ -27,8 +24,7 @@ export function MaimaiDxRatingFrames({ disablePagination = true }: MaimaiDxRatin
 	const { activeData, isLoading, playerRatingValue, highestRatingValue } = useMaimaiDxRatingData(activeTab)
 
 	const filtered = useFiltering(activeData || [], ratingFilters, searchQuery, filterValues)
-	const pagination = usePagination(filtered, 20, [searchQuery, filterValues])
-	const displayItems = disablePagination ? filtered : pagination.paged
+	const { page, setPage, totalPages, paged: displayItems, hasMore } = usePagination(filtered, STANDARD_PAGE_SIZE, [searchQuery, filterValues])
 
 	if (!version) {
 		return (
@@ -89,10 +85,7 @@ export function MaimaiDxRatingFrames({ disablePagination = true }: MaimaiDxRatin
 				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
-
-				{!disablePagination && (
-					<Pagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={pagination.setPage} />
-				)}
+				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>
 	)

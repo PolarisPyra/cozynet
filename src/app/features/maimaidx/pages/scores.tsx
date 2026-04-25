@@ -6,6 +6,7 @@ import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
@@ -20,7 +21,7 @@ export function MaimaiDxScorePage() {
 
 	const filtered = useFiltering(scores || [], scoreFilters, searchQuery, filterValues)
 	
-	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery, filterValues])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, STANDARD_PAGE_SIZE, [searchQuery, filterValues])
 
 	const searchItems = useMemo(
 		() => (scores || []).map(s => ({ id: s.id, title: s.title || "" })),
@@ -64,7 +65,7 @@ export function MaimaiDxScorePage() {
 						filterValues={filterValues}
 						onFilterChange={(id, val) => {
 							setFilterValues(prev => ({ ...prev, [id]: val }))
-							setPage(1) // Reset to first page when filters change
+							setPage(1)
 						}}
 						onClearAll={() => {
 							setFilterValues(getDefaults(scoreFilters))
@@ -90,14 +91,7 @@ export function MaimaiDxScorePage() {
 								/>
 							))}
 						</CardGrid>
-
-						{hasMore && (
-							<Pagination 
-								page={page} 
-								totalPages={totalPages} 
-								onPageChange={setPage} 
-							/>
-						)}
+						{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 					</>
 				)}
 			</Body>

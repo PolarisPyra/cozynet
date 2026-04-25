@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 
-import { Pagination } from "@/app/shared/components/common/pagination"
 import { CardItem } from "@/app/features/ongeki/components/cards/card-item"
+import { Pagination } from "@/app/shared/components/common/pagination"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import type { DB } from "@/app/shared/types"
 
 interface CardGalleryProps {
@@ -11,44 +13,11 @@ interface CardGalleryProps {
 	itemsPerPage?: number
 }
 
-export function CardGallery({ cards, loading = false, itemsPerPage = 48 }: CardGalleryProps) {
-	const [page, setPage] = useState(1)
+export function CardGallery({ cards, loading = false, itemsPerPage = STANDARD_PAGE_SIZE }: CardGalleryProps) {
+	const safeItemsPerPage = Math.max(1, Math.floor(itemsPerPage || STANDARD_PAGE_SIZE))
 
-	const safeItemsPerPage = Math.max(1, Math.floor(itemsPerPage || 70))
-	const totalPages = Math.max(1, Math.ceil((cards?.length || 0) / safeItemsPerPage))
-
-	useEffect(() => {
-		setPage(1)
-	}, [cards.length])
-
-	const pagedCards = useMemo(() => {
-		const start = (page - 1) * safeItemsPerPage
-		return (cards || []).slice(start, start + safeItemsPerPage)
-	}, [cards, page, safeItemsPerPage])
-
-	useEffect(() => {
-		function handleKeyDown(event: KeyboardEvent) {
-			if (
-				event.target instanceof HTMLInputElement ||
-				event.target instanceof HTMLTextAreaElement ||
-				event.target instanceof HTMLSelectElement ||
-				(event.target as HTMLElement).isContentEditable
-			) {
-				return
-			}
-
-			if (event.key === "ArrowLeft") {
-				event.preventDefault()
-				setPage(p => Math.max(1, p - 1))
-			} else if (event.key === "ArrowRight") {
-				event.preventDefault()
-				setPage(p => Math.min(totalPages, p + 1))
-			}
-		}
-
-		window.addEventListener("keydown", handleKeyDown)
-		return () => window.removeEventListener("keydown", handleKeyDown)
-	}, [totalPages])
+	const list = useMemo(() => cards || [], [cards])
+	const { page, setPage, totalPages, paged: pagedCards, hasMore } = usePagination(list, safeItemsPerPage, [list.length])
 
 	if (loading) {
 		return (
@@ -71,8 +40,7 @@ export function CardGallery({ cards, loading = false, itemsPerPage = 48 }: CardG
 					<CardItem key={card.id} item={card} />
 				))}
 			</div>
-
-			{cards && cards.length > safeItemsPerPage && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+			{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 		</div>
 	)
 }

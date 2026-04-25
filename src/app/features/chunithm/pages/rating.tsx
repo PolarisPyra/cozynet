@@ -1,29 +1,46 @@
 import { useEffect, useMemo, useState } from "react"
 
+import { LayoutGrid, List } from "lucide-react"
+
 import ChunithmRatingInfoCard from "@/app/features/chunithm/components/rating-info-card"
 import { ratingFilters, useChunithmRatingData, useChunithmVersion } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import Spinner from "@/app/shared/components/common/spinner"
+import { Button } from "@/app/shared/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/shared/components/ui/table"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
-import type { FilterValues, ChunithmRating } from "@/app/shared/types"
-import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
+import type { ChunithmRating, FilterValues } from "@/app/shared/types"
+import { chunithmBadgeColors, getChunithmGrade, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
+import { CDN } from "@/app/shared/utils/constants"
+import { formatLevel } from "@/app/shared/utils/format-level"
+
+const CHUNITHM_RATING_DENSITY_KEY = "chunithm-rating-density"
 
 const getLevelSortValue = (rating: ChunithmRating): number => {
-	// For normal charts use the numeric constant level directly.
-	// Treat missing levels or WORLDS END as very large so they fall to the end for "Floor" and to the front for "Ceiling".
 	if (rating.level == null || !Number.isFinite(rating.level) || rating.chartId === 5) {
 		return Number.POSITIVE_INFINITY
 	}
+
 	return rating.level
 }
 
 export default function ChunithmRatingPage() {
 	const version = useChunithmVersion()
 	const filters = ratingFilters(version || 0)
+
 	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(filters))
+	const [density, setDensity] = useState<"list" | "grid">(() => {
+		try {
+			const saved = localStorage.getItem(CHUNITHM_RATING_DENSITY_KEY)
+			if (saved === "grid" || saved === "comfortable") return "grid"
+			return "list"
+		} catch {
+			return "list"
+		}
+	})
 
 	const activeTab = filterValues.tab || "base"
 	const { getActiveData, getActiveLoading } = useChunithmRatingData(activeTab)
@@ -37,10 +54,8 @@ export default function ChunithmRatingPage() {
 		const sortMode = filterValues.sort || "default"
 
 		if (sortMode === "floor") {
-			// Strictly lowest level first
 			list.sort((a, b) => getLevelSortValue(a) - getLevelSortValue(b))
 		} else if (sortMode === "ceiling") {
-			// Strictly highest level first
 			list.sort((a, b) => getLevelSortValue(b) - getLevelSortValue(a))
 		}
 
@@ -48,14 +63,19 @@ export default function ChunithmRatingPage() {
 	}, [filtered, filterValues.sort])
 
 	useEffect(() => {
-		if (version) {
-			const newFilters = ratingFilters(version)
-			const validTabs = newFilters.find(f => f.identifier === "tab")?.options.map(o => o.value) || []
-			if (filterValues.tab && !validTabs.includes(filterValues.tab)) {
-				setFilterValues(getDefaults(newFilters))
-			}
+		if (!version) return
+
+		const newFilters = ratingFilters(version)
+		const validTabs = newFilters.find(filter => filter.identifier === "tab")?.options.map(option => option.value) || []
+
+		if (filterValues.tab && !validTabs.includes(filterValues.tab)) {
+			setFilterValues(getDefaults(newFilters))
 		}
 	}, [version, filterValues.tab])
+
+	useEffect(() => {
+		localStorage.setItem(CHUNITHM_RATING_DENSITY_KEY, density)
+	}, [density])
 
 	if (!version) {
 		return (
@@ -86,35 +106,124 @@ export default function ChunithmRatingPage() {
 			<Header
 				title="Rating"
 				searchProps={{
-					items: sorted.map((r: ChunithmRating, i: number) => ({ id: i, title: r.title || "" })),
+					items: sorted.map((rating: ChunithmRating, index: number) => ({ id: index, title: rating.title || "" })),
 					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No ratings.",
 					groupLabel: "Ratings"
 				}}
 			/>
+
 			<Body>
 				<FilterArea>
-					<MultiFilter
-						filters={filters}
-						filterValues={filterValues}
-						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
-						onClearAll={() => setFilterValues(getDefaults(filters))}
-					/>
+					<div className="flex flex-wrap items-center justify-between gap-2">
+						<MultiFilter
+							filters={filters}
+							filterValues={filterValues}
+							onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
+							onClearAll={() => setFilterValues(getDefaults(filters))}
+						/>
+
+						<div className="ml-auto flex items-center gap-2">
+							<Button
+								variant={density === "grid" ? "secondary" : "outline"}
+								size="sm"
+								onClick={() => setDensity("grid")}
+								className="h-8 text-xs"
+							>
+								<LayoutGrid className="h-3.5 w-3.5" />
+								Grid
+							</Button>
+
+							<Button
+								variant={density === "list" ? "secondary" : "outline"}
+								size="sm"
+								onClick={() => setDensity("list")}
+								className="h-8 text-xs"
+							>
+								<List className="h-3.5 w-3.5" />
+								List
+							</Button>
+						</div>
+					</div>
 				</FilterArea>
 
-				<CardGrid>
-					{sorted.map((rating: ChunithmRating, idx: number) => (
-						<ChunithmRatingInfoCard
-							key={idx}
-							score={rating}
-							levelColorBadge={chunithmBadgeColors}
-							isPotential={filterValues.tab === "potential"}
-						/>
-					))}
-				</CardGrid>
+				{sorted.length === 0 ? (
+					<div className="text-muted-foreground py-20 text-center">No ratings found</div>
+				) : density === "list" ? (
+					<div className="bg-card overflow-hidden rounded-lg border">
+						<Table className="min-w-full">
+							<colgroup>
+								<col className="w-16" />
+								<col className="w-[34%]" />
+								<col className="w-[14%]" />
+								<col className="w-[10%]" />
+								<col className="w-[16%]" />
+								<col className="w-[10%]" />
+								<col className="w-[12%]" />
+							</colgroup>
 
-				{sorted.length === 0 && <div className="text-muted-foreground py-20 text-center">No ratings found</div>}
+							<TableHeader className="[&_tr]:bg-muted/35">
+								<TableRow>
+									<TableHead>Jacket</TableHead>
+									<TableHead>Song</TableHead>
+									<TableHead>Difficulty</TableHead>
+									<TableHead>Level</TableHead>
+									<TableHead className="text-right">Score</TableHead>
+									<TableHead>Grade</TableHead>
+									<TableHead className="text-right">Rating</TableHead>
+								</TableRow>
+							</TableHeader>
+
+							<TableBody>
+								{sorted.map((rating, index) => (
+									<TableRow key={`${rating.musicId ?? index}-${rating.chartId ?? 0}`}>
+										<TableCell className="h-16">
+											<img
+												src={`${CDN}/chunithm/jacket/${rating.jacketPath}`}
+												alt={rating.title || "Song jacket"}
+												width={44}
+												height={44}
+												className="block size-11 shrink-0 rounded-sm object-cover"
+											/>
+										</TableCell>
+
+										<TableCell className="h-16 max-w-80 truncate text-sm font-semibold leading-none">
+											{rating.title || "Unknown"}
+										</TableCell>
+
+										<TableCell className="text-muted-foreground h-16 leading-none">
+											{getDifficultyFromChunithmChart(rating.chartId ?? 0)}
+										</TableCell>
+
+										<TableCell className="h-16 font-medium leading-none">{formatLevel(rating.level)}</TableCell>
+
+										<TableCell className="h-16 text-right font-semibold leading-none">
+											{(rating.score ?? 0).toLocaleString()}
+										</TableCell>
+
+										<TableCell className="h-16 font-medium leading-none">{getChunithmGrade(rating.score ?? 0)}</TableCell>
+
+										<TableCell className="h-16 text-right font-medium leading-none">
+											{((rating.rating ?? 0) / 100).toFixed(2)}
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</div>
+				) : (
+					<CardGrid className="lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
+						{sorted.map((rating: ChunithmRating, index: number) => (
+							<ChunithmRatingInfoCard
+								key={index}
+								score={rating}
+								levelColorBadge={chunithmBadgeColors}
+								isPotential={filterValues.tab === "potential"}
+							/>
+						))}
+					</CardGrid>
+				)}
 			</Body>
 		</Container>
 	)

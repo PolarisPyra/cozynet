@@ -7,6 +7,7 @@ import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import { RivalInfoCard } from "@/app/shared/components/common/rival-info-card"
 import Spinner from "@/app/shared/components/common/spinner"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 
@@ -25,7 +26,7 @@ export function OngekiRivals() {
 		[users, searchQuery]
 	)
 
-	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, 20, [searchQuery])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filtered, STANDARD_PAGE_SIZE, [searchQuery])
 
 	const handleAdd = (id: number) => {
 		if (rivalCount >= 3) return toast.error("Max 3 rivals")
@@ -89,7 +90,6 @@ export function OngekiRivals() {
 				</CardGrid>
 
 				{filtered.length === 0 && <div className="text-muted-foreground py-20 text-center">No users found</div>}
-
 				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>

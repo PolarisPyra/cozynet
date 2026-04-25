@@ -1,23 +1,40 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
-import { useSearchParams } from "react-router-dom"
+import { LayoutGrid, List } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
 
 import { SongInfoCard } from "@/app/features/ongeki/components/song-info-card"
 import { songFilters, useOngekiSongs, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
+import { Button } from "@/app/shared/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/shared/components/ui/table"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
-import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 import type { DB, FilterValues, OngekiStaticMusic } from "@/app/shared/types"
-import { ongekiBadgeColors } from "@/app/shared/utils/ongeki"
+import { CDN } from "@/app/shared/utils/constants"
+import { formatLevel } from "@/app/shared/utils/format-level"
+import { getDifficultyFromOngekiChart, ongekiBadgeColors } from "@/app/shared/utils/ongeki"
+
+const ONGEKI_ALLSONGS_VIEW_KEY = "ongeki-allsongs-view"
 
 export function OngekiAllSongs() {
-	const [searchParams, setSearchParams] = useSearchParams()
-	const searchQuery = searchParams.get("search") || ""
+	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(songFilters))
+	const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
+		try {
+			return localStorage.getItem(ONGEKI_ALLSONGS_VIEW_KEY) === "list" ? "list" : "grid"
+		} catch {
+			return "grid"
+		}
+	})
+
+	const location = useLocation()
+	const navigate = useNavigate()
 
 	const version = useOngekiVersion()
 	const { data: songs, isLoading } = useOngekiSongs()
@@ -25,15 +42,49 @@ export function OngekiAllSongs() {
 
 	const grouped = useMemo(() => {
 		const map = new Map<number, OngekiStaticMusic>()
-		filtered.forEach((s: DB.OngekiStaticMusic) => {
-			if (!s.level || !s.songId || !s.title) return
-			if (!map.has(s.songId)) map.set(s.songId, { ...s, charts: [] })
-			map.get(s.songId)!.charts.push({ chartId: s.chartId ?? null, level: s.level })
+
+		filtered.forEach((song: DB.OngekiStaticMusic) => {
+			if (!song.level || !song.songId || !song.title) return
+
+			if (!map.has(song.songId)) {
+				map.set(song.songId, { ...song, charts: [] })
+			}
+
+			map.get(song.songId)!.charts.push({
+				chartId: song.chartId ?? null,
+				level: song.level
+			})
 		})
+
 		return Array.from(map.values())
 	}, [filtered])
 
-	const { page, setPage, totalPages, paged, hasMore } = usePagination(grouped, 20, [searchQuery, filterValues])
+	const searchItems = useMemo(
+		() => grouped.filter(song => song.songId).map(song => ({ id: song.songId as number, title: song.title || "" })),
+		[grouped]
+	)
+
+	const { page, setPage, totalPages, paged } = usePagination(grouped, STANDARD_PAGE_SIZE, [searchQuery, filterValues])
+
+	useEffect(() => {
+		if (location.search) {
+			navigate(location.pathname, { replace: true })
+		}
+	}, [location.pathname, location.search, navigate])
+
+	useEffect(() => {
+		localStorage.setItem(ONGEKI_ALLSONGS_VIEW_KEY, viewMode)
+	}, [viewMode])
+
+	const handleFilterChange = (identifier: string, value: string) => {
+		setFilterValues(prev => ({ ...prev, [identifier]: value }))
+		setPage(1)
+	}
+
+	const handleClearAll = () => {
+		setFilterValues(getDefaults(songFilters))
+		setPage(1)
+	}
 
 	if (!version) {
 		return (
@@ -63,33 +114,128 @@ export function OngekiAllSongs() {
 		<Container>
 			<Header
 				title="All Songs"
+				actions={
+					<InlineFilters
+						filters={songFilters}
+						filterValues={filterValues}
+						onFilterChange={handleFilterChange}
+						onClearAll={handleClearAll}
+						labelOverrides={{ chartType: "Difficulty" }}
+					/>
+				}
 				searchProps={{
-					items: grouped.filter(s => s.songId).map(s => ({ id: s.songId as number, title: s.title || "" })),
-					onSelect: val => setSearchParams({ search: val }),
+					items: searchItems,
+					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No songs.",
 					groupLabel: "Songs"
 				}}
 			/>
+
 			<Body>
-				<FilterArea>
-					<MultiFilter
-						filters={songFilters}
-						filterValues={filterValues}
-						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
-						onClearAll={() => setFilterValues(getDefaults(songFilters))}
-					/>
-				</FilterArea>
+				<div className="mb-4 flex justify-end gap-2">
+					<Button
+						variant={viewMode === "grid" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setViewMode("grid")}
+						className="h-8 text-xs"
+					>
+						<LayoutGrid className="h-3.5 w-3.5" />
+						Grid
+					</Button>
 
-				<CardGrid className="auto-rows-fr">
-					{paged.map((song, idx) => (
-						<SongInfoCard key={idx} score={song} levelColorBadge={ongekiBadgeColors} jacketArt="ongeki/jacket" />
-					))}
-				</CardGrid>
+					<Button
+						variant={viewMode === "list" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setViewMode("list")}
+						className="h-8 text-xs"
+					>
+						<List className="h-3.5 w-3.5" />
+						List
+					</Button>
+				</div>
 
-				{grouped.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
+				{grouped.length === 0 ? (
+					<div className="text-muted-foreground py-20 text-center">No songs found</div>
+				) : viewMode === "list" ? (
+					<>
+						<div className="bg-card overflow-hidden rounded-lg border">
+							<Table className="min-w-full">
+								<colgroup>
+									<col className="w-16" />
+									<col className="w-[30%]" />
+									<col className="w-[18%]" />
+									<col className="w-[48%]" />
+								</colgroup>
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+								<TableHeader className="[&_tr]:bg-muted/35">
+									<TableRow>
+										<TableHead>Jacket</TableHead>
+										<TableHead>Song</TableHead>
+										<TableHead>Genre</TableHead>
+										<TableHead>Charts</TableHead>
+									</TableRow>
+								</TableHeader>
+
+								<TableBody>
+									{paged.map(song => (
+										<TableRow key={song.songId}>
+											<TableCell className="h-16">
+												<img
+													src={`${CDN}/ongeki/jacket/${song.jacketPath}`}
+													alt={song.title || "Song jacket"}
+													width={44}
+													height={44}
+													className="block size-11 shrink-0 rounded-sm object-cover"
+												/>
+											</TableCell>
+
+											<TableCell className="h-16 max-w-80 truncate text-sm font-semibold leading-none">
+												{song.title || "Unknown"}
+											</TableCell>
+
+											<TableCell className="text-muted-foreground h-16 leading-none">
+												{song.genre || "—"}
+											</TableCell>
+
+											<TableCell className="text-muted-foreground h-16 max-w-120 truncate leading-none">
+												{(song.charts || [])
+													.sort((a, b) => (a.chartId ?? 0) - (b.chartId ?? 0))
+													.map(chart => `${getDifficultyFromOngekiChart(chart.chartId ?? 0)} ${formatLevel(chart.level)}`)
+													.join(" / ")}
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</div>
+
+						{totalPages > 1 && (
+							<div className="mt-4">
+								<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+							</div>
+						)}
+					</>
+				) : (
+					<>
+						<CardGrid className="auto-rows-fr">
+							{paged.map(song => (
+								<SongInfoCard
+									key={song.songId}
+									score={song}
+									levelColorBadge={ongekiBadgeColors}
+									jacketArt="ongeki/jacket"
+								/>
+							))}
+						</CardGrid>
+
+						{totalPages > 1 && (
+							<div className="mt-4">
+								<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+							</div>
+						)}
+					</>
+				)}
 			</Body>
 		</Container>
 	)

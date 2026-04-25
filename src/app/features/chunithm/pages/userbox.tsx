@@ -32,7 +32,7 @@ const ChunithmUserbox = () => {
 			<Header title={"Userbox"} />
 			<AvatarPendingProvider>
 				<UserboxPendingProvider>
-					<Body className="mx-auto flex max-w-7xl flex-col gap-4">
+					<Body className="flex w-full flex-col gap-4 px-3 sm:px-4 lg:px-5">
 						<AvatarPreview />
 						<div className="grid auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 							<AvatarAccessories />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 
 import { useAccentColor } from "@/app/shared/components/accent-color-provider"
 import { Card, CardHeader, CardTitle } from "@/app/shared/components/ui/card"
@@ -11,9 +11,10 @@ import { ModeToggle } from "./theme-switcher"
 type HeaderProps = {
 	title: string
 	searchProps?: SearchProps
+	actions?: ReactNode
 }
 
-const Header = ({ title, searchProps }: HeaderProps) => {
+const Header = ({ title, searchProps, actions }: HeaderProps) => {
 	const accentColor = useAccentColor()
 	const [isScrolled, setIsScrolled] = useState(false)
 
@@ -54,6 +55,7 @@ const Header = ({ title, searchProps }: HeaderProps) => {
 						</CardTitle>
 					</div>
 					<div className="flex flex-1 flex-shrink-0 items-center justify-end gap-2 sm:flex-initial">
+						{actions}
 						{searchProps && (
 							<div className="max-w-[200px] flex-1 sm:max-w-none sm:flex-initial">
 								<Search {...searchProps} />

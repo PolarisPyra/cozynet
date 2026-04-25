@@ -4,15 +4,16 @@ import useRivalsManagement from "@/app/features/chunithm/hooks/use-rivals-manage
 import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 
 export default function ChunithmRivals() {
 	const version = useChunithmVersion()
-	const { rivalIds, rivalCount, users, filteredRivals, searchQuery, setSearchQuery, handleAddRival, handleRemoveRival, isLoading } =
+	const { rivalIds, rivalCount, users, filteredRivals, setSearchQuery, handleAddRival, handleRemoveRival, isLoading } =
 		useRivalsManagement()
 
-	const { page, setPage, totalPages, paged, hasMore } = usePagination(filteredRivals, 20, [searchQuery])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(filteredRivals, STANDARD_PAGE_SIZE)
 
 	if (!version) {
 		return (
@@ -65,7 +66,6 @@ export default function ChunithmRivals() {
 				</CardGrid>
 
 				{filteredRivals.length === 0 && <div className="text-muted-foreground py-20 text-center">No users found</div>}
-
 				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>

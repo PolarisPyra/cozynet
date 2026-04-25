@@ -8,6 +8,7 @@ import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
@@ -33,7 +34,7 @@ export function MaimaiDxAllSongs() {
 		return Array.from(map.values())
 	}, [filtered])
 
-	const { page, setPage, totalPages, paged, hasMore } = usePagination(grouped, 20, [searchQuery, filterValues])
+	const { page, setPage, totalPages, paged, hasMore } = usePagination(grouped, STANDARD_PAGE_SIZE, [searchQuery, filterValues])
 
 	if (!version) {
 		return (
@@ -88,7 +89,6 @@ export function MaimaiDxAllSongs() {
 				</CardGrid>
 
 				{grouped.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
-
 				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 			</Body>
 		</Container>

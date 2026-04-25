@@ -84,14 +84,6 @@ const MENU_CONFIG: MenuItem[] = [
 					{ name: "Cards", href: "/ongeki/cards", icon: RectangleVertical },
 					{ name: "Profile", href: "/ongeki/profile", icon: User }
 				]
-			},
-			{
-				name: "Maimai DX",
-				icon: Folder,
-				children: [
-					{ name: "Scores", href: "/maimaidx/scores", icon: NotepadText },
-					{ name: "All Songs", href: "/maimaidx/allsongs", icon: BoomBox }
-				]
 			}
 		]
 	}
@@ -120,7 +112,11 @@ function useExpandedState() {
 	const toggle = useCallback((name: string) => {
 		setExpanded(prev => {
 			const next = new Set(prev)
-			next.has(name) ? next.delete(name) : next.add(name)
+			if (next.has(name)) {
+				next.delete(name)
+			} else {
+				next.add(name)
+			}
 			return next
 		})
 	}, [])

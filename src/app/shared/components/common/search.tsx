@@ -22,10 +22,11 @@ export type SearchItem = {
 
 export type SearchProps = Omit<DialogProps, "open" | "onOpenChange"> & {
 	items?: SearchItem[]
-	onSelect?: (value: string) => void
+	onSelect?: (value: string, item?: SearchItem) => void
 	placeholder?: string
 	emptyMessage?: string
 	groupLabel?: string
+	recentStorageKey?: string
 }
 
 export const Search = ({
@@ -34,10 +35,32 @@ export const Search = ({
 	placeholder = "Search...",
 	emptyMessage = "No results found.",
 	groupLabel = "Results",
+	recentStorageKey,
 	...props
 }: SearchProps) => {
 	const [open, setOpen] = React.useState(false)
 	const [search, setSearch] = React.useState("")
+	const [debouncedSearch, setDebouncedSearch] = React.useState("")
+	const storageKey = React.useMemo(
+		() => recentStorageKey || `search-recent:${groupLabel.toLowerCase().replace(/\s+/g, "-")}`,
+		[groupLabel, recentStorageKey]
+	)
+
+	const [recentItems, setRecentItems] = React.useState<SearchItem[]>(() => {
+		try {
+			const raw = localStorage.getItem(storageKey)
+			if (!raw) return []
+			const parsed = JSON.parse(raw) as SearchItem[]
+			return Array.isArray(parsed) ? parsed.slice(0, 5) : []
+		} catch {
+			return []
+		}
+	})
+
+	React.useEffect(() => {
+		const id = window.setTimeout(() => setDebouncedSearch(search), 180)
+		return () => window.clearTimeout(id)
+	}, [search])
 
 	// Deduplicate items by title
 	const uniqueItems = React.useMemo(() => {
@@ -52,24 +75,29 @@ export const Search = ({
 
 	// Filter items based on search query
 	const filteredItems = React.useMemo(() => {
-		if (!search) return uniqueItems
-		const searchLower = search.toLowerCase()
+		if (!debouncedSearch) return uniqueItems
+		const searchLower = debouncedSearch.toLowerCase()
 		return uniqueItems.filter(item => {
 			const title = item.title || ""
 			return title.toLowerCase().includes(searchLower)
 		})
-	}, [uniqueItems, search])
+	}, [uniqueItems, debouncedSearch])
 
 	const displayedItems = filteredItems.slice(0, 10)
 	const remainingCount = filteredItems.length - 10
 
 	const handleSelect = React.useCallback(
-		(value: string) => {
+		(item: SearchItem) => {
 			setOpen(false)
 			setSearch("")
-			onSelect?.(value)
+			setRecentItems(prev => {
+				const next = [item, ...prev.filter(it => `${it.id}` !== `${item.id}`)].slice(0, 5)
+				localStorage.setItem(storageKey, JSON.stringify(next))
+				return next
+			})
+			onSelect?.(item.title, item)
 		},
-		[onSelect]
+		[onSelect, storageKey]
 	)
 
 	// Reset search when dialog closes
@@ -123,10 +151,38 @@ export const Search = ({
 					className="**:data-[slot=command-input-wrapper]:bg-input/50 **:data-[slot=command-input-wrapper]:border-input rounded-none bg-transparent **:data-[slot=command-input]:!h-9 **:data-[slot=command-input]:py-0 **:data-[slot=command-input-wrapper]:mb-1.5 **:data-[slot=command-input-wrapper]:!h-9 **:data-[slot=command-input-wrapper]:rounded-sm **:data-[slot=command-input-wrapper]:border"
 					shouldFilter={false}
 				>
-					<CommandInput placeholder={placeholder} value={search} onValueChange={setSearch} />
+					<CommandInput
+						placeholder={placeholder}
+						value={search}
+						onValueChange={setSearch}
+						onKeyDown={e => {
+							if (e.key === "Escape") {
+								if (search.trim().length > 0) {
+									e.preventDefault()
+									e.stopPropagation()
+									setSearch("")
+								} else {
+									setOpen(false)
+								}
+							}
+						}}
+					/>
 					<CommandList className="no-scrollbar bg-background min-h-80 scroll-pt-2 scroll-pb-1.5">
 						{filteredItems.length === 0 && (
 							<CommandEmpty className="text-muted-foreground py-12 text-center text-sm">{emptyMessage}</CommandEmpty>
+						)}
+						{!debouncedSearch && recentItems.length > 0 && (
+							<CommandGroup
+								heading="Recent"
+								className="!p-0 [&_[cmdk-group-heading]]:scroll-mt-16 [&_[cmdk-group-heading]]:!p-3 [&_[cmdk-group-heading]]:!pb-1"
+							>
+								{recentItems.map(item => (
+									<CommandMenuItem key={`recent-${item.id}`} value={item.title || ""} onSelect={() => handleSelect(item)}>
+										<ArrowRight />
+										{item.title}
+									</CommandMenuItem>
+								))}
+							</CommandGroup>
 						)}
 						{displayedItems.length > 0 && (
 							<CommandGroup
@@ -137,10 +193,10 @@ export const Search = ({
 									<CommandMenuItem
 										key={item.id}
 										value={item.title || ""}
-										onSelect={handleSelect}
+										onSelect={() => handleSelect(item)}
 									>
 										<ArrowRight />
-										{item.title}
+										<HighlightedText text={item.title} query={debouncedSearch} />
 									</CommandMenuItem>
 								))}
 							</CommandGroup>
@@ -162,6 +218,26 @@ export const Search = ({
 				</div>
 			</DialogContent>
 		</Dialog>
+	)
+}
+
+const HighlightedText = ({ text, query }: { text: string; query: string }) => {
+	if (!query.trim()) return <>{text}</>
+	const lower = text.toLowerCase()
+	const q = query.toLowerCase()
+	const index = lower.indexOf(q)
+	if (index < 0) return <>{text}</>
+
+	const before = text.slice(0, index)
+	const match = text.slice(index, index + query.length)
+	const after = text.slice(index + query.length)
+
+	return (
+		<>
+			{before}
+			<mark className="bg-primary/25 text-foreground rounded-sm px-0.5">{match}</mark>
+			{after}
+		</>
 	)
 }
 

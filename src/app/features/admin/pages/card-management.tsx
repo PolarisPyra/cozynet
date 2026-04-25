@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 
 import { useQuery } from "@tanstack/react-query"
 import { CreditCard } from "lucide-react"
@@ -9,17 +9,16 @@ import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { DB } from "@/app/shared/types"
 import { api } from "@/app/shared/utils"
-
-const ITEMS_PER_PAGE = 20
 
 const CardManagement = () => {
 	const isAdmin = useIsAdmin()
 	const navigate = useNavigate()
 	const [searchParams, setSearchParams] = useSearchParams()
-	const [page, setPage] = useState(1)
 
 	const searchQuery = searchParams.get("search") || ""
 
@@ -55,11 +54,6 @@ const CardManagement = () => {
 		}
 	}, [isAdmin, navigate, isLoadingAuth])
 
-	// Reset to page 1 when search changes
-	useEffect(() => {
-		setPage(1)
-	}, [searchQuery])
-
 	const isLoading = isLoadingCards || isLoadingUsers
 	const allCards = cardsData?.users || []
 	const users = usersData?.users || []
@@ -91,12 +85,7 @@ const CardManagement = () => {
 		})
 	}, [allCards, searchQuery, users])
 
-	// Paginate filtered cards
-	const totalPages = Math.max(1, Math.ceil(filteredCards.length / ITEMS_PER_PAGE))
-	const paginatedCards = useMemo(() => {
-		const start = (page - 1) * ITEMS_PER_PAGE
-		return filteredCards.slice(start, start + ITEMS_PER_PAGE)
-	}, [filteredCards, page])
+	const { page, setPage, totalPages, paged: paginatedCards, hasMore } = usePagination(filteredCards, STANDARD_PAGE_SIZE, [searchQuery])
 
 	// Prepare search items for the search component
 	const searchItems = useMemo(() => {
@@ -203,8 +192,7 @@ const CardManagement = () => {
 									</tbody>
 								</table>
 							</div>
-
-							{filteredCards.length > ITEMS_PER_PAGE && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+							{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 						</>
 					)}
 				</div>

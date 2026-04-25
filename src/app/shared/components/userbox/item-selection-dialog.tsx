@@ -6,6 +6,8 @@ import { Pagination } from "@/app/shared/components/common/pagination"
 import { Button } from "@/app/shared/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/shared/components/ui/dialog"
 import { Input } from "@/app/shared/components/ui/input"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { cn } from "@/app/shared/utils"
 
 interface Item {
@@ -39,9 +41,8 @@ export function ItemSelectionDialog({
 	headerControls
 }: ItemSelectionDialogProps) {
 	const [selectedId, setSelectedId] = useState<number | null>(currentItemId ?? null)
-	const [currentPage, setCurrentPage] = useState(1)
 	const [searchQuery, setSearchQuery] = useState("")
-	const itemsPerPage = 12
+	const itemsPerPage = STANDARD_PAGE_SIZE
 
 	// Filter items based on search query
 	const filteredItems = useMemo(() => {
@@ -49,33 +50,20 @@ export function ItemSelectionDialog({
 		return items.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
 	}, [items, searchQuery])
 
-	// Reset search and page when dialog opens or closes
+	const { page, setPage, totalPages, paged: paginatedItems, hasMore } = usePagination(filteredItems, itemsPerPage, [searchQuery, isOpen])
+
+	// Reset search when dialog opens or closes
 	useEffect(() => {
 		if (isOpen) {
 			setSearchQuery("")
-			setCurrentPage(1)
 			if (currentItemId) {
 				const itemIndex = items.findIndex(item => item.id === currentItemId)
-				if (itemIndex !== -1) {
-					setCurrentPage(Math.floor(itemIndex / itemsPerPage) + 1)
+				if (itemIndex >= 0) {
+					setPage(Math.floor(itemIndex / itemsPerPage) + 1)
 				}
 			}
 		}
-	}, [isOpen, currentItemId, items, itemsPerPage])
-
-	// Reset to page 1 when search changes (but not on initial open)
-	useEffect(() => {
-		if (searchQuery !== "") {
-			setCurrentPage(1)
-		}
-	}, [searchQuery])
-
-	const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
-
-	const paginatedItems = useMemo(() => {
-		const start = (currentPage - 1) * itemsPerPage
-		return filteredItems.slice(start, start + itemsPerPage)
-	}, [filteredItems, currentPage])
+	}, [isOpen, currentItemId, items, itemsPerPage, setPage])
 
 	const handleSelect = (id: number) => {
 		setSelectedId(id)
@@ -166,14 +154,11 @@ export function ItemSelectionDialog({
 					</div>
 				</div>
 
-				{/* Pagination Bottom */}
-				<div className="border-border shrink-0 border-t">
-					<Pagination
-						page={currentPage}
-						totalPages={totalPages}
-						onPageChange={setCurrentPage}
-					/>
-				</div>
+				{hasMore && (
+					<div className="border-border shrink-0 border-t">
+						<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+					</div>
+				)}
 
 				{/* Action Button */}
 				<div className="mt-3 shrink-0 sm:mt-4">

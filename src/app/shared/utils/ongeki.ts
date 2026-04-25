@@ -30,7 +30,7 @@ export enum OngekiDifficulty {
 }
 
 export enum OngekiGradeLevel {
-	SSSPlus = "SSSPLUS",
+	SSSPlus = "SSS+",
 	SSS = "SSS",
 	SS = "SS",
 	S = "S",

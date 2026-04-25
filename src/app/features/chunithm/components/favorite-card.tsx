@@ -20,22 +20,28 @@ export interface FavoriteCardProps {
 	isPotential?: boolean
 	isRecommend?: boolean
 	ongekiVersion?: number
+	density?: "list" | "grid"
 }
 
-export const FavoriteCard = function ({ score, onToggleFavorite, favoriteSongIds = [] }: FavoriteCardProps) {
+export const FavoriteCard = function ({ score, onToggleFavorite, favoriteSongIds = [], density = "list" }: FavoriteCardProps) {
 	const isFavorited = favoriteSongIds.some(fav => fav.favId === score.songId)
+	const isGrid = density === "grid"
 
 	return (
-		<div className="bg-card flex items-center justify-between rounded-sm border p-4 transition-colors">
-			<div className="flex min-w-0 flex-1 items-center gap-3">
+		<div
+			className={`bg-card flex items-center justify-between rounded-sm border p-4 transition-colors ${
+				isGrid ? "min-h-32" : "min-h-28"
+			}`}
+		>
+			<div className="flex min-w-0 flex-1 items-center gap-4">
 				<img
-					width={48}
-					height={48}
+					width={isGrid ? 80 : 72}
+					height={isGrid ? 80 : 72}
 					src={`${CDN}/chunithm/jacket/${score.jacketPath}`}
 					alt={score.title}
-					className="h-12 w-12 flex-shrink-0 rounded-sm"
+					className={`flex-shrink-0 rounded-sm object-cover ${isGrid ? "h-20 w-20" : "h-[4.5rem] w-[4.5rem]"}`}
 				/>
-				<span className="text-foreground truncate text-base leading-tight font-bold">{score.title}</span>
+				<span className="text-foreground line-clamp-2 text-base leading-tight font-bold">{score.title}</span>
 			</div>
 			<Heart
 				fill={isFavorited ? "currentColor" : "none"}

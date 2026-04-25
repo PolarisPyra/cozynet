@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Copy, Eye, EyeOff, Gamepad, Pencil, Plus, X } from "lucide-react"
@@ -18,6 +18,8 @@ import {
 } from "@/app/shared/components/ui/dialog"
 import { Input } from "@/app/shared/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
+import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { api } from "@/app/shared/utils"
 
@@ -33,8 +35,6 @@ interface ErrorResponse {
 	message?: string
 }
 
-const ITEMS_PER_PAGE = 12
-
 const KeychipPage = () => {
 	const queryClient = useQueryClient()
 	const [hiddenKeychips, setHiddenKeychips] = useState<Record<number, boolean>>({})
@@ -43,7 +43,6 @@ const KeychipPage = () => {
 	const [removeDialogOpen, setRemoveDialogOpen] = useState<number | null>(null)
 	const [placeName, setPlaceName] = useState("")
 	const [hoveredIcon, setHoveredIcon] = useState<{ keychipId: number; type: "eye" | "copy" | "edit" } | null>(null)
-	const [myKeychipsPage, setMyKeychipsPage] = useState(1)
 
 	const { data: keychipsData, isLoading } = useQuery<{ keychips: Keychip[] }>({
 		queryKey: ["user", "keychips"],
@@ -144,17 +143,7 @@ const KeychipPage = () => {
 	}
 
 	const allKeychips = keychipsData?.keychips || []
-
-	// Paginate My Keychips
-	const myKeychipsTotalPages = Math.max(1, Math.ceil(allKeychips.length / ITEMS_PER_PAGE))
-	const paginatedKeychips = useMemo(() => {
-		const start = (myKeychipsPage - 1) * ITEMS_PER_PAGE
-		return allKeychips.slice(start, start + ITEMS_PER_PAGE)
-	}, [allKeychips, myKeychipsPage])
-
-	useEffect(() => {
-		setMyKeychipsPage(1)
-	}, [allKeychips.length])
+	const { page, setPage, totalPages, paged: paginatedKeychips, hasMore } = usePagination(allKeychips, STANDARD_PAGE_SIZE, [allKeychips.length])
 
 	return (
 		<Container>
@@ -380,9 +369,7 @@ const KeychipPage = () => {
 									</DialogContent>
 								</Dialog>
 							</div>
-							{allKeychips.length > ITEMS_PER_PAGE && (
-								<Pagination page={myKeychipsPage} totalPages={myKeychipsTotalPages} onPageChange={setMyKeychipsPage} />
-							)}
+							{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 						</>
 					)}
 				</div>

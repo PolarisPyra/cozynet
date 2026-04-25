@@ -1,17 +1,11 @@
-// Initialize react-scan FIRST before anything else
 import React, { Suspense } from "react"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRoot } from "react-dom/client"
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
-import { scan } from "react-scan"
 
 import { Toaster } from "@/app/shared/components/ui/sonner"
 
-import { MaimaiDxAllSongs } from "./app/features/maimaidx/pages/allsongs"
-import { MaimaiDxRatingFrames } from "./app/features/maimaidx/pages/rating"
-import { MaimaiDxScorePage } from "./app/features/maimaidx/pages/scores"
-import { MaimaiDxSettings } from "./app/features/maimaidx/pages/settings"
 import { OngekiAllSongs } from "./app/features/ongeki/pages/allsongs"
 import { CardManagement } from "./app/features/ongeki/pages/cards"
 import OngekiLeaderboard from "./app/features/ongeki/pages/leaderboard"
@@ -31,8 +25,6 @@ import ServerNews from "./app/shared/pages/home-page"
 import { NotFound } from "./app/shared/pages/not-found"
 import { ProtectedRoute } from "./app/shared/utils/protected"
 import "./index.css"
-
-scan()
 
 // Lazy-load large pages and feature components to reduce initial bundle size
 const Account = React.lazy(() => import("./app/features/account/pages/account"))
@@ -103,6 +95,7 @@ const app = (
 										<Route path="/chunithm/userbox" element={<ChunithmUserbox />} />
 										<Route path="/chunithm/scores" element={<ChunithmScorePage />} />
 										<Route path="/chunithm/favorites" element={<ChunithmFavorites />} />
+										<Route path="/chunithm/favorites/:songId" element={<ChunithmFavorites />} />
 										<Route path="/chunithm/leaderboard" element={<ChunithmLeaderboard />} />
 										<Route path="/chunithm/song-leaderboard/:musicId/:chartId" element={<ChunithmSongLeaderboard />} />
 										<Route path="/chunithm/allsongs" element={<ChunithmAllSongs />} />
@@ -115,16 +108,11 @@ const app = (
 										<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
 										<Route path="/ongeki/scores" element={<OngekiScorePage />} />
 										<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
-										<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
 										<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
 										<Route path="/ongeki/song-leaderboard/:musicId/:chartId" element={<OngekiSongLeaderboard />} />
 										<Route path="/ongeki/rivals" element={<OngekiRivals />} />
 										<Route path="/ongeki/cards" element={<CardManagement />} />
 										<Route path="/ongeki/profile" element={<OngekiProfile />} />
-										<Route path="/maimaidx/scores" element={<MaimaiDxScorePage />} />
-										<Route path="/maimaidx/rating" element={<MaimaiDxRatingFrames />} />
-										<Route path="/maimaidx/settings" element={<MaimaiDxSettings />} />
-										<Route path="/maimaidx/allsongs" element={<MaimaiDxAllSongs />} />
 									</Route>
 								</Route>
 

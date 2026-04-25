@@ -1,30 +1,73 @@
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
-import { useSearchParams } from "react-router-dom"
+import { LayoutGrid, List } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
 
 import SongInfoCard from "@/app/features/chunithm/components/song-info-card"
 import { songFilters, useChunithmSongs } from "@/app/features/chunithm/hooks"
 import useGroupedSongs from "@/app/features/chunithm/hooks/use-grouped-songs"
 import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
+import { Button } from "@/app/shared/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/shared/components/ui/table"
+import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
-import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
-import { chunithmBadgeColors } from "@/app/shared/utils/chunithm"
+import { chunithmBadgeColors, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
+import { CDN } from "@/app/shared/utils/constants"
+import { formatLevel } from "@/app/shared/utils/format-level"
+
+const CHUNITHM_ALLSONGS_VIEW_KEY = "chunithm-allsongs-view"
 
 export default function ChunithmAllSongs() {
-	const [searchParams, setSearchParams] = useSearchParams()
-	const searchQuery = searchParams.get("search") || ""
+	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(songFilters))
+	const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
+		try {
+			return localStorage.getItem(CHUNITHM_ALLSONGS_VIEW_KEY) === "list" ? "list" : "grid"
+		} catch {
+			return "grid"
+		}
+	})
+
+	const location = useLocation()
+	const navigate = useNavigate()
 
 	const { data: songs, isLoading } = useChunithmSongs()
+
 	const filtered = useFiltering(songs || [], songFilters, searchQuery, filterValues)
 	const grouped = useGroupedSongs({ songs: filtered })
+	const inlineFilters = useMemo(() => songFilters, [])
+	const searchItems = useMemo(
+		() => grouped.filter(song => song.songId).map(song => ({ id: song.songId as number, title: song.title || "" })),
+		[grouped]
+	)
 
-	const { page, setPage, totalPages, paged, hasMore } = usePagination(grouped, 20, [searchQuery, filterValues])
+	const { page, setPage, totalPages, paged } = usePagination(grouped, STANDARD_PAGE_SIZE, [searchQuery, filterValues])
+
+	useEffect(() => {
+		if (location.search) {
+			navigate(location.pathname, { replace: true })
+		}
+	}, [location.pathname, location.search, navigate])
+
+	useEffect(() => {
+		localStorage.setItem(CHUNITHM_ALLSONGS_VIEW_KEY, viewMode)
+	}, [viewMode])
+
+	const handleFilterChange = (identifier: string, value: string) => {
+		setFilterValues(prev => ({ ...prev, [identifier]: value }))
+		setPage(1)
+	}
+
+	const handleClearAll = () => {
+		setFilterValues(getDefaults(songFilters))
+		setPage(1)
+	}
 
 	if (isLoading) {
 		return (
@@ -43,33 +86,128 @@ export default function ChunithmAllSongs() {
 		<Container>
 			<Header
 				title="All Songs"
+				actions={
+					<InlineFilters
+						filters={inlineFilters}
+						filterValues={filterValues}
+						onFilterChange={handleFilterChange}
+						onClearAll={handleClearAll}
+						labelOverrides={{ chartType: "Difficulty" }}
+					/>
+				}
 				searchProps={{
-					items: grouped.filter(s => s.songId).map(s => ({ id: s.songId as number, title: s.title || "" })),
-					onSelect: val => setSearchParams({ search: val }),
+					items: searchItems,
+					onSelect: setSearchQuery,
 					placeholder: "Search...",
 					emptyMessage: "No songs.",
 					groupLabel: "Songs"
 				}}
 			/>
+
 			<Body>
-				<FilterArea>
-					<MultiFilter
-						filters={songFilters}
-						filterValues={filterValues}
-						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
-						onClearAll={() => setFilterValues(getDefaults(songFilters))}
-					/>
-				</FilterArea>
+				<div className="mb-4 flex justify-end gap-2">
+					<Button
+						variant={viewMode === "grid" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setViewMode("grid")}
+						className="h-8 text-xs"
+					>
+						<LayoutGrid className="h-3.5 w-3.5" />
+						Grid
+					</Button>
 
-				<CardGrid className="auto-rows-fr">
-					{paged.map((song, idx) => (
-						<SongInfoCard key={idx} score={song} levelColorBadge={chunithmBadgeColors} jacketArt="chunithm/jacket" />
-					))}
-				</CardGrid>
+					<Button
+						variant={viewMode === "list" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setViewMode("list")}
+						className="h-8 text-xs"
+					>
+						<List className="h-3.5 w-3.5" />
+						List
+					</Button>
+				</div>
 
-				{grouped.length === 0 && <div className="text-muted-foreground py-20 text-center">No songs found</div>}
+				{grouped.length === 0 ? (
+					<div className="text-muted-foreground py-20 text-center">No songs found</div>
+				) : viewMode === "list" ? (
+					<>
+						<div className="bg-card overflow-hidden rounded-lg border">
+							<Table className="min-w-full">
+								<colgroup>
+									<col className="w-16" />
+									<col className="w-[30%]" />
+									<col className="w-[18%]" />
+									<col className="w-[48%]" />
+								</colgroup>
 
-				{hasMore && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+								<TableHeader className="[&_tr]:bg-muted/35">
+									<TableRow>
+										<TableHead>Jacket</TableHead>
+										<TableHead>Song</TableHead>
+										<TableHead>Genre</TableHead>
+										<TableHead>Charts</TableHead>
+									</TableRow>
+								</TableHeader>
+
+								<TableBody>
+									{paged.map(song => (
+										<TableRow key={song.songId}>
+											<TableCell className="h-16">
+												<img
+													src={`${CDN}/chunithm/jacket/${song.jacketPath}`}
+													alt={song.title || "Song jacket"}
+													width={44}
+													height={44}
+													className="block size-11 shrink-0 rounded-sm object-cover"
+												/>
+											</TableCell>
+
+											<TableCell className="h-16 max-w-80 truncate text-sm font-semibold leading-none">
+												{song.title || "Unknown"}
+											</TableCell>
+
+											<TableCell className="text-muted-foreground h-16 leading-none">
+												{song.genre || "—"}
+											</TableCell>
+
+											<TableCell className="text-muted-foreground h-16 max-w-120 truncate leading-none">
+												{(song.charts || [])
+													.sort((a, b) => (a.chartId ?? 0) - (b.chartId ?? 0))
+													.map(chart => `${getDifficultyFromChunithmChart(chart.chartId ?? 0)} ${formatLevel(chart.level)}`)
+													.join(" / ")}
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</div>
+
+						{totalPages > 1 && (
+							<div className="mt-4">
+								<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+							</div>
+						)}
+					</>
+				) : (
+					<>
+						<CardGrid className="auto-rows-fr">
+							{paged.map(song => (
+								<SongInfoCard
+									key={song.songId}
+									score={song}
+									levelColorBadge={chunithmBadgeColors}
+									jacketArt="chunithm/jacket"
+								/>
+							))}
+						</CardGrid>
+
+						{totalPages > 1 && (
+							<div className="mt-4">
+								<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+							</div>
+						)}
+					</>
+				)}
 			</Body>
 		</Container>
 	)
