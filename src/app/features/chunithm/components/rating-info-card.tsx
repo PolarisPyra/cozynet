@@ -6,6 +6,7 @@ import { ChunithmAchievementBadges } from "@/app/features/chunithm/components/ac
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
 import { ChunithmRating } from "@/app/shared/types"
 import { calculateChunithmRating, getChunithmGrade, levelToStars } from "@/app/shared/utils/chunithm"
@@ -88,9 +89,21 @@ export const ChunithmRatingInfoCard = function ({
 
 				{/* Score and Rating */}
 				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+					{logoUrl && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge variant="secondary" className="h-5 rounded-sm p-0.5">
+									<img src={logoUrl} alt={`Version ${rating.version}`} className="max-h-4 w-auto object-contain" />
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Version the song originated in</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
 					{!isPotential && (
 						<div>
-							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 								Score
 							</div>
 							<div className="flex items-baseline gap-1.5">
@@ -102,7 +115,7 @@ export const ChunithmRatingInfoCard = function ({
 						</div>
 					)}
 					<div>
-						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 							Rating
 						</div>
 						<div>
@@ -135,12 +148,12 @@ export const ChunithmRatingInfoCard = function ({
 					<div className="flex flex-col gap-1.5 min-w-0 w-full">
 						{!isPotential && rating.userPlayDate && (
 							<div className="flex items-center gap-1.5 flex-wrap">
-								<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
+								<Badge variant="secondary" className="h-5 rounded-md px-1.5 text-xs flex-shrink-0 whitespace-nowrap">
 									{DateTime.fromSQL(rating.userPlayDate ?? "", { zone: "Asia/Tokyo" })
 										.toLocal()
 										.toLocaleString(DateTime.DATE_SHORT)}
 								</Badge>
-								<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
+								<Badge variant="secondary" className="h-5 rounded-md px-1.5 text-xs flex-shrink-0 whitespace-nowrap">
 									{DateTime.fromSQL(rating.userPlayDate, { zone: "Asia/Tokyo" })
 										.toLocal()
 										.toLocaleString(DateTime.TIME_SIMPLE)}
@@ -149,15 +162,8 @@ export const ChunithmRatingInfoCard = function ({
 						)}
 						{!isPotential && rating.isNewRecord === 1 && (
 							<div className="flex items-center gap-1.5 flex-wrap">
-								<Badge variant="secondary" className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap">
+								<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-semibold uppercase flex-shrink-0 whitespace-nowrap">
 									New Record
-								</Badge>
-							</div>
-						)}
-						{logoUrl && (
-							<div className="flex items-center gap-1.5 flex-wrap">
-								<Badge variant="secondary" className="h-5 rounded-sm p-0.5 flex-shrink-0">
-									<img src={logoUrl} alt={`Version ${rating.version}`} className="max-h-4 w-auto object-contain" />
 								</Badge>
 							</div>
 						)}

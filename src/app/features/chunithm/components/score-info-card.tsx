@@ -1,13 +1,13 @@
 import { memo, useMemo, useState } from "react"
 
-import { Medal, Star } from "lucide-react"
+import { Star, Users } from "lucide-react"
 
 import { ChunithmAchievementBadges } from "@/app/features/chunithm/components/achievement-badges"
 import { useScoreLeaderboard } from "@/app/features/chunithm/hooks/use-score-leaderboard"
 import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
+import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
 import { Badge } from "@/app/shared/components/ui/badge"
-import { Separator } from "@/app/shared/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { ChunithmPlaylog } from "@/app/shared/types"
 import { cn } from "@/app/shared/utils"
@@ -79,6 +79,12 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 		}
 	}, [score.romVersion, score.songVersion, score.playerRating, score.chartId, score.level])
 
+	const { data: previewLeaderboardData, isLoading: isLoadingPreviewLeaderboard } = useScoreLeaderboard(
+		score.musicId ?? 0,
+		score.chartId ?? 0,
+		4
+	)
+
 	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
 		score.musicId ?? 0,
 		score.chartId ?? 0,
@@ -86,15 +92,37 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 		isDialogOpen
 	)
 
+	const topFourEntries = previewLeaderboardData?.leaderboard ?? []
+	const maxMetaBadges = 4
+	const playDateParts = formatSqlDateToLocalParts(score.userPlayDate)
+	const metaBadges = [
+		...(score.userPlayDate
+			? [
+					{ key: "date", label: playDateParts.date },
+					{ key: "time", label: playDateParts.time }
+				]
+			: []),
+		...(score.isNewRecord === 1 ? [{ key: "new-record", label: "New Record" }] : [])
+	]
+	const visibleMetaBadges = metaBadges.slice(0, maxMetaBadges)
+	const hiddenMetaBadgesCount = Math.max(0, metaBadges.length - maxMetaBadges)
+
+	const getRankRingClass = (rank: number) => {
+		if (rank === 1) return "border-foreground/45"
+		if (rank === 2) return "border-foreground/30"
+		if (rank === 3) return "border-foreground/20"
+		return "border-background"
+	}
+
 	return (
 		<div
 			className={cn(
-				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-2.5 shadow-sm transition-all hover:shadow-md",
+				"bg-card border-border/60 flex h-full w-full flex-col rounded-xl border p-3 shadow-sm",
 				className
 			)}
 		>
 			{/* Top Section: Image, Title, Score */}
-			<div className="mb-1.5 flex items-start gap-3">
+			<div className="flex items-start gap-3">
 				{/* Album Art */}
 				<div className="flex-shrink-0">
 					<CardImage
@@ -102,16 +130,16 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 						alt={score.title ?? ""}
 						width={64}
 						height={64}
-						className="h-16 w-16 rounded-md"
+						className="h-14 w-14 rounded-md"
 					/>
 				</div>
 
 				{/* Title and Info */}
-				<div className="flex min-w-0 flex-1 flex-col gap-1.5">
-					<h3 className="text-foreground line-clamp-2 text-base leading-snug font-semibold break-words">
+				<div className="flex min-w-0 flex-1 flex-col gap-1">
+					<h3 className="text-foreground line-clamp-2 text-sm leading-tight font-semibold break-words">
 						{score.title}
 					</h3>
-					<div className="flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-1.5">
 						<Badge
 							variant="outline"
 							className={cn(
@@ -131,22 +159,45 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 								formatLevel(score.level)
 							)}
 						</Badge>
+						{score.skillName && (
+							<Badge variant="secondary" className="h-5 w-fit rounded-md px-2 text-xs">
+								{score.skillName}
+							</Badge>
+						)}
 					</div>
 				</div>
 
 				{/* Score and Rating */}
-				<div className="flex flex-shrink-0 flex-col items-end gap-2.5 text-right">
+				<div className="flex flex-shrink-0 flex-col items-end gap-2 text-right">
+					<div className="flex flex-wrap justify-end gap-1.5">
+						{score.isImported === 1 ? (
+							<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
+								Imported
+							</Badge>
+						) : (
+							<VersionLogoBadge
+								logoUrl={scoreVersionLogo}
+								tooltip="Version the score was set in"
+								alt={`Score version ${scoreVersionId ?? "unknown"}`}
+							/>
+						)}
+						<VersionLogoBadge
+							logoUrl={songVersionLogo}
+							tooltip="Version the song originated in"
+							alt={`Song version ${score.songVersion ?? "unknown"}`}
+						/>
+					</div>
 					<div>
-						<div className="text-muted-foreground mb-1 text-[10px] font-medium tracking-wider uppercase">Score</div>
+						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">Score</div>
 						<div className="flex items-baseline gap-1.5">
-							<span className="text-foreground text-lg font-bold tabular-nums">
+							<span className="text-foreground text-base font-bold tabular-nums">
 								{score.score?.toLocaleString() ?? "-"}
 							</span>
 							<span className="text-foreground text-xs font-semibold">{getChunithmGrade(score.score ?? 0)}</span>
 						</div>
 					</div>
 					<div>
-						<div className="text-muted-foreground mb-1 text-[10px] font-medium tracking-wider uppercase">
+						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 							Player Rating
 						</div>
 						<div>
@@ -164,9 +215,8 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 				</div>
 			</div>
 
-			{/* Achievement Badges */}
-			<div className="mb-1.5 flex flex-col gap-1.5">
-				<div className="flex items-center gap-2">
+			<div className="border-border/60 mt-3 space-y-2.5 border-t pt-2.5">
+				<div className="flex flex-wrap items-center gap-1.5">
 					<ChunithmAchievementBadges
 						isFullCombo={score.isFullCombo ?? 0}
 						isAllJustice={score.isAllJustice ?? 0}
@@ -176,65 +226,74 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 						skillId={score.skillId ?? 0}
 					/>
 				</div>
-				{score.skillName && (
-					<Badge variant="secondary" className="h-5 w-fit rounded-md px-2 text-xs">
-						{score.skillName}
-					</Badge>
-				)}
-			</div>
 
-			<Separator className="my-1" />
-
-			{/* Footer */}
-			<div className="flex w-full min-w-0 flex-col gap-1">
 				<div className="flex flex-wrap items-center gap-1.5">
-					{score.userPlayDate ? (
+					{visibleMetaBadges.length > 0 ? (
 						<>
-							<Badge variant="secondary" className="h-5 flex-shrink-0 rounded-md px-1.5 text-xs whitespace-nowrap">
-								{formatSqlDateToLocalParts(score.userPlayDate).date}
-							</Badge>
-							<Badge variant="secondary" className="h-5 flex-shrink-0 rounded-md px-1.5 text-xs whitespace-nowrap">
-								{formatSqlDateToLocalParts(score.userPlayDate).time}
-							</Badge>
+							{visibleMetaBadges.map(badge => (
+								<Badge
+									key={badge.key}
+									variant="secondary"
+									className={cn(
+										"h-5 flex-shrink-0 rounded-md px-1.5 text-xs whitespace-nowrap",
+										badge.key === "new-record" && "px-2 font-semibold uppercase"
+									)}
+								>
+									{badge.label}
+								</Badge>
+							))}
+							{hiddenMetaBadgesCount > 0 && (
+								<Badge variant="secondary" className="h-5 flex-shrink-0 rounded-md px-2 text-xs font-semibold">
+									+{hiddenMetaBadgesCount}
+								</Badge>
+							)}
 						</>
 					) : (
 						<span className="text-muted-foreground flex-shrink-0 text-xs">—</span>
 					)}
-					<Badge
-						variant="secondary"
-						className="hover:bg-muted/70 h-5 flex-shrink-0 cursor-pointer rounded-md px-1 transition-colors"
+				</div>
+
+				<div className="flex items-center justify-end gap-2 pt-0.5">
+					<span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">Top 4</span>
+					<div className="flex -space-x-2">
+						{isLoadingPreviewLeaderboard ? (
+							Array.from({ length: 4 }, (_, i) => (
+								<div key={i} className="bg-muted h-6 w-6 rounded-full border-2 border-background" />
+							))
+						) : topFourEntries.length > 0 ? (
+							topFourEntries.slice(0, 4).map((entry, index) => (
+								<Tooltip key={`${entry.userId}-${index}`}>
+									<TooltipTrigger asChild>
+										<Avatar
+											className={cn("h-6 w-6 border-2", getRankRingClass(index + 1))}
+											style={{ zIndex: 20 - index }}
+										>
+											<AvatarFallback className="text-[10px] font-semibold">
+												{entry.username.charAt(0).toUpperCase() || "?"}
+											</AvatarFallback>
+										</Avatar>
+									</TooltipTrigger>
+									<TooltipContent>
+										<p>
+											{entry.username} · #{index + 1}
+										</p>
+									</TooltipContent>
+								</Tooltip>
+							))
+						) : (
+							<div className="text-muted-foreground flex items-center gap-1 text-xs">
+								<Users className="h-3.5 w-3.5" />
+								<span>No leaderboard data yet</span>
+							</div>
+						)}
+					</div>
+					<button
+						type="button"
+						className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-semibold transition-colors"
 						onClick={() => setIsDialogOpen(true)}
 					>
-						<Medal className="h-3.5 w-3.5" />
-					</Badge>
-				</div>
-				<div className="flex flex-wrap items-center gap-1.5">
-					{score.isNewRecord === 1 && (
-						<Badge
-							variant="secondary"
-							className="h-5 flex-shrink-0 rounded-md px-2 text-xs font-semibold whitespace-nowrap uppercase"
-						>
-							New Record
-						</Badge>
-					)}
-				</div>
-				<div className="flex flex-wrap items-center gap-1.5">
-					{score.isImported === 1 ? (
-						<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
-							Imported
-						</Badge>
-					) : (
-						<VersionLogoBadge
-							logoUrl={scoreVersionLogo}
-							tooltip="Version the score was set in"
-							alt={`Score version ${scoreVersionId ?? "unknown"}`}
-						/>
-					)}
-					<VersionLogoBadge
-						logoUrl={songVersionLogo}
-						tooltip="Version the song originated in"
-						alt={`Song version ${score.songVersion ?? "unknown"}`}
-					/>
+						... View all
+					</button>
 				</div>
 			</div>
 

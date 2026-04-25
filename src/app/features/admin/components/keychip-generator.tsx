@@ -18,7 +18,9 @@ import { api } from "@/app/shared/utils"
 const gameOptions = [
 	{ value: "aime", label: "Sega (Aime card)" },
 	{ value: "SDEW", label: "SDEW (Namco PCB)" }
-]
+] as const
+
+type GameType = (typeof gameOptions)[number]["value"]
 
 export const KeychipGenerator = function () {
 	const [isLoading, setIsLoading] = useState(false)
@@ -26,7 +28,7 @@ export const KeychipGenerator = function () {
 	const [formData, setFormData] = useState({
 		arcade_nickname: "",
 		name: "",
-		game: "aime",
+		game: "aime" as GameType,
 		namcopcbid: "",
 		aimecard: ""
 	})
@@ -57,7 +59,7 @@ export const KeychipGenerator = function () {
 		})
 	}
 
-	const handleGameChange = function (value: string) {
+	const handleGameChange = function (value: GameType) {
 		setFormData(data => ({
 			...data,
 			game: value,
@@ -175,7 +177,7 @@ export const KeychipGenerator = function () {
 												key={option.value}
 												value={option.value}
 												className="w-full cursor-pointer justify-between"
-												onSelect={(val: string) => handleGameChange(val)}
+												onSelect={() => handleGameChange(option.value)}
 											>
 												<span className="text-primary">{option.label}</span>
 											</CommandItem>

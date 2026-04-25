@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { api } from "@/app/shared/utils"
+import { type SearchResponse, updateCachedSearchResponse } from "@/app/shared/utils/query-cache"
 
 export interface MapiconItem {
 	mapiconId: number
@@ -36,7 +37,7 @@ export function useSearchMapicons(filters: { locked: boolean | null }) {
 				throw new Error("Failed to search mapicons")
 			}
 
-			return await response.json()
+			return (await response.json()) as SearchResponse<MapiconItem>
 		}
 	})
 }
@@ -79,15 +80,11 @@ export function useUnlockMapicon() {
 		},
 		onSuccess: (_, mapIconId) => {
 			// Update search results to mark item as unlocked
-			queryClient.setQueriesData({ queryKey: ["userbox", "mapicon", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: MapiconItem) =>
-						item.mapiconId === mapIconId ? { ...item, locked: false } : item
-					)
-				}
-			})
+			queryClient.setQueriesData({ queryKey: ["userbox", "mapicon", "search"] }, old =>
+				updateCachedSearchResponse<MapiconItem>(old, items =>
+					items.map(item => (item.mapiconId === mapIconId ? { ...item, locked: false } : item))
+				)
+			)
 		}
 	})
 }

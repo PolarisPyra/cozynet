@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { api } from "@/app/shared/utils"
+import {
+	findCachedSearchItem,
+	type SearchResponse,
+	updateCachedSearchResponse
+} from "@/app/shared/utils/query-cache"
 
 export interface NameplateItem {
 	nameplateId: number
@@ -18,7 +23,7 @@ export function useCurrentNameplate() {
 			if (!response.ok) {
 				throw new Error("Failed to fetch current nameplate")
 			}
-			return (await response.json()) as NameplateItem
+			return (await response.json()) as NameplateItem | null
 		}
 	})
 }
@@ -35,7 +40,7 @@ export function useSearchNameplates(filters: { locked: boolean | null }) {
 				throw new Error("Failed to search nameplates")
 			}
 
-			return await response.json()
+			return (await response.json()) as SearchResponse<NameplateItem>
 		}
 	})
 }
@@ -46,16 +51,8 @@ export function useEquipNameplate() {
 	return useMutation({
 		mutationFn: async (id: number) => {
 			// Find the nameplate in the search cache to get its nameplateId
-			const searchQueries = queryClient.getQueriesData({ queryKey: ["ongeki", "userbox", "nameplate", "search"] })
-			let nameplateToEquip: NameplateItem | undefined = undefined
-
-			for (const [, searchData] of searchQueries) {
-				if (searchData && typeof searchData === "object" && "items" in searchData) {
-					const items = (searchData as any).items as NameplateItem[]
-					nameplateToEquip = items.find(item => item.nameplateId === id)
-					if (nameplateToEquip) break
-				}
-			}
+			const searchQueries = queryClient.getQueriesData<unknown>({ queryKey: ["ongeki", "userbox", "nameplate", "search"] })
+			const nameplateToEquip = findCachedSearchItem<NameplateItem>(searchQueries, item => item.nameplateId === id)
 
 			if (!nameplateToEquip) {
 				throw new Error("Nameplate not found")
@@ -79,16 +76,14 @@ export function useEquipNameplate() {
 			queryClient.setQueryData(["ongeki", "userbox", "nameplate", "current"], data)
 
 			// Update search results to reflect new equipped status
-			queryClient.setQueriesData({ queryKey: ["ongeki", "userbox", "nameplate", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: NameplateItem) => ({
+			queryClient.setQueriesData({ queryKey: ["ongeki", "userbox", "nameplate", "search"] }, old =>
+				updateCachedSearchResponse<NameplateItem>(old, items =>
+					items.map(item => ({
 						...item,
 						equipped: item.nameplateId === id
 					}))
-				}
-			})
+				)
+			)
 
 			// Invalidate search queries to ensure fresh data
 			queryClient.invalidateQueries({ queryKey: ["ongeki", "userbox", "nameplate", "search"] })
@@ -102,16 +97,8 @@ export function useUnlockNameplate() {
 	return useMutation({
 		mutationFn: async (id: number) => {
 			// Find the nameplate in the search cache to get its nameplateId
-			const searchQueries = queryClient.getQueriesData({ queryKey: ["ongeki", "userbox", "nameplate", "search"] })
-			let nameplateToUnlock: NameplateItem | undefined = undefined
-
-			for (const [, searchData] of searchQueries) {
-				if (searchData && typeof searchData === "object" && "items" in searchData) {
-					const items = (searchData as any).items as NameplateItem[]
-					nameplateToUnlock = items.find(item => item.nameplateId === id)
-					if (nameplateToUnlock) break
-				}
-			}
+			const searchQueries = queryClient.getQueriesData<unknown>({ queryKey: ["ongeki", "userbox", "nameplate", "search"] })
+			const nameplateToUnlock = findCachedSearchItem<NameplateItem>(searchQueries, item => item.nameplateId === id)
 
 			if (!nameplateToUnlock) {
 				throw new Error("Nameplate not found")
@@ -128,13 +115,11 @@ export function useUnlockNameplate() {
 			return await response.json()
 		},
 		onSuccess: (_, id) => {
-			queryClient.setQueriesData({ queryKey: ["ongeki", "userbox", "nameplate", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: NameplateItem) => (item.nameplateId === id ? { ...item, locked: false } : item))
-				}
-			})
+			queryClient.setQueriesData({ queryKey: ["ongeki", "userbox", "nameplate", "search"] }, old =>
+				updateCachedSearchResponse<NameplateItem>(old, items =>
+					items.map(item => (item.nameplateId === id ? { ...item, locked: false } : item))
+				)
+			)
 		}
 	})
 }

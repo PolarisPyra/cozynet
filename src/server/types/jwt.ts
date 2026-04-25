@@ -19,6 +19,8 @@ export type UserMeta = {
 }
 
 export interface JWTPayload extends TrimmedJWT {
+	[key: string]: unknown
+
 	// We're explictly setting exp so should be defined, unlike Hono's type
 	exp: number
 

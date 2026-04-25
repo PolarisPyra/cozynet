@@ -4,6 +4,7 @@ import { OngekiAchievementBadges } from "@/app/features/ongeki/components/achiev
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { useImageLoading } from "@/app/shared/hooks/use-image-loading"
 import { CDN } from "@/app/shared/utils/constants"
 import { OngekiRating } from "@/app/shared/types"
@@ -13,6 +14,7 @@ import {
 	calculateOngekiPlatinumRating,
 	formatOngekiScorePlaylogDate
 } from "@/app/shared/utils/ongeki"
+import { getOngekiLogo } from "@/app/shared/utils/version-logos"
 
 import { OngekiRatingColors } from "./rating-colors"
 
@@ -85,6 +87,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 	}
 
 	const isPScoreMode = activeTab === "pscore"
+	const logoUrl = getOngekiLogo.getLogo(rating.version)
 
 	return (
 		<div
@@ -124,9 +127,21 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 
 				{/* Score and Rating */}
 				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+					{logoUrl && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge variant="secondary" className="h-5 rounded-sm p-0.5">
+									<img src={logoUrl} alt={`Version ${rating.version}`} className="max-h-4 w-auto object-contain" />
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Version the song originated in</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
 					{!isRecommend && !isPScoreMode && (
 						<div>
-							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 								Tech Score
 							</div>
 							{rating.techScoreMax != null ? (
@@ -149,7 +164,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 					)}
 					{isPScoreMode ? (
 						<div>
-							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 								P-Rating
 							</div>
 							<div>
@@ -163,7 +178,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 							</div>
 							{rating.platinumScoreMax != null && rating.platinumScoreStar != null && (
 								<div className="mt-2">
-									<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+									<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 										P-Score
 									</div>
 									<div className="flex flex-col items-end gap-0.5">
@@ -182,7 +197,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 						</div>
 					) : (
 						<div>
-							<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+							<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 								Rating
 							</div>
 							<div>
@@ -223,10 +238,10 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 								const { date, time } = formatOngekiScorePlaylogDate(rating.userPlayDate)
 								return (
 									<>
-										<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
+										<Badge variant="secondary" className="h-5 rounded-md px-1.5 text-xs flex-shrink-0 whitespace-nowrap">
 											{date}
 										</Badge>
-										<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
+										<Badge variant="secondary" className="h-5 rounded-md px-1.5 text-xs flex-shrink-0 whitespace-nowrap">
 											{time}
 										</Badge>
 									</>
@@ -238,7 +253,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 								{rating.isTechNewRecord === 1 && (
 									<Badge
 										variant="secondary"
-										className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap"
+										className="h-5 rounded-md px-2 text-xs font-semibold uppercase flex-shrink-0 whitespace-nowrap"
 									>
 										New Score Record
 									</Badge>
@@ -246,7 +261,7 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 								{rating.isBattleNewRecord === 1 && (
 									<Badge
 										variant="secondary"
-										className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap"
+										className="h-5 rounded-md px-2 text-xs font-semibold uppercase flex-shrink-0 whitespace-nowrap"
 									>
 										New Battle Record
 									</Badge>

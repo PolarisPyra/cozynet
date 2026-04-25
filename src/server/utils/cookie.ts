@@ -28,10 +28,7 @@ export const signAndSetCookie = async (
 
 	const { JWT_SECRET, NODE_ENV, DOMAIN } = process.env
 
-	// Using 'any' here because Hono is sitting on their hands:
-	// https://github.com/honojs/hono/issues/2492
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const token = await sign(payload as any, JWT_SECRET!)
+	const token = await sign(payload, JWT_SECRET!)
 
 	// Set JWT token as a cookie
 	setCookie(c, "auth_token", token, {

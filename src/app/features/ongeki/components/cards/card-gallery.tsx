@@ -72,9 +72,7 @@ export function CardGallery({ cards, loading = false, itemsPerPage = 48 }: CardG
 				))}
 			</div>
 
-			{cards && cards.length > safeItemsPerPage && (
-				<Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} showKeyboardHints={true} />
-			)}
+			{cards && cards.length > safeItemsPerPage && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 		</div>
 	)
 }

@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react"
 
-import { Medal } from "lucide-react"
+import { Users } from "lucide-react"
 
 import { OngekiAchievementBadges } from "@/app/features/ongeki/components/achievement-badges"
 import { useScoreLeaderboard } from "@/app/features/ongeki/hooks/use-score-leaderboard"
 import { useOngekiScoreRating } from "@/app/features/ongeki/hooks/use-score-rating"
 import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
+import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
 import { Badge } from "@/app/shared/components/ui/badge"
-import { Separator } from "@/app/shared/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { OngekiPlaylog } from "@/app/shared/types"
@@ -113,20 +113,47 @@ export function OngekiScoreInfoCard({
 		100,
 		isDialogOpen
 	)
+	const { data: previewLeaderboardData, isLoading: isLoadingPreviewLeaderboard } = useScoreLeaderboard(
+		score.musicId ?? 0,
+		score.chartId ?? 0,
+		4
+	)
+	const topFourEntries = previewLeaderboardData?.leaderboard ?? []
+	const maxMetaBadges = 4
+	const playDateParts = formatOngekiScorePlaylogDate(score.userPlayDate)
+	const metaBadges = [
+		...(score.userPlayDate
+			? [
+					{ key: "date", label: playDateParts.date },
+					{ key: "time", label: playDateParts.time }
+				]
+			: []),
+		...(score.isTechNewRecord === 1 ? [{ key: "new-score-record", label: "New Score Record" }] : []),
+		...(score.isBattleNewRecord === 1 ? [{ key: "new-battle-record", label: "New Battle Record" }] : [])
+	]
+	const visibleMetaBadges = metaBadges.slice(0, maxMetaBadges)
+	const hiddenMetaBadgesCount = Math.max(0, metaBadges.length - maxMetaBadges)
 
 	const songVersionLogo = useMemo(() => {
 		return getOngekiLogo.getLogo(score.earliest_version)
 	}, [score.earliest_version])
 
+	const getRankRingClass = (rank: number) => {
+		if (rank === 1) return "border-foreground/45"
+		if (rank === 2) return "border-foreground/30"
+		if (rank === 3) return "border-foreground/20"
+		return "border-background"
+	}
+
 	return (
 		<div
 			className={cn(
-				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-2.5 shadow-sm transition-all hover:shadow-md",
+				"bg-card border-border/60 flex h-full w-full flex-col rounded-xl border p-3 shadow-sm",
 				className
 			)}
 		>
 			{/* Top Section: Image, Title, Score */}
-			<div className="mb-1.5 flex items-start gap-3">
+			<div className="flex items-start gap-3">
 				{/* Album Art */}
 				<div className="flex-shrink-0">
 					<CardImage
@@ -134,13 +161,13 @@ export function OngekiScoreInfoCard({
 						alt={score.title}
 						width={64}
 						height={64}
-						className="h-16 w-16 rounded-md"
+						className="h-14 w-14 rounded-md"
 					/>
 				</div>
 
 				{/* Title and Info */}
-				<div className="flex min-w-0 flex-1 flex-col gap-1.5">
-					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
+				<div className="flex min-w-0 flex-1 flex-col gap-1">
+					<h3 className="text-foreground text-sm font-semibold leading-tight break-words line-clamp-2">
 						{score.title}
 					</h3>
 					<div className="flex items-center gap-2">
@@ -156,15 +183,28 @@ export function OngekiScoreInfoCard({
 				</div>
 
 				{/* Score and Rating */}
-				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+				<div className="flex flex-shrink-0 flex-col items-end gap-2 text-right">
+					<div className="flex flex-wrap justify-end gap-1.5">
+						{score.isImported === 1 ? (
+							<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
+								Imported
+							</Badge>
+						) : (
+							<VersionLogoBadge
+								logoUrl={songVersionLogo}
+								tooltip="Version the song originated in"
+								alt={`Song version ${score.earliest_version ?? "unknown"}`}
+							/>
+						)}
+					</div>
 					<div>
-						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 							Tech Score
 						</div>
 						{score.techScore != null ? (
 							score.techScore >= 1010000 ? (
 								<div className="flex flex-col items-end gap-0.5">
-									<span className="text-foreground text-lg font-bold tabular-nums">1,010,000</span>
+									<span className="text-foreground text-base font-bold tabular-nums">1,010,000</span>
 									<span className="text-muted-foreground text-xs font-medium tabular-nums">
 										(AB+: +{(score.techScore - 1010000).toLocaleString()})
 									</span>
@@ -179,7 +219,7 @@ export function OngekiScoreInfoCard({
 						)}
 					</div>
 					<div>
-						<div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider mb-1">
+						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 							Player Rating
 						</div>
 						<div>
@@ -193,75 +233,87 @@ export function OngekiScoreInfoCard({
 				</div>
 			</div>
 
-			{/* Achievement Badges */}
-			<div className="mb-1.5 flex flex-col gap-1.5">
-				<div className="flex items-center gap-2">
+			<div className="border-border/60 mt-3 space-y-2.5 border-t pt-2.5">
+				<div className="flex flex-wrap items-center gap-1.5">
 					<OngekiAchievementBadges
 						isFullCombo={score.isFullCombo ?? 0}
 						isAllBreak={score.isAllBreak ?? 0}
 						isFullBell={score.isFullBell ?? 0}
 						techScore={score.techScore ?? 0}
 					/>
-				</div>
-				<div className="flex h-5 justify-end">
+					<div className="ml-auto flex h-5 items-center">
 					<PlatinumStars count={score.platinumScoreStar ?? 0} />
+					</div>
 				</div>
-			</div>
 
-			<Separator className="my-1" />
-			{/* Footer */}
-			<div className="flex min-w-0 w-full flex-col gap-1">
-				<div className="flex items-center gap-1.5 flex-wrap">
-					{score.userPlayDate ? (
+				<div className="flex flex-wrap items-center gap-1.5">
+					{visibleMetaBadges.length > 0 ? (
 						<>
-							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
-								{formatOngekiScorePlaylogDate(score.userPlayDate).date}
-							</Badge>
-							<Badge variant="secondary" className="h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap">
-								{formatOngekiScorePlaylogDate(score.userPlayDate).time}
-							</Badge>
+							{visibleMetaBadges.map(badge => (
+								<Badge
+									key={badge.key}
+									variant="secondary"
+									className={cn(
+										"h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap",
+										(badge.key === "new-score-record" || badge.key === "new-battle-record") &&
+											"px-2 font-semibold uppercase"
+									)}
+								>
+									{badge.label}
+								</Badge>
+							))}
+							{hiddenMetaBadgesCount > 0 && (
+								<Badge variant="secondary" className="h-5 flex-shrink-0 rounded-md px-2 text-xs font-semibold">
+									+{hiddenMetaBadgesCount}
+								</Badge>
+							)}
 						</>
 					) : (
 						<span className="text-muted-foreground text-xs flex-shrink-0">—</span>
 					)}
-					<Badge
-						variant="secondary"
-						className="hover:bg-muted/70 h-5 cursor-pointer rounded-md px-1 transition-colors flex-shrink-0"
+				</div>
+
+				<div className="flex items-center justify-end gap-2 pt-0.5">
+					<span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">Top 4</span>
+					<div className="flex -space-x-2">
+						{isLoadingPreviewLeaderboard ? (
+							Array.from({ length: 4 }, (_, i) => (
+								<div key={i} className="bg-muted h-6 w-6 rounded-full border-2 border-background" />
+							))
+						) : topFourEntries.length > 0 ? (
+							topFourEntries.slice(0, 4).map((entry, index) => (
+								<Tooltip key={`${entry.userId}-${index}`}>
+									<TooltipTrigger asChild>
+										<Avatar
+											className={cn("h-6 w-6 border-2", getRankRingClass(index + 1))}
+											style={{ zIndex: 20 - index }}
+										>
+											<AvatarFallback className="text-[10px] font-semibold">
+												{entry.username.charAt(0).toUpperCase() || "?"}
+											</AvatarFallback>
+										</Avatar>
+									</TooltipTrigger>
+									<TooltipContent>
+										<p>
+											{entry.username} · #{index + 1}
+										</p>
+									</TooltipContent>
+								</Tooltip>
+							))
+						) : (
+							<div className="text-muted-foreground flex items-center gap-1 text-xs">
+								<Users className="h-3.5 w-3.5" />
+								<span>No leaderboard data yet</span>
+							</div>
+						)}
+					</div>
+					<button
+						type="button"
+						className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-semibold transition-colors"
 						onClick={() => setIsDialogOpen(true)}
 					>
-						<Medal className="h-3.5 w-3.5" />
-					</Badge>
-				</div>
-				<div className="flex items-center gap-1.5 flex-wrap">
-					{score.isTechNewRecord === 1 && (
-						<Badge
-							variant="secondary"
-							className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap"
-						>
-							New Score Record
-						</Badge>
-					)}
-					{score.isBattleNewRecord === 1 && (
-						<Badge
-							variant="secondary"
-							className="h-5 rounded-md text-xs font-semibold uppercase px-2 flex-shrink-0 whitespace-nowrap"
-						>
-							New Battle Record
-						</Badge>
-					)}
-				</div>
-				<div className="flex items-center gap-1.5 flex-wrap">
-					{score.isImported === 1 ? (
-						<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
-							Imported
-						</Badge>
-					) : (
-						<VersionLogoBadge
-							logoUrl={songVersionLogo}
-							tooltip="Version the song originated in"
-							alt={`Song version ${score.earliest_version ?? "unknown"}`}
-						/>
-					)}
+						... View all
+					</button>
 				</div>
 			</div>
 

@@ -194,14 +194,12 @@ const routes = new Hono()
                         AND cpd.trophyId = dst.trophyId
                     LEFT JOIN chuni_static_opts cso ON dst.opt = cso.id
                     LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
-                    WHERE dst.version = ?
+                WHERE dst.version = ?
                         AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)${additionalWhere}
                     ORDER BY
                         locked ASC,
                         dst.trophyId DESC
                 `
-				//TODO: FIX RENDER BUG WITH THE FIRST GRID ITEM HAVING A YELLOW BORDER EVEN THO ITS NOT SELECTED AS A TROPHY
-				//IF I REMOVE equipped DESC, (it only happens on page load / refresh)
 
 				const [items] = await db.execute<(TrophyItem & { total_count: number } & RowDataPacket)[]>(query, params)
 

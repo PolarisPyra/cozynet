@@ -1,5 +1,11 @@
 import { RivalInfoCard } from "@/app/shared/components/common/rival-info-card"
 
+type RivalCardUser = {
+	id: number
+	username: string
+	isMutual: boolean
+}
+
 export const RivalCard = function({ score, rivalIds, rivalCount, onAddRival, onRemoveRival }: RivalCardProps) {
 	const isRival = rivalIds.includes(score.id)
 
@@ -17,7 +23,7 @@ export const RivalCard = function({ score, rivalIds, rivalCount, onAddRival, onR
 export default RivalCard
 
 interface RivalCardProps {
-	score: any
+	score: RivalCardUser
 	rivalIds: number[]
 	rivalCount: number
 	onAddRival: (id: number) => void

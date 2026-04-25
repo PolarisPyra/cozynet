@@ -55,6 +55,7 @@ const ChunithmSettingsPage = React.lazy(() => import("./app/features/chunithm/pa
 const ChunithmSongLeaderboard = React.lazy(() => import("./app/features/chunithm/pages/song-leaderboard"))
 const ChunithmUserbox = React.lazy(() => import("./app/features/chunithm/pages/userbox"))
 const OngekiProfile = React.lazy(() => import("./app/features/ongeki/pages/profile"))
+const OngekiSongLeaderboard = React.lazy(() => import("./app/features/ongeki/pages/song-leaderboard"))
 const OngekiUserbox = React.lazy(() => import("./app/features/ongeki/pages/userbox"))
 
 const queryClient = new QueryClient()
@@ -116,6 +117,7 @@ const app = (
 										<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
 										<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
 										<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
+										<Route path="/ongeki/song-leaderboard/:musicId/:chartId" element={<OngekiSongLeaderboard />} />
 										<Route path="/ongeki/rivals" element={<OngekiRivals />} />
 										<Route path="/ongeki/cards" element={<CardManagement />} />
 										<Route path="/ongeki/profile" element={<OngekiProfile />} />

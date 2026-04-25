@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { api } from "@/app/shared/utils"
+import {
+	findCachedSearchItem,
+	type SearchResponse,
+	updateCachedSearchResponse
+} from "@/app/shared/utils/query-cache"
 
 export interface StageItem {
 	stageId: number
@@ -35,7 +40,7 @@ export function useSearchStages(filters: { locked: boolean | null }) {
 				throw new Error("Failed to search stages")
 			}
 
-			return await response.json()
+			return (await response.json()) as SearchResponse<StageItem>
 		}
 	})
 }
@@ -46,16 +51,8 @@ export function useEquipStage() {
 	return useMutation({
 		mutationFn: async (id: number) => {
 			// Find the stage in the search cache to get its stageId
-			const searchQueries = queryClient.getQueriesData({ queryKey: ["userbox", "stage", "search"] })
-			let stageToEquip: StageItem | undefined = undefined
-
-			for (const [, searchData] of searchQueries) {
-				if (searchData && typeof searchData === "object" && "items" in searchData) {
-					const items = (searchData as any).items as StageItem[]
-					stageToEquip = items.find(item => item.stageId === id)
-					if (stageToEquip) break
-				}
-			}
+			const searchQueries = queryClient.getQueriesData<unknown>({ queryKey: ["userbox", "stage", "search"] })
+			const stageToEquip = findCachedSearchItem<StageItem>(searchQueries, item => item.stageId === id)
 
 			if (!stageToEquip) {
 				throw new Error("Stage not found")
@@ -79,16 +76,14 @@ export function useEquipStage() {
 			queryClient.setQueryData(["userbox", "stage", "current"], data)
 
 			// Update search results to reflect new equipped status
-			queryClient.setQueriesData({ queryKey: ["userbox", "stage", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: StageItem) => ({
+			queryClient.setQueriesData({ queryKey: ["userbox", "stage", "search"] }, old =>
+				updateCachedSearchResponse<StageItem>(old, items =>
+					items.map(item => ({
 						...item,
 						equipped: item.stageId === id
 					}))
-				}
-			})
+				)
+			)
 
 			// Invalidate search queries to ensure fresh data
 			queryClient.invalidateQueries({ queryKey: ["userbox", "stage", "search"] })
@@ -102,16 +97,8 @@ export function useUnlockStage() {
 	return useMutation({
 		mutationFn: async (id: number) => {
 			// Find the stage in the search cache to get its stageId
-			const searchQueries = queryClient.getQueriesData({ queryKey: ["userbox", "stage", "search"] })
-			let stageToUnlock: StageItem | undefined = undefined
-
-			for (const [, searchData] of searchQueries) {
-				if (searchData && typeof searchData === "object" && "items" in searchData) {
-					const items = (searchData as any).items as StageItem[]
-					stageToUnlock = items.find(item => item.stageId === id)
-					if (stageToUnlock) break
-				}
-			}
+			const searchQueries = queryClient.getQueriesData<unknown>({ queryKey: ["userbox", "stage", "search"] })
+			const stageToUnlock = findCachedSearchItem<StageItem>(searchQueries, item => item.stageId === id)
 
 			if (!stageToUnlock) {
 				throw new Error("Stage not found")
@@ -128,13 +115,11 @@ export function useUnlockStage() {
 			return await response.json()
 		},
 		onSuccess: (_, id) => {
-			queryClient.setQueriesData({ queryKey: ["userbox", "stage", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: StageItem) => (item.stageId === id ? { ...item, locked: false } : item))
-				}
-			})
+			queryClient.setQueriesData({ queryKey: ["userbox", "stage", "search"] }, old =>
+				updateCachedSearchResponse<StageItem>(old, items =>
+					items.map(item => (item.stageId === id ? { ...item, locked: false } : item))
+				)
+			)
 		}
 	})
 }

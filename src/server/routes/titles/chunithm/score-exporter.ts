@@ -244,7 +244,7 @@ const ChunithmKamaitachiRoutes = new Hono()
 			const { userId, versions } = c.payload
 			const version = versions.chunithm_version
 
-			const [profileResults] = await db.execute<ProfileRow>(
+			const [profileResults] = await db.execute<ProfileRow[]>(
 				`SELECT classEmblemBase, classEmblemMedal
        FROM chuni_profile_data
        WHERE user = ? AND version = ?`,
@@ -253,7 +253,7 @@ const ChunithmKamaitachiRoutes = new Hono()
 
 			const profile = profileResults.length > 0 ? profileResults[0] : null
 
-			const [playlogResults] = await db.execute<ExportPlaylogRow>(
+			const [playlogResults] = await db.execute<ExportPlaylogRow[]>(
 				`SELECT
 				-- UNIX_TIMESTAMP returns seconds, Tachi do be needing milliseconds
 				UNIX_TIMESTAMP(p.userPlayDate)*1000 as timeAchieved,

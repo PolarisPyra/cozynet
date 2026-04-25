@@ -204,9 +204,7 @@ const CardManagement = () => {
 								</table>
 							</div>
 
-							{filteredCards.length > ITEMS_PER_PAGE && (
-								<Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-							)}
+							{filteredCards.length > ITEMS_PER_PAGE && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 						</>
 					)}
 				</div>

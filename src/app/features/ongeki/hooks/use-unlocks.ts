@@ -8,7 +8,7 @@ interface CardCountResult {
 }
 
 interface CardUnlockResponse {
-	result: CardCountResult
+	result: CardCountResult[]
 }
 
 export const useUnlockAllCards = () => {
@@ -23,7 +23,7 @@ export const useUnlockAllCards = () => {
 			}
 
 			const data = (await response.json()) as CardUnlockResponse
-			return data.result
+			return data.result[0] ?? { cards: 0, level: version }
 		}
 	})
 }

@@ -171,7 +171,6 @@ export function ItemSelectionDialog({
 					<Pagination
 						page={currentPage}
 						totalPages={totalPages}
-						total={filteredItems.length}
 						onPageChange={setCurrentPage}
 					/>
 				</div>

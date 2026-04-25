@@ -61,7 +61,7 @@ export default function ChunithmAllSongs() {
 					/>
 				</FilterArea>
 
-				<CardGrid>
+				<CardGrid className="auto-rows-fr">
 					{paged.map((song, idx) => (
 						<SongInfoCard key={idx} score={song} levelColorBadge={chunithmBadgeColors} jacketArt="chunithm/jacket" />
 					))}

@@ -60,9 +60,9 @@ const OngekiSettingsRoutes = new Hono()
 
 				const { userId, aimeCardId } = c.payload
 				const { version } = await c.req.json()
-
-				// console.log("UserId:", userId);
-				// console.log("AimeCardId:", aimeCardId, "Type:", typeof aimeCardId);
+				if (!aimeCardId) {
+					throw new HTTPException(400, { message: "Missing Aime card id" })
+				}
 
 				const [result] = await conn.execute<ResultSetHeader>(
 					`
@@ -81,14 +81,11 @@ const OngekiSettingsRoutes = new Hono()
 					userId
 				])
 				const user = users[0]
-				// console.log("User:", user);
-				// console.log("AimeCardId:", aimeCardId);
 				const [cards] = await conn.execute<(DB.AimeCard & RowDataPacket)[]>(
 					"SELECT * FROM aime_card WHERE access_code = ?",
 					[aimeCardId]
 				)
 				const card = cards[0]
-				// console.log("Card:", card);
 				if (!user || !card) {
 					throw new HTTPException(404)
 				}

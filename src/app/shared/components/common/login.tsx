@@ -25,8 +25,8 @@ export const LoginContent = () => {
 			}
 
 			await login(username, password, turnstileToken || undefined)
-		} catch (err: any) {
-			const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred"
+		} catch (error: unknown) {
+			const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
 			toast.error(errorMessage)
 		} finally {
 			if (turnstile) {

@@ -81,7 +81,7 @@ export function OngekiAllSongs() {
 					/>
 				</FilterArea>
 
-				<CardGrid>
+				<CardGrid className="auto-rows-fr">
 					{paged.map((song, idx) => (
 						<SongInfoCard key={idx} score={song} levelColorBadge={ongekiBadgeColors} jacketArt="ongeki/jacket" />
 					))}

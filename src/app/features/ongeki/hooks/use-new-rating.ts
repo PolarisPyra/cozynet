@@ -77,7 +77,7 @@ export const useNewHighestRating = (enabled = true) => {
 	return useQuery({
 		queryKey: ["newHighestRating"],
 		queryFn: async () => {
-			const response = await api.ongeki.newRating.newHighestRating.$get()
+			const response = await api.ongeki.newRating.newPlayerRating.$get()
 			if (!response.ok) {
 				throw new Error("Failed to fetch highest rating")
 			}

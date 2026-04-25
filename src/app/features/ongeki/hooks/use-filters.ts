@@ -6,7 +6,12 @@ import type { DB } from "@/app/shared/types"
 
 import ongekiSkills from "./ongekiSkill.json"
 
-const skillMap = new Map(ongekiSkills.map((s: any) => [s.id, s.category]))
+type OngekiSkill = {
+	id: number
+	category: string
+}
+
+const skillMap = new Map<number, string>((ongekiSkills as OngekiSkill[]).map(skill => [skill.id, skill.category]))
 
 export const scoreFilters: Filter<OngekiPlaylog>[] = [
 	{

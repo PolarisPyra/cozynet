@@ -25,6 +25,9 @@ const ChunithmSettingsRoutes = new Hono()
 
 				const { userId, aimeCardId } = c.payload
 				const { version } = await c.req.json()
+				if (!aimeCardId) {
+					throw new HTTPException(400, { message: "Missing Aime card id" })
+				}
 
 				const [result] = await conn.execute<ResultSetHeader>(
 					`

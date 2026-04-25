@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { api } from "@/app/shared/utils"
+import {
+	findCachedSearchItem,
+	type SearchResponse,
+	updateCachedSearchResponse
+} from "@/app/shared/utils/query-cache"
 
 export interface CharacterItem {
 	characterId: number
@@ -35,7 +40,7 @@ export function useSearchCharacters(filters: { locked: boolean | null }) {
 				throw new Error("Failed to search characters")
 			}
 
-			return await response.json()
+			return (await response.json()) as SearchResponse<CharacterItem>
 		}
 	})
 }
@@ -46,16 +51,8 @@ export function useEquipCharacter() {
 	return useMutation({
 		mutationFn: async (id: number) => {
 			// Find the character in the search cache to get its characterId
-			const searchQueries = queryClient.getQueriesData({ queryKey: ["userbox", "character", "search"] })
-			let characterToEquip: CharacterItem | undefined = undefined
-
-			for (const [, searchData] of searchQueries) {
-				if (searchData && typeof searchData === "object" && "items" in searchData) {
-					const items = (searchData as any).items as CharacterItem[]
-					characterToEquip = items.find(item => item.characterId === id)
-					if (characterToEquip) break
-				}
-			}
+			const searchQueries = queryClient.getQueriesData<unknown>({ queryKey: ["userbox", "character", "search"] })
+			const characterToEquip = findCachedSearchItem<CharacterItem>(searchQueries, item => item.characterId === id)
 
 			if (!characterToEquip) {
 				throw new Error("Character not found")
@@ -79,16 +76,14 @@ export function useEquipCharacter() {
 			queryClient.setQueryData(["userbox", "character", "current"], data)
 
 			// Update search results to reflect new equipped status
-			queryClient.setQueriesData({ queryKey: ["userbox", "character", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: CharacterItem) => ({
+			queryClient.setQueriesData({ queryKey: ["userbox", "character", "search"] }, old =>
+				updateCachedSearchResponse<CharacterItem>(old, items =>
+					items.map(item => ({
 						...item,
 						equipped: item.characterId === id
 					}))
-				}
-			})
+				)
+			)
 
 			// Invalidate search queries to ensure fresh data
 			queryClient.invalidateQueries({ queryKey: ["userbox", "character", "search"] })
@@ -102,16 +97,8 @@ export function useUnlockCharacter() {
 	return useMutation({
 		mutationFn: async (id: number) => {
 			// Find the character in the search cache to get its characterId
-			const searchQueries = queryClient.getQueriesData({ queryKey: ["userbox", "character", "search"] })
-			let characterToUnlock: CharacterItem | undefined = undefined
-
-			for (const [, searchData] of searchQueries) {
-				if (searchData && typeof searchData === "object" && "items" in searchData) {
-					const items = (searchData as any).items as CharacterItem[]
-					characterToUnlock = items.find(item => item.characterId === id)
-					if (characterToUnlock) break
-				}
-			}
+			const searchQueries = queryClient.getQueriesData<unknown>({ queryKey: ["userbox", "character", "search"] })
+			const characterToUnlock = findCachedSearchItem<CharacterItem>(searchQueries, item => item.characterId === id)
 
 			if (!characterToUnlock) {
 				throw new Error("Character not found")
@@ -128,13 +115,11 @@ export function useUnlockCharacter() {
 			return await response.json()
 		},
 		onSuccess: (_, id) => {
-			queryClient.setQueriesData({ queryKey: ["userbox", "character", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: CharacterItem) => (item.characterId === id ? { ...item, locked: false } : item))
-				}
-			})
+			queryClient.setQueriesData({ queryKey: ["userbox", "character", "search"] }, old =>
+				updateCachedSearchResponse<CharacterItem>(old, items =>
+					items.map(item => (item.characterId === id ? { ...item, locked: false } : item))
+				)
+			)
 		}
 	})
 }

@@ -21,7 +21,6 @@ const AimeCardRoute = new Hono()
 			const [rows] = await db.execute<(DB.AimeCard & RowDataPacket)[]>("SELECT * FROM aime_card")
 			return c.json({ users: rows })
 		} catch (error) {
-			console.error("Error executing query:", error)
 			throw rethrowWithMessage("Failed to fetch users", error)
 		}
 	})

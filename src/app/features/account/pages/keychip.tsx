@@ -381,11 +381,7 @@ const KeychipPage = () => {
 								</Dialog>
 							</div>
 							{allKeychips.length > ITEMS_PER_PAGE && (
-								<Pagination
-									currentPage={myKeychipsPage}
-									totalPages={myKeychipsTotalPages}
-									onPageChange={setMyKeychipsPage}
-								/>
+								<Pagination page={myKeychipsPage} totalPages={myKeychipsTotalPages} onPageChange={setMyKeychipsPage} />
 							)}
 						</>
 					)}

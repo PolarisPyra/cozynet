@@ -5,6 +5,7 @@ import { InferResponseType } from "hono"
 
 import { api } from "@/app/shared/utils"
 import { CDN } from "@/app/shared/utils/constants"
+import { updateCachedSearchResponse } from "@/app/shared/utils/query-cache"
 
 // Infer types from API routes
 type AvatarItem = InferResponseType<typeof api.chunithm.userbox.avatar.$get>[0]
@@ -277,15 +278,11 @@ export function useUnlockAvatarItem() {
 		},
 		onSuccess: (_, avatarAccessoryId) => {
 			// Update search results to mark item as unlocked
-			queryClient.setQueriesData({ queryKey: ["userbox", "avatar", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: AvatarAccessoryItem) =>
-						item.avatarAccessoryId === avatarAccessoryId ? { ...item, locked: false } : item
-					)
-				}
-			})
+			queryClient.setQueriesData({ queryKey: ["userbox", "avatar", "search"] }, old =>
+				updateCachedSearchResponse<AvatarAccessoryItem>(old, items =>
+					items.map(item => (item.avatarAccessoryId === avatarAccessoryId ? { ...item, locked: false } : item))
+				)
+			)
 		}
 	})
 }

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { TrophyRareType } from "@/app/shared/utils/enums"
 import { api } from "@/app/shared/utils"
+import { type SearchResponse, updateCachedSearchResponse } from "@/app/shared/utils/query-cache"
 
 export interface TrophyItem {
 	trophyId: number
@@ -42,7 +43,7 @@ export function useSearchTrophies(filters: { locked: boolean | null; rareType?: 
 				throw new Error("Failed to search trophies")
 			}
 
-			return await response.json()
+			return (await response.json()) as SearchResponse<TrophyItem>
 		}
 	})
 }
@@ -85,13 +86,11 @@ export function useUnlockTrophy() {
 		},
 		onSuccess: (_, trophyId) => {
 			// Update search results to mark item as unlocked
-			queryClient.setQueriesData({ queryKey: ["userbox", "trophy", "search"] }, (old: any) => {
-				if (!old?.items) return old
-				return {
-					...old,
-					items: old.items.map((item: TrophyItem) => (item.trophyId === trophyId ? { ...item, locked: false } : item))
-				}
-			})
+			queryClient.setQueriesData({ queryKey: ["userbox", "trophy", "search"] }, old =>
+				updateCachedSearchResponse<TrophyItem>(old, items =>
+					items.map(item => (item.trophyId === trophyId ? { ...item, locked: false } : item))
+				)
+			)
 		}
 	})
 }

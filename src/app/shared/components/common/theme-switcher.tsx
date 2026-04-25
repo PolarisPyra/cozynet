@@ -1,5 +1,5 @@
 // animated theme switcher idea from https://x.com/saltyAom
-import { useCallback, useEffect } from "react"
+import { useCallback, useEffect, type MouseEvent } from "react"
 
 import { Moon, Sun } from "lucide-react"
 import { flushSync } from "react-dom"
@@ -14,19 +14,35 @@ import {
 	DropdownMenuTrigger
 } from "@/app/shared/components/ui/dropdown-menu"
 
+type ViewTransition = {
+	ready: Promise<void>
+}
+
+type ViewTransitionDocument = Document & {
+	startViewTransition?: (callback: () => void) => ViewTransition
+}
+
+type ThemeableElement = HTMLElement & {
+	style: CSSStyleDeclaration & {
+		viewTransitionName?: string
+	}
+}
+
 export function ModeToggle() {
 	const { theme, setTheme } = useTheme()
 	const accentColor = useAccentColor()
 
 	useEffect(() => {
-		const root = document.documentElement as HTMLElement & { style: any }
+		const root = document.documentElement as ThemeableElement
 		try {
 			if (root && root.style) root.style.viewTransitionName = "root"
-		} catch {}
+		} catch {
+			// View transitions are optional; ignore unsupported browsers.
+		}
 	}, [])
 
 	const handleSetTheme = useCallback(
-		(_e: React.MouseEvent<HTMLElement>, next: "light" | "dark" | "system") => {
+		(_e: MouseEvent<HTMLElement>, next: "light" | "dark" | "system") => {
 			const root = document.documentElement
 			const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
 			const currentIsDark = root.classList.contains("dark")
@@ -79,7 +95,7 @@ export function ModeToggle() {
 			}
 
 			freeze()
-			const start = (document as any).startViewTransition as undefined | ((cb: () => void) => any)
+			const start = (document as ViewTransitionDocument).startViewTransition
 			const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 			const run = () => applyTheme()
 			if (typeof start === "function" && !reduced) {
@@ -91,16 +107,17 @@ export function ModeToggle() {
 						const r = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy))
 						const from = `circle(0px at ${cx}px ${cy}px)`
 						const to = `circle(${r}px at ${cx}px ${cy}px)`
-						;(document.documentElement as any).animate([{ clipPath: from }, { clipPath: to }], {
+						const animationOptions: KeyframeAnimationOptions & { pseudoElement: string } = {
 							duration: 600,
 							easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
 							pseudoElement: "::view-transition-new(root)"
-						} as any)
-						;(document.documentElement as any).animate([{ clipPath: to }, { clipPath: from }], {
+						}
+						document.documentElement.animate([{ clipPath: from }, { clipPath: to }], animationOptions)
+						document.documentElement.animate([{ clipPath: to }, { clipPath: from }], {
 							duration: 600,
 							easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
 							pseudoElement: "::view-transition-old(root)"
-						} as any)
+						})
 						showMascot()
 					})
 				} catch {

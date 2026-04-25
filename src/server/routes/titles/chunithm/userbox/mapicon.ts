@@ -188,7 +188,6 @@ const routes = new Hono()
 			const { userId } = c.payload
 			const { id } = c.req.param()
 
-			console.log("Unlocking mapicon for user:", userId, "mapIconId:", id)
 			// Add mapicon to user's inventory
 			await db.execute<ResultSetHeader>(
 				`
