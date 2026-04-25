@@ -19,7 +19,6 @@ export interface LobbySnapshot {
 	game: string
 	host_user_id: number
 	game_version: string
-	status: "waiting" | "active" | "closed"
 	created_at: number
 	seats: LobbySeat[]
 }
@@ -88,12 +87,6 @@ export async function partyJoinLobby(game: string, lobbyId: string): Promise<Lob
 export async function partyLeaveLobby(game: string, lobbyId: string): Promise<void> {
 	await fetchJson<{ ok: boolean }>(`${base(game)}/lobbies/${encodeURIComponent(lobbyId)}/leave`, {
 		method: "DELETE"
-	})
-}
-
-export async function partyStartLobby(game: string, lobbyId: string): Promise<LobbySnapshot> {
-	return fetchJson<LobbySnapshot>(`${base(game)}/lobbies/${encodeURIComponent(lobbyId)}/start`, {
-		method: "POST"
 	})
 }
 
@@ -191,7 +184,6 @@ function handleEvent(game: string, msg: any, qc: ReturnType<typeof useQueryClien
 		type === "member_left" ||
 		type === "cabinet_attached" ||
 		type === "cabinet_detached" ||
-		type === "lobby_started" ||
 		type === "snapshot"
 	) {
 		qc.invalidateQueries({ queryKey: ["party", game, "lobbies"] })

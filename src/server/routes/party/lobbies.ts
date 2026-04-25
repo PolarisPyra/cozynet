@@ -11,7 +11,6 @@ interface LobbySnapshot {
 	game: string
 	host_user_id: number
 	game_version: string
-	status: "waiting" | "active" | "closed"
 	created_at: number
 	seats: Array<{ seat: number; user_id: number; username: string; attached: boolean }>
 }
@@ -85,23 +84,6 @@ const PartyLobbiesRoutes = new Hono()
 			return c.json({ ok: true })
 		} catch (error) {
 			throw rethrowWithMessage("Failed to leave lobby", error)
-		}
-	})
-
-	.post("/:id/start", async c => {
-		try {
-			const userId = c.payload.userId
-			if (!userId) throw new HTTPException(401, { message: "Unauthorized" })
-			const game = encodeURIComponent(c.req.param("game") ?? "")
-			const id = c.req.param("id")
-			const lobby = await artemisFetch<LobbySnapshot>({
-				method: "POST",
-				path: `/internal/party/${game}/lobbies/${encodeURIComponent(id)}/start`,
-				query: { on_behalf_of: userId }
-			})
-			return c.json(lobby)
-		} catch (error) {
-			throw rethrowWithMessage("Failed to start lobby", error)
 		}
 	})
 

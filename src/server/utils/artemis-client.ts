@@ -9,7 +9,18 @@ import { HTTPException } from "hono/http-exception"
 const baseUrl = () => {
 	const v = process.env.ARTEMIS_BASE_URL
 	if (!v) throw new HTTPException(503, { message: "ARTEMIS_BASE_URL is not set" })
-	return v.replace(/\/$/, "")
+	// Tolerate bare hostnames ("host.docker.internal") by prepending http://.
+	// We DON'T inject a default port — Artemis's listening port varies by
+	// install and silently rewriting it would mask real config errors.
+	const normalized = /^[a-z]+:\/\//i.test(v) ? v : `http://${v}`
+	try {
+		new URL(normalized)
+	} catch {
+		throw new HTTPException(503, {
+			message: `ARTEMIS_BASE_URL is not a valid URL: ${v}`
+		})
+	}
+	return normalized.replace(/\/$/, "")
 }
 
 const apiKey = () => {

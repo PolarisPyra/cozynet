@@ -5,8 +5,7 @@ import { formatVersionLong } from "@/app/shared/hooks/format-version"
 import {
 	LobbySnapshot,
 	partyKickMember,
-	partyLeaveLobby,
-	partyStartLobby
+	partyLeaveLobby
 } from "@/app/shared/hooks/use-party"
 import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 import { Button } from "@/app/shared/components/ui/button"
@@ -15,10 +14,9 @@ interface CurrentLobbyPaneProps {
 	game: string
 	gameLabel: string
 	lobby: LobbySnapshot | undefined
-	onLeft: () => void
 }
 
-export function CurrentLobbyPane({ game, gameLabel, lobby, onLeft }: CurrentLobbyPaneProps) {
+export function CurrentLobbyPane({ game, gameLabel, lobby }: CurrentLobbyPaneProps) {
 	const qc = useQueryClient()
 	const auth = useAuth()
 	const userId = auth.user?.userId
@@ -35,27 +33,22 @@ export function CurrentLobbyPane({ game, gameLabel, lobby, onLeft }: CurrentLobb
 	}
 
 	const isHost = userId === lobby.host_user_id
-	const attachedCount = lobby.seats.filter(s => s.attached).length
 
 	const invalidate = () => qc.invalidateQueries({ queryKey: ["party", game, "lobbies"] })
 
 	const handleLeave = async () => {
 		try {
 			await partyLeaveLobby(game, lobby.id)
+			// Drop the lobby from the cached list immediately so the parent
+			// re-derives activeLobbyId = null on the next render. Server-side
+			// the lobby may persist (others still in it) — invalidate too so
+			// the next refetch reconciles.
+			qc.setQueryData<LobbySnapshot[]>(["party", game, "lobbies"], old =>
+				(old ?? []).filter(l => l.id !== lobby.id)
+			)
 			invalidate()
-			onLeft()
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Failed to leave")
-		}
-	}
-
-	const handleStart = async () => {
-		try {
-			await partyStartLobby(game, lobby.id)
-			invalidate()
-			toast.success("Lobby started — go to your cabinet")
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : "Failed to start")
 		}
 	}
 
@@ -68,34 +61,20 @@ export function CurrentLobbyPane({ game, gameLabel, lobby, onLeft }: CurrentLobb
 		}
 	}
 
-	const copyInvite = () => {
-		const url = `${location.origin}/${game}/multiplayer?join=${encodeURIComponent(lobby.id)}`
-		navigator.clipboard?.writeText(url).then(
-			() => toast.success("Invite link copied"),
-			() => toast.error("Could not copy link")
-		)
-	}
-
 	return (
 		<div className="flex flex-col gap-3">
 			<div className="flex items-center justify-between">
 				<div>
 					<div className="text-lg font-semibold">Lobby #{lobby.id.slice(0, 8)}</div>
 					<div className="text-muted-foreground text-xs" title={lobby.game_version}>
-						{formatVersionLong(lobby.game_version, gameLabel)} · <StatusBadge status={lobby.status} />
+						{formatVersionLong(lobby.game_version, gameLabel)}
 					</div>
 				</div>
-				{lobby.status === "active" ? (
-					<div className="rounded bg-green-500/10 px-2 py-1 text-xs text-green-700">
-						Game in progress — go to your cabinet
-					</div>
-				) : (
-					isHost && (
-						<Button size="sm" onClick={handleStart} disabled={attachedCount < 2}>
-							Start Lobby
-						</Button>
-					)
-				)}
+			</div>
+
+			<div className="text-muted-foreground text-xs">
+				Cabinets in this lobby see each other's recruits in their in-game multiplayer tab.
+				Pick a song on your cabinet to start a party — anyone in this lobby can join from there.
 			</div>
 
 			<div className="flex flex-col gap-2">
@@ -109,8 +88,6 @@ export function CurrentLobbyPane({ game, gameLabel, lobby, onLeft }: CurrentLobb
 							isHostSeat={member?.user_id === lobby.host_user_id}
 							canKick={isHost && !!member && member.user_id !== lobby.host_user_id}
 							onKick={() => handleKick(seatNum)}
-							onInvite={copyInvite}
-							status={lobby.status}
 						/>
 					)
 				})}
@@ -125,32 +102,19 @@ export function CurrentLobbyPane({ game, gameLabel, lobby, onLeft }: CurrentLobb
 	)
 }
 
-function StatusBadge({ status }: { status: LobbySnapshot["status"] }) {
-	const color =
-		status === "waiting" ? "text-yellow-600" : status === "active" ? "text-green-600" : "text-gray-500"
-	return <span className={`font-medium capitalize ${color}`}>{status}</span>
-}
-
 interface SeatRowProps {
 	seat: number
 	member: LobbySnapshot["seats"][number] | undefined
 	isHostSeat: boolean
 	canKick: boolean
 	onKick: () => void
-	onInvite: () => void
-	status: LobbySnapshot["status"]
 }
 
-function SeatRow({ seat, member, isHostSeat, canKick, onKick, onInvite, status }: SeatRowProps) {
+function SeatRow({ seat, member, isHostSeat, canKick, onKick }: SeatRowProps) {
 	if (!member) {
 		return (
-			<div className="text-muted-foreground flex items-center justify-between rounded border border-dashed p-3 text-sm">
-				<span>Seat {seat}: empty</span>
-				{status === "waiting" && (
-					<Button size="sm" variant="ghost" onClick={onInvite}>
-						Copy invite link
-					</Button>
-				)}
+			<div className="text-muted-foreground rounded border border-dashed p-3 text-sm">
+				Seat {seat}: empty
 			</div>
 		)
 	}
@@ -167,7 +131,6 @@ function SeatRow({ seat, member, isHostSeat, canKick, onKick, onInvite, status }
 					Seat {seat}: {member.username}
 				</span>
 				{isHostSeat && <span className="text-muted-foreground text-xs">(host)</span>}
-				{status === "active" && <span className="ml-2 text-xs text-green-600">▶ Playing</span>}
 			</div>
 			{canKick && (
 				<Button size="sm" variant="ghost" onClick={onKick}>

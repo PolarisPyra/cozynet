@@ -15,10 +15,9 @@ interface LobbiesPaneProps {
 	game: string
 	gameLabel: string
 	currentLobbyId: string | null
-	onEnterLobby: (lobbyId: string) => void
 }
 
-export function LobbiesPane({ game, gameLabel, currentLobbyId, onEnterLobby }: LobbiesPaneProps) {
+export function LobbiesPane({ game, gameLabel, currentLobbyId }: LobbiesPaneProps) {
 	const { data: lobbies = [], isLoading } = usePartyLobbies(game)
 	const { data: presence } = usePartyPresence(game)
 	const qc = useQueryClient()
@@ -26,11 +25,23 @@ export function LobbiesPane({ game, gameLabel, currentLobbyId, onEnterLobby }: L
 	const atCabinet = !!presence?.at_cabinet
 	const myVersion = presence?.game_version
 
+	// Inject the freshly-created/joined lobby into the cached list directly
+	// so activeLobbyId resolves immediately. No optimistic-state hack to
+	// clear when the lobby later closes.
+	const writeLobby = (lobby: LobbySnapshot) =>
+		qc.setQueryData<LobbySnapshot[]>(["party", game, "lobbies"], old => {
+			const list = old ?? []
+			const idx = list.findIndex(l => l.id === lobby.id)
+			if (idx < 0) return [...list, lobby]
+			const next = list.slice()
+			next[idx] = lobby
+			return next
+		})
+
 	const handleCreate = async () => {
 		try {
 			const lobby = await partyCreateLobby(game)
-			qc.invalidateQueries({ queryKey: ["party", game, "lobbies"] })
-			onEnterLobby(lobby.id)
+			writeLobby(lobby)
 			toast.success("Lobby created")
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Failed to create lobby")
@@ -40,8 +51,7 @@ export function LobbiesPane({ game, gameLabel, currentLobbyId, onEnterLobby }: L
 	const handleJoin = async (lobbyId: string) => {
 		try {
 			const lobby = await partyJoinLobby(game, lobbyId)
-			qc.invalidateQueries({ queryKey: ["party", game, "lobbies"] })
-			onEnterLobby(lobby.id)
+			writeLobby(lobby)
 			toast.success("Joined lobby")
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Failed to join lobby")
