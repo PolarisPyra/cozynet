@@ -193,7 +193,7 @@ export default function ChunithmScorePage() {
 										<TableHead>Level</TableHead>
 										<TableHead className="text-right">Score</TableHead>
 										<TableHead>Grade</TableHead>
-										<TableHead className="text-right">Perf. Rating</TableHead>
+										<TableHead className="text-right">Performance Rating</TableHead>
 										<TableHead>Date</TableHead>
 									</TableRow>
 								</TableHeader>
