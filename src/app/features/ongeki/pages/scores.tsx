@@ -28,23 +28,21 @@ import {
 	ongekiBadgeColors
 } from "@/app/shared/utils/ongeki"
 
-const PlatinumStars = function ({ count }: { count: number }) {
+const PlatinumStars = ({ count }: { count: number }) => {
+	const safeCount = Math.max(0, Math.min(5, count || 0))
 	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`
 
 	return (
-		<div className="flex items-center justify-center gap-0.5">
-			{Array.from({ length: 5 }, (_, i) => {
-				const filled = i < count
-				return (
-					<img
-						key={i}
-						aria-hidden
-						className="inline-block h-3 w-3 object-contain"
-						src={starUrl(filled)}
-						alt={filled ? "Filled Star" : "Empty Star"}
-					/>
-				)
-			})}
+		<div className="flex items-center justify-center gap-px">
+			{Array.from({ length: 5 }, (_, i) => (
+				<img
+					key={i}
+					aria-hidden
+					className="size-3 object-contain opacity-80"
+					src={starUrl(i < safeCount)}
+					alt=""
+				/>
+			))}
 		</div>
 	)
 }
@@ -57,16 +55,18 @@ export function OngekiScorePage() {
 	const [isExporting, setIsExporting] = useState(false)
 	const [density, setDensity] = useState<"list" | "grid">(() => {
 		try {
-			const saved = localStorage.getItem(ONGEKI_SCORES_DENSITY_KEY)
-			if (saved === "grid" || saved === "comfortable") return "grid"
-			return "list"
+			return localStorage.getItem(ONGEKI_SCORES_DENSITY_KEY) === "grid" ? "grid" : "list"
 		} catch {
 			return "list"
 		}
 	})
 
 	useEffect(() => {
-		localStorage.setItem(ONGEKI_SCORES_DENSITY_KEY, density)
+		try {
+			localStorage.setItem(ONGEKI_SCORES_DENSITY_KEY, density)
+		} catch {
+			// Ignore localStorage failures.
+		}
 	}, [density])
 
 	const version = useOngekiVersion()
@@ -76,7 +76,11 @@ export function OngekiScorePage() {
 	const defaults = getDefaults(scoreFilters)
 	const filtered = useFiltering(scores || [], scoreFilters, searchQuery, filterValues)
 	const { page, setPage, totalPages, paged } = usePagination(filtered, STANDARD_PAGE_SIZE, [searchQuery, filterValues])
-	const searchItems = useMemo(() => (scores || []).map(score => ({ id: score.id, title: score.title || "" })), [scores])
+
+	const searchItems = useMemo(
+		() => (scores || []).map(score => ({ id: score.id, title: score.title || "" })),
+		[scores]
+	)
 
 	const handleExport = async () => {
 		setIsExporting(true)
@@ -171,8 +175,8 @@ export function OngekiScorePage() {
 			<Body>
 				<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
 					<div className="flex flex-wrap gap-2">
-						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
-							<Upload className="h-4 w-4" />
+						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting} className="gap-1.5">
+							<Upload className="size-4" />
 							{isExporting ? "Exporting..." : "Export to Kamai"}
 						</Button>
 
@@ -184,9 +188,9 @@ export function OngekiScorePage() {
 							variant={density === "grid" ? "secondary" : "outline"}
 							size="sm"
 							onClick={() => setDensity("grid")}
-							className="h-8 text-xs"
+							className="h-8 gap-1.5 text-xs"
 						>
-							<LayoutGrid className="h-3.5 w-3.5" />
+							<LayoutGrid className="size-3.5" />
 							Grid
 						</Button>
 
@@ -194,9 +198,9 @@ export function OngekiScorePage() {
 							variant={density === "list" ? "secondary" : "outline"}
 							size="sm"
 							onClick={() => setDensity("list")}
-							className="h-8 text-xs"
+							className="h-8 gap-1.5 text-xs"
 						>
-							<List className="h-3.5 w-3.5" />
+							<List className="size-3.5" />
 							List
 						</Button>
 					</div>
@@ -209,91 +213,104 @@ export function OngekiScorePage() {
 				) : density === "list" ? (
 					<>
 						<div className="bg-card overflow-hidden rounded-lg border">
-							<Table className="min-w-[800px] w-full">
-								<colgroup>
-									<col className="w-16" />
-									<col className="w-[26%]" />
-									<col className="w-[12%]" />
-									<col className="w-[8%]" />
-									<col className="w-[14%]" />
-									<col className="w-[8%]" />
-									<col className="w-[10%]" />
-									<col className="w-[18%]" />
-								</colgroup>
+							<div className="w-full overflow-x-auto">
+								<Table className="w-full min-w-[1200px] table-fixed">
+									<colgroup>
+										<col className="w-[64px]" />
+										<col className="w-[30%]" />
+										<col className="w-[12%]" />
+										<col className="w-[8%]" />
+										<col className="w-[12%]" />
+										<col className="w-[8%]" />
+										<col className="w-[10%]" />
+										<col className="w-[8%]" />
+										<col className="w-[12%]" />
+									</colgroup>
 
-								<TableHeader className="[&_tr]:bg-muted/35">
-									<TableRow>
-										<TableHead>Jacket</TableHead>
-										<TableHead>Song</TableHead>
-										<TableHead>Difficulty</TableHead>
-										<TableHead>Level</TableHead>
-										<TableHead className="text-right">Score</TableHead>
-										<TableHead className="text-center">Grade</TableHead>
-										<TableHead className="text-center">Stars</TableHead>
-										<TableHead className="text-right">Rating</TableHead>
-										<TableHead>Date</TableHead>
-									</TableRow>
-								</TableHeader>
+									<TableHeader className="[&_tr]:bg-muted/35">
+										<TableRow>
+											<TableHead className="px-3">Jacket</TableHead>
+											<TableHead className="px-3">Song</TableHead>
+											<TableHead className="px-3">Difficulty</TableHead>
+											<TableHead className="px-3">Level</TableHead>
+											<TableHead className="px-3 text-right">Score</TableHead>
+											<TableHead className="px-3 text-center">Grade</TableHead>
+											<TableHead className="px-3 text-center">Stars</TableHead>
+											<TableHead className="px-3 text-right">Rating</TableHead>
+											<TableHead className="px-3 text-right">Date</TableHead>
+										</TableRow>
+									</TableHeader>
 
-								<TableBody>
-									{paged.map(score => {
-										const dateParts = formatOngekiScorePlaylogDate(score.userPlayDate)
-										const calculatedRating =
-											score.level != null && score.techScore != null
-												? calculateOngekiRating(score.level, score.techScore) / 100
-												: null
+									<TableBody>
+										{paged.map(score => {
+											const dateParts = formatOngekiScorePlaylogDate(score.userPlayDate)
+											const calculatedRating =
+												score.level != null && score.techScore != null
+													? calculateOngekiRating(score.level, score.techScore) / 100
+													: null
 
-										return (
-											<TableRow key={score.id}>
-												<TableCell className="h-16">
-													<img
-														src={`${CDN}/ongeki/jacket/${score.jacketPath}`}
-														alt={score.title || "Song jacket"}
-														width={44}
-														height={44}
-														className="block size-11 shrink-0 rounded-sm object-cover"
-													/>
-												</TableCell>
-
-												<TableCell className="h-16 max-w-80 truncate text-sm font-semibold leading-none">
-													{score.title || "Unknown"}
-												</TableCell>
-
-												<TableCell className="text-muted-foreground h-16 leading-none">
-													{getDifficultyFromOngekiChart(score.chartId ?? 0)}
-												</TableCell>
-
-												<TableCell className="h-16 font-medium leading-none">{formatLevel(score.level)}</TableCell>
-
-												<TableCell className="h-16 text-right font-semibold leading-none">
-													{(score.techScore ?? 0).toLocaleString()}
-												</TableCell>
-												<TableCell className="h-16 text-center font-medium leading-none">
-													{getOngekiGrade(score.techScore ?? 0)}
-												</TableCell>
-												<TableCell className="h-16 text-center leading-none">
-													<PlatinumStars count={score.platinumScoreStar ?? 0} />
-												</TableCell>
-												<TableCell className="h-16 text-right font-medium leading-none">
-													{calculatedRating == null ? (
-														"—"
-													) : (
-														<OngekiRatingColors
-															rating={calculatedRating}
-															version={0}
-															decimals={2}
+											return (
+												<TableRow key={score.id} className="h-16">
+													<TableCell className="px-3 py-2 align-middle">
+														<img
+															src={`${CDN}/ongeki/jacket/${score.jacketPath}`}
+															alt={score.title || "Song jacket"}
+															width={44}
+															height={44}
+															className="block size-11 shrink-0 rounded-sm object-cover"
 														/>
-													)}
-												</TableCell>
+													</TableCell>
 
-												<TableCell className="text-muted-foreground h-16 leading-none">
-													{dateParts.date === "—" ? "—" : `${dateParts.date} ${dateParts.time}`}
-												</TableCell>
-											</TableRow>
-										)
-									})}
-								</TableBody>
-							</Table>
+													<TableCell className="px-3 py-2 align-middle">
+														<div className="min-w-0">
+															<div className="truncate text-sm font-semibold leading-tight">
+																{score.title || "Unknown"}
+															</div>
+															{score.artist ? (
+																<div className="text-muted-foreground mt-1 truncate text-xs leading-tight">
+																	{score.artist}
+																</div>
+															) : null}
+														</div>
+													</TableCell>
+
+													<TableCell className="text-muted-foreground px-3 py-2 align-middle text-sm">
+														{getDifficultyFromOngekiChart(score.chartId ?? 0)}
+													</TableCell>
+
+													<TableCell className="px-3 py-2 align-middle font-medium tabular-nums">
+														{formatLevel(score.level)}
+													</TableCell>
+
+													<TableCell className="px-3 py-2 text-right align-middle font-semibold tabular-nums">
+														{(score.techScore ?? 0).toLocaleString()}
+													</TableCell>
+
+													<TableCell className="px-3 py-2 text-center align-middle font-medium">
+														{getOngekiGrade(score.techScore ?? 0)}
+													</TableCell>
+
+													<TableCell className="px-3 py-2 text-center align-middle">
+														<PlatinumStars count={score.platinumScoreStar ?? 0} />
+													</TableCell>
+
+													<TableCell className="px-3 py-2 text-right align-middle font-medium tabular-nums">
+														{calculatedRating == null ? (
+															"—"
+														) : (
+															<OngekiRatingColors rating={calculatedRating} version={0} decimals={2} />
+														)}
+													</TableCell>
+
+													<TableCell className="text-muted-foreground px-3 py-2 text-right align-middle text-sm tabular-nums">
+														{dateParts.date === "—" ? "—" : `${dateParts.date} ${dateParts.time}`}
+													</TableCell>
+												</TableRow>
+											)
+										})}
+									</TableBody>
+								</Table>
+							</div>
 						</div>
 
 						{totalPages > 1 && (
