@@ -14,6 +14,7 @@ const SSR_RARITY = 3
 
 export interface CardItemProps {
 	item: DB.OngekiUserCard & DB.OngekiStaticCards
+	onClick?: (item: DB.OngekiUserCard & DB.OngekiStaticCards) => void
 }
 
 interface CardImageProps {
@@ -114,7 +115,7 @@ const HolographicCanvas = ({ enabled, canvasRef }: HolographicCanvasProps) => {
 	)
 }
 
-const CardItemBase = ({ item }: CardItemProps) => {
+const CardItemBase = ({ item, onClick }: CardItemProps) => {
 	const cardRef = useRef<HTMLDivElement>(null)
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const isMobile = useIsMobile()
@@ -138,7 +139,31 @@ const CardItemBase = ({ item }: CardItemProps) => {
 				onMouseEnter={isMobile ? undefined : handleMouseEnter}
 				onMouseMove={isMobile ? undefined : handleMouseMove}
 				onMouseLeave={isMobile ? undefined : handleMouseLeave}
-				className="bg-background/30 relative aspect-[3/4] origin-center overflow-hidden rounded-md transition-all duration-150 ease-out will-change-transform"
+				onClick={() => onClick?.(item)}
+				draggable
+				onDragStart={e => {
+					e.dataTransfer.setData("application/json", JSON.stringify(item))
+					e.dataTransfer.effectAllowed = "move"
+
+					// Create a smaller drag ghost image
+					if (imageUrl) {
+						const ghost = document.createElement("img")
+						ghost.src = imageUrl
+						ghost.style.width = "64px"
+						ghost.style.height = "auto"
+						// We need to briefly add it to the DOM for it to be used
+						ghost.style.position = "absolute"
+						ghost.style.top = "-1000px"
+						document.body.appendChild(ghost)
+						e.dataTransfer.setDragImage(ghost, 32, 42)
+						// Clean up after the drag starts
+						setTimeout(() => document.body.removeChild(ghost), 0)
+					}
+				}}
+				className={cn(
+					"bg-background/30 relative aspect-[3/4] origin-center overflow-hidden rounded-md transition-all duration-150 ease-out will-change-transform",
+					onClick && "cursor-pointer hover:ring-2 hover:ring-primary/50"
+				)}
 				style={cardStyles}
 			>
 				<CardImage imageUrl={imageUrl} alt={item.name || "Card"} />
@@ -154,6 +179,7 @@ const areItemsEqual = (prev: CardItemProps, next: CardItemProps) => {
 	const nextItem = next.item
 
 	return (
+		prev.onClick === next.onClick &&
 		prevItem.id === nextItem.id &&
 		prevItem.imagePath === nextItem.imagePath &&
 		prevItem.name === nextItem.name &&

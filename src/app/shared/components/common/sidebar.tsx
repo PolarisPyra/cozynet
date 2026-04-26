@@ -75,7 +75,7 @@ const MENU_CONFIG: MenuItem[] = [
 				icon: Folder,
 				children: [
 					{ name: "Scores", href: "/ongeki/scores", icon: NotepadText },
-					{ name: "Cards", href: "/ongeki/cards", icon: LayoutGrid },
+					{ name: "Deck Builder", href: "/ongeki/cards", icon: LayoutGrid },
 					{ name: "Userbox", href: "/ongeki/userbox", icon: Pencil },
 					{ name: "Rivals", href: "/ongeki/rivals", icon: Swords },
 					{ name: "Leaderboard", href: "/ongeki/leaderboard", icon: Trophy },

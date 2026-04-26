@@ -1,5 +1,6 @@
 export { cardFilters, ratingFilters, scoreFilters, songFilters } from "./use-filters"
 export { useOngekiCards } from "./use-cards"
+export { useOngekiDecks } from "./use-decks"
 export { useLeaderboard } from "./use-leaderboard"
 export { useOngekiProfile } from "./use-profile"
 export {
