@@ -4,6 +4,7 @@ import { LayoutGrid, List } from "lucide-react"
 
 import { OngekiRatingDisplay } from "@/app/features/ongeki/components/rating-display"
 import { OngekiRatingInfoCard } from "@/app/features/ongeki/components/rating-info-card"
+import { OngekiRatingColors } from "@/app/features/ongeki/components/rating-colors"
 import { ratingFilters, useOngekiRatingData, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
 import { MultiFilter } from "@/app/shared/components/common/multi-filter"
@@ -17,11 +18,34 @@ import type { FilterValues, OngekiRating } from "@/app/shared/types"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
 import {
+	calculateOngekiGekForceRating,
 	calculateOngekiRating,
+	calculateOngekiPlatinumRating,
 	getDifficultyFromOngekiChart,
 	getOngekiGrade,
 	ongekiBadgeColors
 } from "@/app/shared/utils/ongeki"
+
+const PlatinumStars = function ({ count }: { count: number }) {
+	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`
+
+	return (
+		<div className="flex items-center justify-center gap-0.5">
+			{Array.from({ length: 5 }, (_, i) => {
+				const filled = i < count
+				return (
+					<img
+						key={i}
+						aria-hidden
+						className="inline-block h-3 w-3 object-contain"
+						src={starUrl(filled)}
+						alt={filled ? "Filled Star" : "Empty Star"}
+					/>
+				)
+			})}
+		</div>
+	)
+}
 
 const ONGEKI_RATING_DENSITY_KEY = "ongeki-rating-density"
 
@@ -42,6 +66,9 @@ export function OngekiRatingFrames() {
 	})
 
 	const activeTab = filterValues.category || "base"
+	const isPScoreMode = activeTab === "pscore"
+	const isRefresh = (version ?? 8) >= 8
+
 	const { getActiveData, getActiveLoading, playerRatingValue, highestRatingValue, ratingDecimals } = useOngekiRatingData(version || 0, activeTab)
 
 	const data = getActiveData(activeTab)
@@ -138,25 +165,26 @@ export function OngekiRatingFrames() {
 				) : density === "list" ? (
 					<div className="bg-card overflow-hidden rounded-lg border">
 						<Table className="min-w-[800px] w-full">
-							<colgroup>
-								<col className="w-16" />
-								<col className="w-[34%]" />
-								<col className="w-[14%]" />
-								<col className="w-[10%]" />
-								<col className="w-[16%]" />
-								<col className="w-[10%]" />
-								<col className="w-[12%]" />
-							</colgroup>
-
 							<TableHeader className="[&_tr]:bg-muted/35">
 								<TableRow>
-									<TableHead>Jacket</TableHead>
+									<TableHead className="w-16">Jacket</TableHead>
 									<TableHead>Song</TableHead>
-									<TableHead>Difficulty</TableHead>
-									<TableHead>Level</TableHead>
-									<TableHead className="text-right">Score</TableHead>
-									<TableHead>Grade</TableHead>
-									<TableHead className="text-right">Rating</TableHead>
+									<TableHead className="w-32">Difficulty</TableHead>
+									<TableHead className="w-20">Level</TableHead>
+									{isPScoreMode ? (
+										<>
+											<TableHead className="text-right">P-Score</TableHead>
+											<TableHead className="text-center">Stars</TableHead>
+											<TableHead className="text-right">P-Rating</TableHead>
+										</>
+									) : (
+										<>
+											<TableHead className="text-right">Score</TableHead>
+											<TableHead className="text-center">Grade</TableHead>
+											<TableHead className="text-center">Stars</TableHead>
+											<TableHead className="text-right">Rating</TableHead>
+										</>
+									)}
 								</TableRow>
 							</TableHeader>
 
@@ -165,7 +193,20 @@ export function OngekiRatingFrames() {
 									const score = rating.techScoreMax ?? null
 									const calculatedRating =
 										rating.level != null && score != null
-											? calculateOngekiRating(rating.level, score) / 100
+											? isRefresh
+												? calculateOngekiGekForceRating(
+													rating.level,
+													score,
+													rating.isFullCombo ?? 0,
+													rating.isAllBreake ?? 0,
+													rating.isFullBell ?? 0
+												) / 1000
+												: calculateOngekiRating(rating.level, score) / 100
+											: null
+
+									const calculatedPlatinumRating =
+										rating.level != null && rating.platinumScoreStar != null
+											? calculateOngekiPlatinumRating(rating.level, rating.platinumScoreStar) / 1000
 											: null
 
 									return (
@@ -190,17 +231,50 @@ export function OngekiRatingFrames() {
 
 											<TableCell className="h-16 font-medium leading-none">{formatLevel(rating.level)}</TableCell>
 
-											<TableCell className="h-16 text-right font-semibold leading-none">
-												{score == null ? "—" : score.toLocaleString()}
-											</TableCell>
-
-											<TableCell className="h-16 font-medium leading-none">
-												{score == null ? "—" : getOngekiGrade(score)}
-											</TableCell>
-
-											<TableCell className="h-16 text-right font-medium leading-none">
-												{calculatedRating == null ? "—" : calculatedRating.toFixed(3)}
-											</TableCell>
+											{isPScoreMode ? (
+												<>
+													<TableCell className="h-16 text-right font-semibold leading-none">
+														{rating.platinumScoreMax == null ? "—" : rating.platinumScoreMax.toLocaleString()}
+													</TableCell>
+													<TableCell className="h-16 text-center leading-none">
+														<PlatinumStars count={rating.platinumScoreStar ?? 0} />
+													</TableCell>
+													<TableCell className="h-16 text-right font-medium leading-none">
+														{calculatedPlatinumRating == null ? (
+															"—"
+														) : (
+															<OngekiRatingColors
+																rating={calculatedPlatinumRating}
+																version={0}
+																decimals={3}
+															/>
+														)}
+													</TableCell>
+												</>
+											) : (
+												<>
+													<TableCell className="h-16 text-right font-semibold leading-none">
+														{score == null ? "—" : score.toLocaleString()}
+													</TableCell>
+													<TableCell className="h-16 text-center font-medium leading-none">
+														{score == null ? "—" : getOngekiGrade(score)}
+													</TableCell>
+													<TableCell className="h-16 text-center leading-none">
+														<PlatinumStars count={rating.platinumScoreStar ?? 0} />
+													</TableCell>
+													<TableCell className="h-16 text-right font-medium leading-none">
+														{calculatedRating == null ? (
+															"—"
+														) : (
+															<OngekiRatingColors
+																rating={calculatedRating}
+																version={0}
+																decimals={isRefresh ? 3 : 2}
+															/>
+														)}
+													</TableCell>
+												</>
+											)}
 										</TableRow>
 									)
 								})}

@@ -24,13 +24,11 @@ const GAMES = [
 ]
 
 function ProfileEditor({
-	gameKey,
 	profile,
 	versions,
 	onSave,
 	onCancel
 }: {
-	gameKey: string
 	profile: Record<string, any>
 	versions: Record<number, string>
 	onSave: (data: Record<string, any>) => void
@@ -54,7 +52,7 @@ function ProfileEditor({
 		return entries.filter(([key]) => key.toLowerCase().includes(q))
 	}, [formData, searchQuery])
 
-	const versionName = versions[profile.version] || `Version ${profile.version}`
+	const versionName = versions[Number(profile.version)] || `Version ${profile.version}`
 
 	return (
 		<div className="bg-muted/50 rounded-md p-4 space-y-4">
@@ -82,8 +80,8 @@ function ProfileEditor({
 			</div>
 			<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
 				{filteredFields.map(([key, value]) => {
-						const isNumber = typeof profile[key] === "number" || profile[key] === null
-						return (
+					const isNumber = typeof profile[key] === "number" || profile[key] === null
+					return (
 							<div key={key} className="space-y-1">
 								<Label className="text-xs text-muted-foreground truncate" title={key}>
 									{key}
@@ -159,7 +157,6 @@ export function AdminGameProfiles({ userId }: Props) {
 										return (
 											<ProfileEditor
 												key={profile.version}
-												gameKey={game.key}
 												profile={profile}
 												versions={game.versions}
 												onCancel={() => setEditingItem(null)}
@@ -176,7 +173,7 @@ export function AdminGameProfiles({ userId }: Props) {
 										)
 									}
 
-									const versionName = game.versions[profile.version] || `Version ${profile.version}`
+									const versionName = game.versions[Number(profile.version)] || `Version ${profile.version}`
 
 									return (
 										<div

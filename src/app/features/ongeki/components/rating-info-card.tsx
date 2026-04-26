@@ -63,12 +63,12 @@ export function OngekiRatingInfoCard(props: OngekiRatingInfoCardProps) {
 		if (rating.techScoreMax != null && rating.level != null) {
 			return isRefresh
 				? calculateOngekiGekForceRating(
-						rating.level,
-						rating.techScoreMax,
-						rating.isFullCombo ?? 0,
-						rating.isAllBreake ?? 0,
-						rating.isFullBell ?? 0
-					) / 1000
+					rating.level,
+					rating.techScoreMax,
+					rating.isFullCombo ?? 0,
+					rating.isAllBreake ?? 0,
+					rating.isFullBell ?? 0
+				) / 1000
 				: calculateOngekiRating(rating.level, rating.techScoreMax) / 100
 		}
 		return null

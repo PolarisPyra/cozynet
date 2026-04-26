@@ -1,15 +1,15 @@
 import { useMemo, useState } from "react"
 
-import { Image } from "lucide-react"
+import { Image as ImageIcon } from "lucide-react"
 import { toast } from "sonner"
 
+import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import {
 	useCurrentNameplate,
 	useEquipNameplate,
 	useSearchNameplates,
 	useUnlockNameplate
 } from "@/app/features/chunithm/hooks/userbox/nameplate"
-import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
@@ -27,7 +27,6 @@ export function Nameplate() {
 	const items = searchResults?.items ?? []
 	const hasPendingSelection = pendingNameplate !== null
 
-	// Get display item - prefer pending selection, then current
 	const displayItem = useMemo(() => {
 		if (pendingNameplate) {
 			return items.find(item => item.nameplateId === pendingNameplate) || currentNameplate
@@ -69,47 +68,45 @@ export function Nameplate() {
 	}
 
 	return (
-		<>
-			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
-				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-3 py-2">
-					<span className="text-primary text-sm font-semibold">Nameplate</span>
-				</div>
-				<div className="flex flex-1 flex-col p-2 text-center">
-					<div className="bg-muted/50 overflow-hidden rounded-sm px-2 py-1 mb-1">
-						<div className="marquee-container">
-							<span className="marquee-text text-primary text-xs whitespace-nowrap">
-								{displayItem?.label || "None"}
-							</span>
-						</div>
+		<div className="flex flex-col gap-8">
+			<div className="flex justify-center">
+				<div
+					className="group border-border relative flex w-full max-w-md cursor-pointer flex-col items-center gap-3 overflow-hidden rounded-xl border p-4 transition-all hover:border-primary/50"
+					onClick={() => setIsDialogOpen(true)}
+				>
+					<div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary opacity-0 transition-opacity group-hover:opacity-100">
+						+
 					</div>
-					<div className="mb-1 flex flex-1 items-center justify-center">
+					<div className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+						Current Nameplate
+					</div>
+					<div className="relative flex aspect-[4/1] w-full items-center justify-center overflow-hidden rounded-lg">
 						{displayItem?.imagePath ? (
 							<img
 								src={`${CDN}/chunithm/nameplate/${displayItem.imagePath}`}
 								alt="Nameplate"
-								className="h-16 w-full max-w-[160px] rounded-sm object-cover"
+								className="h-full w-full object-contain"
 							/>
 						) : (
-							<div className="bg-muted flex h-16 w-full max-w-[160px] items-center justify-center rounded-sm">
-								<Image className="h-6 w-6 opacity-30" />
-							</div>
+							<ImageIcon className="h-10 w-10 opacity-20" />
 						)}
 					</div>
-					<div className="mt-auto flex gap-2">
-						<Button size="sm" variant="outline" onClick={() => setIsDialogOpen(true)} className="flex-1">
-							Change
-						</Button>
-						<Button
-							size="sm"
-							variant="default"
-							onClick={handleSave}
-							disabled={!hasPendingSelection}
-							className="flex-1"
-						>
-							Save
-						</Button>
+					<div className="mt-8 w-full truncate pb-2 text-center text-xs font-semibold">
+						{displayItem?.label || "None"}
 					</div>
 				</div>
+			</div>
+
+			<div className="flex justify-end gap-3 border-t pt-6">
+				<Button
+					size="lg"
+					variant="default"
+					onClick={handleSave}
+					disabled={!hasPendingSelection}
+					className="px-8"
+				>
+					Save Changes
+				</Button>
 			</div>
 
 			<ItemSelectionDialog
@@ -125,7 +122,7 @@ export function Nameplate() {
 				currentItemId={displayItem?.nameplateId}
 				onSelect={handleEquip}
 				onUnlock={handleUnlock}
-				imageClassName="h-16 w-full"
+				imageClassName="w-full h-16 object-contain"
 				headerControls={
 					<Select
 						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
@@ -142,6 +139,6 @@ export function Nameplate() {
 					</Select>
 				}
 			/>
-		</>
+		</div>
 	)
 }

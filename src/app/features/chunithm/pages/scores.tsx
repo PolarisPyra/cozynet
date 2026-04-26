@@ -5,7 +5,7 @@ import { toast } from "sonner"
 
 import { ChunithmKamaiImportDialog } from "@/app/features/chunithm/components/kamai-import-dialog"
 import ChunithmScoreInfoCard from "@/app/features/chunithm/components/score-info-card"
-import { scoreFilters, useChunithmScores, useScoreExporter } from "@/app/features/chunithm/hooks"
+import { scoreFilters, useChunithmScores, useScoreExporter, useChunithmVersion } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
 import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import { Pagination } from "@/app/shared/components/common/pagination"
@@ -17,13 +17,15 @@ import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
 import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 import type { FilterValues } from "@/app/shared/types"
-import { chunithmBadgeColors, formatSqlDateToLocalParts, getChunithmGrade, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
+import { chunithmBadgeColors, calculateChunithmRating, formatSqlDateToLocalParts, getChunithmGrade, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
+import { ChunithmRatingColors } from "@/app/features/chunithm/components/rating-colors"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
 
 const SCORES_DENSITY_KEY = "scores-density"
 
 export default function ChunithmScorePage() {
+	const version = useChunithmVersion()
 	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(scoreFilters))
 	const [isExporting, setIsExporting] = useState(false)
@@ -191,7 +193,7 @@ export default function ChunithmScorePage() {
 										<TableHead>Level</TableHead>
 										<TableHead className="text-right">Score</TableHead>
 										<TableHead>Grade</TableHead>
-										<TableHead className="text-right">Rating</TableHead>
+										<TableHead className="text-right">Perf. Rating</TableHead>
 										<TableHead>Date</TableHead>
 									</TableRow>
 								</TableHeader>
@@ -199,7 +201,6 @@ export default function ChunithmScorePage() {
 								<TableBody>
 									{paged.map(score => {
 										const dateParts = formatSqlDateToLocalParts(score.userPlayDate)
-										const rating = score.playerRating == null ? "—" : (score.playerRating / 100).toFixed(2)
 
 										return (
 											<TableRow key={score.id}>
@@ -229,7 +230,16 @@ export default function ChunithmScorePage() {
 
 												<TableCell className="h-16 font-medium leading-none">{getChunithmGrade(score.score ?? 0)}</TableCell>
 
-												<TableCell className="h-16 text-right font-medium leading-none">{rating}</TableCell>
+												<TableCell className="h-16 text-right font-medium leading-none">
+													{score.score == null || score.level == null ? (
+														"—"
+													) : (
+														<ChunithmRatingColors
+															rating={calculateChunithmRating(score.level, score.score) / 100}
+															version={version || 20}
+														/>
+													)}
+												</TableCell>
 
 												<TableCell className="text-muted-foreground h-16 leading-none">
 													{dateParts.date === "—" ? "—" : `${dateParts.date} ${dateParts.time}`}

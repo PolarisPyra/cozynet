@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
 import type { ChunithmRating, FilterValues } from "@/app/shared/types"
-import { chunithmBadgeColors, getChunithmGrade, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
+import { chunithmBadgeColors, calculateChunithmRating, getChunithmGrade, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
+import { ChunithmRatingColors } from "@/app/features/chunithm/components/rating-colors"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
 
@@ -205,7 +206,14 @@ export default function ChunithmRatingPage() {
 										<TableCell className="h-16 font-medium leading-none">{getChunithmGrade(rating.score ?? 0)}</TableCell>
 
 										<TableCell className="h-16 text-right font-medium leading-none">
-											{((rating.rating ?? 0) / 100).toFixed(2)}
+											<ChunithmRatingColors
+												rating={
+													rating.level != null && rating.score != null
+														? calculateChunithmRating(rating.level, rating.score) / 100
+														: 0
+												}
+												version={rating.version ?? version}
+											/>
 										</TableCell>
 									</TableRow>
 								))}

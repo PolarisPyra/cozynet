@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
-const DEFAULT_ACCENT_COLOR = "#ffffff"
+const DEFAULT_ACCENT_COLOR = "#7c3aed"
 const ACCENT_COLOR_KEY = "profile-banner-color"
 
 const isValidHex = (value: string): boolean => /^#[0-9A-Fa-f]{6}$/.test(value)

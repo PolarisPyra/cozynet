@@ -5,6 +5,7 @@ import { toast } from "sonner"
 
 import { OngekiKamaiImportDialog } from "@/app/features/ongeki/components/kamai-import-dialog"
 import { OngekiScoreInfoCard } from "@/app/features/ongeki/components/score-info-card"
+import { OngekiRatingColors } from "@/app/features/ongeki/components/rating-colors"
 import { scoreFilters, useOngekiScoreExporter, useOngekiScores, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
 import { InlineFilters } from "@/app/shared/components/common/inline-filters"
@@ -26,6 +27,27 @@ import {
 	getOngekiGrade,
 	ongekiBadgeColors
 } from "@/app/shared/utils/ongeki"
+
+const PlatinumStars = function ({ count }: { count: number }) {
+	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`
+
+	return (
+		<div className="flex items-center justify-center gap-0.5">
+			{Array.from({ length: 5 }, (_, i) => {
+				const filled = i < count
+				return (
+					<img
+						key={i}
+						aria-hidden
+						className="inline-block h-3 w-3 object-contain"
+						src={starUrl(filled)}
+						alt={filled ? "Filled Star" : "Empty Star"}
+					/>
+				)
+			})}
+		</div>
+	)
+}
 
 const ONGEKI_SCORES_DENSITY_KEY = "ongeki-scores-density"
 
@@ -206,7 +228,8 @@ export function OngekiScorePage() {
 										<TableHead>Difficulty</TableHead>
 										<TableHead>Level</TableHead>
 										<TableHead className="text-right">Score</TableHead>
-										<TableHead>Grade</TableHead>
+										<TableHead className="text-center">Grade</TableHead>
+										<TableHead className="text-center">Stars</TableHead>
 										<TableHead className="text-right">Rating</TableHead>
 										<TableHead>Date</TableHead>
 									</TableRow>
@@ -245,11 +268,22 @@ export function OngekiScorePage() {
 												<TableCell className="h-16 text-right font-semibold leading-none">
 													{(score.techScore ?? 0).toLocaleString()}
 												</TableCell>
-
-												<TableCell className="h-16 font-medium leading-none">{getOngekiGrade(score.techScore ?? 0)}</TableCell>
-
+												<TableCell className="h-16 text-center font-medium leading-none">
+													{getOngekiGrade(score.techScore ?? 0)}
+												</TableCell>
+												<TableCell className="h-16 text-center leading-none">
+													<PlatinumStars count={score.platinumScoreStar ?? 0} />
+												</TableCell>
 												<TableCell className="h-16 text-right font-medium leading-none">
-													{calculatedRating == null ? "—" : calculatedRating.toFixed(2)}
+													{calculatedRating == null ? (
+														"—"
+													) : (
+														<OngekiRatingColors
+															rating={calculatedRating}
+															version={0}
+															decimals={2}
+														/>
+													)}
 												</TableCell>
 
 												<TableCell className="text-muted-foreground h-16 leading-none">

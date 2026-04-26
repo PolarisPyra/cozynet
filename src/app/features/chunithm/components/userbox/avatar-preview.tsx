@@ -82,24 +82,30 @@ export function AvatarPreview() {
 	}, [optimisticAvatar, currentAvatar])
 
 	return (
-		<div className="bg-card border-border rounded-sm border pb-2">
-			<div className="flex items-center justify-center overflow-hidden" style={{ height: "180px" }}>
-				<div className="avatar_group" style={{ display: "flex", justifyContent: "center", transform: "scale(0.6)" }}>
-					<div className="avatar_base">
-						<div className="avatar_back">{maybeImg(avatarImages.back)}</div>
-						<div className="avatar_wear">{maybeImg(avatarImages.wear)}</div>
-						<div className="avatar_skin">{maybeImg(avatarImages.skin)}</div>
-						<div className="avatar_hand_l">{maybeImg(avatarImages.handL)}</div>
-						<div className="avatar_hand_r">{maybeImg(avatarImages.handR)}</div>
-						<div className="avatar_head">{maybeImg(avatarImages.head)}</div>
-						<div className="avatar_face_static">{maybeImg(avatarImages.faceStatic)}</div>
-						<div className="avatar_face">{maybeImg(avatarImages.face)}</div>
-						<div className="avatar_item_l">{maybeImg(avatarImages.item)}</div>
-						<div className="avatar_item_r">{maybeImg(avatarImages.item)}</div>
-						<div className="avatar_skinfoot_l">{maybeImg(avatarImages.skinfootL)}</div>
-						<div className="avatar_skinfoot_r">{maybeImg(avatarImages.skinfootR)}</div>
-						<div className="avatar_front">{maybeImg(avatarImages.front)}</div>
-					</div>
+		<div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg">
+			<div className="avatar_group relative z-10 flex h-full w-full items-center justify-center">
+				<div
+					className="avatar_base"
+					style={{
+						transform: "scale(1.1)",
+						display: "flex",
+						justifyContent: "center",
+						alignItems: "center"
+					}}
+				>
+					<div className="avatar_back">{maybeImg(avatarImages.back)}</div>
+					<div className="avatar_wear">{maybeImg(avatarImages.wear)}</div>
+					<div className="avatar_skin">{maybeImg(avatarImages.skin)}</div>
+					<div className="avatar_hand_l">{maybeImg(avatarImages.handL)}</div>
+					<div className="avatar_hand_r">{maybeImg(avatarImages.handR)}</div>
+					<div className="avatar_head">{maybeImg(avatarImages.head)}</div>
+					<div className="avatar_face_static">{maybeImg(avatarImages.faceStatic)}</div>
+					<div className="avatar_face">{maybeImg(avatarImages.face)}</div>
+					<div className="avatar_item_l">{maybeImg(avatarImages.item)}</div>
+					<div className="avatar_item_r">{maybeImg(avatarImages.item)}</div>
+					<div className="avatar_skinfoot_l">{maybeImg(avatarImages.skinfootL)}</div>
+					<div className="avatar_skinfoot_r">{maybeImg(avatarImages.skinfootR)}</div>
+					<div className="avatar_front">{maybeImg(avatarImages.front)}</div>
 				</div>
 			</div>
 		</div>
