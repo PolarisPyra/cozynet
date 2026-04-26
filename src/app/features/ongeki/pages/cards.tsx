@@ -8,7 +8,6 @@ import Header from "@/app/shared/components/common/header"
 import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Button } from "@/app/shared/components/ui/button"
-import { Card, CardContent } from "@/app/shared/components/ui/card"
 import { Progress } from "@/app/shared/components/ui/progress"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
@@ -175,8 +174,8 @@ export default function OngekiDeckManagementPage() {
 
 					<div className="flex items-center gap-2">
 						{!isDockVisible && (
-							<Button 
-								onClick={() => setIsDockVisible(true)} 
+							<Button
+								onClick={() => setIsDockVisible(true)}
 								className="h-9 shadow-lg shadow-primary/20"
 							>
 								Open Deck Editor

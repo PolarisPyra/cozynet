@@ -1,4 +1,4 @@
-import { Check, Plus, Save, Trash2, X } from "lucide-react"
+import { Plus, Save, X } from "lucide-react"
 import { useMemo } from "react"
 
 import { Button } from "@/app/shared/components/ui/button"
@@ -118,7 +118,7 @@ export function DeckBuilderDock({
 								)}
 							</div>
 						))}
-					</div>
+					</div>deckbuilder
 
 					{/* Actions */}
 					<div className="flex flex-col gap-2 shrink-0">
