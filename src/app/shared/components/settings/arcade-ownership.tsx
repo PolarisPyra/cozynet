@@ -46,12 +46,10 @@ const ArcadeOwnership = () => {
 	}
 
 	return (
-		<div className="bg-card rounded-sm">
-			<h2 className="text-primary mb-2 text-xl font-semibold">Arcade ownership settings</h2>
-			<div className="text-primary mb-4 text-sm">Changes who owns a specific arcade</div>
+		<div className="space-y-4">
 			<div className="mb-4">
 				<label className="text-primary block pb-2 text-sm font-medium">Select Arcade</label>
-				<Popover open={openArcade} onOpenChange={setOpenArcade}>
+				<Popover open={openArcade} onOpenChange={setOpenArcade} modal={true}>
 					<PopoverTrigger asChild>
 						<Button
 							variant="outline"
@@ -68,7 +66,7 @@ const ArcadeOwnership = () => {
 					<PopoverContent className="w-80 p-0">
 						<Command>
 							<CommandInput placeholder="Search arcades..." />
-							<CommandList>
+							<CommandList className="max-h-64 overflow-y-auto">
 								<CommandEmpty>No arcade found.</CommandEmpty>
 								<CommandGroup>
 									{arcades?.map(arcade => (
@@ -97,7 +95,7 @@ const ArcadeOwnership = () => {
 
 			<div className="mb-4">
 				<label className="text-primary block pb-2 text-sm font-medium">Select User</label>
-				<Popover open={openUser} onOpenChange={setOpenUser}>
+				<Popover open={openUser} onOpenChange={setOpenUser} modal={true}>
 					<PopoverTrigger asChild>
 						<Button
 							variant="outline"
@@ -114,7 +112,7 @@ const ArcadeOwnership = () => {
 					<PopoverContent className="w-80 p-0">
 						<Command>
 							<CommandInput placeholder="Search users..." />
-							<CommandList>
+							<CommandList className="max-h-64 overflow-y-auto">
 								<CommandEmpty>No user found.</CommandEmpty>
 								<CommandGroup>
 									{users?.map(user => (

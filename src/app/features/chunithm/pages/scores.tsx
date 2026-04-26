@@ -171,7 +171,7 @@ export default function ChunithmScorePage() {
 				) : density === "list" ? (
 					<>
 						<div className="bg-card overflow-hidden rounded-lg border">
-							<Table className="min-w-full">
+							<Table className="min-w-[800px] w-full">
 								<colgroup>
 									<col className="w-16" />
 									<col className="w-[26%]" />
