@@ -1,11 +1,14 @@
 import { memo, useMemo, useRef } from "react"
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { Skeleton } from "@/app/shared/components/ui/skeleton"
 import { useIsMobile } from "@/app/shared/hooks/use-mobile"
 import { CDN } from "@/app/shared/utils/constants"
 import type { DB } from "@/app/shared/types"
+import { cn } from "@/app/shared/utils"
 
 import { getCanvasStyles, getCardStyles, useCardEffects } from "./card-effects"
+import { getSkillInfo } from "../../utils/skill-utils"
 
 const SSR_RARITY = 3
 
@@ -49,14 +52,38 @@ const CardImage = ({ imageUrl, alt }: CardImageProps) => {
 interface CardOverlayProps {
 	name: string | null
 	level: number | null
+	skillId: number | null
 }
 
-const CardOverlay = ({ name, level }: CardOverlayProps) => {
+const CardOverlay = ({ name, level, skillId }: CardOverlayProps) => {
+	const skill = getSkillInfo(skillId)
+
 	return (
 		<>
 			{level && (
 				<div className="absolute top-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
 					Lv. {level}
+				</div>
+			)}
+			{skill && (
+				<div className="absolute top-2 left-2">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<div className={cn(
+								"rounded px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow-sm",
+								skill.category === "Attack" ? "bg-red-500" :
+								skill.category === "Boost" ? "bg-blue-500" :
+								skill.category === "Guard" ? "bg-green-500" :
+								skill.category === "Support" ? "bg-purple-500" : "bg-slate-500"
+							)}>
+								{skill.category}
+							</div>
+						</TooltipTrigger>
+						<TooltipContent side="right" className="max-w-[200px] p-2">
+							<div className="font-bold">{skill.name}</div>
+							<div className="mt-1 text-[10px] opacity-90 whitespace-pre-wrap">{skill.info}</div>
+						</TooltipContent>
+					</Tooltip>
 				</div>
 			)}
 			<div className="absolute right-0 bottom-0 left-0 bg-black/80 px-2 py-1">
@@ -116,7 +143,7 @@ const CardItemBase = ({ item }: CardItemProps) => {
 			>
 				<CardImage imageUrl={imageUrl} alt={item.name || "Card"} />
 				<HolographicCanvas enabled={isSSR && !isMobile} canvasRef={canvasRef} />
-				<CardOverlay name={item.name} level={item.level} />
+				<CardOverlay name={item.name} level={item.level} skillId={item.skillId} />
 			</div>
 		</div>
 	)

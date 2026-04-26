@@ -12,6 +12,7 @@ import { OngekiRatingFrames } from "./app/features/ongeki/pages/rating"
 import { OngekiRivals } from "./app/features/ongeki/pages/rivals"
 import { OngekiScorePage } from "./app/features/ongeki/pages/scores"
 import { OngekiSettingsPage } from "./app/features/ongeki/pages/settings"
+import OngekiCards from "./app/features/ongeki/pages/cards"
 import WelcomePage, { WelcomeContent } from "./app/features/public/welcome-page"
 import { AccentColorProvider } from "./app/shared/components/accent-color-provider"
 import { LoginContent } from "./app/shared/components/common/login"
@@ -98,6 +99,7 @@ const app = (
 										<Route path="/ongeki/userbox" element={<OngekiUserbox />} />
 										<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
 										<Route path="/ongeki/scores" element={<OngekiScorePage />} />
+										<Route path="/ongeki/cards" element={<OngekiCards />} />
 										<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
 										<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
 										<Route path="/ongeki/song-leaderboard/:musicId/:chartId" element={<OngekiSongLeaderboard />} />
