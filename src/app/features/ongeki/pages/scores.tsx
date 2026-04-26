@@ -21,7 +21,6 @@ import type { FilterValues } from "@/app/shared/types"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
 import {
-	calculateOngekiRating,
 	formatOngekiScorePlaylogDate,
 	getDifficultyFromOngekiChart,
 	getOngekiGrade,
@@ -33,18 +32,31 @@ const PlatinumStars = ({ count }: { count: number }) => {
 	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`
 
 	return (
-		<div className="flex items-center justify-center gap-px">
-			{Array.from({ length: 5 }, (_, i) => (
-				<img
-					key={i}
-					aria-hidden
-					className="size-3 object-contain opacity-80"
-					src={starUrl(i < safeCount)}
-					alt=""
-				/>
-			))}
+		<div className="flex items-center justify-center gap-0.5">
+			{Array.from({ length: 5 }, (_, i) => {
+				const filled = i < safeCount
+
+				return (
+					<img
+						key={i}
+						aria-hidden
+						className="inline-block h-3 w-3 object-contain"
+						src={starUrl(filled)}
+						alt={filled ? "Filled Star" : "Empty Star"}
+					/>
+				)
+			})}
 		</div>
 	)
+}
+
+const normalizePlayerRating = (rating: number | null | undefined) => {
+	if (rating == null) return null
+
+	const numeric = Number(rating)
+	if (!Number.isFinite(numeric)) return null
+
+	return numeric > 100 ? numeric / 1000 : numeric
 }
 
 const ONGEKI_SCORES_DENSITY_KEY = "ongeki-scores-density"
@@ -55,7 +67,9 @@ export function OngekiScorePage() {
 	const [isExporting, setIsExporting] = useState(false)
 	const [density, setDensity] = useState<"list" | "grid">(() => {
 		try {
-			return localStorage.getItem(ONGEKI_SCORES_DENSITY_KEY) === "grid" ? "grid" : "list"
+			const saved = localStorage.getItem(ONGEKI_SCORES_DENSITY_KEY)
+			if (saved === "grid" || saved === "comfortable") return "grid"
+			return "list"
 		} catch {
 			return "list"
 		}
@@ -65,7 +79,7 @@ export function OngekiScorePage() {
 		try {
 			localStorage.setItem(ONGEKI_SCORES_DENSITY_KEY, density)
 		} catch {
-			// Ignore localStorage failures.
+			// Ignore storage failures.
 		}
 	}, [density])
 
@@ -175,8 +189,8 @@ export function OngekiScorePage() {
 			<Body>
 				<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
 					<div className="flex flex-wrap gap-2">
-						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting} className="gap-1.5">
-							<Upload className="size-4" />
+						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
+							<Upload className="h-4 w-4" />
 							{isExporting ? "Exporting..." : "Export to Kamai"}
 						</Button>
 
@@ -188,9 +202,9 @@ export function OngekiScorePage() {
 							variant={density === "grid" ? "secondary" : "outline"}
 							size="sm"
 							onClick={() => setDensity("grid")}
-							className="h-8 gap-1.5 text-xs"
+							className="h-8 text-xs"
 						>
-							<LayoutGrid className="size-3.5" />
+							<LayoutGrid className="h-3.5 w-3.5" />
 							Grid
 						</Button>
 
@@ -198,9 +212,9 @@ export function OngekiScorePage() {
 							variant={density === "list" ? "secondary" : "outline"}
 							size="sm"
 							onClick={() => setDensity("list")}
-							className="h-8 gap-1.5 text-xs"
+							className="h-8 text-xs"
 						>
-							<List className="size-3.5" />
+							<List className="h-3.5 w-3.5" />
 							List
 						</Button>
 					</div>
@@ -244,10 +258,7 @@ export function OngekiScorePage() {
 									<TableBody>
 										{paged.map(score => {
 											const dateParts = formatOngekiScorePlaylogDate(score.userPlayDate)
-											const calculatedRating =
-												score.level != null && score.techScore != null
-													? calculateOngekiRating(score.level, score.techScore) / 100
-													: null
+											const playerRating = normalizePlayerRating(score.playerRating)
 
 											return (
 												<TableRow key={score.id} className="h-16">
@@ -295,10 +306,14 @@ export function OngekiScorePage() {
 													</TableCell>
 
 													<TableCell className="px-3 py-2 text-right align-middle font-medium tabular-nums">
-														{calculatedRating == null ? (
+														{playerRating == null ? (
 															"—"
 														) : (
-															<OngekiRatingColors rating={calculatedRating} version={0} decimals={2} />
+															<OngekiRatingColors
+																rating={playerRating}
+																version={version}
+																decimals={3}
+															/>
 														)}
 													</TableCell>
 

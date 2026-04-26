@@ -41,13 +41,31 @@ export const ChunithmRatingInfoCard = function ({
 		return Number.isFinite(lvl) ? lvl.toFixed(1) : "?"
 	}
 
+	const metaBadges = [
+		...(!isPotential && rating.userPlayDate
+			? [
+				{
+					key: "date",
+					label: DateTime.fromSQL(rating.userPlayDate ?? "", { zone: "Asia/Tokyo" })
+						.toLocal()
+						.toLocaleString(DateTime.DATE_SHORT)
+				},
+				{
+					key: "time",
+					label: DateTime.fromSQL(rating.userPlayDate, { zone: "Asia/Tokyo" })
+						.toLocal()
+						.toLocaleString(DateTime.TIME_SIMPLE)
+				}
+			]
+			: []),
+		...(!isPotential && rating.isNewRecord === 1 ? [{ key: "new-record", label: "New Record" }] : [])
+	]
+
 	return (
 		<div
 			className={`bg-card border-border relative flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md ${className}`}
 		>
-			{/* Top Section: Image, Title, Score */}
-			<div className="flex items-start gap-3 mb-2">
-				{/* Album Art */}
+			<div className="mb-2 flex items-start gap-3">
 				<div className="flex-shrink-0">
 					<div className="relative h-16 w-16">
 						{!imageLoaded && <Skeleton className="absolute inset-0 rounded-md" />}
@@ -63,14 +81,15 @@ export const ChunithmRatingInfoCard = function ({
 					</div>
 				</div>
 
-				{/* Title and Info */}
-				<div className="flex-1 min-w-0 flex flex-col gap-1.5">
-					<h3 className="text-foreground text-base font-semibold leading-snug break-words line-clamp-2">
+				<div className="flex min-w-0 flex-1 flex-col gap-1.5">
+					<h3 className="text-foreground line-clamp-2 break-words text-base font-semibold leading-snug">
 						{rating.title}
 					</h3>
+
 					<div className="flex items-center gap-2">
 						<span
-							className={`inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold ${levelColorBadge ? levelColorBadge(rating.chartId ?? undefined) : "text-primary-foreground bg-primary"}`}
+							className={`inline-flex h-6 items-center rounded-md border-2 px-2.5 py-0.5 text-xs font-bold ${levelColorBadge ? levelColorBadge(rating.chartId ?? undefined) : "text-primary-foreground bg-primary"
+								}`}
 						>
 							{rating.level == null || !Number.isFinite(rating.level) ? (
 								"?"
@@ -87,8 +106,7 @@ export const ChunithmRatingInfoCard = function ({
 					</div>
 				</div>
 
-				{/* Score and Rating */}
-				<div className="flex flex-col items-end gap-2.5 flex-shrink-0 text-right">
+				<div className="flex flex-shrink-0 flex-col items-end gap-2.5 text-right">
 					{logoUrl && (
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -101,6 +119,7 @@ export const ChunithmRatingInfoCard = function ({
 							</TooltipContent>
 						</Tooltip>
 					)}
+
 					{!isPotential && (
 						<div>
 							<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
@@ -114,6 +133,7 @@ export const ChunithmRatingInfoCard = function ({
 							</div>
 						</div>
 					)}
+
 					<div>
 						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 							Rating
@@ -122,7 +142,7 @@ export const ChunithmRatingInfoCard = function ({
 							{calculatedRating !== null ? (
 								<ChunithmRatingColors rating={calculatedRating} version={rating.version} />
 							) : (
-								<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
+								<span className="text-muted-foreground text-xs font-medium">-</span>
 							)}
 						</div>
 					</div>
@@ -130,7 +150,7 @@ export const ChunithmRatingInfoCard = function ({
 			</div>
 
 			{!isPotential && (
-				<div className="flex items-center gap-2 mb-2">
+				<div className="mb-2 flex items-center gap-2">
 					<ChunithmAchievementBadges
 						isFullCombo={rating.isFullCombo ?? 0}
 						isAllJustice={rating.isAllJustice ?? 0}
@@ -142,31 +162,23 @@ export const ChunithmRatingInfoCard = function ({
 				</div>
 			)}
 
-			{(rating.userPlayDate || logoUrl || (!isPotential && rating.isNewRecord === 1)) && (
+			{metaBadges.length > 0 && (
 				<>
 					<Separator className="my-1.5" />
-					<div className="flex flex-col gap-1.5 min-w-0 w-full">
-						{!isPotential && rating.userPlayDate && (
-							<div className="flex items-center gap-1.5 flex-wrap">
-								<Badge variant="secondary" className="h-5 rounded-md px-1.5 text-xs flex-shrink-0 whitespace-nowrap">
-									{DateTime.fromSQL(rating.userPlayDate ?? "", { zone: "Asia/Tokyo" })
-										.toLocal()
-										.toLocaleString(DateTime.DATE_SHORT)}
+
+					<div className="min-w-0 overflow-hidden">
+						<div className="flex w-full flex-nowrap items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-0.5">
+							{metaBadges.map(badge => (
+								<Badge
+									key={badge.key}
+									variant="secondary"
+									className={`h-5 shrink-0 whitespace-nowrap rounded-md text-xs ${badge.key === "new-record" ? "px-2 font-semibold uppercase" : "px-1.5"
+										}`}
+								>
+									{badge.label}
 								</Badge>
-								<Badge variant="secondary" className="h-5 rounded-md px-1.5 text-xs flex-shrink-0 whitespace-nowrap">
-									{DateTime.fromSQL(rating.userPlayDate, { zone: "Asia/Tokyo" })
-										.toLocal()
-										.toLocaleString(DateTime.TIME_SIMPLE)}
-								</Badge>
-							</div>
-						)}
-						{!isPotential && rating.isNewRecord === 1 && (
-							<div className="flex items-center gap-1.5 flex-wrap">
-								<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-semibold uppercase flex-shrink-0 whitespace-nowrap">
-									New Record
-								</Badge>
-							</div>
-						)}
+							))}
+						</div>
 					</div>
 				</>
 			)}
