@@ -101,26 +101,6 @@ export function NavUser({
 						)}
 						<DropdownMenuGroup>
 							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
-								Management
-							</DropdownMenuLabel>
-							<DropdownMenuItem
-								onClick={() => navigate("/cards")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<CreditCard className="text-primary" />
-								Edit Cards
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={() => navigate("/keychip")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<KeySquare className="text-primary" />
-								Edit keychips
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator className="bg-border" />
-						<DropdownMenuGroup>
-							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
 								Settings
 							</DropdownMenuLabel>
 							<DropdownMenuItem

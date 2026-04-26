@@ -81,7 +81,6 @@ const MENU_CONFIG: MenuItem[] = [
 					{ name: "Leaderboard", href: "/ongeki/leaderboard", icon: Trophy },
 					{ name: "All Songs", href: "/ongeki/allsongs", icon: BoomBox },
 					{ name: "Rating Frame", href: "/ongeki/rating", icon: List },
-					{ name: "Cards", href: "/ongeki/cards", icon: RectangleVertical },
 					{ name: "Profile", href: "/ongeki/profile", icon: User }
 				]
 			}

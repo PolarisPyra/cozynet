@@ -7,7 +7,6 @@ import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
 import { Toaster } from "@/app/shared/components/ui/sonner"
 
 import { OngekiAllSongs } from "./app/features/ongeki/pages/allsongs"
-import { CardManagement } from "./app/features/ongeki/pages/cards"
 import OngekiLeaderboard from "./app/features/ongeki/pages/leaderboard"
 import { OngekiRatingFrames } from "./app/features/ongeki/pages/rating"
 import { OngekiRivals } from "./app/features/ongeki/pages/rivals"
@@ -29,8 +28,6 @@ import "./index.css"
 // Lazy-load large pages and feature components to reduce initial bundle size
 const Account = React.lazy(() => import("./app/features/account/pages/account"))
 const ProfilePage = React.lazy(() => import("./app/features/account/pages/profile"))
-const CardsPage = React.lazy(() => import("./app/features/account/pages/cards"))
-const KeychipPage = React.lazy(() => import("./app/features/account/pages/keychip"))
 const AdminDashboard = React.lazy(() => import("./app/features/admin/pages/admin-dashboard"))
 const AdminUsers = React.lazy(() => import("./app/features/admin/pages/admin-users"))
 const AdminIcfEditor = React.lazy(() => import("./app/features/admin/pages/admin-icf-editor"))
@@ -84,8 +81,6 @@ const app = (
 										<Route path="/admin/users" element={<AdminUsers />} />
 										<Route path="/admin/icf" element={<AdminIcfEditor />} />
 										<Route path="/account" element={<Account />} />
-										<Route path="/cards" element={<CardsPage />} />
-										<Route path="/keychip" element={<KeychipPage />} />
 
 										<Route path="/chunithm/settings" element={<ChunithmSettingsPage />} />
 										<Route path="/chunithm/userbox" element={<ChunithmUserbox />} />
@@ -107,7 +102,6 @@ const app = (
 										<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
 										<Route path="/ongeki/song-leaderboard/:musicId/:chartId" element={<OngekiSongLeaderboard />} />
 										<Route path="/ongeki/rivals" element={<OngekiRivals />} />
-										<Route path="/ongeki/cards" element={<CardManagement />} />
 										<Route path="/ongeki/profile" element={<OngekiProfile />} />
 									</Route>
 								</Route>

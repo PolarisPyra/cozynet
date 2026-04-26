@@ -53,7 +53,7 @@ const AdminUserRoutes = new Hono()
 		validateJson(
 			z.object({
 				username: z.string().min(1),
-				email: z.string().email(),
+				email: z.string().email().optional(),
 				permissions: z.number().int()
 			})
 		),
@@ -69,10 +69,17 @@ const AdminUserRoutes = new Hono()
 				const body = await c.req.json()
 				const { username, email, permissions } = body
 
-				await db.execute<ResultSetHeader>(
-					"UPDATE aime_user SET username = ?, email = ?, permissions = ? WHERE id = ?",
-					[username, email, permissions, targetId]
-				)
+				if (email) {
+					await db.execute<ResultSetHeader>(
+						"UPDATE aime_user SET username = ?, email = ?, permissions = ? WHERE id = ?",
+						[username, email, permissions, targetId]
+					)
+				} else {
+					await db.execute<ResultSetHeader>(
+						"UPDATE aime_user SET username = ?, permissions = ? WHERE id = ?",
+						[username, permissions, targetId]
+					)
+				}
 
 				return c.json({ success: true })
 			} catch (error) {
@@ -127,6 +134,114 @@ const AdminUserRoutes = new Hono()
 			return c.json({ success: true })
 		} catch (error) {
 			throw rethrowWithMessage("Failed to delete user", error)
+		}
+	})
+	.get("/:id/profiles", async c => {
+		try {
+			const { userId: currentUserId, permissions: currentUserPermissions } = c.payload
+			const targetId = parseInt(c.req.param("id"))
+
+			if (!currentUserId || currentUserPermissions !== UserRole.Admin) {
+				throw new HTTPException(403)
+			}
+
+			const [chunithmProfiles] = await db.execute<RowDataPacket[]>(
+				"SELECT * FROM chuni_profile_data WHERE user = ?",
+				[targetId]
+			)
+
+			const [ongekiProfiles] = await db.execute<RowDataPacket[]>(
+				"SELECT * FROM ongeki_profile_data WHERE user = ?",
+				[targetId]
+			)
+
+			const [maimaiProfiles] = await db.execute<RowDataPacket[]>(
+				"SELECT * FROM mai2_profile_detail WHERE user = ?",
+				[targetId]
+			)
+
+			return c.json({
+				chunithm: chunithmProfiles,
+				ongeki: ongekiProfiles,
+				maimaidx: maimaiProfiles
+			})
+		} catch (error) {
+			throw rethrowWithMessage("Failed to fetch user profiles", error)
+		}
+	})
+	.put(
+		"/:id/profiles/:game/:version",
+		validateJson(z.record(z.any())),
+		async c => {
+			try {
+				const { userId: currentUserId, permissions: currentUserPermissions } = c.payload
+				const targetId = parseInt(c.req.param("id"))
+				const game = c.req.param("game")
+				const version = parseInt(c.req.param("version"))
+
+				if (!currentUserId || currentUserPermissions !== UserRole.Admin) {
+					throw new HTTPException(403)
+				}
+
+				const body = await c.req.json()
+				
+				let tableName = ""
+				if (game === "chunithm" || game === "chunithmnew") tableName = "chuni_profile_data"
+				else if (game === "ongeki") tableName = "ongeki_profile_data"
+				else if (game === "maimai" || game === "maimaidx") tableName = "mai2_profile_detail"
+				else throw new HTTPException(400, { message: "Invalid game" })
+
+				// Build dynamic update query
+				// Filter out restricted keys
+				const restrictedKeys = ["id", "user", "version"]
+				const entries = Object.entries(body).filter(([key]) => !restrictedKeys.includes(key))
+
+				if (entries.length === 0) return c.json({ success: true })
+
+				const setFields = entries.map(([key]) => `\`${key}\` = ?`).join(", ")
+				const values = entries.map(([, val]) => val)
+
+				await db.execute<ResultSetHeader>(
+					`UPDATE \`${tableName}\` SET ${setFields} WHERE user = ? AND version = ?`,
+					[...values, targetId, version]
+				)
+
+				return c.json({ success: true })
+			} catch (error) {
+				throw rethrowWithMessage("Failed to update user profile", error)
+			}
+		}
+	)
+	.post("/:id/ban", validateJson(z.object({ banned: z.boolean() })), async c => {
+		try {
+			const { userId: currentUserId, permissions: currentUserPermissions } = c.payload
+			const targetId = parseInt(c.req.param("id"))
+			const { banned } = await c.req.json()
+
+			if (!currentUserId || currentUserPermissions !== UserRole.Admin) {
+				throw new HTTPException(403)
+			}
+
+			await db.execute("UPDATE aime_card SET is_banned = ? WHERE user = ?", [banned ? 1 : 0, targetId])
+			return c.json({ success: true })
+		} catch (error) {
+			throw rethrowWithMessage("Failed to update ban status", error)
+		}
+	})
+	.post("/:id/lock", validateJson(z.object({ locked: z.boolean() })), async c => {
+		try {
+			const { userId: currentUserId, permissions: currentUserPermissions } = c.payload
+			const targetId = parseInt(c.req.param("id"))
+			const { locked } = await c.req.json()
+
+			if (!currentUserId || currentUserPermissions !== UserRole.Admin) {
+				throw new HTTPException(403)
+			}
+
+			await db.execute("UPDATE aime_card SET is_locked = ? WHERE user = ?", [locked ? 1 : 0, targetId])
+			return c.json({ success: true })
+		} catch (error) {
+			throw rethrowWithMessage("Failed to update lock status", error)
 		}
 	})
 
