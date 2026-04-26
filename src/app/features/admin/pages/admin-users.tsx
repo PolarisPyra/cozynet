@@ -24,7 +24,6 @@ import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger
@@ -443,14 +442,14 @@ const AdminUsers = () => {
 																<Pencil className="mr-2 size-4" />
 																Edit Account / Profiles
 															</DropdownMenuItem>
-															<DropdownMenuItem 
+															<DropdownMenuItem
 																onClick={() => banMutation.mutate({ id: user.id, banned: !isBanned(user.cards) })}
 																className="cursor-pointer"
 															>
 																<Ban className="mr-2 size-4" />
 																{isBanned(user.cards) ? "Unban Account" : "Ban Account"}
 															</DropdownMenuItem>
-															<DropdownMenuItem 
+															<DropdownMenuItem
 																onClick={() => lockMutation.mutate({ id: user.id, locked: !isLocked(user.cards) })}
 																className="cursor-pointer"
 															>
@@ -496,7 +495,7 @@ const AdminUsers = () => {
 							<TabsTrigger value="account" className="flex-1">Account Info</TabsTrigger>
 							<TabsTrigger value="profiles" className="flex-1">Game Profiles</TabsTrigger>
 						</TabsList>
-						
+
 						<TabsContent value="account" className="mt-4">
 							<form onSubmit={handleEditSubmit} className="space-y-4">
 								<div className="space-y-2">

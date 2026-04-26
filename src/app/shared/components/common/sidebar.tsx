@@ -12,7 +12,6 @@ import {
 	List,
 	NotepadText,
 	Pencil,
-	RectangleVertical,
 	Swords,
 	Trophy,
 	User

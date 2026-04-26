@@ -1,4 +1,4 @@
-import { Binary, Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon, Users } from "lucide-react"
+import { Binary, ChevronsUpDown, LogOut, SettingsIcon, Users } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { useIsAdmin } from "@/app/features/admin/hooks"
