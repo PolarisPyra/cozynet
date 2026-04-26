@@ -24,7 +24,7 @@ export function SystemVoice() {
 	const { mutate: equipSystemVoice } = useEquipSystemvoice()
 	const { mutate: unlockSystemVoice } = useUnlockSystemvoice()
 
-	const items = searchResults?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
 	const hasPendingSelection = pendingVoice !== null
 
 	const displayItem = useMemo(() => {

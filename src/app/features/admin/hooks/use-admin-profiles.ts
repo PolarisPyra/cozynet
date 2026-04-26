@@ -3,10 +3,17 @@ import { toast } from "sonner"
 
 import { api } from "@/app/shared/utils"
 
+export interface AdminGameProfile extends Record<string, unknown> {
+	version: number
+	userName?: string
+	playerRating?: number
+	level?: number
+}
+
 export interface AdminUserProfiles {
-	chunithm: any[]
-	ongeki: any[]
-	maimaidx: any[]
+	chunithm: AdminGameProfile[]
+	ongeki: AdminGameProfile[]
+	maimaidx: AdminGameProfile[]
 }
 
 export function useAdminUserProfiles(userId: number | null) {
@@ -37,7 +44,7 @@ export function useUpdateAdminUserProfile() {
 			userId: number
 			game: string
 			version: number
-			data: any
+			data: Record<string, unknown>
 		}) => {
 			const res = await api.admin.users[":id"].profiles[":game"][":version"].$put({
 				param: {

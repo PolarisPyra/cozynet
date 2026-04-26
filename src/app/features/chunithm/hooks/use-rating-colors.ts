@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 
-import { getChunithmColorName, getChunithmRatingStyle, getChunithmTier } from "@/app/features/chunithm/components/rating-colors"
+import { getChunithmColorName, getChunithmRatingStyle, getChunithmTier } from "@/app/features/chunithm/utils/rating"
 
 import { useChunithmVersion } from "./use-version"
 

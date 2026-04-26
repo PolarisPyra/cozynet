@@ -1,12 +1,10 @@
-import { memo, useMemo, useState } from "react"
+import { memo } from "react"
 
-import { Star, Users } from "lucide-react"
+import { Star } from "lucide-react"
 
 import { ChunithmAchievementBadges } from "@/app/features/chunithm/components/achievement-badges"
-import { useScoreLeaderboard } from "@/app/features/chunithm/hooks/use-score-leaderboard"
 import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
-import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
@@ -15,16 +13,13 @@ import { cn } from "@/app/shared/utils"
 import {
 	calculateChunithmRating,
 	chunithmBadgeColors,
-	convertRomVersionToVersion,
-	formatSqlDateToLocalParts,
-	getChunithmGrade,
-	levelToStars
+	getChunithmGrade
 } from "@/app/shared/utils/chunithm"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
-import { convertChunithmScoreRating } from "@/app/shared/utils/profile-rating-utils"
-import { getChunithmLogo } from "@/app/shared/utils/version-logos"
+import { ScoreCardLeaderboardPreview } from "@/app/shared/components/common/score-card-leaderboard-preview"
 
+import { useChunithmScoreCard } from "../hooks/use-chunithm-score-card"
 import { ChunithmRatingColors } from "./rating-colors"
 
 interface VersionLogoBadgeProps {
@@ -65,61 +60,21 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 	version,
 	currentUserId
 }: ChunithmScoreInfoCardProps) {
-	const [isDialogOpen, setIsDialogOpen] = useState(false)
-
-	const { scoreVersionId, scoreVersionLogo, songVersionLogo, ratingValue, isWorldsEnd, starCount } = useMemo(() => {
-		const versionId = convertRomVersionToVersion(score.romVersion)
-		const storedRating = convertChunithmScoreRating(score.playerRating)
-
-		return {
-			scoreVersionId: versionId,
-			scoreVersionLogo: getChunithmLogo.getLogo(versionId),
-			songVersionLogo: getChunithmLogo.getLogo(score.songVersion),
-			ratingValue: storedRating,
-			isWorldsEnd: score.chartId === 5,
-			starCount: levelToStars(score.level)
-		}
-	}, [score.romVersion, score.songVersion, score.playerRating, score.chartId, score.level])
-
-	const { data: previewLeaderboardData, isLoading: isLoadingPreviewLeaderboard } = useScoreLeaderboard(
-		score.musicId ?? 0,
-		score.chartId ?? 0,
-		4
-	)
-
-	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
-		score.musicId ?? 0,
-		score.chartId ?? 0,
-		100,
-		isDialogOpen
-	)
-
-	const topFourEntries = previewLeaderboardData?.leaderboard ?? []
-	const playDateParts = formatSqlDateToLocalParts(score.userPlayDate)
-
-	const metaBadges = [
-		...(score.userPlayDate
-			? [
-				{ key: "date", label: playDateParts.date },
-				{ key: "time", label: playDateParts.time }
-			]
-			: []),
-
-		...(score.isNewRecord === 1
-			? [{ key: "new-record", label: "New Record" }]
-			: []),
-
-		...(score.skillName
-			? [{ key: "skill", label: score.skillName }]
-			: [])
-	]
-
-	const getRankRingClass = (rank: number) => {
-		if (rank === 1) return "border-foreground/45"
-		if (rank === 2) return "border-foreground/30"
-		if (rank === 3) return "border-foreground/20"
-		return "border-background"
-	}
+	const {
+		isDialogOpen,
+		setIsDialogOpen,
+		scoreVersionId,
+		scoreVersionLogo,
+		songVersionLogo,
+		ratingValue,
+		isWorldsEnd,
+		starCount,
+		leaderboardData,
+		isLoadingLeaderboard,
+		isLoadingPreviewLeaderboard,
+		topFourEntries,
+		metaBadges
+	} = useChunithmScoreCard({ score })
 
 	return (
 		<div
@@ -164,7 +119,6 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 								formatLevel(score.level)
 							)}
 						</Badge>
-
 					</div>
 				</div>
 
@@ -258,51 +212,11 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 
 			<Separator className="my-2" />
 
-			<div className="flex items-center justify-end gap-2">
-				<span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">Top 4</span>
-
-				<div className="flex -space-x-2">
-					{isLoadingPreviewLeaderboard ? (
-						Array.from({ length: 4 }, (_, i) => (
-							<div key={i} className="bg-muted h-6 w-6 rounded-full border-2 border-background" />
-						))
-					) : topFourEntries.length > 0 ? (
-						topFourEntries.slice(0, 4).map((entry, index) => (
-							<Tooltip key={`${entry.userId}-${index}`}>
-								<TooltipTrigger asChild>
-									<Avatar
-										className={cn("h-6 w-6 border-2", getRankRingClass(index + 1))}
-										style={{ zIndex: 20 - index }}
-									>
-										<AvatarFallback className="text-[10px] font-semibold">
-											{entry.username.charAt(0).toUpperCase() || "?"}
-										</AvatarFallback>
-									</Avatar>
-								</TooltipTrigger>
-
-								<TooltipContent>
-									<p>
-										{entry.username} · #{index + 1}
-									</p>
-								</TooltipContent>
-							</Tooltip>
-						))
-					) : (
-						<div className="text-muted-foreground flex items-center gap-1 text-xs">
-							<Users className="h-3.5 w-3.5" />
-							<span>No leaderboard data yet</span>
-						</div>
-					)}
-				</div>
-
-				<button
-					type="button"
-					className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-semibold transition-colors"
-					onClick={() => setIsDialogOpen(true)}
-				>
-					... View all
-				</button>
-			</div>
+			<ScoreCardLeaderboardPreview
+				topFourEntries={topFourEntries}
+				isLoading={isLoadingPreviewLeaderboard}
+				onViewAll={() => setIsDialogOpen(true)}
+			/>
 
 			{isDialogOpen && (
 				<Leaderboard

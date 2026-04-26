@@ -41,8 +41,8 @@ export function Trophy() {
 	const { mutate: equipTrophy } = useEquipTrophy()
 	const { mutate: unlockTrophy } = useUnlockTrophy()
 
-	const items = searchResults?.items ?? []
-	const allItems = allItemsData?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
+	const allItems = useMemo(() => allItemsData?.items ?? [], [allItemsData])
 	const hasPendingChanges = Object.keys(pendingTrophy).length > 0
 
 	const displayTrophies = useMemo(() => {

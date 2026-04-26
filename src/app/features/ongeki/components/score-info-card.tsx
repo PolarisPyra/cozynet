@@ -1,17 +1,9 @@
-import { useMemo, useState } from "react"
-
-import { Users } from "lucide-react"
-
 import { OngekiAchievementBadges } from "@/app/features/ongeki/components/achievement-badges"
-import { useScoreLeaderboard } from "@/app/features/ongeki/hooks/use-score-leaderboard"
-import { useOngekiScoreRating } from "@/app/features/ongeki/hooks/use-score-rating"
 import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
-import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Separator } from "@/app/shared/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
-import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { OngekiPlaylog } from "@/app/shared/types"
 import { cn } from "@/app/shared/utils"
 import { CDN } from "@/app/shared/utils/constants"
@@ -19,12 +11,12 @@ import { formatLevel } from "@/app/shared/utils/format-level"
 import {
 	calculateOngekiGekForceRating,
 	calculateOngekiRating,
-	formatOngekiScorePlaylogDate,
 	ongekiBadgeColors
 } from "@/app/shared/utils/ongeki"
-import { getOngekiLogo } from "@/app/shared/utils/version-logos"
 
+import { useOngekiScoreCard } from "../hooks/use-ongeki-score-card"
 import { OngekiRatingColors } from "./rating-colors"
+import { ScoreCardLeaderboardPreview } from "@/app/shared/components/common/score-card-leaderboard-preview"
 
 interface VersionLogoBadgeProps {
 	logoUrl: string | null
@@ -49,11 +41,7 @@ const VersionLogoBadge = ({ logoUrl, tooltip, alt }: VersionLogoBadgeProps) => {
 	)
 }
 
-interface PlatinumStarsProps {
-	count: number
-}
-
-const PlatinumStars = ({ count }: PlatinumStarsProps) => {
+const PlatinumStars = ({ count }: { count: number }) => {
 	const safeCount = Math.max(0, Math.min(5, count || 0))
 	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`
 
@@ -89,58 +77,19 @@ export function OngekiScoreInfoCard({
 	className = "",
 	ongekiVersion
 }: OngekiScoreInfoCardProps) {
-	const [isDialogOpen, setIsDialogOpen] = useState(false)
-	const currentUser = useCurrentUser()
-
-	const { calculatedRating, isRefresh } = useOngekiScoreRating({
-		playerRating: score.playerRating,
-		techScore: score.techScore,
-		level: score.level,
-		isFullCombo: score.isFullCombo,
-		isAllBreak: score.isAllBreak,
-		isFullBell: score.isFullBell,
-		scoreVersion: score.scoreVersion,
-		version: ongekiVersion,
-		platinumScoreStar: score.platinumScoreStar
-	})
-
-	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
-		score.musicId ?? 0,
-		score.chartId ?? 0,
-		100,
-		isDialogOpen
-	)
-
-	const { data: previewLeaderboardData, isLoading: isLoadingPreviewLeaderboard } = useScoreLeaderboard(
-		score.musicId ?? 0,
-		score.chartId ?? 0,
-		4
-	)
-
-	const topFourEntries = previewLeaderboardData?.leaderboard ?? []
-	const playDateParts = formatOngekiScorePlaylogDate(score.userPlayDate)
-
-	const songVersionLogo = useMemo(() => {
-		return getOngekiLogo.getLogo(score.earliest_version)
-	}, [score.earliest_version])
-
-	const metaBadges = [
-		...(score.userPlayDate
-			? [
-				{ key: "date", label: playDateParts.date },
-				{ key: "time", label: playDateParts.time }
-			]
-			: []),
-		...(score.isTechNewRecord === 1 ? [{ key: "new-score-record", label: "New Score Record" }] : []),
-		...(score.isBattleNewRecord === 1 ? [{ key: "new-battle-record", label: "New Battle Record" }] : [])
-	]
-
-	const getRankRingClass = (rank: number) => {
-		if (rank === 1) return "border-foreground/45"
-		if (rank === 2) return "border-foreground/30"
-		if (rank === 3) return "border-foreground/20"
-		return "border-background"
-	}
+	const {
+		isDialogOpen,
+		setIsDialogOpen,
+		currentUser,
+		calculatedRating,
+		isRefresh,
+		leaderboardData,
+		isLoadingLeaderboard,
+		isLoadingPreviewLeaderboard,
+		topFourEntries,
+		songVersionLogo,
+		metaBadges
+	} = useOngekiScoreCard({ score, ongekiVersion })
 
 	return (
 		<div
@@ -266,51 +215,11 @@ export function OngekiScoreInfoCard({
 
 			<Separator className="my-2" />
 
-			<div className="flex items-center justify-end gap-2">
-				<span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">Top 4</span>
-
-				<div className="flex -space-x-2">
-					{isLoadingPreviewLeaderboard ? (
-						Array.from({ length: 4 }, (_, i) => (
-							<div key={i} className="bg-muted h-6 w-6 rounded-full border-2 border-background" />
-						))
-					) : topFourEntries.length > 0 ? (
-						topFourEntries.slice(0, 4).map((entry, index) => (
-							<Tooltip key={`${entry.userId}-${index}`}>
-								<TooltipTrigger asChild>
-									<Avatar
-										className={cn("h-6 w-6 border-2", getRankRingClass(index + 1))}
-										style={{ zIndex: 20 - index }}
-									>
-										<AvatarFallback className="text-[10px] font-semibold">
-											{entry.username.charAt(0).toUpperCase() || "?"}
-										</AvatarFallback>
-									</Avatar>
-								</TooltipTrigger>
-
-								<TooltipContent>
-									<p>
-										{entry.username} · #{index + 1}
-									</p>
-								</TooltipContent>
-							</Tooltip>
-						))
-					) : (
-						<div className="text-muted-foreground flex items-center gap-1 text-xs">
-							<Users className="h-3.5 w-3.5" />
-							<span>No leaderboard data yet</span>
-						</div>
-					)}
-				</div>
-
-				<button
-					type="button"
-					className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-semibold transition-colors"
-					onClick={() => setIsDialogOpen(true)}
-				>
-					... View all
-				</button>
-			</div>
+			<ScoreCardLeaderboardPreview
+				topFourEntries={topFourEntries}
+				isLoading={isLoadingPreviewLeaderboard}
+				onViewAll={() => setIsDialogOpen(true)}
+			/>
 
 			<Leaderboard
 				open={isDialogOpen}

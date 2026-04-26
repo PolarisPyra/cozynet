@@ -14,7 +14,7 @@ export function AvatarPreview() {
 	const { pendingSelections } = useAvatarPending()
 	// Fetch all items to resolve pending IDs
 	const { data: allItemsData } = useSearchAvatarItems({ category: null, locked: null })
-	const allItems = allItemsData?.items ?? []
+	const allItems = useMemo(() => allItemsData?.items ?? [], [allItemsData])
 
 	// Create optimistic avatar by merging currentAvatar with pending selections
 	const optimisticAvatar = useMemo(() => {

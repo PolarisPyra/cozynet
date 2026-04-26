@@ -18,7 +18,7 @@ export function Stage() {
 	const { mutate: equipStage } = useEquipStage()
 	const { mutate: unlockStage } = useUnlockStage()
 
-	const items = searchResults?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
 	const hasPendingSelection = pendingStage !== null
 
 	const displayItem = useMemo(() => {

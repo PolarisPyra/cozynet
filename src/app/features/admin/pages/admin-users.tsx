@@ -88,7 +88,7 @@ const AdminUsers = () => {
 		}
 	})
 
-	const allUsers = (data?.users as unknown as UserWithDetails[]) || []
+	const allUsers = useMemo(() => (data?.users as unknown as UserWithDetails[]) || [], [data])
 
 	const filteredUsers = useMemo(() => {
 		if (!searchQuery.trim()) return allUsers
@@ -203,8 +203,8 @@ const AdminUsers = () => {
 		})
 	}
 
-	const isBanned = (cards: any[]) => cards.length > 0 && cards.some(c => c.is_banned)
-	const isLocked = (cards: any[]) => cards.length > 0 && cards.some(c => c.is_locked)
+	const isBanned = (cards: UserWithDetails['cards']) => cards.length > 0 && cards.some(c => c.is_banned)
+	const isLocked = (cards: UserWithDetails['cards']) => cards.length > 0 && cards.some(c => c.is_locked)
 
 	return (
 		<Container>

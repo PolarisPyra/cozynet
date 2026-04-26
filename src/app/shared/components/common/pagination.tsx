@@ -10,13 +10,22 @@ interface PaginationProps {
 
 export const Pagination = memo(function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 	useEffect(() => {
+		let lastTime = 0
+		const throttleMs = 150
+
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
 
-			if (e.key === "ArrowLeft" && page > 1) {
-				onPageChange(page - 1)
-			} else if (e.key === "ArrowRight" && page < totalPages) {
-				onPageChange(page + 1)
+			if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+				const now = Date.now()
+				if (now - lastTime < throttleMs) return
+				lastTime = now
+
+				if (e.key === "ArrowLeft" && page > 1) {
+					onPageChange(page - 1)
+				} else if (e.key === "ArrowRight" && page < totalPages) {
+					onPageChange(page + 1)
+				}
 			}
 		}
 

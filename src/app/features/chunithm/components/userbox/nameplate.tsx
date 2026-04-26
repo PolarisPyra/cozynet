@@ -24,7 +24,7 @@ export function Nameplate() {
 	const { mutate: equipNameplate } = useEquipNameplate()
 	const { mutate: unlockNameplate } = useUnlockNameplate()
 
-	const items = searchResults?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
 	const hasPendingSelection = pendingNameplate !== null
 
 	const displayItem = useMemo(() => {

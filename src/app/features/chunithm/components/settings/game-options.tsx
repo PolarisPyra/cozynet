@@ -67,7 +67,7 @@ const ChunithmGameOptions = () => {
 					const importedOptions = JSON.parse(e.target?.result as string)
 					setFormData(importedOptions)
 					toast.success("Options imported successfully!")
-				} catch (error) {
+				} catch {
 					toast.error("Failed to parse imported file")
 				}
 			}

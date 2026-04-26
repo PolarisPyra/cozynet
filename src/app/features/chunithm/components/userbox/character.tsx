@@ -24,7 +24,7 @@ export function Character() {
 	const { mutate: equipCharacter } = useEquipCharacter()
 	const { mutate: unlockCharacter } = useUnlockCharacter()
 
-	const items = searchResults?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
 	const hasPendingSelection = pendingCharacter !== null
 
 	const displayItem = useMemo(() => {

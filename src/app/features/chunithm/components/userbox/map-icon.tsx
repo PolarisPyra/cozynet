@@ -24,7 +24,7 @@ export function MapIcon() {
 	const { mutate: equipMapIcon } = useEquipMapicon()
 	const { mutate: unlockMapIcon } = useUnlockMapicon()
 
-	const items = searchResults?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
 	const hasPendingSelection = pendingMapIcon !== null
 
 	const displayItem = useMemo(() => {

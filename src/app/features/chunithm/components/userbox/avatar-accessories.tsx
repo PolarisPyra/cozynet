@@ -52,8 +52,8 @@ export function AvatarAccessories() {
 	const { mutate: equipAvatarItem } = useEquipAvatarItem()
 	const { mutate: unlockAvatarItem } = useUnlockAvatarItem()
 
-	const items = searchResults?.items ?? []
-	const allItems = allItemsData?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
+	const allItems = useMemo(() => allItemsData?.items ?? [], [allItemsData])
 	const hasPendingSelections = Object.keys(pendingSelections).length > 0
 
 	// Get current item, preferring pending selection over current avatar

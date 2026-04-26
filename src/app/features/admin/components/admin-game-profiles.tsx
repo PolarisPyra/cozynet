@@ -2,7 +2,7 @@ import { useState, useMemo } from "react"
 
 import { Gamepad2, Save, X, Search } from "lucide-react"
 
-import { useAdminUserProfiles, useUpdateAdminUserProfile } from "@/app/features/admin/hooks/use-admin-profiles"
+import { useAdminUserProfiles, useUpdateAdminUserProfile, type AdminGameProfile } from "@/app/features/admin/hooks/use-admin-profiles"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Button } from "@/app/shared/components/ui/button"
@@ -29,9 +29,9 @@ function ProfileEditor({
 	onSave,
 	onCancel
 }: {
-	profile: Record<string, any>
+	profile: AdminGameProfile
 	versions: Record<number, string>
-	onSave: (data: Record<string, any>) => void
+	onSave: (data: AdminGameProfile) => void
 	onCancel: () => void
 }) {
 	const [formData, setFormData] = useState({ ...profile })
@@ -88,7 +88,7 @@ function ProfileEditor({
 								</Label>
 								<Input
 									type={isNumber ? "number" : "text"}
-									value={value ?? ""}
+									value={(value as string | number) ?? ""}
 									onChange={e => handleChange(key, e.target.value)}
 									className="h-8 text-xs"
 								/>
@@ -150,7 +150,7 @@ export function AdminGameProfiles({ userId }: Props) {
 							</div>
 
 							<div className="space-y-3">
-								{profiles.map((profile: any) => {
+								{profiles.map((profile: AdminGameProfile) => {
 									const isEditing = editingItem?.game === game.key && editingItem?.version === profile.version
 
 									if (isEditing) {
