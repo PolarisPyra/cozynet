@@ -79,10 +79,10 @@ const MENU_CONFIG: MenuItem[] = [
 					{ name: "Deck Builder", href: "/ongeki/cards", icon: LayoutGrid },
 					{ name: "Userbox", href: "/ongeki/userbox", icon: Pencil },
 					{ name: "Rivals", href: "/ongeki/rivals", icon: Swords },
-					{ name: "Multiplayer", href: "/ongeki/multiplayer", icon: Users },
 					{ name: "Leaderboard", href: "/ongeki/leaderboard", icon: Trophy },
 					{ name: "All Songs", href: "/ongeki/allsongs", icon: BoomBox },
 					{ name: "Rating Frame", href: "/ongeki/rating", icon: List },
+					{ name: "Multiplayer", href: "/ongeki/multiplayer", icon: Users },
 					{ name: "Profile", href: "/ongeki/profile", icon: User }
 				]
 			}
