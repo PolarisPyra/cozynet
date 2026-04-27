@@ -11,7 +11,7 @@ import {
 	useUnlockNameplate
 } from "@/app/features/chunithm/hooks/userbox/nameplate"
 import { Button } from "@/app/shared/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+
 import { Tabs, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"

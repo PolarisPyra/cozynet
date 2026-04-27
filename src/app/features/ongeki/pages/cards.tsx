@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Filter, LayoutGrid, Search, Sparkles } from "lucide-react"
+import { LayoutGrid, Search, Sparkles } from "lucide-react"
 
 import { CardGallery } from "@/app/features/ongeki/components/cards/card-gallery"
 import { DeckBuilderDock } from "@/app/features/ongeki/components/cards/deck-builder-dock"

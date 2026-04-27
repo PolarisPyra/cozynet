@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 
-import { Upload } from "lucide-react"
+
 
 import { OngekiKamaiImportDialog } from "@/app/features/ongeki/components/kamai-import-dialog"
 import { OngekiScoreGrid } from "@/app/features/ongeki/components/scores/score-grid"
@@ -11,7 +11,7 @@ import Header from "@/app/shared/components/common/header"
 import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
-import { Button } from "@/app/shared/components/ui/button"
+
 import { DensityToggle } from "@/app/shared/components/common/density-toggle"
 import { useScorePageState } from "@/app/shared/hooks/use-score-page-state"
 import { Body, Container } from "@/app/shared/pages/layout/layout"

@@ -2,7 +2,7 @@ import { Plus, Save, Trash2 } from "lucide-react"
 import { useMemo } from "react"
 
 import { Button } from "@/app/shared/components/ui/button"
-import { Card, CardContent } from "@/app/shared/components/ui/card"
+
 import { CDN } from "@/app/shared/utils/constants"
 import { cn } from "@/app/shared/utils"
 import type { DB } from "@/app/shared/types"
