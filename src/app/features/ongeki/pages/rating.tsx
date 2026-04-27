@@ -67,7 +67,7 @@ export function OngekiRatingFrames() {
 	const isPScoreMode = activeTab === "pscore"
 	const isRefresh = (version ?? 8) >= 8
 
-	const { getActiveData, getActiveLoading, playerRatingValue, highestRatingValue, ratingDecimals } = useOngekiRatingData(version || 0, activeTab)
+	const { getActiveData, getActiveLoading } = useOngekiRatingData(version || 0, activeTab)
 
 	const data = getActiveData(activeTab)
 	const isLoading = getActiveLoading(activeTab)
