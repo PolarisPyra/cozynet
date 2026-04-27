@@ -13,6 +13,7 @@ import {
 } from "@/app/features/chunithm/hooks/userbox/avatar"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
@@ -52,8 +53,8 @@ export function AvatarAccessories() {
 	const { mutate: equipAvatarItem } = useEquipAvatarItem()
 	const { mutate: unlockAvatarItem } = useUnlockAvatarItem()
 
-	const items = searchResults?.items ?? []
-	const allItems = allItemsData?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
+	const allItems = useMemo(() => allItemsData?.items ?? [], [allItemsData])
 	const hasPendingSelections = Object.keys(pendingSelections).length > 0
 
 	// Get current item, preferring pending selection over current avatar
@@ -142,67 +143,64 @@ export function AvatarAccessories() {
 	}
 
 	return (
-		<>
-			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
-				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-3 py-2">
-					<span className="text-primary text-sm font-semibold">Avatar</span>
-				</div>
-				<div className="flex flex-1 flex-col p-2">
-					{/* All Avatar Slots */}
-					<div className="mb-2 grid grid-cols-3 gap-2">
-						{SLOT_ORDER.map(slot => {
-							// Get the item to display - prefer pending selection, then current avatar
-							const pendingId = pendingSelections[slot]
-							const displayItem = pendingId
-								? allItems.find(item => item.avatarAccessoryId === pendingId)
-								: currentAvatar?.[slot]
-							const avatarPart = displayItem || currentAvatar?.[slot]
+		<div className="flex flex-col gap-6">
+			<div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-4">
+				{SLOT_ORDER.map(slot => {
+					// Get the item to display - prefer pending selection, then current avatar
+					const pendingId = pendingSelections[slot]
+					const displayItem = pendingId
+						? allItems.find(item => item.avatarAccessoryId === pendingId)
+						: currentAvatar?.[slot]
+					const avatarPart = displayItem || currentAvatar?.[slot]
 
-							return (
-								<div
-									key={slot}
-									className="flex cursor-pointer flex-col items-center gap-1 transition-opacity hover:opacity-80"
-									onClick={() => {
-										setSelectedSlot(slot)
-										setIsDialogOpen(true)
-									}}
-								>
-									<div className="text-muted-foreground text-xs">{SLOT_LABELS[slot]}</div>
-									{avatarPart?.imagePath && (slot === AvatarSlot.SKIN || avatarPart?.label !== "ノーマル") ? (
-										<img
-											src={
-												avatarPart.imagePath.startsWith("http")
-													? avatarPart.imagePath
-													: `${CDN}/chunithm/avatar/${avatarPart.imagePath}`
-											}
-											alt={SLOT_LABELS[slot]}
-											className="h-14 w-14 rounded-sm object-cover"
-										/>
-									) : (
-										<div className="bg-muted flex h-14 w-14 items-center justify-center rounded-sm">
-											<Shirt className="h-5 w-5 opacity-30" />
-										</div>
-									)}
-								</div>
-							)
-						})}
-					</div>
-
-					<div className="mt-auto flex gap-2">
-						<Button size="sm" variant="outline" onClick={() => setIsDialogOpen(true)} className="flex-1">
-							Change
-						</Button>
-						<Button
-							size="sm"
-							variant="default"
-							onClick={handleSave}
-							disabled={!hasPendingSelections}
-							className="flex-1"
+					return (
+						<div
+							key={slot}
+							className="group border-border relative flex cursor-pointer flex-col items-center gap-3 overflow-hidden rounded-xl border p-4 transition-all hover:border-primary/50"
+							onClick={() => {
+								setSelectedSlot(slot)
+								setIsDialogOpen(true)
+							}}
 						>
-							Save
-						</Button>
-					</div>
-				</div>
+							<div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary opacity-0 transition-opacity group-hover:opacity-100">
+								+
+							</div>
+							<div className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
+								{SLOT_LABELS[slot]}
+							</div>
+							<div className="relative flex h-24 w-24 items-center justify-center">
+								{avatarPart?.imagePath && (slot === AvatarSlot.SKIN || avatarPart?.label !== "ノーマル") ? (
+									<img
+										src={
+											avatarPart.imagePath.startsWith("http")
+												? avatarPart.imagePath
+												: `${CDN}/chunithm/avatar/${avatarPart.imagePath}`
+										}
+										alt={SLOT_LABELS[slot]}
+										className="h-full w-full object-contain p-2"
+									/>
+								) : (
+									<Shirt className="h-10 w-10 opacity-20 transition-opacity group-hover:opacity-40" />
+								)}
+							</div>
+							<div className="mt-6 w-full truncate text-center text-xs font-semibold">
+								{avatarPart?.label || "Empty"}
+							</div>
+						</div>
+					)
+				})}
+			</div>
+
+			<div className="flex justify-end gap-3 border-t pt-6">
+				<Button
+					size="lg"
+					variant="default"
+					onClick={handleSave}
+					disabled={!hasPendingSelections}
+					className="px-8"
+				>
+					Save Changes
+				</Button>
 			</div>
 
 			<ItemSelectionDialog
@@ -225,43 +223,35 @@ export function AvatarAccessories() {
 				onUnlock={handleUnlock}
 				imageClassName="h-16 w-16"
 				headerControls={
-					<div className="flex flex-col gap-3">
-						<div className="flex gap-2">
-							<div className="flex-1">
-								<Select value={selectedSlot} onValueChange={v => setSelectedSlot(v as AvatarSlot | "all")}>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Select category" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="all">All Categories</SelectItem>
-										{Object.entries(SLOT_LABELS).map(([value, label]) => (
-											<SelectItem key={value} value={value}>
-												{label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-							<div className="flex-1">
-								<Select
-									value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
-									onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
-								>
-									<SelectTrigger className="w-full">
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="all">All</SelectItem>
-										<SelectItem value="unlocked">Unlocked</SelectItem>
-										<SelectItem value="locked">Locked</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-						</div>
+					<div className="flex w-full items-center gap-2 sm:w-auto">
+						<Select value={selectedSlot} onValueChange={v => setSelectedSlot(v as AvatarSlot | "all")}>
+							<SelectTrigger className="w-[140px] sm:w-[160px]">
+								<SelectValue placeholder="Select category" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All Categories</SelectItem>
+								{Object.entries(SLOT_LABELS).map(([value, label]) => (
+									<SelectItem key={value} value={value}>
+										{label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+
+						<Tabs
+							value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
+							onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
+						>
+							<TabsList>
+								<TabsTrigger value="all">All</TabsTrigger>
+								<TabsTrigger value="unlocked">Unlocked</TabsTrigger>
+								<TabsTrigger value="locked">Locked</TabsTrigger>
+							</TabsList>
+						</Tabs>
 					</div>
 				}
 			/>
-		</>
+		</div>
 	)
 }
 

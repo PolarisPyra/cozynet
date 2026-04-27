@@ -9,6 +9,8 @@ import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
 
+import { AdminUserRoutes } from "./admin-users"
+
 const AdminRoutes = new Hono()
 	.get("/roles", async c => {
 		try {
@@ -110,5 +112,6 @@ const AdminRoutes = new Hono()
 			}
 		}
 	)
+	.route("/users", AdminUserRoutes)
 
 export { AdminRoutes }

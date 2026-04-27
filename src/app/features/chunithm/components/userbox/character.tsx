@@ -3,21 +3,20 @@ import { useMemo, useState } from "react"
 import { User } from "lucide-react"
 import { toast } from "sonner"
 
+import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import {
 	useCurrentCharacter,
 	useEquipCharacter,
 	useSearchCharacters,
 	useUnlockCharacter
 } from "@/app/features/chunithm/hooks/userbox/character"
-import { useUserboxPending } from "@/app/features/chunithm/components/userbox/userbox-pending-context"
 import { Button } from "@/app/shared/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
 export function Character() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
-	const [imageError, setImageError] = useState(false)
 	const [lockedFilter, setLockedFilter] = useState<boolean | null>(null)
 	const { character: pendingCharacter, setCharacter } = useUserboxPending()
 	const { data: currentCharacter } = useCurrentCharacter()
@@ -25,7 +24,7 @@ export function Character() {
 	const { mutate: equipCharacter } = useEquipCharacter()
 	const { mutate: unlockCharacter } = useUnlockCharacter()
 
-	const items = searchResults?.items ?? []
+	const items = useMemo(() => searchResults?.items ?? [], [searchResults])
 	const hasPendingSelection = pendingCharacter !== null
 
 	const displayItem = useMemo(() => {
@@ -38,7 +37,6 @@ export function Character() {
 	const handleSelect = (id: number) => {
 		setCharacter(id)
 		setIsDialogOpen(false)
-		setImageError(false)
 	}
 
 	const handleSave = () => {
@@ -50,7 +48,6 @@ export function Character() {
 		equipCharacter(pendingCharacter, {
 			onSuccess: () => {
 				toast.success("Character equipped successfully!")
-				setImageError(false)
 				setCharacter(null)
 			},
 			onError: () => toast.error("Failed to equip character")
@@ -71,48 +68,45 @@ export function Character() {
 	}
 
 	return (
-		<>
-			<div className="bg-card border-border flex flex-col overflow-hidden rounded-sm border">
-				<div className="bg-muted/50 border-border flex items-center justify-center border-b px-3 py-2">
-					<span className="text-primary text-sm font-semibold">Character</span>
-				</div>
-				<div className="flex flex-1 flex-col p-2 text-center">
-					<div className="bg-muted/50 overflow-hidden rounded-sm px-2 py-1 mb-1">
-						<div className="marquee-container">
-							<span className="marquee-text text-primary text-xs whitespace-nowrap">
-								{displayItem?.label || "None"}
-							</span>
-						</div>
+		<div className="flex flex-col gap-8">
+			<div className="flex justify-center">
+				<div
+					className="group border-border relative flex w-full max-w-sm cursor-pointer flex-col items-center gap-3 overflow-hidden rounded-xl border p-4 transition-all hover:border-primary/50"
+					onClick={() => setIsDialogOpen(true)}
+				>
+					<div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary opacity-0 transition-opacity group-hover:opacity-100">
+						+
 					</div>
-					<div className="mb-1 flex flex-1 items-center justify-center">
-						{displayItem?.imagePath && !imageError ? (
+					<div className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+						Current Character
+					</div>
+					<div className="relative flex aspect-square w-full max-w-[256px] items-center justify-center overflow-hidden rounded-xl">
+						{displayItem?.imagePath ? (
 							<img
 								src={`${CDN}/chunithm/characters/${displayItem.imagePath}`}
 								alt="Character"
-								className="h-32 w-32 rounded-sm object-cover"
-								onError={() => setImageError(true)}
+								className="h-full w-full object-contain p-2"
 							/>
 						) : (
-							<div className="bg-muted flex h-32 w-32 items-center justify-center rounded-sm">
-								<User className="h-10 w-10 opacity-30" />
-							</div>
+							<User className="h-12 w-12 opacity-20" />
 						)}
 					</div>
-					<div className="mt-auto flex gap-2">
-						<Button size="sm" variant="outline" onClick={() => setIsDialogOpen(true)} className="flex-1">
-							Change
-						</Button>
-						<Button
-							size="sm"
-							variant="default"
-							onClick={handleSave}
-							disabled={!hasPendingSelection}
-							className="flex-1"
-						>
-							Save
-						</Button>
+					<div className="mt-8 w-full truncate pb-2 text-center text-xs font-semibold">
+						{displayItem?.label || "None"}
 					</div>
 				</div>
+			</div>
+
+			<div className="flex justify-end gap-3 border-t pt-6">
+				<Button
+					size="lg"
+					variant="default"
+					onClick={handleSave}
+					disabled={!hasPendingSelection}
+					className="px-8"
+				>
+					Save Changes
+				</Button>
 			</div>
 
 			<ItemSelectionDialog
@@ -128,23 +122,20 @@ export function Character() {
 				currentItemId={displayItem?.characterId}
 				onSelect={handleEquip}
 				onUnlock={handleUnlock}
-				imageClassName="h-20 w-20"
+				imageClassName="h-32 w-32"
 				headerControls={
-					<Select
+					<Tabs
 						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
 						onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
 					>
-						<SelectTrigger className="w-full">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">All</SelectItem>
-							<SelectItem value="unlocked">Unlocked</SelectItem>
-							<SelectItem value="locked">Locked</SelectItem>
-						</SelectContent>
-					</Select>
+						<TabsList>
+							<TabsTrigger value="all">All</TabsTrigger>
+							<TabsTrigger value="unlocked">Unlocked</TabsTrigger>
+							<TabsTrigger value="locked">Locked</TabsTrigger>
+						</TabsList>
+					</Tabs>
 				}
 			/>
-		</>
+		</div>
 	)
 }

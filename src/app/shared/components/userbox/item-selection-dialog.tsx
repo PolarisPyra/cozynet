@@ -89,19 +89,25 @@ export function ItemSelectionDialog({
 					<DialogTitle>{title}</DialogTitle>
 				</DialogHeader>
 
-				{/* Header Controls (e.g., slot selector) */}
-				{headerControls && <div className="border-border border-b pb-3">{headerControls}</div>}
+				<div className="border-border flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+					{/* Search */}
+					<div className="relative w-full sm:max-w-xs">
+						<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+						<Input
+							type="text"
+							placeholder="Search..."
+							value={searchQuery}
+							onChange={e => setSearchQuery(e.target.value)}
+							className="bg-secondary/30 border-transparent pl-9 focus:border-primary"
+						/>
+					</div>
 
-				{/* Search */}
-				<div className="relative">
-					<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-					<Input
-						type="text"
-						placeholder="Search..."
-						value={searchQuery}
-						onChange={e => setSearchQuery(e.target.value)}
-						className="pl-9"
-					/>
+					{/* Header Controls (Filters) */}
+					{headerControls && (
+						<div className="flex w-full items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
+							{headerControls}
+						</div>
+					)}
 				</div>
 
 				{/* Items Grid */}
@@ -111,23 +117,22 @@ export function ItemSelectionDialog({
 							<div
 								key={item.id}
 								className={cn(
-									"bg-card flex h-[160px] flex-col rounded-sm border-2 p-2 text-center sm:h-[180px] sm:p-3",
-									selectedId === item.id ? "border-primary" : "border-border",
-									item.locked && !onUnlock && "cursor-not-allowed opacity-60"
+									"bg-card flex h-[160px] flex-col rounded-sm border-2 p-2 text-center sm:h-[180px] sm:p-3 transition-all",
+									selectedId === item.id ? "border-primary bg-primary/5" : "border-border",
+									item.locked && !onUnlock ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-primary/50"
 								)}
+								onClick={() => !item.locked && handleSelect(item.id)}
 							>
 								<p className="mb-1 line-clamp-2 h-7 overflow-hidden text-xs font-medium sm:mb-2 sm:h-8">{item.name}</p>
 								<div
-									onClick={() => !item.locked && handleSelect(item.id)}
 									className={cn(
-										"relative flex h-16 w-full items-center justify-center overflow-hidden sm:h-20",
-										!item.locked && "cursor-pointer"
+										"relative flex h-16 w-full items-center justify-center overflow-hidden sm:h-20"
 									)}
 								>
 									<img
 										src={item.imageUrl}
 										alt={item.name}
-										className={cn("max-h-full max-w-full rounded-sm object-contain", imageClassName)}
+										className={cn("max-h-full max-w-full object-contain", imageClassName)}
 										loading="lazy"
 										decoding="async"
 									/>
@@ -154,17 +159,22 @@ export function ItemSelectionDialog({
 					</div>
 				</div>
 
-				{hasMore && (
-					<div className="border-border shrink-0 border-t">
-						<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+				<div className="border-border mt-auto border-t p-4 sm:p-6">
+					<div className="flex flex-col gap-4">
+						{hasMore && (
+							<div className="border-border border-b pb-4">
+								<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+							</div>
+						)}
+						<Button
+							variant="default"
+							onClick={handleConfirm}
+							disabled={selectedId === null}
+							className="h-11 w-full text-base font-bold transition-all active:scale-95"
+						>
+							OK
+						</Button>
 					</div>
-				)}
-
-				{/* Action Button */}
-				<div className="mt-3 shrink-0 sm:mt-4">
-					<Button variant="secondary" onClick={handleConfirm} disabled={selectedId === null} className="w-full">
-						OK
-					</Button>
 				</div>
 			</DialogContent>
 		</Dialog>

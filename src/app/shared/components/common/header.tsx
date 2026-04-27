@@ -7,14 +7,16 @@ import { SidebarTrigger } from "@/app/shared/components/ui/sidebar"
 
 import { Search, type SearchProps } from "./search"
 import { ModeToggle } from "./theme-switcher"
+import { cn } from "../../utils/cn"
 
 type HeaderProps = {
 	title: string
+	description?: string
 	searchProps?: SearchProps
 	actions?: ReactNode
 }
 
-const Header = ({ title, searchProps, actions }: HeaderProps) => {
+const Header = ({ title, description, searchProps, actions }: HeaderProps) => {
 	const accentColor = useAccentColor()
 	const [isScrolled, setIsScrolled] = useState(false)
 
@@ -29,9 +31,8 @@ const Header = ({ title, searchProps, actions }: HeaderProps) => {
 
 	return (
 		<div
-			className={`sticky top-0 z-50 mb-4 transition-all duration-300 ${
-				isScrolled ? "shadow-lg backdrop-blur-md bg-background/80" : "bg-background"
-			}`}
+			className={`sticky top-0 z-50 mb-4 transition-all duration-300 ${isScrolled ? "shadow-lg backdrop-blur-md bg-background/80" : "bg-background"
+				}`}
 		>
 			<style>{`
 				[data-sidebar="trigger"] svg {
@@ -40,19 +41,26 @@ const Header = ({ title, searchProps, actions }: HeaderProps) => {
 			`}</style>
 			<Card className="w-full gap-0 rounded-none border-b border-none bg-transparent py-0 shadow-none">
 				<CardHeader
-					className={`flex items-center justify-between gap-2 pr-3 pl-3 transition-all duration-300 sm:pr-4 sm:pl-4 lg:pr-6 lg:pl-6 ${
-						isScrolled ? "py-1.5 sm:py-2" : "py-2 sm:py-3"
-					}`}
+					className={`flex items-center justify-between gap-2 pr-3 pl-3 transition-all duration-300 sm:pr-4 sm:pl-4 lg:pr-6 lg:pl-6 ${isScrolled ? "py-1.5 sm:py-2" : "py-2 sm:py-3"
+						}`}
 				>
 					<div className="flex min-w-0 items-center gap-2">
 						<SidebarTrigger className="bg-background hover:bg-accent hover:text-accent-foreground flex-shrink-0 cursor-pointer transition-none" />
-						<CardTitle
-							className={`hidden truncate border-none font-semibold transition-all duration-300 sm:block ${
-								isScrolled ? "text-base sm:text-lg" : "text-lg sm:text-xl"
-							}`}
-						>
-							{title}
-						</CardTitle>
+						<div className="flex flex-col min-w-0">
+							<CardTitle
+								className={cn(
+									"truncate border-none font-semibold transition-all duration-300",
+									isScrolled ? "text-base sm:text-lg" : "text-lg sm:text-xl"
+								)}
+							>
+								{title}
+							</CardTitle>
+							{description && !isScrolled && (
+								<div className="text-muted-foreground hidden truncate text-[10px] font-normal sm:block">
+									{description}
+								</div>
+							)}
+						</div>
 					</div>
 					<div className="flex flex-1 flex-shrink-0 items-center justify-end gap-2 sm:flex-initial">
 						{actions}

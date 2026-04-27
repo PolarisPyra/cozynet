@@ -10,7 +10,7 @@ import {
 	useUnlockNameplate
 } from "@/app/features/ongeki/hooks/userbox/nameplate"
 import { Button } from "@/app/shared/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
@@ -110,19 +110,16 @@ export function Nameplate() {
 				}}
 				imageClassName="h-16 w-full"
 				headerControls={
-					<Select
+					<Tabs
 						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
 						onValueChange={value => setLockedFilter(value === "all" ? null : value === "locked" ? true : false)}
 					>
-						<SelectTrigger className="w-full">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">All</SelectItem>
-							<SelectItem value="unlocked">Unlocked</SelectItem>
-							<SelectItem value="locked">Locked</SelectItem>
-						</SelectContent>
-					</Select>
+						<TabsList>
+							<TabsTrigger value="all">All</TabsTrigger>
+							<TabsTrigger value="unlocked">Unlocked</TabsTrigger>
+							<TabsTrigger value="locked">Locked</TabsTrigger>
+						</TabsList>
+					</Tabs>
 				}
 			/>
 		</>

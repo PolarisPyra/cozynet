@@ -1,4 +1,4 @@
-import { Binary, Building2, ChevronsUpDown, CreditCard, KeySquare, LogOut, SettingsIcon } from "lucide-react"
+import { Binary, ChevronsUpDown, LogOut, SettingsIcon, Users } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { useIsAdmin } from "@/app/features/admin/hooks"
@@ -82,25 +82,11 @@ export function NavUser({
 										Admin
 									</DropdownMenuLabel>
 									<DropdownMenuItem
-										onClick={() => navigate("/admin/keychip-generator")}
+										onClick={() => navigate("/admin/users")}
 										className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 									>
-										<KeySquare className="text-primary" />
-										Keychip Generator
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										onClick={() => navigate("/admin/arcade-ownership")}
-										className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-									>
-										<Building2 className="text-primary" />
-										Arcade Ownership
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										onClick={() => navigate("/admin/cards")}
-										className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-									>
-										<CreditCard className="text-primary" />
-										Card Management
+										<Users className="text-primary" />
+										User Management
 									</DropdownMenuItem>
 									<DropdownMenuItem
 										onClick={() => navigate("/admin/icf")}
@@ -113,26 +99,6 @@ export function NavUser({
 								<DropdownMenuSeparator className="bg-border" />
 							</>
 						)}
-						<DropdownMenuGroup>
-							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
-								Management
-							</DropdownMenuLabel>
-							<DropdownMenuItem
-								onClick={() => navigate("/cards")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<CreditCard className="text-primary" />
-								Edit Cards
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={() => navigate("/keychip")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<KeySquare className="text-primary" />
-								Edit keychips
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator className="bg-border" />
 						<DropdownMenuGroup>
 							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
 								Settings

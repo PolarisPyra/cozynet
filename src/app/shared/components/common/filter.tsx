@@ -50,7 +50,10 @@ export const Filter: React.FC<FilterProps> = ({
 			variant={variant}
 			size={size}
 			className={cn(
-				"border-input bg-background hover:bg-accent hover:text-accent-foreground flex items-center gap-2 hover:cursor-pointer",
+				"flex items-center gap-2 rounded-full font-medium transition-colors hover:cursor-pointer",
+				selectedFilter && selectedFilter !== "all"
+					? "bg-primary text-primary-foreground hover:bg-primary/90 border-transparent"
+					: "bg-secondary/40 hover:bg-secondary/60 border-transparent",
 				className
 			)}
 		>

@@ -7,13 +7,13 @@ import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
 import { Toaster } from "@/app/shared/components/ui/sonner"
 
 import { OngekiAllSongs } from "./app/features/ongeki/pages/allsongs"
-import { CardManagement } from "./app/features/ongeki/pages/cards"
 import OngekiLeaderboard from "./app/features/ongeki/pages/leaderboard"
 import { OngekiMultiplayer } from "./app/features/ongeki/pages/multiplayer"
 import { OngekiRatingFrames } from "./app/features/ongeki/pages/rating"
 import { OngekiRivals } from "./app/features/ongeki/pages/rivals"
 import { OngekiScorePage } from "./app/features/ongeki/pages/scores"
 import { OngekiSettingsPage } from "./app/features/ongeki/pages/settings"
+import OngekiCards from "./app/features/ongeki/pages/cards"
 import WelcomePage, { WelcomeContent } from "./app/features/public/welcome-page"
 import { AccentColorProvider } from "./app/shared/components/accent-color-provider"
 import { LoginContent } from "./app/shared/components/common/login"
@@ -30,13 +30,9 @@ import "./index.css"
 // Lazy-load large pages and feature components to reduce initial bundle size
 const Account = React.lazy(() => import("./app/features/account/pages/account"))
 const ProfilePage = React.lazy(() => import("./app/features/account/pages/profile"))
-const CardsPage = React.lazy(() => import("./app/features/account/pages/cards"))
-const KeychipPage = React.lazy(() => import("./app/features/account/pages/keychip"))
 const AdminDashboard = React.lazy(() => import("./app/features/admin/pages/admin-dashboard"))
-const AdminCardManagement = React.lazy(() => import("./app/features/admin/pages/card-management"))
+const AdminUsers = React.lazy(() => import("./app/features/admin/pages/admin-users"))
 const AdminIcfEditor = React.lazy(() => import("./app/features/admin/pages/admin-icf-editor"))
-const AdminKeychipGenerator = React.lazy(() => import("./app/features/admin/pages/admin-keychip-generator"))
-const AdminArcadeOwnership = React.lazy(() => import("./app/features/admin/pages/admin-arcade-ownership"))
 const ChunithmAllSongs = React.lazy(() => import("./app/features/chunithm/pages/allsongs"))
 const ChunithmFavorites = React.lazy(() => import("./app/features/chunithm/pages/favorites"))
 const ChunithmLeaderboard = React.lazy(() => import("./app/features/chunithm/pages/leaderboard"))
@@ -84,13 +80,9 @@ const app = (
 										<Route path="/home" element={<ServerNews />} />
 										<Route path="/profile" element={<ProfilePage />} />
 										<Route path="/admin" element={<AdminDashboard />} />
-										<Route path="/admin/cards" element={<AdminCardManagement />} />
+										<Route path="/admin/users" element={<AdminUsers />} />
 										<Route path="/admin/icf" element={<AdminIcfEditor />} />
-										<Route path="/admin/keychip-generator" element={<AdminKeychipGenerator />} />
-										<Route path="/admin/arcade-ownership" element={<AdminArcadeOwnership />} />
 										<Route path="/account" element={<Account />} />
-										<Route path="/cards" element={<CardsPage />} />
-										<Route path="/keychip" element={<KeychipPage />} />
 
 										<Route path="/chunithm/settings" element={<ChunithmSettingsPage />} />
 										<Route path="/chunithm/userbox" element={<ChunithmUserbox />} />
@@ -108,12 +100,12 @@ const app = (
 										<Route path="/ongeki/userbox" element={<OngekiUserbox />} />
 										<Route path="/ongeki/allsongs" element={<OngekiAllSongs />} />
 										<Route path="/ongeki/scores" element={<OngekiScorePage />} />
+										<Route path="/ongeki/cards" element={<OngekiCards />} />
 										<Route path="/ongeki/rating" element={<OngekiRatingFrames />} />
 										<Route path="/ongeki/leaderboard" element={<OngekiLeaderboard />} />
 										<Route path="/ongeki/song-leaderboard/:musicId/:chartId" element={<OngekiSongLeaderboard />} />
 										<Route path="/ongeki/rivals" element={<OngekiRivals />} />
 										<Route path="/ongeki/multiplayer" element={<OngekiMultiplayer />} />
-										<Route path="/ongeki/cards" element={<CardManagement />} />
 										<Route path="/ongeki/profile" element={<OngekiProfile />} />
 									</Route>
 								</Route>

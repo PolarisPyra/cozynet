@@ -4,6 +4,7 @@ import { Badge } from "@/app/shared/components/ui/badge"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
 import type { BaseFilter, FilterValues } from "@/app/shared/types"
+import { cn } from "@/app/shared/utils"
 
 interface MultiFilterProps {
 	filters: BaseFilter[]
@@ -33,7 +34,16 @@ export const MultiFilter = ({ filters, filterValues, onFilterChange, onClearAll 
 						value={filterValues[filter.identifier] || "all"}
 						onValueChange={value => onFilterChange(filter.identifier, value)}
 					>
-						<SelectTrigger className="w-auto min-w-[80px] rounded-sm px-2 text-sm sm:min-w-[100px]">
+						<SelectTrigger
+							className={cn(
+								"h-8 w-auto min-w-[80px] rounded-full border-transparent bg-secondary/40 px-3 text-xs font-medium transition-colors hover:bg-secondary/60 focus:ring-0 sm:min-w-[100px]",
+								(() => {
+									const selectedValue = filterValues[filter.identifier] || "all"
+									const defaultValue = filter.options[0]?.value ?? "all"
+									return selectedValue !== defaultValue ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""
+								})()
+							)}
+						>
 							<SelectValue placeholder={filter.label}>
 								{(() => {
 									const selectedValue = filterValues[filter.identifier] || "all"

@@ -1,6 +1,7 @@
 import { Hono } from "hono"
 
 import { OngekiCardsRoutes } from "./cards"
+import { OngekiDecksRoutes } from "./decks"
 import { OngekiScoreExporterRoutes } from "./score-exporter"
 import { OngekiLeaderboardRoutes } from "./leaderboard"
 import { OngekiModsRoutes } from "./modifications"
@@ -28,5 +29,6 @@ export const AllOngekiRoutes = new Hono()
 	.route("mods", OngekiModsRoutes)
 	.route("scoreExporter", OngekiScoreExporterRoutes)
 	.route("cards", OngekiCardsRoutes)
+	.route("decks", OngekiDecksRoutes)
 	.route("username", UsernameRoutes)
 	.route("userbox", UserBoxRoutes)

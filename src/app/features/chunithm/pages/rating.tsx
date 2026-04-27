@@ -5,14 +5,15 @@ import { LayoutGrid, List } from "lucide-react"
 import ChunithmRatingInfoCard from "@/app/features/chunithm/components/rating-info-card"
 import { ratingFilters, useChunithmRatingData, useChunithmVersion } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Button } from "@/app/shared/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/shared/components/ui/table"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
-import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 import type { ChunithmRating, FilterValues } from "@/app/shared/types"
-import { chunithmBadgeColors, getChunithmGrade, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
+import { chunithmBadgeColors, calculateChunithmRating, getChunithmGrade, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
+import { ChunithmRatingColors } from "@/app/features/chunithm/components/rating-colors"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
 
@@ -105,6 +106,14 @@ export default function ChunithmRatingPage() {
 		<Container>
 			<Header
 				title="Rating"
+				actions={
+					<InlineFilters
+						filters={filters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(filters))}
+					/>
+				}
 				searchProps={{
 					items: sorted.map((rating: ChunithmRating, index: number) => ({ id: index, title: rating.title || "" })),
 					onSelect: setSearchQuery,
@@ -115,44 +124,33 @@ export default function ChunithmRatingPage() {
 			/>
 
 			<Body>
-				<FilterArea>
-					<div className="flex flex-wrap items-center justify-between gap-2">
-						<MultiFilter
-							filters={filters}
-							filterValues={filterValues}
-							onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
-							onClearAll={() => setFilterValues(getDefaults(filters))}
-						/>
+				<div className="mb-4 flex items-center justify-end gap-2">
+					<Button
+						variant={density === "grid" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setDensity("grid")}
+						className="h-8 text-xs"
+					>
+						<LayoutGrid className="h-3.5 w-3.5" />
+						Grid
+					</Button>
 
-						<div className="ml-auto flex items-center gap-2">
-							<Button
-								variant={density === "grid" ? "secondary" : "outline"}
-								size="sm"
-								onClick={() => setDensity("grid")}
-								className="h-8 text-xs"
-							>
-								<LayoutGrid className="h-3.5 w-3.5" />
-								Grid
-							</Button>
-
-							<Button
-								variant={density === "list" ? "secondary" : "outline"}
-								size="sm"
-								onClick={() => setDensity("list")}
-								className="h-8 text-xs"
-							>
-								<List className="h-3.5 w-3.5" />
-								List
-							</Button>
-						</div>
-					</div>
-				</FilterArea>
+					<Button
+						variant={density === "list" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setDensity("list")}
+						className="h-8 text-xs"
+					>
+						<List className="h-3.5 w-3.5" />
+						List
+					</Button>
+				</div>
 
 				{sorted.length === 0 ? (
 					<div className="text-muted-foreground py-20 text-center">No ratings found</div>
 				) : density === "list" ? (
 					<div className="bg-card overflow-hidden rounded-lg border">
-						<Table className="min-w-full">
+						<Table className="min-w-[800px] w-full">
 							<colgroup>
 								<col className="w-16" />
 								<col className="w-[34%]" />
@@ -205,7 +203,14 @@ export default function ChunithmRatingPage() {
 										<TableCell className="h-16 font-medium leading-none">{getChunithmGrade(rating.score ?? 0)}</TableCell>
 
 										<TableCell className="h-16 text-right font-medium leading-none">
-											{((rating.rating ?? 0) / 100).toFixed(2)}
+											<ChunithmRatingColors
+												rating={
+													rating.level != null && rating.score != null
+														? calculateChunithmRating(rating.level, rating.score) / 100
+														: 0
+												}
+												version={rating.version ?? version}
+											/>
 										</TableCell>
 									</TableRow>
 								))}

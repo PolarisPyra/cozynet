@@ -1,29 +1,22 @@
-import { useMemo, useState } from "react"
-
-import { Users } from "lucide-react"
-
 import { OngekiAchievementBadges } from "@/app/features/ongeki/components/achievement-badges"
-import { useScoreLeaderboard } from "@/app/features/ongeki/hooks/use-score-leaderboard"
-import { useOngekiScoreRating } from "@/app/features/ongeki/hooks/use-score-rating"
 import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
-import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
 import { Badge } from "@/app/shared/components/ui/badge"
+import { Separator } from "@/app/shared/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
-import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { OngekiPlaylog } from "@/app/shared/types"
+import { cn } from "@/app/shared/utils"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
 import {
 	calculateOngekiGekForceRating,
 	calculateOngekiRating,
-	formatOngekiScorePlaylogDate,
 	ongekiBadgeColors
 } from "@/app/shared/utils/ongeki"
-import { cn } from "@/app/shared/utils"
-import { getOngekiLogo } from "@/app/shared/utils/version-logos"
 
+import { useOngekiScoreCard } from "../hooks/use-ongeki-score-card"
 import { OngekiRatingColors } from "./rating-colors"
+import { ScoreCardLeaderboardPreview } from "@/app/shared/components/common/score-card-leaderboard-preview"
 
 interface VersionLogoBadgeProps {
 	logoUrl: string | null
@@ -48,31 +41,22 @@ const VersionLogoBadge = ({ logoUrl, tooltip, alt }: VersionLogoBadgeProps) => {
 	)
 }
 
-interface PlatinumStarsProps {
-	count: number
-}
-
-const PlatinumStars = function ({ count }: PlatinumStarsProps) {
+const PlatinumStars = ({ count }: { count: number }) => {
+	const safeCount = Math.max(0, Math.min(5, count || 0))
 	const starUrl = (filled: boolean) => `${CDN}/ongeki/badges/${filled ? "filled" : "base"}/pstar.webp`
 
 	return (
 		<div className="flex items-center gap-0.5 md:gap-1">
 			{Array.from({ length: 5 }, (_, i) => {
-				const filled = i < count
+				const filled = i < safeCount
+
 				return (
-					<span
+					<img
 						key={i}
 						aria-hidden
-						className="inline-block h-3 w-3 md:h-4 md:w-4"
-						style={{
-							WebkitMaskImage: `url(${starUrl(filled)})`,
-							maskImage: `url(${starUrl(filled)})`,
-							WebkitMaskRepeat: "no-repeat",
-							maskRepeat: "no-repeat",
-							WebkitMaskSize: "contain",
-							maskSize: "contain",
-							backgroundColor: filled ? "var(--foreground)" : "var(--muted-foreground)"
-						}}
+						className="inline-block h-3 w-3 object-contain md:h-4 md:w-4"
+						src={starUrl(filled)}
+						alt={filled ? "Filled Star" : "Empty Star"}
 					/>
 				)
 			})}
@@ -93,83 +77,43 @@ export function OngekiScoreInfoCard({
 	className = "",
 	ongekiVersion
 }: OngekiScoreInfoCardProps) {
-	const [isDialogOpen, setIsDialogOpen] = useState(false)
-	const currentUser = useCurrentUser()
-	const { calculatedRating, isRefresh } = useOngekiScoreRating({
-		playerRating: score.playerRating,
-		techScore: score.techScore,
-		level: score.level,
-		isFullCombo: score.isFullCombo,
-		isAllBreak: score.isAllBreak,
-		isFullBell: score.isFullBell,
-		scoreVersion: score.scoreVersion,
-		version: ongekiVersion,
-		platinumScoreStar: score.platinumScoreStar
-	})
-
-	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
-		score.musicId ?? 0,
-		score.chartId ?? 0,
-		100,
-		isDialogOpen
-	)
-	const { data: previewLeaderboardData, isLoading: isLoadingPreviewLeaderboard } = useScoreLeaderboard(
-		score.musicId ?? 0,
-		score.chartId ?? 0,
-		4
-	)
-	const topFourEntries = previewLeaderboardData?.leaderboard ?? []
-	const maxMetaBadges = 4
-	const playDateParts = formatOngekiScorePlaylogDate(score.userPlayDate)
-	const metaBadges = [
-		...(score.userPlayDate
-			? [
-					{ key: "date", label: playDateParts.date },
-					{ key: "time", label: playDateParts.time }
-				]
-			: []),
-		...(score.isTechNewRecord === 1 ? [{ key: "new-score-record", label: "New Score Record" }] : []),
-		...(score.isBattleNewRecord === 1 ? [{ key: "new-battle-record", label: "New Battle Record" }] : [])
-	]
-	const visibleMetaBadges = metaBadges.slice(0, maxMetaBadges)
-	const hiddenMetaBadgesCount = Math.max(0, metaBadges.length - maxMetaBadges)
-
-	const songVersionLogo = useMemo(() => {
-		return getOngekiLogo.getLogo(score.earliest_version)
-	}, [score.earliest_version])
-
-	const getRankRingClass = (rank: number) => {
-		if (rank === 1) return "border-foreground/45"
-		if (rank === 2) return "border-foreground/30"
-		if (rank === 3) return "border-foreground/20"
-		return "border-background"
-	}
+	const {
+		isDialogOpen,
+		setIsDialogOpen,
+		currentUser,
+		calculatedRating,
+		isRefresh,
+		leaderboardData,
+		isLoadingLeaderboard,
+		isLoadingPreviewLeaderboard,
+		topFourEntries,
+		songVersionLogo,
+		metaBadges
+	} = useOngekiScoreCard({ score, ongekiVersion })
 
 	return (
 		<div
 			className={cn(
-				"bg-card border-border/60 flex h-full w-full flex-col rounded-xl border p-3 shadow-sm",
+				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md",
 				className
 			)}
 		>
-			{/* Top Section: Image, Title, Score */}
-			<div className="flex items-start gap-3">
-				{/* Album Art */}
+			<div className="mb-2 flex items-start gap-3">
 				<div className="flex-shrink-0">
 					<CardImage
 						src={`${CDN}/ongeki/jacket/${score.jacketPath}`}
-						alt={score.title}
-						width={64}
-						height={64}
-						className="h-14 w-14 rounded-md"
+						alt={score.title ?? ""}
+						width={72}
+						height={72}
+						className="h-16 w-16 rounded-md object-cover"
 					/>
 				</div>
 
-				{/* Title and Info */}
-				<div className="flex min-w-0 flex-1 flex-col gap-1">
-					<h3 className="text-foreground text-sm font-semibold leading-tight break-words line-clamp-2">
-						{score.title}
+				<div className="flex min-w-0 flex-1 flex-col gap-1.5">
+					<h3 className="text-foreground line-clamp-2 break-words text-base font-semibold leading-snug">
+						{score.title ?? ""}
 					</h3>
+
 					<div className="flex items-center gap-2">
 						<span
 							className={cn(
@@ -182,29 +126,28 @@ export function OngekiScoreInfoCard({
 					</div>
 				</div>
 
-				{/* Score and Rating */}
-				<div className="flex flex-shrink-0 flex-col items-end gap-2 text-right">
-					<div className="flex flex-wrap justify-end gap-1.5">
-						{score.isImported === 1 ? (
-							<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
-								Imported
-							</Badge>
-						) : (
-							<VersionLogoBadge
-								logoUrl={songVersionLogo}
-								tooltip="Version the song originated in"
-								alt={`Song version ${score.earliest_version ?? "unknown"}`}
-							/>
-						)}
-					</div>
+				<div className="flex flex-shrink-0 flex-col items-end gap-2.5 text-right">
+					{score.isImported === 1 ? (
+						<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
+							Imported
+						</Badge>
+					) : (
+						<VersionLogoBadge
+							logoUrl={songVersionLogo}
+							tooltip="Version the song originated in"
+							alt={`Song version ${score.earliest_version ?? "unknown"}`}
+						/>
+					)}
+
 					<div>
 						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 							Tech Score
 						</div>
+
 						{score.techScore != null ? (
 							score.techScore >= 1010000 ? (
 								<div className="flex flex-col items-end gap-0.5">
-									<span className="text-foreground text-base font-bold tabular-nums">1,010,000</span>
+									<span className="text-foreground text-lg font-bold tabular-nums">1,010,000</span>
 									<span className="text-muted-foreground text-xs font-medium tabular-nums">
 										(AB+: +{(score.techScore - 1010000).toLocaleString()})
 									</span>
@@ -218,104 +161,65 @@ export function OngekiScoreInfoCard({
 							<span className="text-foreground text-sm font-semibold tabular-nums">-</span>
 						)}
 					</div>
+
 					<div>
 						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 							Player Rating
 						</div>
+
 						<div>
 							{calculatedRating !== null ? (
 								<OngekiRatingColors rating={calculatedRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
 							) : (
-								<span className="text-foreground text-xs font-medium text-muted-foreground">-</span>
+								<span className="text-muted-foreground text-xs font-medium">-</span>
 							)}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div className="border-border/60 mt-3 space-y-2.5 border-t pt-2.5">
-				<div className="flex flex-wrap items-center gap-1.5">
-					<OngekiAchievementBadges
-						isFullCombo={score.isFullCombo ?? 0}
-						isAllBreak={score.isAllBreak ?? 0}
-						isFullBell={score.isFullBell ?? 0}
-						techScore={score.techScore ?? 0}
-					/>
-					<div className="ml-auto flex h-5 items-center">
-					<PlatinumStars count={score.platinumScoreStar ?? 0} />
-					</div>
-				</div>
+			<div className="mb-2 flex items-end justify-between gap-2">
+				<OngekiAchievementBadges
+					isFullCombo={score.isFullCombo ?? 0}
+					isAllBreak={score.isAllBreak ?? 0}
+					isFullBell={score.isFullBell ?? 0}
+					techScore={score.techScore ?? 0}
+				/>
 
-				<div className="flex flex-wrap items-center gap-1.5">
-					{visibleMetaBadges.length > 0 ? (
-						<>
-							{visibleMetaBadges.map(badge => (
+				<PlatinumStars count={score.platinumScoreStar ?? 0} />
+			</div>
+
+			{metaBadges.length > 0 && (
+				<>
+					<Separator className="my-1.5" />
+
+					<div className="min-w-0 overflow-hidden">
+						<div className="flex w-full flex-nowrap items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-0.5">
+							{metaBadges.map(badge => (
 								<Badge
 									key={badge.key}
 									variant="secondary"
 									className={cn(
-										"h-5 rounded-md text-xs px-1.5 flex-shrink-0 whitespace-nowrap",
+										"h-5 shrink-0 whitespace-nowrap rounded-md px-1.5 text-xs",
 										(badge.key === "new-score-record" || badge.key === "new-battle-record") &&
-											"px-2 font-semibold uppercase"
+										"px-2 font-semibold uppercase"
 									)}
 								>
 									{badge.label}
 								</Badge>
 							))}
-							{hiddenMetaBadgesCount > 0 && (
-								<Badge variant="secondary" className="h-5 flex-shrink-0 rounded-md px-2 text-xs font-semibold">
-									+{hiddenMetaBadgesCount}
-								</Badge>
-							)}
-						</>
-					) : (
-						<span className="text-muted-foreground text-xs flex-shrink-0">—</span>
-					)}
-				</div>
-
-				<div className="flex items-center justify-end gap-2 pt-0.5">
-					<span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">Top 4</span>
-					<div className="flex -space-x-2">
-						{isLoadingPreviewLeaderboard ? (
-							Array.from({ length: 4 }, (_, i) => (
-								<div key={i} className="bg-muted h-6 w-6 rounded-full border-2 border-background" />
-							))
-						) : topFourEntries.length > 0 ? (
-							topFourEntries.slice(0, 4).map((entry, index) => (
-								<Tooltip key={`${entry.userId}-${index}`}>
-									<TooltipTrigger asChild>
-										<Avatar
-											className={cn("h-6 w-6 border-2", getRankRingClass(index + 1))}
-											style={{ zIndex: 20 - index }}
-										>
-											<AvatarFallback className="text-[10px] font-semibold">
-												{entry.username.charAt(0).toUpperCase() || "?"}
-											</AvatarFallback>
-										</Avatar>
-									</TooltipTrigger>
-									<TooltipContent>
-										<p>
-											{entry.username} · #{index + 1}
-										</p>
-									</TooltipContent>
-								</Tooltip>
-							))
-						) : (
-							<div className="text-muted-foreground flex items-center gap-1 text-xs">
-								<Users className="h-3.5 w-3.5" />
-								<span>No leaderboard data yet</span>
-							</div>
-						)}
+						</div>
 					</div>
-					<button
-						type="button"
-						className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-semibold transition-colors"
-						onClick={() => setIsDialogOpen(true)}
-					>
-						... View all
-					</button>
-				</div>
-			</div>
+				</>
+			)}
+
+			<Separator className="my-2" />
+
+			<ScoreCardLeaderboardPreview
+				topFourEntries={topFourEntries}
+				isLoading={isLoadingPreviewLeaderboard}
+				onViewAll={() => setIsDialogOpen(true)}
+			/>
 
 			<Leaderboard
 				open={isDialogOpen}
@@ -331,16 +235,18 @@ export function OngekiScoreInfoCard({
 				renderRating={entry => {
 					const level = leaderboardData?.chart?.level ?? 0
 					if (level === 0) return null
+
 					const isRefresh = ongekiVersion >= 8
 					const entryRating = isRefresh
 						? calculateOngekiGekForceRating(
-								level,
-								entry.score,
-								entry.isFullCombo ?? 0,
-								entry.isAllBreak ?? 0,
-								entry.isFullBell ?? 0
-							) / 1000
+							level,
+							entry.score,
+							entry.isFullCombo ?? 0,
+							entry.isAllBreak ?? 0,
+							entry.isFullBell ?? 0
+						) / 1000
 						: calculateOngekiRating(level, entry.score) / 100
+
 					return <OngekiRatingColors rating={entryRating} version={ongekiVersion} decimals={isRefresh ? 3 : 2} />
 				}}
 			/>

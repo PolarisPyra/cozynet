@@ -54,14 +54,42 @@ const server = new Hono()
 
 // Apply rate limiting to all API routes (only in production)
 if (NODE_ENV === "production") {
+	// Stricter limit for auth endpoints
+	server.use(
+		"/api/login",
+		rateLimiter({
+			windowMs: 15 * 60 * 1000, // 15 minutes
+			limit: 10, // 10 attempts per 15 minutes
+			standardHeaders: "draft-6",
+			message: "Too many login attempts. Please try again later.",
+			keyGenerator: c => {
+				return c.req.header("x-forwarded-for")?.split(",")[0].trim() || c.req.header("x-real-ip") || "unknown"
+			}
+		})
+	)
+
+	server.use(
+		"/api/signup",
+		rateLimiter({
+			windowMs: 60 * 60 * 1000, // 1 hour
+			limit: 5, // 5 attempts per hour
+			standardHeaders: "draft-6",
+			message: "Too many signup attempts. Please try again later.",
+			keyGenerator: c => {
+				return c.req.header("x-forwarded-for")?.split(",")[0].trim() || c.req.header("x-real-ip") || "unknown"
+			}
+		})
+	)
+
+	// General API rate limit
 	server.use(
 		"/api/*",
 		rateLimiter({
 			windowMs: 1 * 60 * 1000, // 1 minute
-			limit: 100, // 100 requests per minute for all API routes
+			limit: 100, // 100 requests per minute
 			standardHeaders: "draft-6",
+			message: "Rate limit exceeded. Please slow down.",
 			keyGenerator: c => {
-				// Use IP address from headers (works with proxies) or fallback to connection IP
 				return c.req.header("x-forwarded-for")?.split(",")[0].trim() || c.req.header("x-real-ip") || "unknown"
 			}
 		})

@@ -124,9 +124,7 @@ export const KeychipGenerator = function () {
 	}
 
 	return (
-		<div className="bg-card rounded-sm">
-			<h2 className="text-primary mb-4 text-xl font-semibold">Keychip Generator</h2>
-			<div className="text-primary mb-4 text-sm">Makes a new keychip</div>
+		<div className="space-y-4">
 			<form onSubmit={handleSubmit} className="space-y-4">
 				<div>
 					<label className="text-primary mb-1 block text-sm font-medium">Arcade Nickname</label>
@@ -156,7 +154,7 @@ export const KeychipGenerator = function () {
 
 				<div>
 					<label className="text-primary mb-1 block text-sm font-medium">Game Type</label>
-					<Popover open={openDropdown} onOpenChange={setOpenDropdown}>
+					<Popover open={openDropdown} onOpenChange={setOpenDropdown} modal={true}>
 						<PopoverTrigger asChild>
 							<Button variant="dropdown" type="button">
 								<span className="text-primary truncate">

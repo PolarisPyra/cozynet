@@ -1,29 +1,25 @@
-import { memo, useMemo, useState } from "react"
+import { memo } from "react"
 
-import { Star, Users } from "lucide-react"
+import { Star } from "lucide-react"
 
 import { ChunithmAchievementBadges } from "@/app/features/chunithm/components/achievement-badges"
-import { useScoreLeaderboard } from "@/app/features/chunithm/hooks/use-score-leaderboard"
 import { CardImage } from "@/app/shared/components/common/card-image"
 import { Leaderboard } from "@/app/shared/components/leaderboard"
-import { Avatar, AvatarFallback } from "@/app/shared/components/ui/avatar"
 import { Badge } from "@/app/shared/components/ui/badge"
+import { Separator } from "@/app/shared/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/app/shared/components/ui/tooltip"
 import { ChunithmPlaylog } from "@/app/shared/types"
 import { cn } from "@/app/shared/utils"
 import {
 	calculateChunithmRating,
 	chunithmBadgeColors,
-	convertRomVersionToVersion,
-	formatSqlDateToLocalParts,
-	getChunithmGrade,
-	levelToStars
+	getChunithmGrade
 } from "@/app/shared/utils/chunithm"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
-import { convertChunithmScoreRating } from "@/app/shared/utils/profile-rating-utils"
-import { getChunithmLogo } from "@/app/shared/utils/version-logos"
+import { ScoreCardLeaderboardPreview } from "@/app/shared/components/common/score-card-leaderboard-preview"
 
+import { useChunithmScoreCard } from "../hooks/use-chunithm-score-card"
 import { ChunithmRatingColors } from "./rating-colors"
 
 interface VersionLogoBadgeProps {
@@ -64,81 +60,45 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 	version,
 	currentUserId
 }: ChunithmScoreInfoCardProps) {
-	const [isDialogOpen, setIsDialogOpen] = useState(false)
-
-	const { scoreVersionId, scoreVersionLogo, songVersionLogo, ratingValue, isWorldsEnd, starCount } = useMemo(() => {
-		const versionId = convertRomVersionToVersion(score.romVersion)
-		const storedRating = convertChunithmScoreRating(score.playerRating)
-		return {
-			scoreVersionId: versionId,
-			scoreVersionLogo: getChunithmLogo.getLogo(versionId),
-			songVersionLogo: getChunithmLogo.getLogo(score.songVersion),
-			ratingValue: storedRating,
-			isWorldsEnd: score.chartId === 5,
-			starCount: levelToStars(score.level)
-		}
-	}, [score.romVersion, score.songVersion, score.playerRating, score.chartId, score.level])
-
-	const { data: previewLeaderboardData, isLoading: isLoadingPreviewLeaderboard } = useScoreLeaderboard(
-		score.musicId ?? 0,
-		score.chartId ?? 0,
-		4
-	)
-
-	const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useScoreLeaderboard(
-		score.musicId ?? 0,
-		score.chartId ?? 0,
-		100,
-		isDialogOpen
-	)
-
-	const topFourEntries = previewLeaderboardData?.leaderboard ?? []
-	const maxMetaBadges = 4
-	const playDateParts = formatSqlDateToLocalParts(score.userPlayDate)
-	const metaBadges = [
-		...(score.userPlayDate
-			? [
-					{ key: "date", label: playDateParts.date },
-					{ key: "time", label: playDateParts.time }
-				]
-			: []),
-		...(score.isNewRecord === 1 ? [{ key: "new-record", label: "New Record" }] : [])
-	]
-	const visibleMetaBadges = metaBadges.slice(0, maxMetaBadges)
-	const hiddenMetaBadgesCount = Math.max(0, metaBadges.length - maxMetaBadges)
-
-	const getRankRingClass = (rank: number) => {
-		if (rank === 1) return "border-foreground/45"
-		if (rank === 2) return "border-foreground/30"
-		if (rank === 3) return "border-foreground/20"
-		return "border-background"
-	}
+	const {
+		isDialogOpen,
+		setIsDialogOpen,
+		scoreVersionId,
+		scoreVersionLogo,
+		songVersionLogo,
+		ratingValue,
+		isWorldsEnd,
+		starCount,
+		leaderboardData,
+		isLoadingLeaderboard,
+		isLoadingPreviewLeaderboard,
+		topFourEntries,
+		metaBadges
+	} = useChunithmScoreCard({ score })
 
 	return (
 		<div
 			className={cn(
-				"bg-card border-border/60 flex h-full w-full flex-col rounded-xl border p-3 shadow-sm",
+				"bg-card border-border flex h-full w-full flex-col rounded-lg border p-3 shadow-sm transition-all hover:shadow-md",
 				className
 			)}
 		>
-			{/* Top Section: Image, Title, Score */}
-			<div className="flex items-start gap-3">
-				{/* Album Art */}
+			<div className="mb-2 flex items-start gap-3">
 				<div className="flex-shrink-0">
 					<CardImage
 						src={`${CDN}/chunithm/jacket/${score.jacketPath}`}
 						alt={score.title ?? ""}
-						width={64}
-						height={64}
-						className="h-14 w-14 rounded-md"
+						width={72}
+						height={72}
+						className="h-16 w-16 rounded-md object-cover"
 					/>
 				</div>
 
-				{/* Title and Info */}
-				<div className="flex min-w-0 flex-1 flex-col gap-1">
-					<h3 className="text-foreground line-clamp-2 text-sm leading-tight font-semibold break-words">
+				<div className="flex min-w-0 flex-1 flex-col gap-1.5">
+					<h3 className="text-foreground line-clamp-2 break-words text-base font-semibold leading-snug">
 						{score.title}
 					</h3>
+
 					<div className="flex flex-wrap items-center gap-1.5">
 						<Badge
 							variant="outline"
@@ -159,16 +119,10 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 								formatLevel(score.level)
 							)}
 						</Badge>
-						{score.skillName && (
-							<Badge variant="secondary" className="h-5 w-fit rounded-md px-2 text-xs">
-								{score.skillName}
-							</Badge>
-						)}
 					</div>
 				</div>
 
-				{/* Score and Rating */}
-				<div className="flex flex-shrink-0 flex-col items-end gap-2 text-right">
+				<div className="flex flex-shrink-0 flex-col items-end gap-2.5 text-right">
 					<div className="flex flex-wrap justify-end gap-1.5">
 						{score.isImported === 1 ? (
 							<Badge variant="secondary" className="h-5 rounded-md px-2 text-xs font-medium">
@@ -181,25 +135,32 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 								alt={`Score version ${scoreVersionId ?? "unknown"}`}
 							/>
 						)}
+
 						<VersionLogoBadge
 							logoUrl={songVersionLogo}
 							tooltip="Version the song originated in"
 							alt={`Song version ${score.songVersion ?? "unknown"}`}
 						/>
 					</div>
+
 					<div>
-						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">Score</div>
-						<div className="flex items-baseline gap-1.5">
-							<span className="text-foreground text-base font-bold tabular-nums">
+						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
+							Score
+						</div>
+
+						<div className="flex items-baseline justify-end gap-1.5">
+							<span className="text-foreground text-lg font-bold tabular-nums">
 								{score.score?.toLocaleString() ?? "-"}
 							</span>
 							<span className="text-foreground text-xs font-semibold">{getChunithmGrade(score.score ?? 0)}</span>
 						</div>
 					</div>
+
 					<div>
 						<div className="text-muted-foreground mb-0.5 text-[9px] font-medium tracking-[0.08em] uppercase">
 							Player Rating
 						</div>
+
 						<div>
 							{ratingValue > 0 ? (
 								version || scoreVersionId ? (
@@ -208,94 +169,54 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 									<span className="text-foreground text-sm font-semibold">{ratingValue.toFixed(2)}</span>
 								)
 							) : (
-								<span className="text-foreground text-muted-foreground text-xs font-medium">-</span>
+								<span className="text-muted-foreground text-xs font-medium">-</span>
 							)}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div className="border-border/60 mt-3 space-y-2.5 border-t pt-2.5">
-				<div className="flex flex-wrap items-center gap-1.5">
-					<ChunithmAchievementBadges
-						isFullCombo={score.isFullCombo ?? 0}
-						isAllJustice={score.isAllJustice ?? 0}
-						isClear={score.isClear ?? 0}
-						fullChainKind={score.fullChainKind ?? 0}
-						score={score.score ?? 0}
-						skillId={score.skillId ?? 0}
-					/>
-				</div>
+			<div className="mb-2 flex items-end justify-between gap-2">
+				<ChunithmAchievementBadges
+					isFullCombo={score.isFullCombo ?? 0}
+					isAllJustice={score.isAllJustice ?? 0}
+					isClear={score.isClear ?? 0}
+					fullChainKind={score.fullChainKind ?? 0}
+					score={score.score ?? 0}
+					skillId={score.skillId ?? 0}
+				/>
+			</div>
 
-				<div className="flex flex-wrap items-center gap-1.5">
-					{visibleMetaBadges.length > 0 ? (
-						<>
-							{visibleMetaBadges.map(badge => (
+			{metaBadges.length > 0 && (
+				<>
+					<Separator className="my-1.5" />
+
+					<div className="min-w-0 overflow-hidden">
+						<div className="flex w-full flex-nowrap items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-0.5">
+							{metaBadges.map(badge => (
 								<Badge
 									key={badge.key}
 									variant="secondary"
 									className={cn(
-										"h-5 flex-shrink-0 rounded-md px-1.5 text-xs whitespace-nowrap",
+										"h-5 shrink-0 whitespace-nowrap rounded-md px-1.5 text-xs",
 										badge.key === "new-record" && "px-2 font-semibold uppercase"
 									)}
 								>
 									{badge.label}
 								</Badge>
 							))}
-							{hiddenMetaBadgesCount > 0 && (
-								<Badge variant="secondary" className="h-5 flex-shrink-0 rounded-md px-2 text-xs font-semibold">
-									+{hiddenMetaBadgesCount}
-								</Badge>
-							)}
-						</>
-					) : (
-						<span className="text-muted-foreground flex-shrink-0 text-xs">—</span>
-					)}
-				</div>
-
-				<div className="flex items-center justify-end gap-2 pt-0.5">
-					<span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">Top 4</span>
-					<div className="flex -space-x-2">
-						{isLoadingPreviewLeaderboard ? (
-							Array.from({ length: 4 }, (_, i) => (
-								<div key={i} className="bg-muted h-6 w-6 rounded-full border-2 border-background" />
-							))
-						) : topFourEntries.length > 0 ? (
-							topFourEntries.slice(0, 4).map((entry, index) => (
-								<Tooltip key={`${entry.userId}-${index}`}>
-									<TooltipTrigger asChild>
-										<Avatar
-											className={cn("h-6 w-6 border-2", getRankRingClass(index + 1))}
-											style={{ zIndex: 20 - index }}
-										>
-											<AvatarFallback className="text-[10px] font-semibold">
-												{entry.username.charAt(0).toUpperCase() || "?"}
-											</AvatarFallback>
-										</Avatar>
-									</TooltipTrigger>
-									<TooltipContent>
-										<p>
-											{entry.username} · #{index + 1}
-										</p>
-									</TooltipContent>
-								</Tooltip>
-							))
-						) : (
-							<div className="text-muted-foreground flex items-center gap-1 text-xs">
-								<Users className="h-3.5 w-3.5" />
-								<span>No leaderboard data yet</span>
-							</div>
-						)}
+						</div>
 					</div>
-					<button
-						type="button"
-						className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-semibold transition-colors"
-						onClick={() => setIsDialogOpen(true)}
-					>
-						... View all
-					</button>
-				</div>
-			</div>
+				</>
+			)}
+
+			<Separator className="my-2" />
+
+			<ScoreCardLeaderboardPreview
+				topFourEntries={topFourEntries}
+				isLoading={isLoadingPreviewLeaderboard}
+				onViewAll={() => setIsDialogOpen(true)}
+			/>
 
 			{isDialogOpen && (
 				<Leaderboard
@@ -312,6 +233,7 @@ export const ChunithmScoreInfoCard = memo(function ChunithmScoreInfoCard({
 					renderRating={entry => {
 						const level = leaderboardData?.chart?.level ?? 0
 						if (level === 0 || !version) return null
+
 						const entryRating = calculateChunithmRating(level, entry.score) / 100
 						return <ChunithmRatingColors rating={entryRating} version={version} />
 					}}
