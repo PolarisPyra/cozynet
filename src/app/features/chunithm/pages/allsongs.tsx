@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { LayoutGrid, List } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 import SongInfoCard from "@/app/features/chunithm/components/song-info-card"
@@ -11,7 +10,6 @@ import Header from "@/app/shared/components/common/header"
 import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
-import { Button } from "@/app/shared/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/shared/components/ui/table"
 import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { Heart, LayoutGrid, List } from "lucide-react"
+import { Heart } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 

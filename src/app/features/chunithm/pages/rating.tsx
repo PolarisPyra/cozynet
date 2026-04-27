@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { LayoutGrid, List } from "lucide-react"
 
 import ChunithmRatingInfoCard from "@/app/features/chunithm/components/rating-info-card"
 import { ratingFilters, useChunithmRatingData, useChunithmVersion } from "@/app/features/chunithm/hooks"
@@ -8,7 +7,6 @@ import { DensityToggle } from "@/app/shared/components/common/density-toggle"
 import Header from "@/app/shared/components/common/header"
 import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import Spinner from "@/app/shared/components/common/spinner"
-import { Button } from "@/app/shared/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/shared/components/ui/table"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
