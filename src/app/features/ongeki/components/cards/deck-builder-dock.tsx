@@ -1,5 +1,5 @@
 import { Plus, Save, X } from "lucide-react"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { Button } from "@/app/shared/components/ui/button"
 import { CDN } from "@/app/shared/utils/constants"
@@ -46,6 +46,8 @@ export function DeckBuilderDock({
 		]
 	}, [deck, allCards])
 
+	const [dragHoverSlot, setDragHoverSlot] = useState<number | null>(null)
+
 
 
 	return (
@@ -53,12 +55,12 @@ export function DeckBuilderDock({
 			{/* Deck Selector */}
 			<div className="flex gap-1 sm:gap-2 bg-background/60 p-1.5 rounded-2xl backdrop-blur-md border border-white/10 shadow-xl mx-auto">
 				{allDecks.map(d => (
-					<button 
-						key={d.deckId} 
+					<button
+						key={d.deckId}
 						onClick={() => onDeckSelect(d)}
 						className={cn(
 							"px-3 sm:px-5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 cursor-pointer",
-							deck.deckId === d.deckId 
+							deck.deckId === d.deckId
 								? "bg-primary text-primary-foreground scale-105"
 								: "text-muted-foreground hover:bg-white/10 hover:text-foreground"
 						)}
@@ -68,12 +70,14 @@ export function DeckBuilderDock({
 				))}
 			</div>
 
-			<div className="bg-background/80 border-primary/20 relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl transition-all w-full">
+			<div className="bg-background/80 border-primary/20 relative rounded-2xl border shadow-2xl backdrop-blur-xl transition-all w-full">
 				{/* Subtle Background Glows */}
-				<div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-				<div className="absolute -right-24 -bottom-24 h-48 w-48 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+				<div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none z-0">
+					<div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+					<div className="absolute -right-24 -bottom-24 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+				</div>
 
-				<div className="relative flex items-center gap-6 p-4">
+				<div className="relative z-10 flex items-center gap-6 p-4">
 					{/* Left Info */}
 					<div className="hidden flex-col justify-center sm:flex shrink-0">
 						<span className="text-[10px] font-bold text-primary uppercase tracking-widest">Active Deck</span>
@@ -90,8 +94,19 @@ export function DeckBuilderDock({
 										e.preventDefault()
 										e.dataTransfer.dropEffect = "move"
 									}}
+									onDragEnter={(e) => {
+										e.preventDefault()
+										setDragHoverSlot(slot.id)
+									}}
+									onDragLeave={(e) => {
+										e.preventDefault()
+										if (dragHoverSlot === slot.id) {
+											setDragHoverSlot(null)
+										}
+									}}
 									onDrop={(e) => {
 										e.preventDefault()
+										setDragHoverSlot(null)
 										const data = e.dataTransfer.getData("application/json")
 										if (data) {
 											try {
@@ -103,11 +118,12 @@ export function DeckBuilderDock({
 										}
 									}}
 									className={cn(
-										"relative h-16 w-12 sm:h-20 sm:w-16 cursor-pointer overflow-hidden rounded-lg border-2 transition-all duration-300",
+										"relative w-14 h-20 sm:w-[72px] sm:h-[102px] cursor-pointer overflow-hidden rounded-xl transition-all duration-300 shrink-0",
 										activeSlot === slot.id
-											? "border-primary ring-4 ring-primary/20 scale-105"
-											: "border-white/10 hover:border-white/30",
-										!slot.card && "bg-white/5 flex items-center justify-center border-dashed"
+											? "ring-2 ring-primary ring-offset-2 ring-offset-background/80 scale-110 shadow-xl shadow-primary/30 z-10"
+											: "hover:scale-105 z-0",
+										dragHoverSlot === slot.id && !activeSlot && "scale-105 z-10",
+										!slot.card && "bg-white/5 flex items-center justify-center border-2 border-dashed border-white/20 hover:border-white/40"
 									)}
 								>
 									{slot.card ? (
