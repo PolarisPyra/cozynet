@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react"
 
-import { LayoutGrid, List } from "lucide-react"
-
 import { OngekiRatingInfoCard } from "@/app/features/ongeki/components/rating-info-card"
 import { OngekiRatingColors } from "@/app/features/ongeki/components/rating-colors"
 import { ratingFilters, useOngekiRatingData, useOngekiVersion } from "@/app/features/ongeki/hooks"
+import { DensityToggle } from "@/app/shared/components/common/density-toggle"
 import Header from "@/app/shared/components/common/header"
 import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import Spinner from "@/app/shared/components/common/spinner"
@@ -105,14 +104,6 @@ export function OngekiRatingFrames() {
 		<Container>
 			<Header
 				title="Rating"
-				actions={
-					<InlineFilters
-						filters={filters}
-						filterValues={filterValues}
-						onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
-						onClearAll={() => setFilterValues(getDefaults(filters))}
-					/>
-				}
 				searchProps={{
 					items: filtered.map((rating: OngekiRating, index: number) => ({ id: index, title: rating.title || "" })),
 					onSelect: setSearchQuery,
@@ -123,28 +114,22 @@ export function OngekiRatingFrames() {
 			/>
 
 			<Body>
+				<div className="mb-4 flex flex-col gap-4">
+					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
+						<div className="flex items-center gap-2">
+							{/* Placeholder for potential future buttons */}
+						</div>
+						<DensityToggle density={density} onChange={setDensity} />
+					</div>
 
-
-				<div className="mb-4 flex items-center justify-end gap-2">
-					<Button
-						variant={density === "grid" ? "secondary" : "outline"}
-						size="sm"
-						onClick={() => setDensity("grid")}
-						className="h-8 text-xs"
-					>
-						<LayoutGrid className="h-3.5 w-3.5" />
-						Grid
-					</Button>
-
-					<Button
-						variant={density === "list" ? "secondary" : "outline"}
-						size="sm"
-						onClick={() => setDensity("list")}
-						className="h-8 text-xs"
-					>
-						<List className="h-3.5 w-3.5" />
-						List
-					</Button>
+					<div className="flex justify-center sm:justify-end">
+						<InlineFilters
+							filters={filters}
+							filterValues={filterValues}
+							onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
+							onClearAll={() => setFilterValues(getDefaults(filters))}
+						/>
+					</div>
 				</div>
 
 				{filtered.length === 0 ? (

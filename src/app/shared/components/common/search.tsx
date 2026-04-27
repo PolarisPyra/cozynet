@@ -131,7 +131,7 @@ export const Search = ({
 				<Button
 					variant="outline"
 					className={cn(
-						"relative h-8 w-full justify-start pl-3 font-medium shadow-none hover:cursor-pointer sm:pr-12 md:w-48 lg:w-56 xl:w-64"
+						"relative h-9 w-full justify-start pl-3 font-medium shadow-none hover:cursor-pointer sm:h-8 sm:pr-12 md:w-48 lg:w-56 xl:w-64"
 					)}
 				>
 					<span className="hidden lg:inline-flex">{placeholder}</span>

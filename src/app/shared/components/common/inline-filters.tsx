@@ -29,7 +29,7 @@ export function InlineFilters({
 	}, 0)
 
 	return (
-		<div className={cn("flex flex-wrap items-center gap-2", isVertical && "flex-col items-stretch")}>
+		<div className={cn("flex flex-wrap items-center gap-1.5 sm:gap-2", isVertical && "flex-col items-stretch")}>
 			{filters.map(filter => {
 				const selectedValue = filterValues[filter.identifier] || "all"
 				const selectedOption = filter.options.find(option => option.value === selectedValue)
@@ -43,7 +43,7 @@ export function InlineFilters({
 						<Select value={selectedValue} onValueChange={value => onFilterChange(filter.identifier, value)}>
 							<SelectTrigger
 								className={cn(
-									"h-8 w-auto min-w-[105px] rounded-full border-transparent bg-secondary/40 px-3 text-xs font-medium transition-colors hover:bg-secondary/60 focus:ring-0",
+									"h-8 w-auto min-w-[90px] xs:min-w-[105px] rounded-full border-transparent bg-secondary/40 px-2.5 xs:px-3 text-xs font-medium transition-colors hover:bg-secondary/60 focus:ring-0",
 									isVertical && "w-full rounded-md",
 									!isDefaultSelection && "bg-pink-500 text-white hover:bg-pink-600 shadow-md"
 								)}

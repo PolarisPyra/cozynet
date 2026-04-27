@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import SongInfoCard from "@/app/features/chunithm/components/song-info-card"
 import { songFilters, useChunithmSongs } from "@/app/features/chunithm/hooks"
 import useGroupedSongs from "@/app/features/chunithm/hooks/use-grouped-songs"
+import { DensityToggle } from "@/app/shared/components/common/density-toggle"
 import Header from "@/app/shared/components/common/header"
 import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import { Pagination } from "@/app/shared/components/common/pagination"
@@ -86,15 +87,6 @@ export default function ChunithmAllSongs() {
 		<Container>
 			<Header
 				title="All Songs"
-				actions={
-					<InlineFilters
-						filters={inlineFilters}
-						filterValues={filterValues}
-						onFilterChange={handleFilterChange}
-						onClearAll={handleClearAll}
-						labelOverrides={{ chartType: "Difficulty" }}
-					/>
-				}
 				searchProps={{
 					items: searchItems,
 					onSelect: setSearchQuery,
@@ -105,26 +97,23 @@ export default function ChunithmAllSongs() {
 			/>
 
 			<Body>
-				<div className="mb-4 flex justify-end gap-2">
-					<Button
-						variant={viewMode === "grid" ? "secondary" : "outline"}
-						size="sm"
-						onClick={() => setViewMode("grid")}
-						className="h-8 text-xs"
-					>
-						<LayoutGrid className="h-3.5 w-3.5" />
-						Grid
-					</Button>
+				<div className="mb-4 flex flex-col gap-4">
+					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
+						<div className="flex items-center gap-2">
+							{/* Placeholder for potential future buttons */}
+						</div>
+						<DensityToggle density={viewMode} onChange={setViewMode} />
+					</div>
 
-					<Button
-						variant={viewMode === "list" ? "secondary" : "outline"}
-						size="sm"
-						onClick={() => setViewMode("list")}
-						className="h-8 text-xs"
-					>
-						<List className="h-3.5 w-3.5" />
-						List
-					</Button>
+					<div className="flex justify-center sm:justify-end">
+						<InlineFilters
+							filters={inlineFilters}
+							filterValues={filterValues}
+							onFilterChange={handleFilterChange}
+							onClearAll={handleClearAll}
+							labelOverrides={{ chartType: "Difficulty" }}
+						/>
+					</div>
 				</div>
 
 				{grouped.length === 0 ? (

@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import FavoriteCard from "@/app/features/chunithm/components/favorite-card"
 import { useAddFavorite, useChunithmSongs, useChunithmVersion, useFavorites, useRemoveFavorite } from "@/app/features/chunithm/hooks"
+import { DensityToggle } from "@/app/shared/components/common/density-toggle"
 import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
@@ -121,40 +122,6 @@ export default function ChunithmFavorites() {
 		<Container>
 			<Header
 				title="Favorites"
-				actions={
-					<div className="flex items-center gap-2">
-						<Button
-							variant={density === "grid" ? "secondary" : "outline"}
-							size="sm"
-							onClick={() => setDensity("grid")}
-							className="h-8 text-xs"
-						>
-							<LayoutGrid className="h-3.5 w-3.5" />
-							Grid
-						</Button>
-
-						<Button
-							variant={density === "list" ? "secondary" : "outline"}
-							size="sm"
-							onClick={() => setDensity("list")}
-							className="h-8 text-xs"
-						>
-							<List className="h-3.5 w-3.5" />
-							List
-						</Button>
-
-						{deepLinkedSongId != null && (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => navigate("/chunithm/favorites")}
-								className="h-8 text-xs"
-							>
-								Show All
-							</Button>
-						)}
-					</div>
-				}
 				searchProps={{
 					items: searchItems,
 					onSelect: (_, item) => {
@@ -171,6 +138,24 @@ export default function ChunithmFavorites() {
 			/>
 
 			<Body>
+				<div className="mb-4 flex flex-col gap-4">
+					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
+						<div className="flex items-center gap-2">
+							{deepLinkedSongId != null && (
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => navigate("/chunithm/favorites")}
+									className="h-8 text-xs"
+								>
+									Show All Songs
+								</Button>
+							)}
+						</div>
+
+						<DensityToggle density={density} onChange={setDensity} />
+					</div>
+				</div>
 				{filtered.length === 0 ? (
 					<div className="text-muted-foreground py-20 text-center">No songs found</div>
 				) : density === "list" ? (

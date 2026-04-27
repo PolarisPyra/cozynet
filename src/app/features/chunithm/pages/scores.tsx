@@ -72,14 +72,6 @@ export default function ChunithmScorePage() {
 		<Container>
 			<Header
 				title="Scores"
-				actions={
-					<InlineFilters
-						filters={scoreFilters}
-						filterValues={filterValues}
-						onFilterChange={handleFilterChange}
-						onClearAll={resetFilters}
-					/>
-				}
 				searchProps={{
 					items: searchItems,
 					onSelect: setSearchQuery,
@@ -91,16 +83,24 @@ export default function ChunithmScorePage() {
 			/>
 
 			<Body>
-				<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-					<div className="flex flex-wrap gap-2">
+				<div className="mb-4 flex flex-col gap-4">
+					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
 						<KamaiSyncButtons
 							onExport={handleExport}
 							isExporting={isExporting}
 							importDialog={<ChunithmKamaiImportDialog existingScores={scores || []} />}
 						/>
+						<DensityToggle density={density} onChange={setDensity} />
 					</div>
 
-					<DensityToggle density={density} onChange={setDensity} className="ml-auto" />
+					<div className="flex justify-center sm:justify-end">
+						<InlineFilters
+							filters={scoreFilters}
+							filterValues={filterValues}
+							onFilterChange={handleFilterChange}
+							onClearAll={resetFilters}
+						/>
+					</div>
 				</div>
 
 				{showEmptyState ? (

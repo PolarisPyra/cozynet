@@ -147,17 +147,17 @@ export default function OngekiDeckManagementPage() {
 					groupLabel: "Cards",
 					recentStorageKey: "recent:ongeki:cards"
 				}}
-				actions={
+			/>
+
+			<Body>
+				<div className="mb-6 flex justify-center sm:justify-end">
 					<InlineFilters
 						filters={cardFilters}
 						filterValues={filterValues}
 						onFilterChange={handleFilterChange}
 						onClearAll={resetFilters}
 					/>
-				}
-			/>
-
-			<Body>
+				</div>
 				{/* Modern Stats / Info Bar */}
 				<div className="mb-6 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between border-b border-border/50 pb-6">
 					<div className="flex flex-wrap items-center gap-6">
