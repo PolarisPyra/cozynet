@@ -45,7 +45,7 @@ export function InlineFilters({
 								className={cn(
 									"h-8 w-auto min-w-[105px] rounded-full border-transparent bg-secondary/40 px-3 text-xs font-medium transition-colors hover:bg-secondary/60 focus:ring-0",
 									isVertical && "w-full rounded-md",
-									!isDefaultSelection && "bg-primary text-primary-foreground hover:bg-primary/90"
+									!isDefaultSelection && "bg-pink-500 text-white hover:bg-pink-600 shadow-md"
 								)}
 							>
 								<SelectValue placeholder={displayLabel}>
