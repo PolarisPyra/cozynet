@@ -68,16 +68,18 @@ const Header = ({ title, description, searchProps, actions }: HeaderProps) => {
 						</div>
 					</div>
 
-					<div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-2">
+					<div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
 						{actions && <div className="flex items-center justify-end gap-1.5 sm:gap-2">{actions}</div>}
 						{searchProps && (
-							<div className="w-full sm:max-w-[200px] sm:flex-initial">
+							<div className="w-full sm:w-52 lg:w-64">
 								<Search {...searchProps} />
 							</div>
 						)}
-						<div className="hidden items-center gap-2 sm:flex">
-							<Separator orientation="vertical" className="ml-1 h-6! sm:ml-2" />
-							<ModeToggle />
+						<div className="flex items-center justify-end gap-2 sm:gap-3">
+							<Separator orientation="vertical" className="hidden h-6! sm:block" />
+							<div className="hidden sm:block">
+								<ModeToggle />
+							</div>
 						</div>
 					</div>
 				</CardHeader>
