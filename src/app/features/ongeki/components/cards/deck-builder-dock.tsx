@@ -8,6 +8,8 @@ import type { DB } from "@/app/shared/types"
 
 interface DeckBuilderDockProps {
 	deck: DB.OngekiUserDeck
+	allDecks: DB.OngekiUserDeck[]
+	onDeckSelect: (deck: DB.OngekiUserDeck) => void
 	allCards: (DB.OngekiUserCard & DB.OngekiStaticCards)[]
 	activeSlot: number | null
 	onSlotClick: (slot: number) => void
@@ -22,6 +24,8 @@ interface DeckBuilderDockProps {
 
 export function DeckBuilderDock({
 	deck,
+	allDecks,
+	onDeckSelect,
 	allCards,
 	activeSlot,
 	onSlotClick,
@@ -45,8 +49,26 @@ export function DeckBuilderDock({
 
 
 	return (
-		<div className="fixed bottom-6 left-1/2 z-[100] w-full max-w-2xl -translate-x-1/2 px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
-			<div className="bg-background/80 border-primary/20 relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl transition-all hover:border-primary/40">
+		<div className="fixed bottom-6 left-1/2 z-[100] w-full max-w-2xl -translate-x-1/2 px-4 animate-in fade-in slide-in-from-bottom-8 duration-500 flex flex-col items-center gap-3">
+			{/* Deck Selector */}
+			<div className="flex gap-1 sm:gap-2 bg-background/60 p-1.5 rounded-2xl backdrop-blur-md border border-white/10 shadow-xl mx-auto">
+				{allDecks.map(d => (
+					<button 
+						key={d.deckId} 
+						onClick={() => onDeckSelect(d)}
+						className={cn(
+							"px-3 sm:px-5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 cursor-pointer",
+							deck.deckId === d.deckId 
+								? "bg-primary text-primary-foreground scale-105"
+								: "text-muted-foreground hover:bg-white/10 hover:text-foreground"
+						)}
+					>
+						Deck {d.deckId}
+					</button>
+				))}
+			</div>
+
+			<div className="bg-background/80 border-primary/20 relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl transition-all w-full">
 				{/* Subtle Background Glows */}
 				<div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
 				<div className="absolute -right-24 -bottom-24 h-48 w-48 rounded-full bg-primary/5 blur-3xl pointer-events-none" />

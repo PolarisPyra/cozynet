@@ -4,6 +4,7 @@ import { Upload } from "lucide-react"
 
 import { ChunithmKamaiImportDialog } from "@/app/features/chunithm/components/kamai-import-dialog"
 import { scoreFilters, useChunithmScores, useScoreExporter, useChunithmVersion } from "@/app/features/chunithm/hooks"
+import { KamaiSyncButtons } from "@/app/shared/components/common/kamai-sync-buttons"
 import { ChunithmScoreGrid } from "@/app/features/chunithm/components/scores/score-grid"
 import { ChunithmScoreTable } from "@/app/features/chunithm/components/scores/score-table"
 import Header from "@/app/shared/components/common/header"
@@ -92,12 +93,11 @@ export default function ChunithmScorePage() {
 			<Body>
 				<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
 					<div className="flex flex-wrap gap-2">
-						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
-							<Upload className="h-4 w-4" />
-							{isExporting ? "Exporting..." : "Export to Kamai"}
-						</Button>
-
-						<ChunithmKamaiImportDialog existingScores={scores || []} />
+						<KamaiSyncButtons
+							onExport={handleExport}
+							isExporting={isExporting}
+							importDialog={<ChunithmKamaiImportDialog existingScores={scores || []} />}
+						/>
 					</div>
 
 					<DensityToggle density={density} onChange={setDensity} className="ml-auto" />

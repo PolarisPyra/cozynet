@@ -19,7 +19,6 @@ export default function OngekiDeckManagementPage() {
 
 	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState(() => getDefaults(cardFilters))
-	const [showFilters, setShowFilters] = useState(false)
 	const [isDockVisible, setIsDockVisible] = useState(true)
 
 	const [draftDeck, setDraftDeck] = useState<DB.OngekiUserDeck | null>(null)
@@ -108,6 +107,11 @@ export default function OngekiDeckManagementPage() {
 		setDraftDeck(newDeck)
 	}
 
+	const handleDeckSelect = (deck: DB.OngekiUserDeck) => {
+		setDraftDeck(deck)
+		setActiveSlot(null)
+	}
+
 	const handleSave = () => {
 		if (!draftDeck) return
 		updateDeck.mutate({
@@ -135,7 +139,6 @@ export default function OngekiDeckManagementPage() {
 		<Container>
 			<Header
 				title="Deck Builder"
-				description="Assemble your tactical team and optimize character skills."
 				searchProps={{
 					items: cards.map(c => ({ id: c.cardId ?? 0, title: c.name || "" })),
 					onSelect: setSearchQuery,
@@ -145,30 +148,46 @@ export default function OngekiDeckManagementPage() {
 					recentStorageKey: "recent:ongeki:cards"
 				}}
 				actions={
-					<div className="hidden sm:flex items-center gap-4 mr-2">
-						<div className="flex flex-col items-end gap-1">
-							<div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-								<Sparkles className="h-3 w-3 text-yellow-500" />
-								Collection {stats.percentage}%
-							</div>
-							<Progress value={stats.percentage} className="h-1 w-24 bg-white/5" />
-						</div>
-					</div>
+					<InlineFilters
+						filters={cardFilters}
+						filterValues={filterValues}
+						onFilterChange={handleFilterChange}
+						onClearAll={resetFilters}
+					/>
 				}
 			/>
 
 			<Body>
 				{/* Modern Stats / Info Bar */}
-				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-6">
-					<div className="flex items-center gap-4">
-						<div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-xl">
-							<LayoutGrid className="h-5 w-5 text-primary" />
+				<div className="mb-6 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between border-b border-border/50 pb-6">
+					<div className="flex flex-wrap items-center gap-6">
+						<div className="flex items-center gap-4">
+							<div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-xl">
+								<LayoutGrid className="h-5 w-5 text-primary" />
+							</div>
+							<div>
+								<h2 className="text-sm font-bold tracking-tight">Team Management</h2>
+								<p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
+									{filtered.length} Cards Available
+								</p>
+							</div>
 						</div>
-						<div>
-							<h2 className="text-sm font-bold">Team Management</h2>
-							<p className="text-muted-foreground text-[10px] font-medium uppercase">
-								{filtered.length} Cards Available
-							</p>
+
+						<div className="hidden h-8 w-[1px] bg-border/50 sm:block" />
+
+						<div className="flex items-center gap-4">
+							<div className="bg-pink-500/10 flex h-10 w-10 items-center justify-center rounded-xl">
+								<Sparkles className="h-5 w-5 text-pink-500" />
+							</div>
+							<div className="flex flex-col gap-1.5">
+								<div className="flex items-center gap-3">
+									<span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+										Collection Rate
+									</span>
+									<span className="text-sm font-bold text-pink-500">{stats.percentage}%</span>
+								</div>
+								<Progress value={stats.percentage} className="h-1.5 w-32 bg-muted" />
+							</div>
 						</div>
 					</div>
 
@@ -176,38 +195,15 @@ export default function OngekiDeckManagementPage() {
 						{!isDockVisible && (
 							<Button
 								onClick={() => setIsDockVisible(true)}
-								className="h-9 shadow-lg shadow-primary/20"
+								className="h-10 bg-primary text-primary-foreground font-bold px-6"
 							>
-								Open Deck Editor
+								Deck Editor
 							</Button>
 						)}
-						<Button
-							variant={showFilters ? "secondary" : "outline"}
-							size="sm"
-							onClick={() => setShowFilters(!showFilters)}
-							className="h-9"
-						>
-							<Filter className="mr-2 h-4 w-4" />
-							Filters
-						</Button>
 					</div>
 				</div>
 
 				<div className="flex flex-col gap-6 lg:flex-row pb-32">
-					{/* Tactical Sidebar (Conditional) */}
-					{showFilters && (
-						<aside className="sticky top-20 w-full shrink-0 self-start lg:w-64">
-							<div className="bg-accent/5 rounded-2xl border border-white/10 p-4 backdrop-blur-md">
-								<InlineFilters
-									filters={cardFilters}
-									filterValues={filterValues}
-									onFilterChange={handleFilterChange}
-									onClearAll={resetFilters}
-									isVertical
-								/>
-							</div>
-						</aside>
-					)}
 
 					{/* Visual Gallery */}
 					<div className="flex-1">
@@ -233,6 +229,8 @@ export default function OngekiDeckManagementPage() {
 				{isDockVisible && draftDeck && (
 					<DeckBuilderDock
 						deck={draftDeck}
+						allDecks={decks}
+						onDeckSelect={handleDeckSelect}
 						allCards={cards}
 						activeSlot={activeSlot}
 						onSlotClick={setActiveSlot}

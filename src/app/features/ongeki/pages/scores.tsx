@@ -4,6 +4,7 @@ import { Upload } from "lucide-react"
 
 import { OngekiKamaiImportDialog } from "@/app/features/ongeki/components/kamai-import-dialog"
 import { OngekiScoreGrid } from "@/app/features/ongeki/components/scores/score-grid"
+import { KamaiSyncButtons } from "@/app/shared/components/common/kamai-sync-buttons"
 import { OngekiScoreTable } from "@/app/features/ongeki/components/scores/score-table"
 import { scoreFilters, useOngekiScoreExporter, useOngekiScores, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
@@ -105,12 +106,11 @@ export function OngekiScorePage() {
 			<Body>
 				<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
 					<div className="flex flex-wrap gap-2">
-						<Button onClick={handleExport} variant="outline" size="sm" disabled={isExporting}>
-							<Upload className="h-4 w-4" />
-							{isExporting ? "Exporting..." : "Export to Kamai"}
-						</Button>
-
-						<OngekiKamaiImportDialog existingScores={scores || []} />
+						<KamaiSyncButtons
+							onExport={handleExport}
+							isExporting={isExporting}
+							importDialog={<OngekiKamaiImportDialog existingScores={scores || []} />}
+						/>
 					</div>
 
 					<DensityToggle density={density} onChange={setDensity} className="ml-auto" />
