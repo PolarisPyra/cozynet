@@ -76,7 +76,6 @@ const MENU_CONFIG: MenuItem[] = [
 				children: [
 					{ name: "Scores", href: "/ongeki/scores", icon: NotepadText },
 					{ name: "Deck Builder", href: "/ongeki/cards", icon: LayoutGrid },
-					{ name: "Userbox", href: "/ongeki/userbox", icon: Pencil },
 					{ name: "Rivals", href: "/ongeki/rivals", icon: Swords },
 					{ name: "Leaderboard", href: "/ongeki/leaderboard", icon: Trophy },
 					{ name: "All Songs", href: "/ongeki/allsongs", icon: BoomBox },
