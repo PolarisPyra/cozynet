@@ -5,12 +5,12 @@ import { LayoutGrid, List } from "lucide-react"
 import ChunithmRatingInfoCard from "@/app/features/chunithm/components/rating-info-card"
 import { ratingFilters, useChunithmRatingData, useChunithmVersion } from "@/app/features/chunithm/hooks"
 import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Button } from "@/app/shared/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/shared/components/ui/table"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
-import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 import type { ChunithmRating, FilterValues } from "@/app/shared/types"
 import { chunithmBadgeColors, calculateChunithmRating, getChunithmGrade, getDifficultyFromChunithmChart } from "@/app/shared/utils/chunithm"
 import { ChunithmRatingColors } from "@/app/features/chunithm/components/rating-colors"
@@ -106,6 +106,14 @@ export default function ChunithmRatingPage() {
 		<Container>
 			<Header
 				title="Rating"
+				actions={
+					<InlineFilters
+						filters={filters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(filters))}
+					/>
+				}
 				searchProps={{
 					items: sorted.map((rating: ChunithmRating, index: number) => ({ id: index, title: rating.title || "" })),
 					onSelect: setSearchQuery,
@@ -116,38 +124,27 @@ export default function ChunithmRatingPage() {
 			/>
 
 			<Body>
-				<FilterArea>
-					<div className="flex flex-wrap items-center justify-between gap-2">
-						<MultiFilter
-							filters={filters}
-							filterValues={filterValues}
-							onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
-							onClearAll={() => setFilterValues(getDefaults(filters))}
-						/>
+				<div className="mb-4 flex items-center justify-end gap-2">
+					<Button
+						variant={density === "grid" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setDensity("grid")}
+						className="h-8 text-xs"
+					>
+						<LayoutGrid className="h-3.5 w-3.5" />
+						Grid
+					</Button>
 
-						<div className="ml-auto flex items-center gap-2">
-							<Button
-								variant={density === "grid" ? "secondary" : "outline"}
-								size="sm"
-								onClick={() => setDensity("grid")}
-								className="h-8 text-xs"
-							>
-								<LayoutGrid className="h-3.5 w-3.5" />
-								Grid
-							</Button>
-
-							<Button
-								variant={density === "list" ? "secondary" : "outline"}
-								size="sm"
-								onClick={() => setDensity("list")}
-								className="h-8 text-xs"
-							>
-								<List className="h-3.5 w-3.5" />
-								List
-							</Button>
-						</div>
-					</div>
-				</FilterArea>
+					<Button
+						variant={density === "list" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setDensity("list")}
+						className="h-8 text-xs"
+					>
+						<List className="h-3.5 w-3.5" />
+						List
+					</Button>
+				</div>
 
 				{sorted.length === 0 ? (
 					<div className="text-muted-foreground py-20 text-center">No ratings found</div>

@@ -6,6 +6,7 @@ import { useUserboxPending } from "@/app/features/chunithm/components/userbox/us
 import { useCurrentTrophies, useEquipTrophy, useSearchTrophies, useUnlockTrophy, type TrophyItem } from "@/app/features/chunithm/hooks/userbox/trophy"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
@@ -178,19 +179,16 @@ export function Trophy() {
 				onUnlock={handleUnlock}
 				imageClassName="w-full h-12 object-contain"
 				headerControls={
-					<Select
+					<Tabs
 						value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
 						onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
 					>
-						<SelectTrigger className="w-full">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">All</SelectItem>
-							<SelectItem value="unlocked">Unlocked</SelectItem>
-							<SelectItem value="locked">Locked</SelectItem>
-						</SelectContent>
-					</Select>
+						<TabsList>
+							<TabsTrigger value="all">All</TabsTrigger>
+							<TabsTrigger value="unlocked">Unlocked</TabsTrigger>
+							<TabsTrigger value="locked">Locked</TabsTrigger>
+						</TabsList>
+					</Tabs>
 				}
 			/>
 		</div>

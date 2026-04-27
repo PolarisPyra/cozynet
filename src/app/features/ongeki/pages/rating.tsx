@@ -2,18 +2,16 @@ import { useEffect, useState } from "react"
 
 import { LayoutGrid, List } from "lucide-react"
 
-import { OngekiRatingDisplay } from "@/app/features/ongeki/components/rating-display"
 import { OngekiRatingInfoCard } from "@/app/features/ongeki/components/rating-info-card"
 import { OngekiRatingColors } from "@/app/features/ongeki/components/rating-colors"
 import { ratingFilters, useOngekiRatingData, useOngekiVersion } from "@/app/features/ongeki/hooks"
 import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Button } from "@/app/shared/components/ui/button"
-import { Card, CardContent } from "@/app/shared/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/shared/components/ui/table"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
-import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 import type { FilterValues, OngekiRating } from "@/app/shared/types"
 import { CDN } from "@/app/shared/utils/constants"
 import { formatLevel } from "@/app/shared/utils/format-level"
@@ -107,6 +105,14 @@ export function OngekiRatingFrames() {
 		<Container>
 			<Header
 				title="Rating"
+				actions={
+					<InlineFilters
+						filters={filters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(filters))}
+					/>
+				}
 				searchProps={{
 					items: filtered.map((rating: OngekiRating, index: number) => ({ id: index, title: rating.title || "" })),
 					onSelect: setSearchQuery,
@@ -117,48 +123,29 @@ export function OngekiRatingFrames() {
 			/>
 
 			<Body>
-				<Card className="mb-4 rounded-sm">
-					<CardContent className="px-4 py-2">
-						<OngekiRatingDisplay
-							playerRating={playerRatingValue}
-							highestRating={highestRatingValue}
-							ratingDecimals={ratingDecimals}
-						/>
-					</CardContent>
-				</Card>
 
-				<FilterArea>
-					<div className="flex flex-wrap items-center justify-between gap-2">
-						<MultiFilter
-							filters={filters}
-							filterValues={filterValues}
-							onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
-							onClearAll={() => setFilterValues(getDefaults(filters))}
-						/>
 
-						<div className="ml-auto flex items-center gap-2">
-							<Button
-								variant={density === "grid" ? "secondary" : "outline"}
-								size="sm"
-								onClick={() => setDensity("grid")}
-								className="h-8 text-xs"
-							>
-								<LayoutGrid className="h-3.5 w-3.5" />
-								Grid
-							</Button>
+				<div className="mb-4 flex items-center justify-end gap-2">
+					<Button
+						variant={density === "grid" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setDensity("grid")}
+						className="h-8 text-xs"
+					>
+						<LayoutGrid className="h-3.5 w-3.5" />
+						Grid
+					</Button>
 
-							<Button
-								variant={density === "list" ? "secondary" : "outline"}
-								size="sm"
-								onClick={() => setDensity("list")}
-								className="h-8 text-xs"
-							>
-								<List className="h-3.5 w-3.5" />
-								List
-							</Button>
-						</div>
-					</div>
-				</FilterArea>
+					<Button
+						variant={density === "list" ? "secondary" : "outline"}
+						size="sm"
+						onClick={() => setDensity("list")}
+						className="h-8 text-xs"
+					>
+						<List className="h-3.5 w-3.5" />
+						List
+					</Button>
+				</div>
 
 				{filtered.length === 0 ? (
 					<div className="text-muted-foreground py-20 text-center">No ratings found</div>

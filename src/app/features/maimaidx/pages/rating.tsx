@@ -4,14 +4,14 @@ import { MaimaiRatingDisplay } from "@/app/features/maimaidx/components/rating-d
 import { MaimaiRatingInfoCard } from "@/app/features/maimaidx/components/rating-info-card"
 import { ratingFilters, useMaimaiDxRatingData, useMaimaiDxVersion } from "@/app/features/maimaidx/hooks"
 import Header from "@/app/shared/components/common/header"
-import { MultiFilter } from "@/app/shared/components/common/multi-filter"
+import { InlineFilters } from "@/app/shared/components/common/inline-filters"
 import { Pagination } from "@/app/shared/components/common/pagination"
 import Spinner from "@/app/shared/components/common/spinner"
 import { Card, CardContent } from "@/app/shared/components/ui/card"
 import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { getDefaults, useFiltering } from "@/app/shared/hooks/use-filtering"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
-import { Body, CardGrid, Container, FilterArea } from "@/app/shared/pages/layout/layout"
+import { Body, CardGrid, Container } from "@/app/shared/pages/layout/layout"
 import type { FilterValues, MaimaiRating } from "@/app/shared/types"
 import { maimaiDxBadgeColors } from "@/app/shared/utils/maimai"
 
@@ -54,6 +54,14 @@ export function MaimaiDxRatingFrames() {
 		<Container>
 			<Header
 				title="Rating"
+				actions={
+					<InlineFilters
+						filters={ratingFilters}
+						filterValues={filterValues}
+						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
+						onClearAll={() => setFilterValues(getDefaults(ratingFilters))}
+					/>
+				}
 				searchProps={{
 					items: filtered.map((r: MaimaiRating, i: number) => ({ id: i, title: r.title || "" })),
 					onSelect: setSearchQuery,
@@ -68,15 +76,6 @@ export function MaimaiDxRatingFrames() {
 						<MaimaiRatingDisplay playerRating={playerRatingValue} highestRating={highestRatingValue} />
 					</CardContent>
 				</Card>
-
-				<FilterArea>
-					<MultiFilter
-						filters={ratingFilters}
-						filterValues={filterValues}
-						onFilterChange={(id, val) => setFilterValues(p => ({ ...p, [id]: val }))}
-						onClearAll={() => setFilterValues(getDefaults(ratingFilters))}
-					/>
-				</FilterArea>
 
 				<CardGrid>
 					{displayItems.map((rating: MaimaiRating, idx: number) => (

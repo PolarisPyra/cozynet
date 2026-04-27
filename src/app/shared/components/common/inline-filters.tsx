@@ -41,7 +41,13 @@ export function InlineFilters({
 					<div key={filter.identifier} className={cn("flex items-center gap-2", isVertical && "flex-col items-start")}>
 						{isVertical && <span className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">{filter.label}</span>}
 						<Select value={selectedValue} onValueChange={value => onFilterChange(filter.identifier, value)}>
-							<SelectTrigger className={cn("h-8 w-auto min-w-[105px] rounded-sm px-2 text-xs", isVertical && "w-full")}>
+							<SelectTrigger
+								className={cn(
+									"h-8 w-auto min-w-[105px] rounded-full border-transparent bg-secondary/40 px-3 text-xs font-medium transition-colors hover:bg-secondary/60 focus:ring-0",
+									isVertical && "w-full rounded-md",
+									!isDefaultSelection && "bg-primary text-primary-foreground hover:bg-primary/90"
+								)}
+							>
 								<SelectValue placeholder={displayLabel}>
 									{isDefaultSelection ? (
 										displayLabel

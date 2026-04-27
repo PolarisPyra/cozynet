@@ -13,6 +13,7 @@ import {
 } from "@/app/features/chunithm/hooks/userbox/avatar"
 import { Button } from "@/app/shared/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/shared/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { ItemSelectionDialog } from "@/app/shared/components/userbox/item-selection-dialog"
 import { CDN } from "@/app/shared/utils/constants"
 
@@ -222,39 +223,31 @@ export function AvatarAccessories() {
 				onUnlock={handleUnlock}
 				imageClassName="h-16 w-16"
 				headerControls={
-					<div className="flex flex-col gap-3">
-						<div className="flex gap-2">
-							<div className="flex-1">
-								<Select value={selectedSlot} onValueChange={v => setSelectedSlot(v as AvatarSlot | "all")}>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Select category" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="all">All Categories</SelectItem>
-										{Object.entries(SLOT_LABELS).map(([value, label]) => (
-											<SelectItem key={value} value={value}>
-												{label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-							<div className="flex-1">
-								<Select
-									value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
-									onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
-								>
-									<SelectTrigger className="w-full">
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="all">All</SelectItem>
-										<SelectItem value="unlocked">Unlocked</SelectItem>
-										<SelectItem value="locked">Locked</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-						</div>
+					<div className="flex w-full items-center gap-2 sm:w-auto">
+						<Select value={selectedSlot} onValueChange={v => setSelectedSlot(v as AvatarSlot | "all")}>
+							<SelectTrigger className="w-[140px] sm:w-[160px]">
+								<SelectValue placeholder="Select category" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All Categories</SelectItem>
+								{Object.entries(SLOT_LABELS).map(([value, label]) => (
+									<SelectItem key={value} value={value}>
+										{label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+
+						<Tabs
+							value={lockedFilter === null ? "all" : lockedFilter ? "locked" : "unlocked"}
+							onValueChange={v => setLockedFilter(v === "all" ? null : v === "locked" ? true : false)}
+						>
+							<TabsList>
+								<TabsTrigger value="all">All</TabsTrigger>
+								<TabsTrigger value="unlocked">Unlocked</TabsTrigger>
+								<TabsTrigger value="locked">Locked</TabsTrigger>
+							</TabsList>
+						</Tabs>
 					</div>
 				}
 			/>

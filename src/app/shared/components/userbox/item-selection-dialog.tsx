@@ -89,19 +89,25 @@ export function ItemSelectionDialog({
 					<DialogTitle>{title}</DialogTitle>
 				</DialogHeader>
 
-				{/* Header Controls (e.g., slot selector) */}
-				{headerControls && <div className="border-border border-b pb-3">{headerControls}</div>}
+				<div className="border-border flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+					{/* Search */}
+					<div className="relative w-full sm:max-w-xs">
+						<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+						<Input
+							type="text"
+							placeholder="Search..."
+							value={searchQuery}
+							onChange={e => setSearchQuery(e.target.value)}
+							className="bg-secondary/30 border-transparent pl-9 focus:border-primary"
+						/>
+					</div>
 
-				{/* Search */}
-				<div className="relative">
-					<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-					<Input
-						type="text"
-						placeholder="Search..."
-						value={searchQuery}
-						onChange={e => setSearchQuery(e.target.value)}
-						className="pl-9"
-					/>
+					{/* Header Controls (Filters) */}
+					{headerControls && (
+						<div className="flex w-full items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
+							{headerControls}
+						</div>
+					)}
 				</div>
 
 				{/* Items Grid */}

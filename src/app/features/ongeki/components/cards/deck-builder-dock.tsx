@@ -118,7 +118,7 @@ export function DeckBuilderDock({
 								)}
 							</div>
 						))}
-					</div>deckbuilder
+					</div>
 
 					{/* Actions */}
 					<div className="flex flex-col gap-2 shrink-0">
