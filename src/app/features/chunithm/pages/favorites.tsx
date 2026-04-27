@@ -152,7 +152,9 @@ export default function ChunithmFavorites() {
 								</Button>
 							)}
 						</div>
+					</div>
 
+					<div className="flex justify-start">
 						<DensityToggle density={density} onChange={setDensity} />
 					</div>
 				</div>

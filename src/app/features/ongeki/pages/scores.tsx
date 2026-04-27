@@ -103,10 +103,10 @@ export function OngekiScorePage() {
 							isExporting={isExporting}
 							importDialog={<OngekiKamaiImportDialog existingScores={scores || []} />}
 						/>
-						<DensityToggle density={density} onChange={setDensity} />
 					</div>
 
-					<div className="flex justify-center sm:justify-end">
+					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
+						<DensityToggle density={density} onChange={setDensity} />
 						<InlineFilters
 							filters={scoreFilters}
 							filterValues={filterValues}

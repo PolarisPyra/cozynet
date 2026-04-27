@@ -118,10 +118,10 @@ export function OngekiRatingFrames() {
 						<div className="flex items-center gap-2">
 							{/* Placeholder for potential future buttons */}
 						</div>
-						<DensityToggle density={density} onChange={setDensity} />
 					</div>
 
-					<div className="flex justify-center sm:justify-end">
+					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
+						<DensityToggle density={density} onChange={setDensity} />
 						<InlineFilters
 							filters={filters}
 							filterValues={filterValues}
