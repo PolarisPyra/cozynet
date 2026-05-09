@@ -173,7 +173,8 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 			</span>
 			{hasChildren && (
 				<ChevronRight
-					className={cn("ml-auto size-4 shrink-0 transition-transform duration-200", isOpen && "rotate-90")}
+					className={cn("ml-auto size-4 shrink-0 transition-all duration-500", isOpen && "rotate-90 scale-125")}
+					style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
 				/>
 			)}
 		</>
@@ -218,7 +219,11 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 				<SidebarMenuButton
 					asChild
 					isActive={isActive}
-					className={cn(isActive && "border-l-2", !borderColor && isActive && "border-primary")}
+					className={cn(
+						"transition-colors duration-200 hover:bg-accent/50",
+						isActive && "border-l-2", 
+						!borderColor && isActive && "border-primary"
+					)}
 					style={borderColor ? { borderLeftColor: borderColor } : undefined}
 				>
 					<Link to={href}>{buttonContent}</Link>

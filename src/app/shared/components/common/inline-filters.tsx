@@ -14,12 +14,14 @@ type InlineFiltersProps = {
 	isVertical?: boolean
 }
 
+const DEFAULT_LABEL_OVERRIDES = {}
+
 export function InlineFilters({
 	filters,
 	filterValues,
 	onFilterChange,
 	onClearAll,
-	labelOverrides = {},
+	labelOverrides = DEFAULT_LABEL_OVERRIDES,
 	isVertical = false
 }: InlineFiltersProps) {
 	const activeFilterCount = filters.reduce((count, filter) => {
@@ -29,7 +31,7 @@ export function InlineFilters({
 	}, 0)
 
 	return (
-		<div className={cn("flex flex-wrap items-center gap-1.5 sm:gap-2", isVertical && "flex-col items-stretch")}>
+		<div className={cn("flex flex-wrap items-center gap-3 sm:gap-4", isVertical && "flex-col items-stretch")}>
 			{filters.map(filter => {
 				const selectedValue = filterValues[filter.identifier] || "all"
 				const selectedOption = filter.options.find(option => option.value === selectedValue)
@@ -38,14 +40,14 @@ export function InlineFilters({
 				const isDefaultSelection = selectedValue === defaultValue
 
 				return (
-					<div key={filter.identifier} className={cn("flex items-center gap-2", isVertical && "flex-col items-start")}>
+					<div key={filter.identifier} className={cn("flex items-center gap-2.5", isVertical && "flex-col items-start")}>
 						{isVertical && <span className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">{filter.label}</span>}
 						<Select value={selectedValue} onValueChange={value => onFilterChange(filter.identifier, value)}>
 							<SelectTrigger
 								className={cn(
-									"h-8 w-auto min-w-[90px] xs:min-w-[105px] rounded-full border-transparent bg-secondary/40 px-2.5 xs:px-3 text-xs font-medium transition-colors hover:bg-secondary/60 focus:ring-0",
-									isVertical && "w-full rounded-md",
-									!isDefaultSelection && "bg-pink-500 text-white hover:bg-pink-600 shadow-md"
+									"h-9 w-auto min-w-[110px] rounded-xl border border-border/50 bg-muted/20 px-4 text-xs font-bold transition-all hover:bg-muted/40 hover:border-border focus:ring-2 focus:ring-primary/10",
+									isVertical && "w-full rounded-lg",
+									!isDefaultSelection && "bg-accent text-accent-foreground border-accent shadow-md scale-[1.02]"
 								)}
 							>
 								<SelectValue placeholder={displayLabel}>
@@ -54,7 +56,7 @@ export function InlineFilters({
 									) : selectedOption?.value.startsWith("star") ? (
 										<div className="flex items-center gap-1">
 											{Array.from({ length: parseInt(selectedOption.value.replace("star", ""), 10) }, (_, i) => (
-												<Star key={i} className="h-3.5 w-3.5 fill-current" />
+												<Star key={i} className="size-3.5 fill-current" />
 											))}
 										</div>
 									) : (
@@ -62,21 +64,21 @@ export function InlineFilters({
 									)}
 								</SelectValue>
 							</SelectTrigger>
-							<SelectContent>
+							<SelectContent className="rounded-xl border-border/50 shadow-xl">
 								{filter.options.map(option => {
 									if (option.value.startsWith("star")) {
 										return (
-											<SelectItem key={option.value} value={option.value}>
+											<SelectItem key={option.value} value={option.value} className="rounded-lg focus:bg-muted">
 												<div className="flex items-center gap-1.5">
 													{Array.from({ length: parseInt(option.value.replace("star", ""), 10) }, (_, i) => (
-														<Star key={i} className="h-3.5 w-3.5 fill-current" />
+														<Star key={i} className="size-3.5 fill-current" />
 													))}
 												</div>
 											</SelectItem>
 										)
 									}
 									return (
-										<SelectItem key={option.value} value={option.value}>
+										<SelectItem key={option.value} value={option.value} className="rounded-lg focus:bg-muted">
 											{option.label}
 										</SelectItem>
 									)
@@ -87,7 +89,15 @@ export function InlineFilters({
 				)
 			})}
 			{onClearAll && activeFilterCount > 0 && (
-				<Button variant="ghost" size="sm" onClick={onClearAll} className={cn("h-8 px-2 text-xs hover:cursor-pointer", isVertical && "w-full mt-2")}>
+				<Button 
+					variant="ghost" 
+					size="sm" 
+					onClick={onClearAll} 
+					className={cn(
+						"h-9 px-4 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors", 
+						isVertical && "w-full mt-2"
+					)}
+				>
 					Clear all
 				</Button>
 			)}

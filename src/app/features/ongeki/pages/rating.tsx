@@ -33,7 +33,7 @@ const PlatinumStars = function ({ count }: { count: number }) {
 					<img
 						key={i}
 						aria-hidden
-						className="inline-block h-3 w-3 object-contain"
+						className="inline-block size-3 object-contain"
 						src={starUrl(filled)}
 						alt={filled ? "Filled Star" : "Empty Star"}
 					/>
@@ -50,7 +50,7 @@ export function OngekiRatingFrames() {
 	const filters = ratingFilters(version || 0)
 
 	const [searchQuery, setSearchQuery] = useState("")
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(filters))
+	const [filterValues, setFilterValues] = useState<FilterValues>(() => getDefaults(filters))
 	const [density, setDensity] = useState<"list" | "grid">(() => {
 		try {
 			const saved = localStorage.getItem(ONGEKI_RATING_DENSITY_KEY)
@@ -121,13 +121,13 @@ export function OngekiRatingFrames() {
 					</div>
 
 					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
-						<DensityToggle density={density} onChange={setDensity} />
 						<InlineFilters
 							filters={filters}
 							filterValues={filterValues}
 							onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
 							onClearAll={() => setFilterValues(getDefaults(filters))}
 						/>
+						<DensityToggle density={density} onChange={setDensity} />
 					</div>
 				</div>
 

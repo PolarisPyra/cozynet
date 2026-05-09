@@ -31,7 +31,7 @@ export default function ChunithmRatingPage() {
 	const filters = ratingFilters(version || 0)
 
 	const [searchQuery, setSearchQuery] = useState("")
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(filters))
+	const [filterValues, setFilterValues] = useState<FilterValues>(() => getDefaults(filters))
 	const [density, setDensity] = useState<"list" | "grid">(() => {
 		try {
 			const saved = localStorage.getItem(CHUNITHM_RATING_DENSITY_KEY)
@@ -123,13 +123,13 @@ export default function ChunithmRatingPage() {
 					</div>
 
 					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
-						<DensityToggle density={density} onChange={setDensity} />
 						<InlineFilters
 							filters={filters}
 							filterValues={filterValues}
 							onFilterChange={(id, val) => setFilterValues(prev => ({ ...prev, [id]: val }))}
 							onClearAll={() => setFilterValues(getDefaults(filters))}
 						/>
+						<DensityToggle density={density} onChange={setDensity} />
 					</div>
 				</div>
 

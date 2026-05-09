@@ -23,7 +23,7 @@ const ONGEKI_ALLSONGS_VIEW_KEY = "ongeki-allsongs-view"
 
 export function OngekiAllSongs() {
 	const [searchQuery, setSearchQuery] = useState("")
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(songFilters))
+	const [filterValues, setFilterValues] = useState<FilterValues>(() => getDefaults(songFilters))
 	const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
 		try {
 			return localStorage.getItem(ONGEKI_ALLSONGS_VIEW_KEY) === "list" ? "list" : "grid"
@@ -59,7 +59,12 @@ export function OngekiAllSongs() {
 	}, [filtered])
 
 	const searchItems = useMemo(
-		() => grouped.filter(song => song.songId).map(song => ({ id: song.songId as number, title: song.title || "" })),
+		() => grouped.reduce((acc: { id: number; title: string }[], song) => {
+			if (song.songId) {
+				acc.push({ id: song.songId as number, title: song.title || "" })
+			}
+			return acc
+		}, []),
 		[grouped]
 	)
 
@@ -131,7 +136,6 @@ export function OngekiAllSongs() {
 					</div>
 
 					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
-						<DensityToggle density={viewMode} onChange={setViewMode} />
 						<InlineFilters
 							filters={songFilters}
 							filterValues={filterValues}
@@ -139,6 +143,7 @@ export function OngekiAllSongs() {
 							onClearAll={handleClearAll}
 							labelOverrides={{ chartType: "Difficulty" }}
 						/>
+						<DensityToggle density={viewMode} onChange={setViewMode} />
 					</div>
 				</div>
 

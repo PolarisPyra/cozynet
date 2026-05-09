@@ -24,7 +24,7 @@ const CHUNITHM_ALLSONGS_VIEW_KEY = "chunithm-allsongs-view"
 
 export default function ChunithmAllSongs() {
 	const [searchQuery, setSearchQuery] = useState("")
-	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(songFilters))
+	const [filterValues, setFilterValues] = useState<FilterValues>(() => getDefaults(songFilters))
 	const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
 		try {
 			return localStorage.getItem(CHUNITHM_ALLSONGS_VIEW_KEY) === "list" ? "list" : "grid"
@@ -42,7 +42,12 @@ export default function ChunithmAllSongs() {
 	const grouped = useGroupedSongs({ songs: filtered })
 	const inlineFilters = useMemo(() => songFilters, [])
 	const searchItems = useMemo(
-		() => grouped.filter(song => song.songId).map(song => ({ id: song.songId as number, title: song.title || "" })),
+		() => grouped.reduce((acc: { id: number; title: string }[], song) => {
+			if (song.songId) {
+				acc.push({ id: song.songId as number, title: song.title || "" })
+			}
+			return acc
+		}, []),
 		[grouped]
 	)
 
@@ -103,7 +108,6 @@ export default function ChunithmAllSongs() {
 					</div>
 
 					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
-						<DensityToggle density={viewMode} onChange={setViewMode} />
 						<InlineFilters
 							filters={inlineFilters}
 							filterValues={filterValues}
@@ -111,6 +115,7 @@ export default function ChunithmAllSongs() {
 							onClearAll={handleClearAll}
 							labelOverrides={{ chartType: "Difficulty" }}
 						/>
+						<DensityToggle density={viewMode} onChange={setViewMode} />
 					</div>
 				</div>
 

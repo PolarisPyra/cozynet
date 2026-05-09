@@ -106,13 +106,13 @@ export function OngekiScorePage() {
 					</div>
 
 					<div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
-						<DensityToggle density={density} onChange={setDensity} />
 						<InlineFilters
 							filters={scoreFilters}
 							filterValues={filterValues}
 							onFilterChange={handleFilterChange}
 							onClearAll={resetFilters}
 						/>
+						<DensityToggle density={density} onChange={setDensity} />
 					</div>
 				</div>
 
