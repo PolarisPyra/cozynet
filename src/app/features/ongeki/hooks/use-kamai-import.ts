@@ -1,8 +1,10 @@
 import { useMemo, useRef, useState, ChangeEvent } from "react"
 import { toast } from "sonner"
+import { DateTime } from "luxon"
 import type { DB, OngekiPlaylog } from "@/app/shared/types"
-import type { OngekiKamaiImportScore } from "./use-score-importer"
+import type { KamaiPbScore, KamaiChartDefinition, KamaiFileFormat } from "@/app/shared/types/kamai"
 import { useOngekiSongs, useOngekiScoreImporter } from "@/app/features/ongeki/hooks"
+import type { OngekiKamaiImportScore } from "./use-score-importer"
 
 export type ImportedScorePreview = OngekiKamaiImportScore & {
 	id: string
@@ -33,37 +35,6 @@ export type ExistingBestScore = {
 	platinumScoreStar: number | null
 }
 
-export type KamaiChartDefinition = {
-	chartID: string
-	difficulty?: "BASIC" | "ADVANCED" | "EXPERT" | "MASTER" | "LUNATIC"
-	data?: {
-		inGameID?: number
-		maxPlatScore?: number
-	}
-}
-
-export type KamaiPbScore = {
-	chartID?: string
-	game?: string
-	playtype?: string
-	songID?: number
-	timeAchieved?: number | null
-	scoreData?: {
-		score?: number
-		noteLamp?: OngekiKamaiImportScore["noteLamp"]
-		bellLamp?: OngekiKamaiImportScore["bellLamp"]
-		platinumScore?: number | null
-		platinumStars?: number | null
-		judgements?: Partial<OngekiKamaiImportScore["judgements"]>
-		optional?: {
-			maxCombo?: number
-			damage?: number | null
-			bellCount?: number | null
-			totalBellCount?: number | null
-		}
-	}
-}
-
 export const KAMAI_DIFFICULTY_TO_CHART_ID: Record<string, OngekiKamaiImportScore["level"]> = {
 	BASIC: 0,
 	ADVANCED: 1,
@@ -72,16 +43,19 @@ export const KAMAI_DIFFICULTY_TO_CHART_ID: Record<string, OngekiKamaiImportScore
 	LUNATIC: 10
 }
 
-export const getDuplicateScoreKey = (score: { musicId: number; level: number; score: number }) =>
+const getDuplicateScoreKey = (score: { musicId: number; level: number; score: number; timeAchieved?: number | null }) =>
+	`${score.musicId}:${score.level}:${score.score}${score.timeAchieved ? `:${score.timeAchieved}` : ""}`
+
+const getGeneralScoreKey = (score: { musicId: number; level: number; score: number }) =>
 	`${score.musicId}:${score.level}:${score.score}`
 
-export const getPreviewRowId = (
-	score: { musicId: number; level: number; score: number; timeAchieved?: number },
+const getPreviewRowId = (
+	score: { musicId: number; level: number; score: number; timeAchieved?: number | null },
 	index: number
-) => `${getDuplicateScoreKey(score)}:${score.timeAchieved ?? 0}:${index}`
+) => `${getGeneralScoreKey(score)}:${score.timeAchieved ?? 0}:${index}`
 
-export const getExistingPlaylogKey = (score: OngekiPlaylog) =>
-	`${score.musicId ?? 0}:${score.chartId ?? score.level ?? -1}:${score.techScore ?? 0}`
+const getExistingPlaylogKey = (score: OngekiPlaylog) =>
+	`${score.musicId ?? 0}:${score.chartId ?? score.level ?? -1}:${score.techScore ?? 0}${score.userPlayDate ? `:${DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toMillis()}` : ""}`
 
 export const isImportableStatus = (status: ImportedScorePreview["status"]) =>
 	status === "ready" || status === "best-update"
@@ -91,6 +65,7 @@ export const isScoreBestUpdate = (score: OngekiKamaiImportScore, best?: Existing
 	const isFullCombo = isAllBreake === 1 || score.noteLamp === "FULL COMBO" ? 1 : 0
 	const isFullBell = score.bellLamp === "FULL BELL" ? 1 : 0
 	const clearStatus = score.noteLamp === "LOSS" ? 0 : 1
+
 	if (!best || best.techScoreMax == null) return true
 	if (score.score > best.techScoreMax) return true
 	if (score.maxCombo != null && score.maxCombo > (best.maxComboCount ?? 0)) return true
@@ -105,19 +80,15 @@ export const isScoreBestUpdate = (score: OngekiKamaiImportScore, best?: Existing
 	return false
 }
 
-export const sanitizeTimeAchieved = (value: unknown) => (typeof value === "number" ? value : undefined)
+const sanitizeTimeAchieved = (value: unknown) => (typeof value === "number" ? value : undefined)
 
-export const sanitizeJudgements = (value: unknown): OngekiKamaiImportScore["judgements"] | undefined => {
-	if (!value || typeof value !== "object") {
-		return undefined
-	}
+const sanitizeJudgements = (value: unknown): OngekiKamaiImportScore["judgements"] | undefined => {
+	if (!value || typeof value !== "object") return undefined
 
 	const judgements = value as Partial<Record<keyof NonNullable<OngekiKamaiImportScore["judgements"]>, unknown>>
 	const keys: (keyof NonNullable<OngekiKamaiImportScore["judgements"]>)[] = ["cbreak", "break", "hit", "miss"]
 
-	if (!keys.every(key => typeof judgements[key] === "number")) {
-		return undefined
-	}
+	if (!keys.every(key => typeof judgements[key] === "number")) return undefined
 
 	return {
 		cbreak: judgements.cbreak as number,
@@ -129,9 +100,7 @@ export const sanitizeJudgements = (value: unknown): OngekiKamaiImportScore["judg
 
 export const normalizeExportScores = (scores: unknown[]): OngekiKamaiImportScore[] => {
 	return scores.flatMap((raw, index) => {
-		if (!raw || typeof raw !== "object") {
-			return []
-		}
+		if (!raw || typeof raw !== "object") return []
 
 		const score = raw as {
 			identifier?: string
@@ -181,26 +150,20 @@ export const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDe
 	const chartMap = new Map(charts.map(chart => [chart.chartID, chart]))
 
 	return pbs.flatMap((pb, index) => {
-		if (pb.game && pb.game !== "ongeki") {
-			return []
-		}
-
-		if (pb.playtype && pb.playtype !== "Single") {
-			return []
-		}
+		if (pb.game !== "ongeki" || pb.playtype !== "Single") return []
 
 		const chart = pb.chartID ? chartMap.get(pb.chartID) : undefined
-		const musicId = chart?.data?.inGameID ?? pb.songID
+		const musicId = chart?.data?.inGameID
 		const level = chart?.difficulty ? KAMAI_DIFFICULTY_TO_CHART_ID[chart.difficulty] : undefined
 		const scoreValue = pb.scoreData?.score
 
 		if (
-			typeof musicId !== "number" ||
+			musicId === undefined ||
 			!Number.isInteger(musicId) ||
 			level === undefined ||
 			typeof scoreValue !== "number"
 		) {
-			console.warn("Skipping invalid PB score at index", index)
+			console.warn(`Skipping PB score at index ${index}: Missing inGameID or invalid data`)
 			return []
 		}
 
@@ -209,8 +172,8 @@ export const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDe
 				musicId,
 				level,
 				score: scoreValue,
-				noteLamp: pb.scoreData?.noteLamp ?? "LOSS",
-				bellLamp: pb.scoreData?.bellLamp ?? "NONE",
+				noteLamp: (pb.scoreData?.noteLamp as OngekiKamaiImportScore["noteLamp"]) ?? "LOSS",
+				bellLamp: (pb.scoreData?.bellLamp as OngekiKamaiImportScore["bellLamp"]) ?? "NONE",
 				platinumScore: pb.scoreData?.platinumScore ?? null,
 				platinumScoreMax: chart?.data?.maxPlatScore ?? null,
 				platinumStars: pb.scoreData?.platinumStars ?? null,
@@ -226,13 +189,7 @@ export const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDe
 }
 
 export const parseKamaiFile = (content: string): OngekiKamaiImportScore[] => {
-	const parsed = JSON.parse(content) as {
-		scores?: unknown[]
-		body?: {
-			pbs?: KamaiPbScore[]
-			charts?: KamaiChartDefinition[]
-		}
-	}
+	const parsed = JSON.parse(content) as KamaiFileFormat
 
 	if (Array.isArray(parsed.scores)) {
 		return normalizeExportScores(parsed.scores)
@@ -259,10 +216,27 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 	const importMutation = useOngekiScoreImporter()
 
 	const songMap = useMemo(() => {
-		return new Map(((songs ?? []) as DB.OngekiStaticMusic[]).map(song => [`${song.songId}:${song.chartId}`, song]))
+		const map = new Map<string, DB.OngekiStaticMusic>()
+		for (const song of (songs ?? []) as DB.OngekiStaticMusic[]) {
+			map.set(`${song.songId}:${song.chartId}`, song)
+		}
+		return map
 	}, [songs])
 
-	const existingScoreKeys = useMemo(() => new Set(existingScores.map(getExistingPlaylogKey)), [existingScores])
+	const existingExactPlayKeys = useMemo(() => new Set(existingScores.map(getExistingPlaylogKey)), [existingScores])
+	const existingGeneralScoreKeys = useMemo(
+		() =>
+			new Set(
+				existingScores.map(score =>
+					getGeneralScoreKey({
+						musicId: score.musicId ?? 0,
+						level: score.chartId ?? score.level ?? -1,
+						score: score.techScore ?? 0
+					})
+				)
+			),
+		[existingScores]
+	)
 
 	const existingBestMap = useMemo(() => {
 		const bestMap = new Map<string, ExistingBestScore>()
@@ -295,11 +269,12 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		return parsedScores.map((score, index) => {
 			const song = songMap.get(`${score.musicId}:${score.level}`)
 			const duplicateKey = getDuplicateScoreKey(score)
+			const generalKey = getGeneralScoreKey(score)
 			let status: ImportedScorePreview["status"] = "ready"
 
 			if (!song) {
 				status = "unknown-song"
-			} else if (existingScoreKeys.has(duplicateKey)) {
+			} else if (existingExactPlayKeys.has(duplicateKey) || existingGeneralScoreKeys.has(generalKey)) {
 				status = isScoreBestUpdate(score, existingBestMap.get(`${score.musicId}:${score.level}`))
 					? "best-update"
 					: "duplicate"
@@ -317,7 +292,7 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 				status
 			}
 		})
-	}, [existingBestMap, existingScoreKeys, parsedScores, songMap])
+	}, [existingBestMap, existingExactPlayKeys, existingGeneralScoreKeys, parsedScores, songMap])
 
 	const selectedRows = useMemo(
 		() => previewRows.filter(row => isImportableStatus(row.status) && selectedKeys[row.id]),
@@ -339,16 +314,6 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		}),
 		[previewRows]
 	)
-
-	const getPreviewTextClassName = (status: ImportedScorePreview["status"]) =>
-		isImportableStatus(status) ? "text-foreground" : "text-muted-foreground"
-
-	const getPreviewMetaClassName = (status: ImportedScorePreview["status"]) =>
-		isImportableStatus(status) ? "text-foreground" : "text-muted-foreground"
-
-	const normalizedKamaiUsername = kamaiUsername.trim()
-	const shouldFetchFromKamai =
-		normalizedKamaiUsername.length > 0 && normalizedKamaiUsername !== lastFetchedKamaiUsername
 
 	const resetState = () => {
 		setFileName(null)
@@ -390,7 +355,8 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 	}
 
 	const handleFetchFromKamai = async () => {
-		if (!normalizedKamaiUsername) {
+		const normalized = kamaiUsername.trim()
+		if (!normalized) {
 			toast.error("Enter a Kamai username")
 			return
 		}
@@ -398,12 +364,10 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		setIsFetchingKamai(true)
 		try {
 			const response = await fetch(
-				`https://kamai.tachi.ac/api/v1/users/${encodeURIComponent(normalizedKamaiUsername)}/games/ongeki/Single/pbs/all`
+				`https://kamai.tachi.ac/api/v1/users/${encodeURIComponent(normalized)}/games/ongeki/Single/pbs/all`
 			)
 
-			if (!response.ok) {
-				throw new Error(`Kamai returned ${response.status}`)
-			}
+			if (!response.ok) throw new Error(`Kamai returned ${response.status}`)
 
 			const content = await response.text()
 			const scores = parseKamaiFile(content)
@@ -413,12 +377,10 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 				return
 			}
 
-			setFileName(`Kamai: ${normalizedKamaiUsername}`)
+			setFileName(`Kamai: ${normalized}`)
 			setParsedScores(scores)
-			setLastFetchedKamaiUsername(normalizedKamaiUsername)
-			if (document.activeElement instanceof HTMLElement) {
-				document.activeElement.blur()
-			}
+			setLastFetchedKamaiUsername(normalized)
+			toast.success(`Fetched ${scores.length} scores from Kamaitachi`)
 		} catch (error) {
 			console.error("Kamai fetch error:", error)
 			toast.error("Failed to fetch scores from Kamai")
@@ -438,14 +400,16 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		kamaiUsername,
 		setKamaiUsername,
 		isFetchingKamai,
-		shouldFetchFromKamai,
+		shouldFetchFromKamai: kamaiUsername.trim().length > 0 && kamaiUsername.trim() !== lastFetchedKamaiUsername,
 		previewRows,
 		selectedRows,
 		visiblePreviewRows,
 		summary,
 		importMutation,
-		getPreviewTextClassName,
-		getPreviewMetaClassName,
+		getPreviewTextClassName: (status: ImportedScorePreview["status"]) =>
+			isImportableStatus(status) ? "text-foreground" : "text-muted-foreground",
+		getPreviewMetaClassName: (status: ImportedScorePreview["status"]) =>
+			isImportableStatus(status) ? "text-foreground" : "text-muted-foreground",
 		resetState,
 		handleFile,
 		handleInputChange,

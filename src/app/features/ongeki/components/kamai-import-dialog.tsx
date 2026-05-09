@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
-import { Download, FileUp, LoaderCircle } from "lucide-react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { DateTime } from "luxon"
+import { Download, FileUp, LoaderCircle } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/app/shared/components/ui/button"
@@ -9,23 +10,18 @@ import { Checkbox } from "@/app/shared/components/ui/checkbox"
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger
 } from "@/app/shared/components/ui/dialog"
 import { Input } from "@/app/shared/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { cn } from "@/app/shared/utils"
 import { formatLevel } from "@/app/shared/utils/format-level"
 import { getDifficultyFromOngekiChart } from "@/app/shared/utils/ongeki"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 
-import {
-	useKamaiImport,
-	isImportableStatus,
-	type OngekiExistingScore
-} from "../hooks/use-kamai-import"
+import { isImportableStatus, type OngekiExistingScore, useKamaiImport } from "../hooks/use-kamai-import"
 
 export function OngekiKamaiImportDialog({ existingScores }: { existingScores: OngekiExistingScore[] }) {
 	const [open, setOpen] = useState(false)
@@ -51,6 +47,16 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 		handleInputChange,
 		handleFetchFromKamai
 	} = useKamaiImport(existingScores)
+
+	const parentRef = useRef<HTMLDivElement>(null)
+
+	const rowVirtualizer = useVirtualizer({
+		count: visiblePreviewRows.length,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => 92,
+		getItemKey: index => visiblePreviewRows[index].id,
+		overscan: 5
+	})
 
 	const handleImport = async () => {
 		if (selectedRows.length === 0) {
@@ -128,43 +134,48 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 			}}
 		>
 			<DialogTrigger asChild>
-				<Button variant="ghost" size="sm" className="h-8 gap-2 rounded-lg text-xs font-medium hover:bg-emerald-500/20 hover:text-emerald-700 dark:hover:text-emerald-300">
+				<Button
+					variant="ghost"
+					size="sm"
+					className="h-8 gap-2 rounded-lg text-xs font-medium hover:bg-emerald-500/20 hover:text-emerald-700 dark:hover:text-emerald-300"
+				>
 					<Download className="h-3.5 w-3.5" />
 					Import
 				</Button>
 			</DialogTrigger>
-			<DialogContent
-				className="bg-background w-[95vw] max-w-4xl h-[600px] rounded-xl !border-0 shadow-2xl outline-none flex flex-col p-0 overflow-hidden"
-			>
-				<div className="flex flex-col h-full p-6">
-					<DialogHeader className="mb-4">
-						<div className="flex items-center gap-3">
+			<DialogContent className="bg-background w-[95vw] max-w-4xl h-[750px] rounded-xl border border-border shadow-2xl outline-none flex flex-col p-0 overflow-hidden">
+				<div className="flex flex-col h-full p-8">
+					<DialogHeader className="mb-6">
+						<div className="flex items-center gap-4">
+							<div className="bg-muted p-2.5 rounded-lg border border-border">
+								<Download className="h-5 w-5 text-muted-foreground" />
+							</div>
 							<div>
-								<DialogTitle className="text-xl">Import from Kamai</DialogTitle>
-								<DialogDescription>Sync your scores from the cloud or a local file</DialogDescription>
+								<DialogTitle className="text-xl font-bold tracking-tight text-foreground">Import from Kamai</DialogTitle>
+								<p className="text-muted-foreground text-sm">Synchronize your records from Kamaitachi</p>
 							</div>
 						</div>
 					</DialogHeader>
 
-					<div className="flex-1 overflow-y-auto pr-1 -mr-1 custom-scrollbar">
+					<div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar space-y-8">
 						<Tabs defaultValue="file" className="w-full">
-							<TabsList className="mb-4 w-full justify-start border-b border-border/50 bg-transparent p-0 h-auto">
+							<TabsList className="mb-6 w-full justify-start border-b border-border bg-transparent p-0 h-auto gap-8">
 								<TabsTrigger
 									value="file"
-									className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-pink-500 data-[state=active]:bg-transparent data-[state=active]:text-pink-500"
+									className="rounded-none border-b-2 border-transparent px-2 py-3 text-sm font-medium text-muted-foreground data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground transition-all"
 								>
-									Import
+									File Upload
 								</TabsTrigger>
 								<TabsTrigger
 									value="remote"
-									className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-pink-500 data-[state=active]:bg-transparent data-[state=active]:text-pink-500"
+									className="rounded-none border-b-2 border-transparent px-2 py-3 text-sm font-medium text-muted-foreground data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground transition-all"
 								>
-									Download
+									Remote Fetch
 								</TabsTrigger>
 							</TabsList>
 
 							<TabsContent value="file" className="mt-0 outline-none">
-								<div className="border-border/50 bg-muted/20 transition-all flex min-h-32 flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center">
+								<div className="border-border bg-muted/20 transition-all flex min-h-40 flex-col items-center justify-center rounded-xl border-2 border-dashed px-8 py-8 text-center hover:bg-muted/30 group">
 									<input
 										ref={inputRef}
 										type="file"
@@ -172,25 +183,28 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 										className="hidden"
 										onChange={handleInputChange}
 									/>
-									<div className="mb-3 rounded-full bg-background p-3 shadow-sm">
-										<FileUp className="h-6 w-6 text-muted-foreground" />
+									<div className="mb-4 rounded-xl bg-background p-4 border border-border shadow-sm group-hover:scale-105 transition-transform">
+										<FileUp className="h-8 w-8 text-muted-foreground" />
 									</div>
 									<Button
 										type="button"
 										variant="outline"
-										size="sm"
-										className="border-pink-500/50 text-pink-500 hover:bg-pink-500/10 gap-2 font-semibold"
+										size="default"
+										className="gap-2 font-semibold px-6 h-11 rounded-lg"
 										onClick={() => inputRef.current?.click()}
 									>
 										Choose Kamai JSON
 									</Button>
-									<p className="mt-3 text-sm font-medium text-muted-foreground">{fileName ?? "No file selected"}</p>
+									<p className="mt-4 text-xs font-medium text-muted-foreground truncate max-w-md italic">
+										{fileName ?? "Select a JSON export from Kamaitachi"}
+									</p>
 								</div>
 							</TabsContent>
 
 							<TabsContent value="remote" className="mt-0 outline-none">
-								<div className="space-y-4 rounded-xl border border-border/50 bg-muted/20 p-6">
-									<div className="space-y-2">
+								<div className="space-y-6 rounded-xl border border-border bg-muted/20 p-8">
+									<div className="space-y-4">
+										<label className="text-sm font-semibold px-1 block text-foreground/80">Kamaitachi Username</label>
 										<Input
 											value={kamaiUsername}
 											onChange={event => setKamaiUsername(event.target.value)}
@@ -200,28 +214,28 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 												event.preventDefault()
 												void handleFetchFromKamai()
 											}}
-											placeholder="Enter Kamai player name..."
-											className="bg-background border-border/50"
+											placeholder="e.g. PlayerName"
+											className="bg-background border-border h-11 px-4 rounded-lg text-sm shadow-sm"
 											name="ongeki-kamai-player"
 											autoComplete="new-password"
 											disabled={isFetchingKamai || importMutation.isPending}
 										/>
-										<p className="text-muted-foreground text-xs">
-											Fetch your latest scores directly from Kamaitachi's servers.
+										<p className="text-muted-foreground text-xs px-1 leading-relaxed italic">
+											Your scores will be fetched directly via the Kamaitachi API.
 										</p>
 									</div>
 									{shouldFetchFromKamai && (
 										<Button
 											onClick={handleFetchFromKamai}
 											disabled={isFetchingKamai}
-											className="w-full bg-pink-500 text-white hover:bg-pink-600"
+											className="w-full bg-foreground text-background hover:bg-foreground/90 h-11 rounded-lg font-bold shadow-sm"
 										>
 											{isFetchingKamai ? (
 												<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
 											) : (
 												<Download className="mr-2 h-4 w-4" />
 											)}
-											Download Scores
+											Download Latest Scores
 										</Button>
 									)}
 								</div>
@@ -229,130 +243,182 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 						</Tabs>
 
 						{previewRows.length > 0 && (
-							<>
-								<div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-									<div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl px-3 py-2 border border-emerald-500/20">
-										<p className="text-[10px] font-bold uppercase opacity-70">Ready</p>
-										<p className="text-lg font-bold">{summary.ready + summary.bestUpdate}</p>
+							<div className="space-y-6">
+								<div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+									<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
+										<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ready</p>
+										<p className="text-xl font-bold mt-1 text-foreground">{summary.ready + summary.bestUpdate}</p>
 									</div>
-									<div className="bg-pink-500/10 text-pink-600 dark:text-pink-400 rounded-xl px-3 py-2 border border-pink-500/20">
-										<p className="text-[10px] font-bold uppercase opacity-70">Selected</p>
-										<p className="text-lg font-bold">{selectedRows.length}</p>
+									<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
+										<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Selected</p>
+										<p className="text-xl font-bold mt-1 text-foreground">{selectedRows.length}</p>
 									</div>
-									<div className="bg-muted/50 text-muted-foreground rounded-xl px-3 py-2 border border-border/50">
-										<p className="text-[10px] font-bold uppercase opacity-70">Existing</p>
-										<p className="text-lg font-bold">{summary.duplicate + summary.duplicateInFile}</p>
+									<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
+										<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Synced</p>
+										<p className="text-xl font-bold mt-1 text-foreground">{summary.duplicate + summary.duplicateInFile}</p>
 									</div>
-									<div className="bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl px-3 py-2 border border-rose-500/20">
-										<p className="text-[10px] font-bold uppercase opacity-70">Missing</p>
-										<p className="text-lg font-bold">{summary.unknownSong}</p>
+									<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
+										<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Missing</p>
+										<p className="text-xl font-bold mt-1 text-foreground">{summary.unknownSong}</p>
 									</div>
 								</div>
 
-								<div className="bg-muted/20 overflow-hidden rounded-xl border border-border/50">
-									<div className="px-4 py-3 bg-muted/30 border-b border-border/50">
-										<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+								<div className="bg-card overflow-hidden rounded-xl border border-border shadow-sm">
+									<div className="px-6 py-4 bg-muted/30 border-b border-border">
+										<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 											<div>
-												<p className="text-sm font-bold">Import Preview</p>
-												<p className="text-muted-foreground text-[10px] uppercase tracking-wider">
-													Review scores before final sync
+												<p className="text-sm font-bold text-foreground">Import Preview</p>
+												<p className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest mt-0.5">
+													Review changes before synchronizing
 												</p>
 											</div>
-											<label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+											<label className="flex items-center gap-3 text-xs font-semibold cursor-pointer bg-background/50 px-3 py-2 rounded-lg border border-border hover:bg-background transition-colors">
 												<Checkbox
 													checked={onlyShowReadyRows}
 													onCheckedChange={checked => setOnlyShowReadyRows(checked === true)}
-													className="data-[state=checked]:bg-pink-500 data-[state=checked]:border-pink-500"
+													className="data-[state=checked]:bg-foreground data-[state=checked]:border-foreground"
 												/>
-												Importable only
+												Show Importable Only
 											</label>
 										</div>
 									</div>
-									<div className="h-80 overflow-y-auto">
-										<div className="divide-y divide-border/30">
-											{visiblePreviewRows.map(row => (
-												<label
-													key={row.id}
-													className={cn(
-														"flex items-start gap-3 px-4 py-3 transition-colors hover:bg-accent/50",
-														isImportableStatus(row.status) && "bg-emerald-500/5 hover:bg-emerald-500/10"
-													)}
-												>
-													{row.status === "unknown-song" || row.status === "duplicate-in-file" ? (
-														<div className="size-4 shrink-0" />
-													) : (
-														<Checkbox
-															checked={Boolean(selectedKeys[row.id])}
-															disabled={!isImportableStatus(row.status)}
-															onCheckedChange={checked =>
-																setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))
-															}
-															className="mt-1 data-[state=checked]:bg-pink-500 data-[state=checked]:border-pink-500"
-														/>
-													)}
-													<div className="min-w-0 flex-1">
-														<div className="flex flex-wrap items-center gap-2">
-															<p className={cn("text-sm font-bold", getPreviewTextClassName(row.status))}>
-																{row.title ?? `Song ${row.musicId}`}
-															</p>
-															<span className={cn("rounded px-1.5 py-0.5 text-[10px] font-bold uppercase border border-current", getPreviewMetaClassName(row.status))}>
-																{getDifficultyFromOngekiChart(row.level)}
-																{row.chartLevel != null ? ` ${formatLevel(row.chartLevel)}` : ""}
-															</span>
-														</div>
-														<div className={cn("mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs opacity-70", getPreviewMetaClassName(row.status))}>
-															<span className="font-mono">{row.score.toLocaleString()}</span>
-															<span>{row.noteLamp}</span>
-															<span>{row.bellLamp}</span>
-															{row.platinumScore != null && <span>Plat {row.platinumScore}</span>}
-															{row.timeAchieved ? (
-																<span className="tabular-nums">{DateTime.fromMillis(row.timeAchieved).toFormat("yyyy-LL-dd HH:mm")}</span>
+									<div ref={parentRef} className="h-[320px] overflow-y-auto custom-scrollbar">
+										<div
+											style={{
+												height: `${rowVirtualizer.getTotalSize()}px`,
+												width: "100%",
+												position: "relative"
+											}}
+										>
+											{rowVirtualizer.getVirtualItems().map(virtualItem => {
+												const row = visiblePreviewRows[virtualItem.index]
+												return (
+													<label
+														key={virtualItem.key}
+														data-index={virtualItem.index}
+														ref={rowVirtualizer.measureElement}
+														style={{
+															position: "absolute",
+															top: 0,
+															left: 0,
+															width: "100%",
+															transform: `translateY(${virtualItem.start}px)`
+														}}
+														className={cn(
+															"flex items-start gap-5 px-6 py-5 transition-colors hover:bg-muted/50 cursor-pointer border-b border-border/50 last:border-0",
+															isImportableStatus(row.status) && "bg-muted/10 hover:bg-muted/20"
+														)}
+													>
+														<div className="pt-1">
+															{row.status === "unknown-song" || row.status === "duplicate-in-file" ? (
+																<div className="size-5 shrink-0" />
 															) : (
-																<span>No play time</span>
+																<Checkbox
+																	checked={Boolean(selectedKeys[row.id])}
+																	disabled={!isImportableStatus(row.status)}
+																	onCheckedChange={checked =>
+																		setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))
+																	}
+																	className="size-5 rounded-md data-[state=checked]:bg-foreground data-[state=checked]:border-foreground"
+																/>
 															)}
 														</div>
-													</div>
-													<div className="text-[10px] font-bold uppercase tracking-widest pt-1">
-														{row.status === "ready" && <span className="text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">Ready</span>}
-														{row.status === "best-update" && <span className="text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">Update</span>}
-														{row.status === "duplicate" && <span className="text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Synced</span>}
-														{row.status === "duplicate-in-file" && (
-															<span className="text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">Duplicate</span>
-														)}
-														{row.status === "unknown-song" && <span className="text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-full">Missing</span>}
-													</div>
-												</label>
-											))}
+														<div className="min-w-0 flex-1">
+															<div className="flex flex-wrap items-center gap-3">
+																<p className={cn("text-base font-bold leading-tight", getPreviewTextClassName(row.status))}>
+																	{row.title ?? `Song ${row.musicId}`}
+																</p>
+																<span
+																	className={cn(
+																		"rounded-md px-1.5 py-0.5 text-[10px] font-black uppercase border-2",
+																		getPreviewMetaClassName(row.status)
+																	)}
+																>
+																	{getDifficultyFromOngekiChart(row.level)}
+																	{row.chartLevel != null ? ` ${formatLevel(row.chartLevel)}` : ""}
+																</span>
+															</div>
+															<div
+																className={cn(
+																	"mt-2.5 flex flex-wrap gap-x-6 gap-y-1.5 text-xs font-medium opacity-80 tabular-nums",
+																	getPreviewMetaClassName(row.status)
+																)}
+															>
+																<span className="font-bold">{row.score.toLocaleString()}</span>
+																<span className="opacity-50">•</span>
+																<span>{row.noteLamp}</span>
+																<span className="opacity-50">•</span>
+																<span>{row.bellLamp}</span>
+																<span className="opacity-50">•</span>
+																{row.timeAchieved ? (
+																	<span>{DateTime.fromMillis(row.timeAchieved).toFormat("yyyy-LL-dd HH:mm")}</span>
+																) : (
+																	<span className="italic opacity-60">No timestamp</span>
+																)}
+															</div>
+														</div>
+														<div className="shrink-0 pt-0.5">
+															{row.status === "ready" && (
+																<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-muted px-2.5 py-1 rounded-md border border-border shadow-sm">
+																	Ready
+																</span>
+															)}
+															{row.status === "best-update" && (
+																<span className="text-[10px] font-black uppercase tracking-wider text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20 shadow-sm">
+																	PB
+																</span>
+															)}
+															{row.status === "duplicate" && (
+																<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 bg-muted/40 px-2.5 py-1 rounded-md border border-border/50">
+																	Synced
+																</span>
+															)}
+															{row.status === "duplicate-in-file" && (
+																<span className="text-[10px] font-black uppercase tracking-wider text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20 shadow-sm">
+																	Duplicate
+																</span>
+															)}
+															{row.status === "unknown-song" && (
+																<span className="text-[10px] font-black uppercase tracking-wider text-rose-600 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20 shadow-sm">
+																	Missing
+																</span>
+															)}
+														</div>
+													</label>
+												)
+											})}
 										</div>
 									</div>
 								</div>
-							</>
+							</div>
 						)}
 					</div>
 
-					<DialogFooter className="mt-2">
+					<DialogFooter className="mt-8 pt-6 border-t border-border/50">
 						<Button
 							variant="ghost"
+							size="lg"
 							onClick={() => setOpen(false)}
 							disabled={importMutation.isPending || isFetchingKamai}
-							className="hover:bg-muted"
+							className="hover:bg-muted font-bold text-muted-foreground px-8 rounded-lg"
 						>
 							Cancel
 						</Button>
 						<Button
 							onClick={handlePrimaryAction}
 							disabled={primaryButtonDisabled}
-							className="bg-pink-500 text-white hover:bg-pink-600 min-w-32"
+							size="lg"
+							className="bg-foreground text-background hover:bg-foreground/90 min-w-[160px] font-bold rounded-lg shadow-sm px-8"
 						>
 							{isFetchingKamai ? (
 								<>
 									<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-									Syncing...
+									Fetching...
 								</>
 							) : shouldFetchFromKamai ? (
 								<>
 									<Download className="mr-2 h-4 w-4" />
-									Fetch
+									Download
 								</>
 							) : importMutation.isPending ? (
 								<>
@@ -362,7 +428,7 @@ export function OngekiKamaiImportDialog({ existingScores }: { existingScores: On
 							) : (
 								<>
 									<Download className="mr-2 h-4 w-4" />
-									Import {selectedRows.length > 0 ? selectedRows.length : ""}
+									Sync {selectedRows.length > 0 ? `${selectedRows.length}` : ""}
 								</>
 							)}
 						</Button>
