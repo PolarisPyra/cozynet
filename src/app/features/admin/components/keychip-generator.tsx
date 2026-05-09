@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useTransition } from "react"
 
 import { ChevronDown, Loader2, Shuffle } from "lucide-react"
 import { toast } from "sonner"
@@ -12,6 +12,7 @@ import {
 	CommandItem,
 	CommandList
 } from "@/app/shared/components/ui/command"
+import { Input } from "@/app/shared/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/shared/components/ui/popover"
 import { api } from "@/app/shared/utils"
 
@@ -23,7 +24,7 @@ const gameOptions = [
 type GameType = (typeof gameOptions)[number]["value"]
 
 export const KeychipGenerator = function () {
-	const [isLoading, setIsLoading] = useState(false)
+	const [isPending, startTransition] = useTransition()
 	const [openDropdown, setOpenDropdown] = useState(false)
 	const [formData, setFormData] = useState({
 		arcade_nickname: "",
@@ -36,7 +37,7 @@ export const KeychipGenerator = function () {
 	const showNamcoPcbId = formData.game === "SDEW"
 	const hasSerialId = showNamcoPcbId ? !!formData.namcopcbid : !!formData.aimecard
 
-	const handleChange = function (e: { target: { name: string; value: string } }) {
+	const updateKeychipForm = function (e: React.ChangeEvent<HTMLInputElement>) {
 		const { name, value } = e.target
 		let normalized = value
 		if (name === "aimecard" || name === "namcopcbid") {
@@ -53,10 +54,10 @@ export const KeychipGenerator = function () {
 			}
 			normalized = result
 		}
-		setFormData({
-			...formData,
+		setFormData(prev => ({
+			...prev,
 			[name]: normalized
-		})
+		}))
 	}
 
 	const handleGameChange = function (value: GameType) {
@@ -70,11 +71,11 @@ export const KeychipGenerator = function () {
 	}
 
 	const generateRandomSerial = function () {
-		let uniqueNumbers = ""
-		while (uniqueNumbers.length < 4) {
-			const digit = Math.floor(Math.random() * 10)
-			if (!uniqueNumbers.includes(digit.toString())) uniqueNumbers += digit
+		const uniqueSet = new Set<string>()
+		while (uniqueSet.size < 4) {
+			uniqueSet.add(Math.floor(Math.random() * 10).toString())
 		}
+		const uniqueNumbers = Array.from(uniqueSet).join("")
 		const randomNumbers = Math.floor(1000 + Math.random() * 9000)
 		// Store with dash so it displays as A69E-01A... (dash stripped on submit)
 		const randomSerial = `A69E-01A${uniqueNumbers}${randomNumbers}`
@@ -85,78 +86,79 @@ export const KeychipGenerator = function () {
 		}))
 	}
 
-	const handleSubmit = async function (e: { preventDefault: () => void }) {
+	const handleSubmit = function (e: { preventDefault: () => void }) {
 		e.preventDefault()
-		setIsLoading(true)
 
-		try {
-			// Server expects raw format (no hyphens); strip if user typed a dash
-			const payload = {
-				...formData,
-				aimecard: formData.aimecard.replace(/-/g, ""),
-				namcopcbid: formData.namcopcbid.replace(/-/g, "")
+		startTransition(async () => {
+			try {
+				// Server expects raw format (no hyphens); strip if user typed a dash
+				const payload = {
+					...formData,
+					aimecard: formData.aimecard.replace(/-/g, ""),
+					namcopcbid: formData.namcopcbid.replace(/-/g, "")
+				}
+				const response = await api.admin.keychip.generate.$post({
+					json: payload
+				})
+
+				if (!response.ok) {
+					const errorMessage =
+						response.status === 403
+							? "You don't have permission to generate keychips"
+							: `Failed to generate keychip: ${response.status}`
+					toast.error(errorMessage)
+					return
+				}
+
+				toast.success("Keychip generated successfully!")
+				setFormData(data => ({
+					...data,
+					arcade_nickname: "",
+					name: ""
+				}))
+			} catch (error) {
+				console.error("Error generating keychip:", error)
+				toast.error("An unexpected error occurred")
 			}
-			const response = await api.admin.keychip.generate.$post({
-				json: payload
-			})
-
-			if (!response.ok) {
-				const errorMessage =
-					response.status === 403
-						? "You don't have permission to generate keychips"
-						: `Failed to generate keychip: ${response.status}`
-				toast.error(errorMessage)
-				return
-			}
-
-			toast.success("Keychip generated successfully!")
-			setFormData(data => ({
-				...data,
-				arcade_nickname: "",
-				name: ""
-			}))
-		} catch (error) {
-			console.error("Error generating keychip:", error)
-			toast.error("An unexpected error occurred")
-		} finally {
-			setIsLoading(false)
-		}
+		})
 	}
 
 	return (
 		<div className="space-y-4">
 			<form onSubmit={handleSubmit} className="space-y-4">
 				<div>
-					<label className="text-primary mb-1 block text-sm font-medium">Arcade Nickname</label>
-					<input
+					<label htmlFor="arcade_nickname" className="text-primary mb-1 block text-sm font-medium">Arcade Nickname</label>
+					<Input
+						id="arcade_nickname"
 						type="text"
 						name="arcade_nickname"
 						placeholder="Enter arcade nickname"
 						value={formData.arcade_nickname}
-						onChange={handleChange}
+						onChange={updateKeychipForm}
 						className="bg-background text-foreground border-input w-full rounded border p-2"
 						required
 					/>
 				</div>
 
 				<div>
-					<label className="text-primary mb-1 block text-sm font-medium">Arcade Name</label>
-					<input
+					<label htmlFor="name" className="text-primary mb-1 block text-sm font-medium">Arcade Name</label>
+					<Input
+						id="name"
 						type="text"
 						name="name"
 						placeholder="Enter arcade name"
 						value={formData.name}
-						onChange={handleChange}
+						onChange={updateKeychipForm}
 						className="bg-background text-foreground border-input w-full rounded border p-2"
 						required
 					/>
 				</div>
 
 				<div>
-					<label className="text-primary mb-1 block text-sm font-medium">Game Type</label>
+					<label htmlFor="game-type-trigger" className="text-primary mb-1 block text-sm font-medium">Game Type</label>
 					<Popover open={openDropdown} onOpenChange={setOpenDropdown} modal={true}>
 						<PopoverTrigger asChild>
-							<Button variant="dropdown" type="button">
+							<Button id="game-type-trigger" variant="dropdown" type="button">
 								<span className="text-primary truncate">
 									{gameOptions.find(opt => opt.value === formData.game)?.label || "Select Game Type"}
 								</span>
@@ -188,15 +190,16 @@ export const KeychipGenerator = function () {
 				</div>
 
 				<div>
-					<label className="text-primary mb-1 block text-sm font-medium">
+					<label htmlFor="keychip-id" className="text-primary mb-1 block text-sm font-medium">
 						{showNamcoPcbId ? "Namco PCBID" : "Keychip ID"}
 					</label>
-					<input
+					<Input
+						id="keychip-id"
 						type="text"
 						placeholder={showNamcoPcbId ? "Enter Namco PCBID" : "Enter keychip ID"}
 						name={showNamcoPcbId ? "namcopcbid" : "aimecard"}
 						value={showNamcoPcbId ? formData.namcopcbid : formData.aimecard}
-						onChange={handleChange}
+						onChange={updateKeychipForm}
 						className="bg-background text-foreground border-input w-full rounded border p-2 font-mono"
 						required
 					/>
@@ -207,11 +210,11 @@ export const KeychipGenerator = function () {
 					size="sm"
 					type="button"
 					onClick={generateRandomSerial}
-					disabled={isLoading}
+					disabled={isPending}
 					className="mt-4 w-full"
-					aria-busy={isLoading}
+					aria-busy={isPending}
 				>
-					<Shuffle className="h-4 w-4" />
+					<Shuffle className="size-4" />
 					<span>Generate random serial</span>
 				</Button>
 
@@ -219,14 +222,14 @@ export const KeychipGenerator = function () {
 					variant="outline"
 					size="sm"
 					type="submit"
-					disabled={isLoading || !hasSerialId}
+					disabled={isPending || !hasSerialId}
 					className="mt-4 w-full"
-					aria-busy={isLoading}
+					aria-busy={isPending}
 				>
-					{isLoading ? (
+					{isPending ? (
 						<>
-							<Loader2 className="h-4 w-4 animate-spin" />
-							<span>Generating...</span>
+							<Loader2 className="size-4 animate-spin" />
+							<span>Generating…</span>
 						</>
 					) : (
 						<span>Add new keychip</span>

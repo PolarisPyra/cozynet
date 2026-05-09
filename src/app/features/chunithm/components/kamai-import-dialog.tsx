@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import { useRef, useState } from "react"
 
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { DateTime } from "luxon"
@@ -43,21 +43,64 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 		getPreviewTextClassName,
 		getPreviewMetaClassName,
 		resetState,
-		handleInputChange,
-		handleFetchFromKamai
+		uploadKamaiFile,
+		fetchRemoteScores
 	} = useKamaiImport(existingScores)
+	return (
+		<ChunithmKamaiImportDialogView
+			open={open}
+			setOpen={setOpen}
+			fileName={fileName}
+			inputRef={inputRef}
+			selectedKeys={selectedKeys}
+			setSelectedKeys={setSelectedKeys}
+			onlyShowReadyRows={onlyShowReadyRows}
+			setOnlyShowReadyRows={setOnlyShowReadyRows}
+			kamaiUsername={kamaiUsername}
+			setKamaiUsername={setKamaiUsername}
+			isFetchingKamai={isFetchingKamai}
+			shouldFetchFromKamai={shouldFetchFromKamai}
+			previewRows={previewRows}
+			selectedRows={selectedRows}
+			visiblePreviewRows={visiblePreviewRows}
+			summary={summary}
+			importMutation={importMutation}
+			getPreviewTextClassName={getPreviewTextClassName}
+			getPreviewMetaClassName={getPreviewMetaClassName}
+			resetState={resetState}
+			uploadKamaiFile={uploadKamaiFile}
+			fetchRemoteScores={fetchRemoteScores}
+		/>
+	)
+}
 
-	const parentRef = useRef<HTMLDivElement>(null)
+function ChunithmKamaiImportDialogView({
+	open,
+	setOpen,
+	fileName,
+	inputRef,
+	selectedKeys,
+	setSelectedKeys,
+	onlyShowReadyRows,
+	setOnlyShowReadyRows,
+	kamaiUsername,
+	setKamaiUsername,
+	isFetchingKamai,
+	shouldFetchFromKamai,
+	previewRows,
+	selectedRows,
+	visiblePreviewRows,
+	summary,
+	importMutation,
+	getPreviewTextClassName,
+	getPreviewMetaClassName,
+	resetState,
+	uploadKamaiFile,
+	fetchRemoteScores
+}: any) {
 
-	const rowVirtualizer = useVirtualizer({
-		count: visiblePreviewRows.length,
-		getScrollElement: () => parentRef.current,
-		estimateSize: () => 92,
-		getItemKey: index => visiblePreviewRows[index].id,
-		overscan: 5
-	})
 
-	const handleImport = async () => {
+	const syncKamaiScores = async () => {
 		if (selectedRows.length === 0) {
 			toast.error("Select at least one score to import")
 			return
@@ -65,7 +108,7 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 
 		try {
 			const result = await importMutation.mutateAsync(
-				selectedRows.map(row => ({
+				selectedRows.map((row: any) => ({
 					musicId: row.musicId,
 					level: row.level,
 					score: row.score,
@@ -89,13 +132,13 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 		}
 	}
 
-	const handlePrimaryAction = async () => {
+	const executeImportAction = async () => {
 		if (shouldFetchFromKamai) {
-			await handleFetchFromKamai()
+			await fetchRemoteScores()
 			return
 		}
 
-		await handleImport()
+		await syncKamaiScores()
 	}
 
 	const primaryButtonDisabled = shouldFetchFromKamai
@@ -154,13 +197,13 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 							</TabsList>
 
 							<TabsContent value="file" className="mt-0 outline-none">
-								<div className="border-border bg-muted/20 transition-all flex min-h-40 flex-col items-center justify-center rounded-xl border-2 border-dashed px-8 py-8 text-center hover:bg-muted/30 group">
-									<input
+								<div className="border-border bg-muted/20 transition-all flex min-h-40 flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center hover:bg-muted/30 group">
+									<Input
 										ref={inputRef}
 										type="file"
 										accept=".json,application/json"
 										className="hidden"
-										onChange={handleInputChange}
+										onChange={uploadKamaiFile}
 									/>
 									<div className="mb-4 rounded-xl bg-background p-4 border border-border shadow-sm group-hover:scale-105 transition-transform">
 										<FileUp className="h-8 w-8 text-muted-foreground" />
@@ -183,15 +226,16 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 							<TabsContent value="remote" className="mt-0 outline-none">
 								<div className="space-y-6 rounded-xl border border-border bg-muted/20 p-8">
 									<div className="space-y-4">
-										<label className="text-sm font-semibold px-1 block text-foreground/80">Kamaitachi Username</label>
+										<label htmlFor="chunithm-kamai-username" className="text-sm font-semibold px-1 block text-foreground/80">Kamaitachi Username</label>
 										<Input
+											id="chunithm-kamai-username"
 											value={kamaiUsername}
 											onChange={event => setKamaiUsername(event.target.value)}
 											onKeyDown={event => {
 												if (event.key !== "Enter" || event.nativeEvent.isComposing || !shouldFetchFromKamai || isFetchingKamai)
 													return
 												event.preventDefault()
-												void handleFetchFromKamai()
+												void fetchRemoteScores()
 											}}
 											placeholder="e.g. PlayerName"
 											className="bg-background border-border h-11 px-4 rounded-lg text-sm shadow-sm"
@@ -205,7 +249,7 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 									</div>
 									{shouldFetchFromKamai && (
 										<Button
-											onClick={handleFetchFromKamai}
+											onClick={fetchRemoteScores}
 											disabled={isFetchingKamai}
 											className="w-full bg-foreground text-background hover:bg-foreground/90 h-11 rounded-lg font-bold shadow-sm"
 										>
@@ -223,152 +267,16 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 
 						{previewRows.length > 0 && (
 							<div className="space-y-6">
-								<div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-									<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
-										<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ready</p>
-										<p className="text-xl font-bold mt-1 text-foreground">{summary.ready + summary.bestUpdate}</p>
-									</div>
-									<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
-										<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Selected</p>
-										<p className="text-xl font-bold mt-1 text-foreground">{selectedRows.length}</p>
-									</div>
-									<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
-										<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Synced</p>
-										<p className="text-xl font-bold mt-1 text-foreground">{summary.duplicate + summary.duplicateInFile}</p>
-									</div>
-									<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
-										<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Missing</p>
-										<p className="text-xl font-bold mt-1 text-foreground">{summary.unknownSong}</p>
-									</div>
-								</div>
-
-								<div className="bg-card overflow-hidden rounded-xl border border-border shadow-sm">
-									<div className="px-6 py-4 bg-muted/30 border-b border-border">
-										<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-											<div>
-												<p className="text-sm font-bold text-foreground">Import Preview</p>
-												<p className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest mt-0.5">
-													Review changes before synchronizing
-												</p>
-											</div>
-											<label className="flex items-center gap-3 text-xs font-semibold cursor-pointer bg-background/50 px-3 py-2 rounded-lg border border-border hover:bg-background transition-colors">
-												<Checkbox
-													checked={onlyShowReadyRows}
-													onCheckedChange={checked => setOnlyShowReadyRows(checked === true)}
-													className="data-[state=checked]:bg-foreground data-[state=checked]:border-foreground"
-												/>
-												Show Importable Only
-											</label>
-										</div>
-									</div>
-									<div ref={parentRef} className="h-[320px] overflow-y-auto custom-scrollbar">
-										<div
-											style={{
-												height: `${rowVirtualizer.getTotalSize()}px`,
-												width: "100%",
-												position: "relative"
-											}}
-										>
-											{rowVirtualizer.getVirtualItems().map(virtualItem => {
-												const row = visiblePreviewRows[virtualItem.index]
-												return (
-													<label
-														key={virtualItem.key}
-														data-index={virtualItem.index}
-														ref={rowVirtualizer.measureElement}
-														style={{
-															position: "absolute",
-															top: 0,
-															left: 0,
-															width: "100%",
-															transform: `translateY(${virtualItem.start}px)`
-														}}
-														className={cn(
-															"flex items-start gap-5 px-6 py-5 transition-colors hover:bg-muted/50 cursor-pointer border-b border-border/50 last:border-0",
-															isImportableStatus(row.status) && "bg-muted/10 hover:bg-muted/20"
-														)}
-													>
-														<div className="pt-1">
-															{row.status === "unknown-song" || row.status === "duplicate-in-file" ? (
-																<div className="size-5 shrink-0" />
-															) : (
-																<Checkbox
-																	checked={Boolean(selectedKeys[row.id])}
-																	disabled={!isImportableStatus(row.status)}
-																	onCheckedChange={checked =>
-																		setSelectedKeys(prev => ({ ...prev, [row.id]: checked === true }))
-																	}
-																	className="size-5 rounded-md data-[state=checked]:bg-foreground data-[state=checked]:border-foreground"
-																/>
-															)}
-														</div>
-														<div className="min-w-0 flex-1">
-															<div className="flex flex-wrap items-center gap-3">
-																<p className={cn("text-base font-bold leading-tight", getPreviewTextClassName(row.status))}>
-																	{row.title ?? `Song ${row.musicId}`}
-																</p>
-																<span
-																	className={cn(
-																		"rounded-md px-1.5 py-0.5 text-[10px] font-black uppercase border-2",
-																		getPreviewMetaClassName(row.status)
-																	)}
-																>
-																	{getDifficultyFromChunithmChart(row.level)}
-																	{row.chartLevel != null ? ` ${formatLevel(row.chartLevel)}` : ""}
-																</span>
-															</div>
-															<div
-																className={cn(
-																	"mt-2.5 flex flex-wrap gap-x-6 gap-y-1.5 text-xs font-medium opacity-80 tabular-nums",
-																	getPreviewMetaClassName(row.status)
-																)}
-															>
-																<span className="font-bold">{row.score.toLocaleString()}</span>
-																<span className="opacity-50">•</span>
-																<span>{row.noteLamp}</span>
-																<span className="opacity-50">•</span>
-																<span>{row.clearLamp}</span>
-																<span className="opacity-50">•</span>
-																{row.timeAchieved ? (
-																	<span>{DateTime.fromMillis(row.timeAchieved).toFormat("yyyy-LL-dd HH:mm")}</span>
-																) : (
-																	<span className="italic opacity-60">No timestamp</span>
-																)}
-															</div>
-														</div>
-														<div className="shrink-0 pt-0.5">
-															{row.status === "ready" && (
-																<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-muted px-2.5 py-1 rounded-md border border-border shadow-sm">
-																	Ready
-																</span>
-															)}
-															{row.status === "best-update" && (
-																<span className="text-[10px] font-black uppercase tracking-wider text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20 shadow-sm">
-																	PB
-																</span>
-															)}
-															{row.status === "duplicate" && (
-																<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 bg-muted/40 px-2.5 py-1 rounded-md border border-border/50">
-																	Synced
-																</span>
-															)}
-															{row.status === "duplicate-in-file" && (
-																<span className="text-[10px] font-black uppercase tracking-wider text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20 shadow-sm">
-																	Duplicate
-																</span>
-															)}
-															{row.status === "unknown-song" && (
-																<span className="text-[10px] font-black uppercase tracking-wider text-rose-600 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20 shadow-sm">
-																	Missing
-																</span>
-															)}
-														</div>
-													</label>
-												)
-											})}
-										</div>
-									</div>
-								</div>
+								<ImportSummary summary={summary} selectedCount={selectedRows.length} />
+								<ImportPreview
+									visiblePreviewRows={visiblePreviewRows}
+									selectedKeys={selectedKeys}
+									setSelectedKeys={setSelectedKeys}
+									onlyShowReadyRows={onlyShowReadyRows}
+									setOnlyShowReadyRows={setOnlyShowReadyRows}
+									getPreviewTextClassName={getPreviewTextClassName}
+									getPreviewMetaClassName={getPreviewMetaClassName}
+								/>
 							</div>
 						)}
 					</div>
@@ -384,7 +292,7 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 							Cancel
 						</Button>
 						<Button
-							onClick={handlePrimaryAction}
+							onClick={executeImportAction}
 							disabled={primaryButtonDisabled}
 							size="lg"
 							className="bg-foreground text-background hover:bg-foreground/90 min-w-[160px] font-bold rounded-lg shadow-sm px-8"
@@ -392,7 +300,7 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 							{isFetchingKamai ? (
 								<>
 									<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-									Fetching...
+									Fetching…
 								</>
 							) : shouldFetchFromKamai ? (
 								<>
@@ -402,7 +310,7 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 							) : importMutation.isPending ? (
 								<>
 									<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-									Importing...
+									Importing…
 								</>
 							) : (
 								<>
@@ -415,5 +323,177 @@ export function ChunithmKamaiImportDialog({ existingScores }: { existingScores: 
 				</div>
 			</DialogContent>
 		</Dialog>
+	)
+}
+
+function ImportSummary({ summary, selectedCount }: any) {
+	return (
+		<div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+			<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
+				<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ready</p>
+				<p className="text-xl font-bold mt-1 text-foreground">{summary.ready + summary.bestUpdate}</p>
+			</div>
+			<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
+				<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Selected</p>
+				<p className="text-xl font-bold mt-1 text-foreground">{selectedCount}</p>
+			</div>
+			<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
+				<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Synced</p>
+				<p className="text-xl font-bold mt-1 text-foreground">{summary.duplicate + summary.duplicateInFile}</p>
+			</div>
+			<div className="bg-muted/40 rounded-xl px-5 py-4 border border-border shadow-sm">
+				<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Missing</p>
+				<p className="text-xl font-bold mt-1 text-foreground">{summary.unknownSong}</p>
+			</div>
+		</div>
+	)
+}
+
+function ImportPreview({
+	visiblePreviewRows,
+	selectedKeys,
+	setSelectedKeys,
+	onlyShowReadyRows,
+	setOnlyShowReadyRows,
+	getPreviewTextClassName,
+	getPreviewMetaClassName
+}: any) {
+	const parentRef = useRef<HTMLDivElement>(null)
+
+	const rowVirtualizer = useVirtualizer({
+		count: visiblePreviewRows.length,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => 92,
+		getItemKey: index => visiblePreviewRows[index].id,
+		overscan: 5
+	})
+
+	return (
+		<div className="bg-card overflow-hidden rounded-xl border border-border shadow-sm">
+			<div className="px-6 py-4 bg-muted/30 border-b border-border">
+				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div>
+						<p className="text-sm font-bold text-foreground">Import Preview</p>
+						<p className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest mt-0.5">
+							Review changes before synchronizing
+						</p>
+					</div>
+					<label htmlFor="chunithm-only-ready" className="flex items-center gap-3 text-xs font-semibold cursor-pointer bg-background/50 px-3 py-2 rounded-lg border border-border hover:bg-background transition-colors">
+						<Checkbox
+							id="chunithm-only-ready"
+							checked={onlyShowReadyRows}
+							onCheckedChange={checked => setOnlyShowReadyRows(checked === true)}
+							className="data-[state=checked]:bg-foreground data-[state=checked]:border-foreground"
+						/>
+						Show Importable Only
+					</label>
+				</div>
+			</div>
+			<div ref={parentRef} className="h-[320px] overflow-y-auto custom-scrollbar">
+				<div
+					style={{
+						height: `${rowVirtualizer.getTotalSize()}px`,
+						width: "100%",
+						position: "relative"
+					}}
+				>
+					{rowVirtualizer.getVirtualItems().map(virtualItem => {
+						const row = visiblePreviewRows[virtualItem.index]
+						return (
+							<label
+								key={virtualItem.key}
+								data-index={virtualItem.index}
+								ref={rowVirtualizer.measureElement}
+								style={{
+									position: "absolute",
+									top: 0,
+									left: 0,
+									width: "100%",
+									transform: `translateY(${virtualItem.start}px)`
+								}}
+								className={cn(
+									"flex items-start gap-5 px-6 py-5 transition-colors hover:bg-muted/50 cursor-pointer border-b border-border/50 last:border-0",
+									isImportableStatus(row.status) && "bg-muted/10 hover:bg-muted/20"
+								)}
+							>
+								<div className="pt-1">
+									{row.status === "unknown-song" || row.status === "duplicate-in-file" ? (
+										<div className="size-5 shrink-0" />
+									) : (
+										<Checkbox
+											checked={Boolean(selectedKeys[row.id])}
+											disabled={!isImportableStatus(row.status)}
+											onCheckedChange={checked => setSelectedKeys((prev: any) => ({ ...prev, [row.id]: checked === true }))}
+											className="size-5 rounded-md data-[state=checked]:bg-foreground data-[state=checked]:border-foreground"
+										/>
+									)}
+								</div>
+								<div className="min-w-0 flex-1">
+									<div className="flex flex-wrap items-center gap-3">
+										<p className={cn("text-base font-bold leading-tight", getPreviewTextClassName(row.status))}>
+											{row.title ?? `Song ${row.musicId}`}
+										</p>
+										<span
+											className={cn(
+												"rounded-md px-1.5 py-0.5 text-[10px] font-black uppercase border-2",
+												getPreviewMetaClassName(row.status)
+											)}
+										>
+											{getDifficultyFromChunithmChart(row.level)}
+											{row.chartLevel != null ? ` ${formatLevel(row.chartLevel)}` : ""}
+										</span>
+									</div>
+									<div
+										className={cn(
+											"mt-2.5 flex flex-wrap gap-x-6 gap-y-1.5 text-xs font-medium opacity-80 tabular-nums",
+											getPreviewMetaClassName(row.status)
+										)}
+									>
+										<span className="font-bold">{row.score.toLocaleString()}</span>
+										<span className="opacity-50">•</span>
+										<span>{row.noteLamp}</span>
+										<span className="opacity-50">•</span>
+										<span>{row.clearLamp}</span>
+										<span className="opacity-50">•</span>
+										{row.timeAchieved ? (
+											<span>{DateTime.fromMillis(row.timeAchieved).toFormat("yyyy-LL-dd HH:mm")}</span>
+										) : (
+											<span className="italic opacity-60">No timestamp</span>
+										)}
+									</div>
+								</div>
+								<div className="shrink-0 pt-0.5">
+									{row.status === "ready" && (
+										<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-muted px-2.5 py-1 rounded-md border border-border shadow-sm">
+											Ready
+										</span>
+									)}
+									{row.status === "best-update" && (
+										<span className="text-[10px] font-black uppercase tracking-wider text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20 shadow-sm">
+											PB
+										</span>
+									)}
+									{row.status === "duplicate" && (
+										<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 bg-muted/40 px-2.5 py-1 rounded-md border border-border/50">
+											Synced
+										</span>
+									)}
+									{row.status === "duplicate-in-file" && (
+										<span className="text-[10px] font-black uppercase tracking-wider text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20 shadow-sm">
+											Duplicate
+										</span>
+									)}
+									{row.status === "unknown-song" && (
+										<span className="text-[10px] font-black uppercase tracking-wider text-rose-600 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20 shadow-sm">
+											Missing
+										</span>
+									)}
+								</div>
+							</label>
+						)
+					})}
+				</div>
+			</div>
+		</div>
 	)
 }

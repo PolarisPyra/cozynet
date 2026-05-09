@@ -328,7 +328,7 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		}
 	}
 
-	const handleFile = async (file: File) => {
+	const processKamaiFile = async (file: File) => {
 		try {
 			const content = await file.text()
 			const scores = parseKamaiFile(content)
@@ -348,13 +348,13 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		}
 	}
 
-	const handleInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
+	const uploadKamaiFile = async (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0]
 		if (!file) return
-		await handleFile(file)
+		await processKamaiFile(file)
 	}
 
-	const handleFetchFromKamai = async () => {
+	const fetchRemoteScores = async () => {
 		const normalized = kamaiUsername.trim()
 		if (!normalized) {
 			toast.error("Enter a Kamai username")
@@ -411,8 +411,8 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		getPreviewMetaClassName: (status: ImportedScorePreview["status"]) =>
 			isImportableStatus(status) ? "text-foreground" : "text-muted-foreground",
 		resetState,
-		handleFile,
-		handleInputChange,
-		handleFetchFromKamai
+		processKamaiFile,
+		uploadKamaiFile,
+		fetchRemoteScores
 	}
 }
