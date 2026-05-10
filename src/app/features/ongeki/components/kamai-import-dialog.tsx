@@ -1,4 +1,4 @@
-import { type ReactNode, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { DateTime } from "luxon";
@@ -23,12 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/shared/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/app/shared/components/ui/tabs";
+
 import { cn } from "@/app/shared/utils";
 import { formatLevel } from "@/app/shared/utils/format-level";
 import { getDifficultyFromOngekiChart } from "@/app/shared/utils/ongeki";
