@@ -178,7 +178,7 @@ function OngekiKamaiImportDialogView({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex h-[88vh] max-h-[920px] w-[96vw] sm:max-w-[1150px] flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#141414] p-0 shadow-[0_30px_120px_rgba(0,0,0,0.85)] outline-none ring-1 ring-white/[0.06]">
+      <DialogContent className="flex h-[88vh] max-h-[920px] w-[96vw] sm:max-w-[1150px] flex-col overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#141414] p-0 outline-none ring-1 ring-white/[0.03]" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader className="border-b border-white/[0.06] px-8 pb-6 pt-8 sm:px-9">
           <div className="flex items-center gap-4">
             <div className="grid size-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.045] shadow-inner">
