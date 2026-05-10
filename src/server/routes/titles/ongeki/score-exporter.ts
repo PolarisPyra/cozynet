@@ -8,6 +8,7 @@ import { calculateOngekiGekForceRating, calculateOngekiRating } from "@/app/shar
 import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
+import type { DB } from "@/app/shared/types"
 
 const TACHI_CLASSES = [undefined, "DAN_I", "DAN_II", "DAN_III", "DAN_IV", "DAN_V", "DAN_INFINITE"] as const
 const TACHI_DIFFICULTIES = ["BASIC", "ADVANCED", "EXPERT", "MASTER", "LUNATIC"] as const
@@ -55,7 +56,7 @@ type ProfileRow = RowDataPacket & {
 }
 
 type ExportPlaylogRow = RowDataPacket & {
-	timeAchieved: number | null
+	userPlayDate: string | null
 	musicId: number | null
 	level: number | null
 	techScore: number | null
@@ -74,16 +75,11 @@ type ExportPlaylogRow = RowDataPacket & {
 	platinumScore: number | null
 }
 
-type StaticChartRow = RowDataPacket & {
-	songId: number
-	chartId: number
-	chartLevel: number
-}
-
-type ExistingImportedScoreRow = RowDataPacket & {
+interface ExistingImportedScoreRow extends RowDataPacket {
 	musicId: number
 	level: number
 	techScore: number
+	timeAchieved: number
 }
 
 type ExistingBestScoreRow = RowDataPacket & {
@@ -180,7 +176,7 @@ const normalizeOptionalJudgements = (value: unknown) => {
 }
 
 const ImportScoreSchema = z.object({
-	musicId: z.number().int().nonnegative(),
+	songId: z.number().int().nonnegative(),
 	level: z.union([z.number().int().min(0).max(3), z.literal(10)]),
 	score: z.number().int().min(0),
 	noteLamp: z.enum(["LOSS", "CLEAR", "FULL COMBO", "ALL BREAK", "ALL BREAK+"]),
@@ -300,8 +296,7 @@ const OngekiKamaitachiRoutes = new Hono()
 
 			const [playlogResults] = await db.execute<ExportPlaylogRow[]>(
 				`SELECT
-				-- UNIX_TIMESTAMP returns seconds, Tachi do be needing milliseconds
-                UNIX_TIMESTAMP(p.userPlayDate)*1000 as timeAchieved,
+				p.userPlayDate as userPlayDate,
                 p.musicId,
                 p.level,
                 p.techScore,
@@ -321,7 +316,7 @@ const OngekiKamaitachiRoutes = new Hono()
             FROM ongeki_score_playlog p
             WHERE user = ?
             GROUP BY p.id
-            ORDER BY timeAchieved DESC`,
+            ORDER BY userPlayDate DESC`,
 				[userId]
 			)
 
@@ -339,7 +334,7 @@ const OngekiKamaitachiRoutes = new Hono()
 
 			for (const log of playlogResults) {
 				const {
-					timeAchieved,
+					userPlayDate,
 					musicId,
 					level,
 					techScore,
@@ -358,6 +353,10 @@ const OngekiKamaitachiRoutes = new Hono()
 					platinumScore
 				} = log
 
+				const timeAchieved = userPlayDate
+					? DateTime.fromSQL(userPlayDate, { zone: "Asia/Tokyo" }).toMillis()
+					: undefined
+
 				if (
 					musicId === null ||
 					level === null ||
@@ -375,7 +374,7 @@ const OngekiKamaitachiRoutes = new Hono()
 				// Determine note lamp based on clearStatus and achievements
 				// According to Kamaitachi docs: LOSS, CLEAR, FULL COMBO, ALL BREAK, ALL BREAK+
 				if (clearStatus >= 1) {
-					if (isAllBreak && techScore >= 1007500) {
+					if (isAllBreak && techScore >= 1010000) {
 						noteLamp = "ALL BREAK+"
 					} else if (isAllBreak) {
 						noteLamp = "ALL BREAK"
@@ -404,7 +403,7 @@ const OngekiKamaitachiRoutes = new Hono()
 					identifier: musicId.toString(),
 					matchType: "inGameID",
 					difficulty,
-					timeAchieved: timeAchieved ?? undefined
+					timeAchieved
 				}
 
 				if (judgeCriticalBreak !== null && judgeBreak !== null && judgeHit !== null && judgeMiss !== null) {
@@ -441,29 +440,22 @@ const OngekiKamaitachiRoutes = new Hono()
 			const { scores } = c.req.valid("json")
 			const version = versions.ongeki_version
 
-			const musicIds = [...new Set(scores.map(score => score.musicId))]
+			const songIds = [...new Set(scores.map(score => score.songId))]
 			const chartIds = [...new Set(scores.map(score => score.level))]
 
-			if (musicIds.length === 0 || chartIds.length === 0) {
+			if (songIds.length === 0 || chartIds.length === 0) {
 				return c.json({ importedCount: 0, duplicateCount: 0, missingSongCount: 0, skippedCount: 0 })
 			}
 
-			const musicIdPlaceholders = musicIds.map(() => "?").join(", ")
-			const chartIdPlaceholders = chartIds.map(() => "?").join(", ")
-
-			const [staticRows] = await conn.execute<StaticChartRow[]>(
-				`SELECT
-					songId,
-					chartId,
-					MAX(level) AS chartLevel
+			const [staticRows] = await db.execute<(DB.OngekiStaticMusic & RowDataPacket)[]>(
+				`SELECT songId, chartId, level as chartLevel
 				FROM ongeki_static_music
-				WHERE songId IN (${musicIdPlaceholders})
-					AND chartId IN (${chartIdPlaceholders})
+				WHERE songId IN (${songIds.map(() => "?").join(",")})
 				GROUP BY songId, chartId`,
-				[...musicIds, ...chartIds]
+				songIds
 			)
 
-			const staticMap = new Map<string, StaticChartData>(
+			const songLevelsMap = new Map<string, { chartLevel: number }>(
 				staticRows.map(row => [`${row.songId}:${row.chartId}`, { chartLevel: row.chartLevel }])
 			)
 
@@ -474,9 +466,9 @@ const OngekiKamaitachiRoutes = new Hono()
 					techScore
 				FROM ongeki_score_playlog
 				WHERE user = ?
-					AND musicId IN (${musicIdPlaceholders})
-					AND level IN (${chartIdPlaceholders})`,
-				[userId, ...musicIds, ...chartIds]
+					AND musicId IN (${songIds.map(() => "?").join(",")})
+					AND level IN (${chartIds.map(() => "?").join(",")})`,
+				[userId, ...songIds, ...chartIds]
 			)
 
 			const existingKeys = new Set(existingRows.map(getExistingScoreKey))
@@ -495,9 +487,9 @@ const OngekiKamaitachiRoutes = new Hono()
 					platinumScoreStar
 				FROM ongeki_score_best
 				WHERE user = ?
-					AND musicId IN (${musicIdPlaceholders})
-					AND level IN (${chartIdPlaceholders})`,
-				[userId, ...musicIds, ...chartIds]
+					AND musicId IN (${songIds.map(() => "?").join(",")})
+					AND level IN (${chartIds.map(() => "?").join(",")})`,
+				[userId, ...songIds, ...chartIds]
 			)
 
 			const existingBestMap = new Map(existingBestRows.map(row => [`${row.musicId}:${row.level}`, row]))
@@ -509,10 +501,10 @@ const OngekiKamaitachiRoutes = new Hono()
 
 			for (const score of scores) {
 				const playDate = getImportedPlayDate(score.timeAchieved)
-				const duplicateKey = `${score.musicId}:${score.level}:${score.score}`
-				const staticData = staticMap.get(`${score.musicId}:${score.level}`)
+				const duplicateKey = `${score.songId}:${score.level}:${score.score}`
+				const song = songLevelsMap.get(`${score.songId}:${score.level}`)
 
-				if (!staticData) {
+				if (!song) {
 					missingSongCount += 1
 					continue
 				}
@@ -521,18 +513,19 @@ const OngekiKamaitachiRoutes = new Hono()
 				const isFullCombo = isAllBreak === 1 || score.noteLamp === "FULL COMBO" ? 1 : 0
 				const isFullBell = score.bellLamp === "FULL BELL" ? 1 : 0
 				const clearStatus = score.noteLamp === "LOSS" ? 0 : 1
+				const chartLevel = song.chartLevel ?? 0
 				const playerRating =
 					version >= 8
 						? Math.floor(
-								calculateOngekiGekForceRating(staticData.chartLevel, score.score, isFullCombo, isAllBreak, isFullBell)
+								calculateOngekiGekForceRating(chartLevel, score.score, isFullCombo, isAllBreak, isFullBell)
 							)
-						: Math.floor(calculateOngekiRating(staticData.chartLevel, score.score) * 100)
+						: Math.floor(calculateOngekiRating(chartLevel, score.score) * 100)
 
-				const bestKey = `${score.musicId}:${score.level}`
+				const bestKey = `${score.songId}:${score.level}`
 				bestByChart.set(
 					bestKey,
 					mergeOngekiBest(bestByChart.get(bestKey), {
-						musicId: score.musicId,
+						musicId: score.songId,
 						level: score.level,
 						playCount: 1,
 						techScoreMax: score.score,
@@ -556,7 +549,7 @@ const OngekiKamaitachiRoutes = new Hono()
 
 				rowsToInsert.push([
 					userId,
-					score.musicId,
+					score.songId,
 					score.level,
 					clearStatus,
 					score.score,

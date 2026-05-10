@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/app/shared/utils"
 
 export type OngekiKamaiImportScore = {
-	musicId: number
+	songId: number
 	level: 0 | 1 | 2 | 3 | 10
 	score: number
 	noteLamp: "LOSS" | "CLEAR" | "FULL COMBO" | "ALL BREAK" | "ALL BREAK+"

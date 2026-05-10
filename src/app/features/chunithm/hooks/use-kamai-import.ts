@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, ChangeEvent } from "react"
+import { useEffect, useMemo, useRef, useState, ChangeEvent } from "react"
 import { toast } from "sonner"
 import { DateTime } from "luxon"
 import type { DB, ChunithmPlaylog } from "@/app/shared/types"
@@ -39,21 +39,19 @@ const KAMAI_DIFFICULTY_TO_CHART_ID: Record<string, number> = {
 	ULTIMA: 4
 }
 
-const getDuplicateScoreKey = (score: { musicId: number; level: number; score: number; timeAchieved?: number | null }) =>
-	`${score.musicId}:${score.level}:${score.score}${score.timeAchieved ? `:${score.timeAchieved}` : ""}`
+const getDuplicateScoreKey = (score: ChunithmKamaiImportScore) =>
+	`${score.songId}:${score.level}:${score.score}${score.timeAchieved ? `:${score.timeAchieved}` : ""}`
 
-const getGeneralScoreKey = (score: { musicId: number; level: number; score: number }) =>
-	`${score.musicId}:${score.level}:${score.score}`
+const getGeneralScoreKey = (score: { songId: number; level: number; score: number }) =>
+	`${score.songId}:${score.level}:${score.score}`
 
 const getPreviewRowId = (
-	score: { musicId: number; level: number; score: number; timeAchieved?: number | null },
+	score: { songId: number; level: number; score: number; timeAchieved?: number | null },
 	index: number
 ) => `${getGeneralScoreKey(score)}:${score.timeAchieved ?? 0}:${index}`
 
-const getExistingPlaylogKey = (score: ChunithmPlaylog) => {
-	const millis = score.userPlayDate ? DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toMillis() : 0
-	return `${score.musicId ?? 0}:${score.chartId ?? score.level ?? -1}:${score.score ?? 0}${millis ? `:${millis}` : ""}`
-}
+const getExistingPlaylogKey = (score: ChunithmPlaylog) =>
+	`${score.musicId ?? 0}:${score.level ?? -1}:${score.score ?? 0}${score.userPlayDate ? `:${DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toMillis()}` : ""}`
 
 export const isImportableStatus = (status: ImportedScorePreview["status"]) =>
 	status === "ready" || status === "best-update"
@@ -74,7 +72,10 @@ const isScoreBestUpdate = (score: ChunithmKamaiImportScore, best?: ExistingBestS
 	return false
 }
 
-const normalizeExportScores = (scores: unknown[]): ChunithmKamaiImportScore[] => {
+const normalizeExportScores = (
+	scores: unknown[],
+	songMap?: Map<string, number>
+): ChunithmKamaiImportScore[] => {
 	return scores.flatMap((raw, index) => {
 		if (!raw || typeof raw !== "object") return []
 
@@ -91,7 +92,11 @@ const normalizeExportScores = (scores: unknown[]): ChunithmKamaiImportScore[] =>
 			}
 		}
 
-		const musicId = Number(score.identifier)
+		let musicId = Number(score.identifier)
+		if (isNaN(musicId) && score.identifier && songMap) {
+			musicId = songMap.get(score.identifier) ?? NaN
+		}
+
 		const level = KAMAI_DIFFICULTY_TO_CHART_ID[score.difficulty ?? ""]
 
 		if (!Number.isInteger(musicId) || level === undefined || typeof score.score !== "number") {
@@ -101,7 +106,7 @@ const normalizeExportScores = (scores: unknown[]): ChunithmKamaiImportScore[] =>
 
 		return [
 			{
-				musicId,
+				songId: musicId,
 				level,
 				score: score.score,
 				noteLamp: score.noteLamp ?? "NONE",
@@ -121,24 +126,18 @@ const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDefinitio
 		if (pb.game !== "chunithm" || pb.playtype !== "Single") return []
 
 		const chart = pb.chartID ? chartMap.get(pb.chartID) : undefined
-		// CRITICAL: We only match by inGameID. songID is unreliable and arbitrary.
 		const musicId = chart?.data?.inGameID
 		const level = chart?.difficulty ? KAMAI_DIFFICULTY_TO_CHART_ID[chart.difficulty] : undefined
 		const scoreValue = pb.scoreData?.score
 
-		if (
-			musicId === undefined ||
-			!Number.isInteger(musicId) ||
-			level === undefined ||
-			typeof scoreValue !== "number"
-		) {
+		if (musicId === undefined || level === undefined || typeof scoreValue !== "number") {
 			console.warn(`Skipping PB score at index ${index}: Missing inGameID or invalid data`)
 			return []
 		}
 
 		return [
 			{
-				musicId,
+				songId: musicId,
 				level,
 				score: scoreValue,
 				noteLamp: (pb.scoreData?.noteLamp as ChunithmKamaiImportScore["noteLamp"]) ?? "NONE",
@@ -151,11 +150,11 @@ const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDefinitio
 	})
 }
 
-const parseKamaiFile = (content: string): ChunithmKamaiImportScore[] => {
+const parseKamaiFile = (content: string, songMap?: Map<string, number>): ChunithmKamaiImportScore[] => {
 	const parsed = JSON.parse(content) as KamaiFileFormat
 
 	if (Array.isArray(parsed.scores)) {
-		return normalizeExportScores(parsed.scores)
+		return normalizeExportScores(parsed.scores, songMap)
 	}
 
 	if (Array.isArray(parsed.body?.pbs) && Array.isArray(parsed.body?.charts)) {
@@ -174,6 +173,16 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 	const [kamaiUsername, setKamaiUsername] = useState("")
 	const [lastFetchedKamaiUsername, setLastFetchedKamaiUsername] = useState<string | null>(null)
 	const [isFetchingKamai, setIsFetchingKamai] = useState(false)
+	const [sortOrder, setSortOrder] = useState<"date-desc" | "date-asc" | "title-asc">(() => {
+		if (typeof window !== "undefined") {
+			return (localStorage.getItem("chunithm-kamai-import-sort") as any) ?? "date-desc"
+		}
+		return "date-desc"
+	})
+
+	useEffect(() => {
+		localStorage.setItem("chunithm-kamai-import-sort", sortOrder)
+	}, [sortOrder])
 
 	const { data: songs } = useChunithmSongs()
 	const importMutation = useScoreImporter()
@@ -186,14 +195,24 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 		return map
 	}, [songs])
 
+	const titleToIdMap = useMemo(() => {
+		const map = new Map<string, number>()
+		for (const song of (songs ?? []) as DB.ChuniStaticMusic[]) {
+			if (song.title && song.songId !== null) {
+				map.set(song.title, song.songId)
+			}
+		}
+		return map
+	}, [songs])
+
 	const existingExactPlayKeys = useMemo(() => new Set(existingScores.map(getExistingPlaylogKey)), [existingScores])
 	const existingGeneralScoreKeys = useMemo(
 		() =>
 			new Set(
 				existingScores.map(score =>
 					getGeneralScoreKey({
-						musicId: score.musicId ?? 0,
-						level: score.chartId ?? score.level ?? -1,
+						songId: score.musicId ?? 0,
+						level: score.level ?? -1,
 						score: score.score ?? 0
 					})
 				)
@@ -227,8 +246,8 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 	const previewRows = useMemo<ImportedScorePreview[]>(() => {
 		const fileSeenKeys = new Set<string>()
 
-		return parsedScores.map((score, index) => {
-			const song = songMap.get(`${score.musicId}:${score.level}`)
+		const rows = parsedScores.map((score, index) => {
+			const song = songMap.get(`${score.songId}:${score.level}`)
 			const duplicateKey = getDuplicateScoreKey(score)
 			const generalKey = getGeneralScoreKey(score)
 			let status: ImportedScorePreview["status"] = "ready"
@@ -236,7 +255,7 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 			if (!song) {
 				status = "unknown-song"
 			} else if (existingExactPlayKeys.has(duplicateKey) || existingGeneralScoreKeys.has(generalKey)) {
-				status = isScoreBestUpdate(score, existingBestMap.get(`${score.musicId}:${score.level}`))
+				status = isScoreBestUpdate(score, existingBestMap.get(`${score.songId}:${score.level}`))
 					? "best-update"
 					: "duplicate"
 			} else if (fileSeenKeys.has(duplicateKey)) {
@@ -253,7 +272,20 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 				status
 			}
 		})
-	}, [existingBestMap, existingExactPlayKeys, existingGeneralScoreKeys, parsedScores, songMap])
+
+		return [...rows].sort((a, b) => {
+			if (sortOrder === "date-desc") {
+				return (b.timeAchieved ?? 0) - (a.timeAchieved ?? 0)
+			}
+			if (sortOrder === "date-asc") {
+				return (a.timeAchieved ?? 0) - (b.timeAchieved ?? 0)
+			}
+			if (sortOrder === "title-asc") {
+				return (a.title ?? "").localeCompare(b.title ?? "")
+			}
+			return 0
+		})
+	}, [existingBestMap, existingExactPlayKeys, existingGeneralScoreKeys, parsedScores, songMap, sortOrder])
 
 	const selectedRows = useMemo(
 		() => previewRows.filter(row => isImportableStatus(row.status) && selectedKeys[row.id]),
@@ -289,10 +321,24 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 		}
 	}
 
+	const toggleSelectAll = (checked: boolean) => {
+		if (checked) {
+			const newSelected: Record<string, boolean> = {}
+			for (const row of visiblePreviewRows) {
+				if (isImportableStatus(row.status)) {
+					newSelected[row.id] = true
+				}
+			}
+			setSelectedKeys(newSelected)
+		} else {
+			setSelectedKeys({})
+		}
+	}
+
 	const processKamaiFile = async (file: File) => {
 		try {
 			const content = await file.text()
-			const scores = parseKamaiFile(content)
+			const scores = parseKamaiFile(content, titleToIdMap)
 
 			if (scores.length === 0) {
 				toast.error("No Chunithm scores found in that file")
@@ -331,7 +377,7 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 			if (!response.ok) throw new Error(`Kamai returned ${response.status}`)
 
 			const content = await response.text()
-			const scores = parseKamaiFile(content)
+			const scores = parseKamaiFile(content, titleToIdMap)
 
 			if (scores.length === 0) {
 				toast.error("No Chunithm scores found for that Kamai user")
@@ -371,6 +417,9 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 			isImportableStatus(status) ? "text-foreground" : "text-muted-foreground",
 		getPreviewMetaClassName: (status: ImportedScorePreview["status"]) =>
 			isImportableStatus(status) ? "text-foreground" : "text-muted-foreground",
+		sortOrder,
+		setSortOrder,
+		toggleSelectAll,
 		resetState,
 		processKamaiFile,
 		uploadKamaiFile,

@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/app/shared/utils"
 
 export type ChunithmKamaiImportScore = {
-	musicId: number
+	songId: number
 	level: number
 	score: number
 	noteLamp: "ALL JUSTICE CRITICAL" | "ALL JUSTICE" | "FULL COMBO" | "NONE"

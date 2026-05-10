@@ -9,6 +9,7 @@ import { calculateChunithmRating } from "@/app/shared/utils/chunithm"
 import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
+import type { DB } from "@/app/shared/types"
 
 const TACHI_CLASSES = [undefined, "DAN_I", "DAN_II", "DAN_III", "DAN_IV", "DAN_V", "DAN_INFINITE"] as const
 const TACHI_DIFFICULTIES = ["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"] as const
@@ -72,10 +73,11 @@ interface BatchManualImport {
 	}
 }
 
-type StaticChartRow = RowDataPacket & {
-	songId: number
-	chartId: number
-	chartLevel: number
+type ExistingImportedScoreRow = RowDataPacket & {
+	musicId: number
+	level: number
+	score: number
+	timeAchieved: number | null
 }
 
 type ProfileRow = RowDataPacket & {
@@ -84,7 +86,7 @@ type ProfileRow = RowDataPacket & {
 }
 
 type ExportPlaylogRow = RowDataPacket & {
-	timeAchieved: number | null
+	userPlayDate: string | null
 	romVersion: string | null
 	musicId: number | null
 	level: number | null
@@ -99,17 +101,6 @@ type ExportPlaylogRow = RowDataPacket & {
 	isAllJustice: number | null
 	isClear: number | null
 	skillCategoryId: number | null
-}
-
-type ExistingImportedScoreRow = RowDataPacket & {
-	musicId: number
-	level: number
-	score: number
-	timeAchieved: number | null
-}
-
-type StaticChartData = {
-	chartLevel: number
 }
 
 type BestUpsertData = {
@@ -166,7 +157,7 @@ type ExecutableConnection = PoolConnection & {
 }
 
 const ImportScoreSchema = z.object({
-	musicId: z.number().int().nonnegative(),
+	songId: z.number().int().nonnegative(),
 	level: z.number().int().min(0).max(4),
 	score: z.number().int().min(0),
 	noteLamp: z.enum(["ALL JUSTICE CRITICAL", "ALL JUSTICE", "FULL COMBO", "NONE"]),
@@ -255,8 +246,7 @@ const ChunithmKamaitachiRoutes = new Hono()
 
 			const [playlogResults] = await db.execute<ExportPlaylogRow[]>(
 				`SELECT
-				-- UNIX_TIMESTAMP returns seconds, Tachi do be needing milliseconds
-				UNIX_TIMESTAMP(p.userPlayDate)*1000 as timeAchieved,
+				p.userPlayDate as userPlayDate,
 				p.romVersion,
 				p.musicId,
 				p.level,
@@ -275,7 +265,7 @@ const ChunithmKamaitachiRoutes = new Hono()
 			LEFT JOIN cozynet_static_chuni_skill s ON s.skillId = p.skillId
 			WHERE p.user = ?
 			GROUP BY p.id
-			ORDER BY timeAchieved DESC`,
+			ORDER BY userPlayDate DESC`,
 				[userId]
 			)
 
@@ -294,7 +284,7 @@ const ChunithmKamaitachiRoutes = new Hono()
 
 			for (const log of playlogResults) {
 				const {
-					timeAchieved,
+					userPlayDate,
 					romVersion,
 					musicId,
 					level,
@@ -310,6 +300,10 @@ const ChunithmKamaitachiRoutes = new Hono()
 					isClear,
 					skillCategoryId
 				} = log
+
+				const timeAchieved = userPlayDate
+					? DateTime.fromSQL(userPlayDate, { zone: "Asia/Tokyo" }).toMillis()
+					: undefined
 
 				if (
 					romVersion === null ||
@@ -399,29 +393,18 @@ const ChunithmKamaitachiRoutes = new Hono()
 			const version = versions.chunithm_version
 			const romVersion = VERSION_TO_ROM_VERSION[version] ?? VERSION_TO_ROM_VERSION[18]
 
-			const musicIds = [...new Set(scores.map(score => score.musicId))]
-			const chartIds = [...new Set(scores.map(score => score.level))]
+			const songIds = [...new Set(scores.map(score => score.songId))]
 
-			if (musicIds.length === 0 || chartIds.length === 0) {
-				return c.json({ importedCount: 0, duplicateCount: 0, missingSongCount: 0, skippedCount: 0 })
-			}
-
-			const musicIdPlaceholders = musicIds.map(() => "?").join(", ")
-			const chartIdPlaceholders = chartIds.map(() => "?").join(", ")
-
-			const [staticRows] = await conn.execute<StaticChartRow[]>(
-				`SELECT
-					songId,
-					chartId,
-					MAX(level) AS chartLevel
-				FROM chuni_static_music
-				WHERE songId IN (${musicIdPlaceholders})
-					AND chartId IN (${chartIdPlaceholders})
+			// Get levels for all songs to calculate ratings
+			const [staticRows] = await db.execute<(DB.ChuniStaticMusic & RowDataPacket)[]>(
+				`SELECT songId, chartId, level as chartLevel
+				FROM chunithm_static_music
+				WHERE songId IN (${songIds.map(() => "?").join(",")})
 				GROUP BY songId, chartId`,
-				[...musicIds, ...chartIds]
+				songIds
 			)
 
-			const staticMap = new Map<string, StaticChartData>(
+			const songLevelsMap = new Map<string, { chartLevel: number }>(
 				staticRows.map(row => [`${row.songId}:${row.chartId}`, { chartLevel: row.chartLevel }])
 			)
 
@@ -433,9 +416,8 @@ const ChunithmKamaitachiRoutes = new Hono()
 					UNIX_TIMESTAMP(userPlayDate) * 1000 AS timeAchieved
 				FROM chuni_score_playlog
 				WHERE user = ?
-					AND musicId IN (${musicIdPlaceholders})
-					AND level IN (${chartIdPlaceholders})`,
-				[userId, ...musicIds, ...chartIds]
+					AND musicId IN (${songIds.map(() => "?").join(", ")})`,
+				[userId, ...songIds]
 			)
 
 			const existingKeys = new Set(existingRows.map(getExistingScoreKey))
@@ -447,10 +429,10 @@ const ChunithmKamaitachiRoutes = new Hono()
 
 			for (const score of scores) {
 				const playDate = getImportedPlayDate(score.timeAchieved)
-				const duplicateKey = `${score.musicId}:${score.level}:${score.score}:${score.timeAchieved ?? 0}`
-				const staticData = staticMap.get(`${score.musicId}:${score.level}`)
+				const duplicateKey = `${score.songId}:${score.level}:${score.score}:${score.timeAchieved ?? 0}`
+				const song = songLevelsMap.get(`${score.songId}:${score.level}`)
 
-				if (!staticData) {
+				if (!song) {
 					missingSongCount += 1
 					continue
 				}
@@ -459,13 +441,14 @@ const ChunithmKamaitachiRoutes = new Hono()
 				const isFullCombo = isAllJustice === 1 || score.noteLamp === "FULL COMBO" ? 1 : 0
 				const isClear = score.clearLamp === "FAILED" ? 0 : 1
 				const skillId = IMPORT_CLEAR_LAMP_TO_SKILL_ID[score.clearLamp] ?? null
-				const playerRating = Math.floor(calculateChunithmRating(staticData.chartLevel, score.score) * 100)
+				const chartLevel = song?.chartLevel ?? 0
+				const playerRating = Math.floor(calculateChunithmRating(chartLevel, score.score) * 100)
 
-				const bestKey = `${score.musicId}:${score.level}`
+				const bestKey = `${score.songId}:${score.level}`
 				bestByChart.set(
 					bestKey,
 					mergeChunithmBest(bestByChart.get(bestKey), {
-						musicId: score.musicId,
+						musicId: score.songId,
 						level: score.level,
 						playCount: 1,
 						scoreMax: score.score,
@@ -487,7 +470,7 @@ const ChunithmKamaitachiRoutes = new Hono()
 
 				rowsToInsert.push([
 					userId,
-					score.musicId,
+					score.songId,
 					score.level,
 					score.score,
 					score.maxCombo ?? null,
