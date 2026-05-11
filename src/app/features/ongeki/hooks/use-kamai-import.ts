@@ -99,8 +99,7 @@ const sanitizeJudgements = (value: unknown): OngekiKamaiImportScore["judgements"
 }
 
 export const normalizeExportScores = (
-	scores: unknown[],
-	songMap?: Map<string, number>
+	scores: unknown[]
 ): OngekiKamaiImportScore[] => {
 	return scores.flatMap((raw, index) => {
 		if (!raw || typeof raw !== "object") return []
@@ -126,8 +125,6 @@ export const normalizeExportScores = (
 		let musicId = NaN
 		if (score.matchType === "inGameID") {
 			musicId = Number(score.identifier)
-		} else if (score.matchType === "songTitle" && songMap) {
-			musicId = songMap.get(score.identifier ?? "") ?? NaN
 		}
 
 		const level = KAMAI_DIFFICULTY_TO_CHART_ID[score.difficulty ?? ""]
@@ -198,11 +195,11 @@ export const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDe
 	})
 }
 
-export const parseKamaiFile = (content: string, songMap?: Map<string, number>): OngekiKamaiImportScore[] => {
+export const parseKamaiFile = (content: string): OngekiKamaiImportScore[] => {
 	const parsed = JSON.parse(content) as KamaiFileFormat
 
 	if (Array.isArray(parsed.scores)) {
-		return normalizeExportScores(parsed.scores, songMap)
+		return normalizeExportScores(parsed.scores)
 	}
 
 	if (Array.isArray(parsed.body?.pbs) && Array.isArray(parsed.body?.charts)) {
@@ -243,15 +240,6 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		return map
 	}, [songs])
 
-	const titleToIdMap = useMemo(() => {
-		const map = new Map<string, number>()
-		for (const song of (songs ?? []) as DB.OngekiStaticMusic[]) {
-			if (song.title && song.songId !== null) {
-				map.set(song.title, song.songId)
-			}
-		}
-		return map
-	}, [songs])
 
 	const existingExactPlayKeys = useMemo(() => new Set(existingScores.map(getExistingPlaylogKey)), [existingScores])
 	const existingGeneralScoreKeys = useMemo(
@@ -388,7 +376,7 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 	const processKamaiFile = async (file: File) => {
 		try {
 			const content = await file.text()
-			const scores = parseKamaiFile(content, titleToIdMap)
+			const scores = parseKamaiFile(content)
 
 			if (scores.length === 0) {
 				toast.error("No Ongeki scores found in that file")
@@ -427,7 +415,7 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 			if (!response.ok) throw new Error(`Kamai returned ${response.status}`)
 
 			const content = await response.text()
-			const scores = parseKamaiFile(content, titleToIdMap)
+			const scores = parseKamaiFile(content)
 
 			if (scores.length === 0) {
 				toast.error("No Ongeki scores found for that Kamai user")

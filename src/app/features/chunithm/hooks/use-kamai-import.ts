@@ -50,8 +50,14 @@ const getPreviewRowId = (
 	index: number
 ) => `${getGeneralScoreKey(score)}:${score.timeAchieved ?? 0}:${index}`
 
-const getExistingPlaylogKey = (score: ChunithmPlaylog) =>
-	`${score.musicId ?? 0}:${score.level ?? -1}:${score.score ?? 0}${score.userPlayDate ? `:${DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toMillis()}` : ""}`
+const getExistingPlaylogKey = (score: ChunithmPlaylog) => {
+	const musicId = score.musicId ?? 0
+	const difficulty = score.chartId ?? score.level ?? -1
+	const scoreValue = score.score ?? 0
+	const timestamp = score.userPlayDate ? DateTime.fromSQL(score.userPlayDate, { zone: "Asia/Tokyo" }).toMillis() : null
+	
+	return `${musicId}:${difficulty}:${scoreValue}${timestamp ? `:${timestamp}` : ""}`
+}
 
 export const isImportableStatus = (status: ImportedScorePreview["status"]) =>
 	status === "ready" || status === "best-update"
@@ -73,8 +79,7 @@ const isScoreBestUpdate = (score: ChunithmKamaiImportScore, best?: ExistingBestS
 }
 
 const normalizeExportScores = (
-	scores: unknown[],
-	songMap?: Map<string, number>
+	scores: unknown[]
 ): ChunithmKamaiImportScore[] => {
 	return scores.flatMap((raw, index) => {
 		if (!raw || typeof raw !== "object") return []
@@ -92,11 +97,7 @@ const normalizeExportScores = (
 			}
 		}
 
-		let musicId = Number(score.identifier)
-		if (isNaN(musicId) && score.identifier && songMap) {
-			musicId = songMap.get(score.identifier) ?? NaN
-		}
-
+		const musicId = Number(score.identifier)
 		const level = KAMAI_DIFFICULTY_TO_CHART_ID[score.difficulty ?? ""]
 
 		if (!Number.isInteger(musicId) || level === undefined || typeof score.score !== "number") {
@@ -119,19 +120,23 @@ const normalizeExportScores = (
 	})
 }
 
-const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDefinition[]): ChunithmKamaiImportScore[] => {
-	const chartMap = new Map(charts.map(chart => [chart.chartID, chart]))
+const normalizeKamaiPbScores = (
+	pbs: KamaiPbScore[],
+	charts: KamaiChartDefinition[]
+): ChunithmKamaiImportScore[] => {
+	const chartMap = new Map(charts.map((chart) => [chart.chartID, chart]))
 
 	return pbs.flatMap((pb, index) => {
 		if (pb.game !== "chunithm" || pb.playtype !== "Single") return []
 
 		const chart = pb.chartID ? chartMap.get(pb.chartID) : undefined
-		const musicId = chart?.data?.inGameID ?? pb.songID
+		const musicId = chart?.data?.inGameID ?? null
+
 		const level = chart?.difficulty ? KAMAI_DIFFICULTY_TO_CHART_ID[chart.difficulty] : undefined
 		const scoreValue = pb.scoreData?.score
 
 		if (
-			typeof musicId !== "number" ||
+			musicId === null ||
 			!Number.isInteger(musicId) ||
 			level === undefined ||
 			typeof scoreValue !== "number"
@@ -155,15 +160,18 @@ const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDefinitio
 	})
 }
 
-const parseKamaiFile = (content: string, songMap?: Map<string, number>): ChunithmKamaiImportScore[] => {
+const parseKamaiFile = (content: string): ChunithmKamaiImportScore[] => {
 	const parsed = JSON.parse(content) as KamaiFileFormat
 
 	if (Array.isArray(parsed.scores)) {
-		return normalizeExportScores(parsed.scores, songMap)
+		return normalizeExportScores(parsed.scores)
 	}
 
 	if (Array.isArray(parsed.body?.pbs) && Array.isArray(parsed.body?.charts)) {
-		return normalizeKamaiPbScores(parsed.body.pbs, parsed.body.charts)
+		return normalizeKamaiPbScores(
+			parsed.body.pbs,
+			parsed.body.charts
+		)
 	}
 
 	throw new Error("Unsupported Kamai JSON format")
@@ -200,24 +208,15 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 		return map
 	}, [songs])
 
-	const titleToIdMap = useMemo(() => {
-		const map = new Map<string, number>()
-		for (const song of (songs ?? []) as DB.ChuniStaticMusic[]) {
-			if (song.title && song.songId !== null) {
-				map.set(song.title, song.songId)
-			}
-		}
-		return map
-	}, [songs])
 
 	const existingExactPlayKeys = useMemo(() => new Set(existingScores.map(getExistingPlaylogKey)), [existingScores])
 	const existingGeneralScoreKeys = useMemo(
 		() =>
 			new Set(
-				existingScores.map(score =>
+				existingScores.map((score) =>
 					getGeneralScoreKey({
 						songId: score.musicId ?? 0,
-						level: score.level ?? -1,
+						level: score.chartId ?? score.level ?? -1,
 						score: score.score ?? 0
 					})
 				)
@@ -343,7 +342,7 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 	const processKamaiFile = async (file: File) => {
 		try {
 			const content = await file.text()
-			const scores = parseKamaiFile(content, titleToIdMap)
+			const scores = parseKamaiFile(content)
 
 			if (scores.length === 0) {
 				toast.error("No Chunithm scores found in that file")
@@ -382,7 +381,7 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 			if (!response.ok) throw new Error(`Kamai returned ${response.status}`)
 
 			const content = await response.text()
-			const scores = parseKamaiFile(content, titleToIdMap)
+			const scores = parseKamaiFile(content)
 
 			if (scores.length === 0) {
 				toast.error("No Chunithm scores found for that Kamai user")
