@@ -85,6 +85,7 @@ const normalizeExportScores = (
 			score?: number
 			noteLamp?: ChunithmKamaiImportScore["noteLamp"]
 			clearLamp?: ChunithmKamaiImportScore["clearLamp"]
+			matchType?: string
 			timeAchieved?: number
 			judgements?: ChunithmKamaiImportScore["judgements"]
 			optional?: {
@@ -92,9 +93,11 @@ const normalizeExportScores = (
 			}
 		}
 
-		let musicId = Number(score.identifier)
-		if (isNaN(musicId) && score.identifier && songMap) {
-			musicId = songMap.get(score.identifier) ?? NaN
+		let musicId = NaN
+		if (score.matchType === "inGameID") {
+			musicId = Number(score.identifier)
+		} else if (score.matchType === "songTitle" && songMap) {
+			musicId = songMap.get(score.identifier ?? "") ?? NaN
 		}
 
 		const level = KAMAI_DIFFICULTY_TO_CHART_ID[score.difficulty ?? ""]
@@ -130,7 +133,7 @@ const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDefinitio
 		const level = chart?.difficulty ? KAMAI_DIFFICULTY_TO_CHART_ID[chart.difficulty] : undefined
 		const scoreValue = pb.scoreData?.score
 
-		if (musicId === undefined || level === undefined || typeof scoreValue !== "number") {
+		if (musicId == null || level === undefined || typeof scoreValue !== "number") {
 			console.warn(`Skipping PB score at index ${index}: Missing inGameID or invalid data`)
 			return []
 		}

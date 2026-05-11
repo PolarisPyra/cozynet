@@ -111,6 +111,7 @@ export const normalizeExportScores = (
 			score?: number
 			noteLamp?: OngekiKamaiImportScore["noteLamp"]
 			bellLamp?: OngekiKamaiImportScore["bellLamp"]
+			matchType?: string
 			platinumScore?: number | null
 			timeAchieved?: number
 			judgements?: OngekiKamaiImportScore["judgements"]
@@ -122,9 +123,11 @@ export const normalizeExportScores = (
 			}
 		}
 
-		let musicId = Number(score.identifier)
-		if (isNaN(musicId) && score.identifier && songMap) {
-			musicId = songMap.get(score.identifier) ?? NaN
+		let musicId = NaN
+		if (score.matchType === "inGameID") {
+			musicId = Number(score.identifier)
+		} else if (score.matchType === "songTitle" && songMap) {
+			musicId = songMap.get(score.identifier ?? "") ?? NaN
 		}
 
 		const level = KAMAI_DIFFICULTY_TO_CHART_ID[score.difficulty ?? ""]
@@ -165,7 +168,7 @@ export const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDe
 		const scoreValue = pb.scoreData?.score
 
 		if (
-			musicId === undefined ||
+			musicId == null ||
 			!Number.isInteger(musicId) ||
 			level === undefined ||
 			typeof scoreValue !== "number"
