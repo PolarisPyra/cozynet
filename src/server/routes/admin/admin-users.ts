@@ -170,6 +170,9 @@ const findExistingUserKeychipArcade = async (targetId: number) => {
 	return selectUserKeychipArcade(await getOwnedKeychipArcades(), await getUserPlayHistoryArcades(targetId))
 }
 
+const isOwnedByTargetUser = (arcade: MatchedArcadeTransferRow | undefined, targetId: number) =>
+	arcade?.ownerUser === targetId
+
 const AdminUserRoutes = new Hono()
 	.get("/", async c => {
 		try {
@@ -208,7 +211,7 @@ const AdminUserRoutes = new Hono()
 					candidate => !userArcades.some(arcade => arcade.id === candidate.id)
 				)
 				const transferCandidateArcade =
-					user.id === userId || matchedOwnedArcade
+					user.id === userId || isOwnedByTargetUser(matchedOwnedArcade, user.id)
 						? undefined
 						: selectUserKeychipArcade(transferCandidates, userPlayHistory)
 
@@ -309,7 +312,7 @@ const AdminUserRoutes = new Hono()
 
 			const targetUser = await getTargetUser(targetId)
 			const existingArcade = await findExistingUserKeychipArcade(targetId)
-			if (existingArcade) {
+			if (isOwnedByTargetUser(existingArcade, targetId)) {
 				throw new HTTPException(409, {
 					message: "This user's keychip arcade is already owned"
 				})

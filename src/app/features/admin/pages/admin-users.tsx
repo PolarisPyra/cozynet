@@ -292,7 +292,7 @@ const AdminUsers = () => {
 
 	const isBanned = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_banned)
 	const isLocked = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_locked)
-	const hasOwnedArcade = (user: UserWithDetails) => user.arcades.length > 0 || Boolean(user.matchedOwnedArcade)
+	const ownsMatchedArcade = (user: UserWithDetails) => user.matchedOwnedArcade?.ownerUser === user.id
 	const pendingActionIsLoading = transferKeychipArcadeMutation.isPending
 
 	const confirmPendingUserAction = () => {
@@ -608,14 +608,14 @@ const AdminUsers = () => {
 															<DropdownMenuItem
 																disabled={
 																	user.id === currentUser.userId ||
-																	hasOwnedArcade(user) ||
+																	ownsMatchedArcade(user) ||
 																	!user.transferCandidateArcade
 																}
 																onSelect={() => deferMenuAction(() => setPendingUserAction({ user }))}
 																className="cursor-pointer"
 															>
 																<Shuffle className="mr-2 size-4" />
-																{hasOwnedArcade(user) ? "Already owned" : "Transfer Keychip Arcade"}
+																{ownsMatchedArcade(user) ? "Already owned" : "Transfer Keychip Arcade"}
 															</DropdownMenuItem>
 															<DropdownMenuSeparator />
 															<DropdownMenuItem
