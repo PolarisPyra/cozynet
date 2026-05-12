@@ -4,11 +4,11 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2"
 import type { PoolConnection } from "mysql2/promise"
 import { z } from "zod"
 
+import type { DB } from "@/app/shared/types"
 import { calculateOngekiGekForceRating, calculateOngekiRating } from "@/app/shared/utils/ongeki"
 import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
-import type { DB } from "@/app/shared/types"
 
 const TACHI_CLASSES = [undefined, "DAN_I", "DAN_II", "DAN_III", "DAN_IV", "DAN_V", "DAN_INFINITE"] as const
 const TACHI_DIFFICULTIES = ["BASIC", "ADVANCED", "EXPERT", "MASTER", "LUNATIC"] as const
@@ -93,10 +93,6 @@ type ExistingBestScoreRow = RowDataPacket & {
 	clearStatus: number | null
 	platinumScoreMax: number | null
 	platinumScoreStar: number | null
-}
-
-type StaticChartData = {
-	chartLevel: number
 }
 
 type BestUpsertData = {
@@ -516,9 +512,7 @@ const OngekiKamaitachiRoutes = new Hono()
 				const chartLevel = song.chartLevel ?? 0
 				const playerRating =
 					version >= 8
-						? Math.floor(
-								calculateOngekiGekForceRating(chartLevel, score.score, isFullCombo, isAllBreak, isFullBell)
-							)
+						? Math.floor(calculateOngekiGekForceRating(chartLevel, score.score, isFullCombo, isAllBreak, isFullBell))
 						: Math.floor(calculateOngekiRating(chartLevel, score.score) * 100)
 
 				const bestKey = `${score.songId}:${score.level}`

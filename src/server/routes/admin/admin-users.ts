@@ -17,14 +17,11 @@ type ArcadeTransferRow = {
 	machineId: number
 	ownerUser: number
 	ownerUsername: string | null
-	matchSource?: "play-history" | "name"
-	matchLastSeen?: number
 } & RowDataPacket
 
-type ScoredArcadeTransferRow = ArcadeTransferRow & {
-	score: number
-	matchSource: "play-history" | "name"
-	matchLastSeen: number | undefined
+type MatchedArcadeTransferRow = ArcadeTransferRow & {
+	matchLastSeen: number
+	sourceRank: number
 }
 
 type PlayHistoryArcadeRow = {
@@ -68,31 +65,6 @@ const generateSegaKeychipSerial = async () => {
 	}
 
 	throw new HTTPException(409, { message: "Failed to generate a unique keychip serial" })
-}
-
-const normalizeTransferLabel = (value: string | null) => value?.toLowerCase().replace(/[^a-z0-9]/g, "") ?? ""
-
-const scoreUserKeychipArcade = (arcade: ArcadeTransferRow, username: string | null) => {
-	const normalizedUsername = normalizeTransferLabel(username)
-	if (!normalizedUsername) return 0
-
-	const expectedLabels = new Set([
-		normalizedUsername,
-		`${normalizedUsername}arcade`,
-		`${normalizedUsername}sarcade`,
-		`${normalizedUsername}keychip`,
-		`${normalizedUsername}skeychip`,
-		`${normalizedUsername}segaarcade`,
-		`${normalizedUsername}ssegaarcade`
-	])
-
-	const labels = [normalizeTransferLabel(arcade.name), normalizeTransferLabel(arcade.nickname)].filter(Boolean)
-	if (labels.some(label => expectedLabels.has(label))) return 100
-
-	if (normalizedUsername.length >= 3 && labels.some(label => label.startsWith(normalizedUsername))) return 75
-	if (normalizedUsername.length >= 3 && labels.some(label => label.includes(normalizedUsername))) return 50
-
-	return 0
 }
 
 const getOwnedKeychipArcades = async (ownerId?: number) => {
@@ -165,37 +137,31 @@ const getUserPlayHistoryArcades = async (targetId?: number) => {
 	return history
 }
 
-const selectUserKeychipArcade = (
-	arcades: ArcadeTransferRow[],
-	username: string | null,
-	playHistory: PlayHistoryArcadeRow[] = []
-) => {
+const selectUserKeychipArcade = (arcades: ArcadeTransferRow[], playHistory: PlayHistoryArcadeRow[] = []) => {
 	const playHistoryByArcade = new Map(playHistory.map(row => [row.arcade, row]))
 	const matches = arcades
 		.map(arcade => {
 			const history = playHistoryByArcade.get(arcade.id)
-			const nameScore = scoreUserKeychipArcade(arcade, username)
+			if (!history) return null
 
 			return {
 				...arcade,
-				score: history ? 1000 + history.sourceRank * 100 + nameScore : nameScore,
-				matchSource: history ? ("play-history" as const) : ("name" as const),
-				matchLastSeen: history?.lastSeen
+				matchLastSeen: history.lastSeen,
+				sourceRank: history.sourceRank
 			}
 		})
-		.filter((arcade): arcade is ScoredArcadeTransferRow => arcade.score > 0)
+		.filter((arcade): arcade is MatchedArcadeTransferRow => arcade !== null)
 		.sort(
 			(a, b) =>
-				b.score - a.score || (b.matchLastSeen ?? 0) - (a.matchLastSeen ?? 0) || b.id - a.id || b.machineId - a.machineId
+				b.sourceRank - a.sourceRank || b.matchLastSeen - a.matchLastSeen || b.id - a.id || b.machineId - a.machineId
 		)
 
 	return matches[0]
 }
 
-const findUserKeychipArcade = async (currentUserId: number, targetId: number, username: string | null) => {
+const findUserKeychipArcade = async (currentUserId: number, targetId: number) => {
 	return selectUserKeychipArcade(
 		await getAdminOwnedKeychipArcades(currentUserId),
-		username,
 		await getUserPlayHistoryArcades(targetId)
 	)
 }
@@ -236,13 +202,12 @@ const AdminUserRoutes = new Hono()
 					candidate => !userArcades.some(arcade => arcade.id === candidate.id)
 				)
 				const transferCandidateArcade =
-					user.id === userId ? undefined : selectUserKeychipArcade(transferCandidates, user.username, userPlayHistory)
+					user.id === userId ? undefined : selectUserKeychipArcade(transferCandidates, userPlayHistory)
 				const matchedOwnedArcade =
 					user.id === userId
 						? undefined
 						: selectUserKeychipArcade(
 								ownedKeychipArcades.filter(candidate => !userArcades.some(arcade => arcade.id === candidate.id)),
-								user.username,
 								userPlayHistory
 							)
 
@@ -255,8 +220,7 @@ const AdminUserRoutes = new Hono()
 								id: transferCandidateArcade.id,
 								name: transferCandidateArcade.name,
 								nickname: transferCandidateArcade.nickname,
-								serial: transferCandidateArcade.serial,
-								matchSource: transferCandidateArcade.matchSource
+								serial: transferCandidateArcade.serial
 							}
 						: null,
 					matchedOwnedArcade:
@@ -267,8 +231,7 @@ const AdminUserRoutes = new Hono()
 									nickname: matchedOwnedArcade.nickname,
 									serial: matchedOwnedArcade.serial,
 									ownerUser: matchedOwnedArcade.ownerUser,
-									ownerUsername: matchedOwnedArcade.ownerUsername,
-									matchSource: matchedOwnedArcade.matchSource
+									ownerUsername: matchedOwnedArcade.ownerUsername
 								}
 							: null
 				}
@@ -345,9 +308,11 @@ const AdminUserRoutes = new Hono()
 			}
 
 			const targetUser = await getTargetUser(targetId)
-			const arcadeMatch = await findUserKeychipArcade(currentUserId, targetId, targetUser.username)
+			const arcadeMatch = await findUserKeychipArcade(currentUserId, targetId)
 			if (!arcadeMatch) {
-				throw new HTTPException(404, { message: "No matching admin-owned keychip arcade was found for this user" })
+				throw new HTTPException(404, {
+					message: "No admin-owned keychip arcade was found in this user's play/profile history"
+				})
 			}
 
 			const connection = await db.getConnection()
@@ -381,11 +346,7 @@ const AdminUserRoutes = new Hono()
 				)
 
 				const arcade = lockedArcades[0]
-				const arcadeStillMatches = selectUserKeychipArcade(
-					lockedArcades,
-					targetUser.username,
-					await getUserPlayHistoryArcades(targetId)
-				)
+				const arcadeStillMatches = selectUserKeychipArcade(lockedArcades, await getUserPlayHistoryArcades(targetId))
 				if (!arcade || !arcadeStillMatches) {
 					throw new HTTPException(404, { message: "Matching keychip arcade is no longer transferable" })
 				}

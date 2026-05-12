@@ -87,7 +87,6 @@ type UserWithDetails = {
 		name: string | null
 		nickname: string | null
 		serial: string | null
-		matchSource?: "play-history" | "name"
 	} | null
 	matchedOwnedArcade: {
 		id: number
@@ -96,7 +95,6 @@ type UserWithDetails = {
 		serial: string | null
 		ownerUser: number
 		ownerUsername: string | null
-		matchSource?: "play-history" | "name"
 	} | null
 }
 
@@ -533,12 +531,7 @@ const AdminUsers = () => {
 																			</span>
 																		</p>
 																		{user.matchedOwnedArcade.serial && <p>Keychip {user.matchedOwnedArcade.serial}</p>}
-																		<p>
-																			Matched by{" "}
-																			{user.matchedOwnedArcade.matchSource === "play-history"
-																				? "play/profile history"
-																				: "arcade name"}
-																		</p>
+																		<p>Matched by play/profile history</p>
 																	</div>
 																</div>
 															</PopoverContent>
@@ -809,9 +802,9 @@ const AdminUsers = () => {
 								.
 								<br />
 								<br />
-								The server will prefer this user's play/profile placeId history, then fall back to arcade
-								names/nicknames, before updating that arcade_owner row from user #{currentUser.userId} to user{" "}
-								{pendingUserAction?.user.id}. The machine/keychip row stays attached to the same arcade.
+								The server will use this user's play/profile placeId history before updating that arcade_owner row from
+								user #{currentUser.userId} to user {pendingUserAction?.user.id}. The machine/keychip row stays attached
+								to the same arcade.
 							</>
 						</AlertDialogDescription>
 					</AlertDialogHeader>
