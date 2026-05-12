@@ -1,13 +1,26 @@
 import { useMemo, useState } from "react"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Building2, CreditCard, MoreVertical, Pencil, ShieldAlert, ShieldCheck, Trash2, ArrowRightLeft, KeySquare, Ban, Lock, Unlock, ShieldX } from "lucide-react"
+import {
+	Ban,
+	Building2,
+	CreditCard,
+	KeySquare,
+	Lock,
+	MoreVertical,
+	Pencil,
+	ShieldAlert,
+	ShieldCheck,
+	ShieldX,
+	Shuffle,
+	Trash2,
+	Unlock
+} from "lucide-react"
 import { useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 
 import Header from "@/app/shared/components/common/header"
 import { Pagination } from "@/app/shared/components/common/pagination"
-import ArcadeOwnership from "@/app/shared/components/settings/arcade-ownership"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -32,6 +45,7 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger
 } from "@/app/shared/components/ui/dropdown-menu"
 import { Input } from "@/app/shared/components/ui/input"
@@ -43,6 +57,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
+import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { UserRole } from "@/app/shared/types"
 import { api } from "@/app/shared/utils"
@@ -52,25 +67,60 @@ import { KeychipGenerator } from "../components/keychip-generator"
 
 type UserWithDetails = {
 	id: number
-	username: string
-	email: string
+	username: string | null
+	email: string | null
 	permissions: number
-	created_date: string
-	last_login_date: string
-	suspend_expire_time: string
-	cards: { id: number; user: number; access_code: string; created_date: string; is_locked: boolean; is_banned: boolean }[]
+	created_date: string | null
+	last_login_date: string | null
+	suspend_expire_time: string | null
+	cards: {
+		id: number
+		user: number
+		access_code: string
+		created_date: string
+		is_locked: boolean
+		is_banned: boolean
+	}[]
 	arcades: { user: number; id: number; name: string; nickname: string }[]
+	transferCandidateArcade: {
+		id: number
+		name: string | null
+		nickname: string | null
+		serial: string | null
+		matchSource?: "play-history" | "name"
+	} | null
+	matchedOwnedArcade: {
+		id: number
+		name: string | null
+		nickname: string | null
+		serial: string | null
+		ownerUser: number
+		ownerUsername: string | null
+		matchSource?: "play-history" | "name"
+	} | null
 }
+
+type SortOrder = "id_desc" | "id_asc"
+type PendingUserAction = {
+	user: UserWithDetails
+} | null
+
+const getUserLabel = (username: string | null, id: number) => username || `User #${id}`
+
+const getArcadeLabel = (arcade: { id: number; name: string | null; nickname: string | null }) =>
+	arcade.nickname || arcade.name || `Arcade #${arcade.id}`
 
 const AdminUsers = () => {
 	const [searchParams, setSearchParams] = useSearchParams()
 	const searchQuery = searchParams.get("search") || ""
+	const sortOrder: SortOrder = searchParams.get("sort") === "id_asc" ? "id_asc" : "id_desc"
 
 	const queryClient = useQueryClient()
+	const currentUser = useCurrentUser()
 
 	const [editingUser, setEditingUser] = useState<UserWithDetails | null>(null)
 	const [deletingUser, setDeletingUser] = useState<UserWithDetails | null>(null)
-	const [arcadeOwnershipOpen, setArcadeOwnershipOpen] = useState(false)
+	const [pendingUserAction, setPendingUserAction] = useState<PendingUserAction>(null)
 	const [keychipGeneratorOpen, setKeychipGeneratorOpen] = useState(false)
 
 	const [editForm, setEditForm] = useState({
@@ -95,20 +145,39 @@ const AdminUsers = () => {
 		const query = searchQuery.trim().toLowerCase()
 		return allUsers.filter(
 			u =>
-				u.username.toLowerCase().includes(query) ||
+				(u.username && u.username.toLowerCase().includes(query)) ||
 				(u.email && u.email.toLowerCase().includes(query)) ||
 				u.id.toString().includes(query)
 		)
 	}, [allUsers, searchQuery])
 
-	const { page, setPage, totalPages, paged: paginatedUsers, hasMore } = usePagination(filteredUsers, STANDARD_PAGE_SIZE, [searchQuery])
+	const sortedUsers = useMemo(() => {
+		return [...filteredUsers].sort((a, b) => (sortOrder === "id_desc" ? b.id - a.id : a.id - b.id))
+	}, [filteredUsers, sortOrder])
+
+	const {
+		page,
+		setPage,
+		totalPages,
+		paged: paginatedUsers,
+		hasMore
+	} = usePagination(sortedUsers, STANDARD_PAGE_SIZE, [searchQuery, sortOrder])
 
 	const searchItems = useMemo(() => {
 		return allUsers.map(u => ({
 			id: u.id,
-			title: u.username
+			title: getUserLabel(u.username, u.id)
 		}))
 	}, [allUsers])
+
+	const setSearchParam = (key: string, value: string | null) => {
+		setSearchParams(prev => {
+			const next = new URLSearchParams(prev)
+			if (value) next.set(key, value)
+			else next.delete(key)
+			return next
+		})
+	}
 
 	const updateMutation = useMutation({
 		mutationFn: async ({ id, data }: { id: number; data: typeof editForm }) => {
@@ -161,6 +230,22 @@ const AdminUsers = () => {
 		onError: () => toast.error("Failed to update lock status")
 	})
 
+	const transferKeychipArcadeMutation = useMutation({
+		mutationFn: async (id: number) => {
+			const res = await api.admin.users[":id"].arcades["transfer-keychip"].$post({
+				param: { id: id.toString() }
+			})
+			if (!res.ok) throw new Error("Failed to transfer keychip arcade")
+			return await res.json()
+		},
+		onSuccess: result => {
+			toast.success(`Transferred arcade #${result.arcadeId} to ${result.username || `user #${result.userId}`}`)
+			setPendingUserAction(null)
+			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
+		},
+		onError: () => toast.error("Failed to transfer keychip arcade")
+	})
+
 	const deleteMutation = useMutation({
 		mutationFn: async (id: number) => {
 			const res = await api.admin.users[":id"].$delete({
@@ -182,10 +267,14 @@ const AdminUsers = () => {
 	const openEditModal = (user: UserWithDetails) => {
 		setEditingUser(user)
 		setEditForm({
-			username: user.username,
-			email: user.email,
+			username: user.username ?? "",
+			email: user.email ?? "",
 			permissions: user.permissions
 		})
+	}
+
+	const deferMenuAction = (action: () => void) => {
+		window.setTimeout(action, 0)
 	}
 
 	const handleEditSubmit = (e: React.FormEvent) => {
@@ -203,8 +292,15 @@ const AdminUsers = () => {
 		})
 	}
 
-	const isBanned = (cards: UserWithDetails['cards']) => cards.length > 0 && cards.some(c => c.is_banned)
-	const isLocked = (cards: UserWithDetails['cards']) => cards.length > 0 && cards.some(c => c.is_locked)
+	const isBanned = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_banned)
+	const isLocked = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_locked)
+	const pendingActionIsLoading = transferKeychipArcadeMutation.isPending
+
+	const confirmPendingUserAction = () => {
+		if (!pendingUserAction) return
+
+		transferKeychipArcadeMutation.mutate(pendingUserAction.user.id)
+	}
 
 	return (
 		<Container>
@@ -212,7 +308,7 @@ const AdminUsers = () => {
 				title="User Management"
 				searchProps={{
 					items: searchItems,
-					onSelect: value => setSearchParams({ search: value }),
+					onSelect: value => setSearchParam("search", value),
 					placeholder: "Search users...",
 					emptyMessage: "No users found.",
 					groupLabel: "Users"
@@ -221,38 +317,26 @@ const AdminUsers = () => {
 			<Body>
 				<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
 					<div className="flex items-center gap-2">
-						<Dialog open={arcadeOwnershipOpen} onOpenChange={setArcadeOwnershipOpen}>
-							<DialogTrigger asChild>
-								<Button variant="outline" size="sm" className="h-8 text-xs">
-									<ArrowRightLeft className="h-3.5 w-3.5 mr-1" />
-									Transfer Arcade Ownership
-								</Button>
-							</DialogTrigger>
-							<DialogContent className="sm:max-w-md">
-								<DialogHeader>
-									<DialogTitle>Transfer Arcade Ownership</DialogTitle>
-									<DialogDescription>
-										Change who owns a specific arcade
-									</DialogDescription>
-								</DialogHeader>
-								<div className="pt-2">
-									<ArcadeOwnership />
-								</div>
-							</DialogContent>
-						</Dialog>
+						<Select value={sortOrder} onValueChange={value => setSearchParam("sort", value)}>
+							<SelectTrigger className="h-8 w-[150px] text-xs">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="id_desc">Newest ID first</SelectItem>
+								<SelectItem value="id_asc">Oldest ID first</SelectItem>
+							</SelectContent>
+						</Select>
 						<Dialog open={keychipGeneratorOpen} onOpenChange={setKeychipGeneratorOpen}>
 							<DialogTrigger asChild>
 								<Button variant="outline" size="sm" className="h-8 text-xs">
-									<KeySquare className="h-3.5 w-3.5 mr-1" />
+									<KeySquare className="mr-1 size-3.5" />
 									Generate Keychip
 								</Button>
 							</DialogTrigger>
 							<DialogContent className="sm:max-w-md">
 								<DialogHeader>
 									<DialogTitle>Keychip Generator</DialogTitle>
-									<DialogDescription>
-										Makes a new keychip
-									</DialogDescription>
+									<DialogDescription>Makes a new keychip</DialogDescription>
 								</DialogHeader>
 								<div className="pt-2">
 									<KeychipGenerator />
@@ -262,14 +346,14 @@ const AdminUsers = () => {
 					</div>
 					{searchQuery && (
 						<div className="text-muted-foreground text-sm">
-							{filteredUsers.length} {filteredUsers.length === 1 ? "user" : "users"} found
+							{sortedUsers.length} {sortedUsers.length === 1 ? "user" : "users"} found
 						</div>
 					)}
 				</div>
 
 				{isLoading ? (
 					<div className="bg-card overflow-hidden rounded-lg border">
-						<Table className="min-w-[800px] w-full">
+						<Table className="w-full min-w-[800px]">
 							<TableHeader className="[&_tr]:bg-muted/35">
 								<TableRow>
 									<TableHead className="w-16">ID</TableHead>
@@ -286,15 +370,33 @@ const AdminUsers = () => {
 							<TableBody>
 								{[...Array(5)].map((_, i) => (
 									<TableRow key={i}>
-										<TableCell><Skeleton className="h-4 w-8" /></TableCell>
-										<TableCell><Skeleton className="h-4 w-24" /></TableCell>
-										<TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
-										<TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
-										<TableCell><Skeleton className="h-5 w-12 rounded-full" /></TableCell>
-										<TableCell><Skeleton className="h-4 w-20" /></TableCell>
-										<TableCell><Skeleton className="h-6 w-8 rounded-md" /></TableCell>
-										<TableCell><Skeleton className="h-6 w-8 rounded-md" /></TableCell>
-										<TableCell className="text-right"><Skeleton className="h-8 w-8 rounded-md ml-auto" /></TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-8" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-24" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-5 w-16 rounded-full" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-5 w-16 rounded-full" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-5 w-12 rounded-full" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-20" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-6 w-8 rounded-md" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-6 w-8 rounded-md" />
+										</TableCell>
+										<TableCell className="text-right">
+											<Skeleton className="ml-auto h-8 w-8 rounded-md" />
+										</TableCell>
 									</TableRow>
 								))}
 							</TableBody>
@@ -303,7 +405,7 @@ const AdminUsers = () => {
 				) : (
 					<>
 						<div className="bg-card overflow-hidden rounded-lg border">
-							<Table className="min-w-[1200px] w-full">
+							<Table className="w-full min-w-[1200px]">
 								<colgroup>
 									<col className="w-16" />
 									<col className="w-[15%]" />
@@ -338,28 +440,32 @@ const AdminUsers = () => {
 									) : (
 										paginatedUsers.map(user => (
 											<TableRow key={user.id} className="hover:bg-muted/50 transition-colors">
-												<TableCell className="h-16 font-medium leading-none">{user.id}</TableCell>
-												<TableCell className="h-16 font-semibold leading-none">{user.username}</TableCell>
+												<TableCell className="h-16 leading-none font-medium">{user.id}</TableCell>
+												<TableCell className="h-16 leading-none font-semibold">
+													{user.username || <span className="text-muted-foreground">User #{user.id}</span>}
+												</TableCell>
 												<TableCell className="h-16 leading-none">
 													{isBanned(user.cards) ? (
-														<Badge variant="secondary" className="flex w-fit items-center gap-1 text-[10px] h-4 border-none">
+														<Badge
+															variant="secondary"
+															className="flex h-4 w-fit items-center gap-1 border-none text-[10px]"
+														>
 															<ShieldX className="size-2.5" /> Banned
 														</Badge>
 													) : (
-														<span className="text-muted-foreground text-[10px] font-medium">
-															Not Banned
-														</span>
+														<span className="text-muted-foreground text-[10px] font-medium">Not Banned</span>
 													)}
 												</TableCell>
 												<TableCell className="h-16 leading-none">
 													{isLocked(user.cards) ? (
-														<Badge variant="secondary" className="flex w-fit items-center gap-1 text-[10px] h-4 border-none">
+														<Badge
+															variant="secondary"
+															className="flex h-4 w-fit items-center gap-1 border-none text-[10px]"
+														>
 															<Lock className="size-2.5" /> Locked
 														</Badge>
 													) : (
-														<span className="text-muted-foreground text-[10px] font-medium">
-															Not Locked
-														</span>
+														<span className="text-muted-foreground text-[10px] font-medium">Not Locked</span>
 													)}
 												</TableCell>
 												<TableCell className="h-16 leading-none">
@@ -373,28 +479,66 @@ const AdminUsers = () => {
 														</Badge>
 													)}
 												</TableCell>
-												<TableCell className="h-16 leading-none text-sm text-muted-foreground">
+												<TableCell className="text-muted-foreground h-16 text-sm leading-none">
 													{formatDate(user.last_login_date)}
 												</TableCell>
 												<TableCell className="h-16 leading-none">
 													{user.arcades.length > 0 ? (
 														<Popover>
 															<PopoverTrigger asChild>
-																<Button variant="outline" size="sm" className="h-6 text-xs px-2 py-0">
-																	<Building2 className="size-3 mr-1" />
+																<Button variant="outline" size="sm" className="h-6 px-2 py-0 text-xs">
+																	<Building2 className="mr-1 size-3" />
 																	{user.arcades.length}
 																</Button>
 															</PopoverTrigger>
-															<PopoverContent align="start" className="w-64 max-h-64 overflow-y-auto">
+															<PopoverContent align="start" className="max-h-64 w-64 overflow-y-auto">
 																<div className="space-y-2">
-																	<h4 className="font-semibold text-sm">Assigned Arcades</h4>
+																	<h4 className="text-sm font-semibold">Assigned Arcades</h4>
 																	<div className="flex flex-col gap-1">
 																		{user.arcades.map(a => (
-																			<div key={a.id} className="text-muted-foreground flex items-center gap-2 text-xs border-b pb-1 last:border-0">
+																			<div
+																				key={a.id}
+																				className="text-muted-foreground flex items-center gap-2 border-b pb-1 text-xs last:border-0"
+																			>
 																				<Building2 className="size-3 flex-shrink-0" />
-																				<span className="truncate">{a.nickname || a.name}</span>
+																				<span className="truncate">{getArcadeLabel(a)}</span>
 																			</div>
 																		))}
+																	</div>
+																</div>
+															</PopoverContent>
+														</Popover>
+													) : user.matchedOwnedArcade ? (
+														<Popover>
+															<PopoverTrigger asChild>
+																<Button variant="outline" size="sm" className="h-6 px-2 py-0 text-xs">
+																	<Building2 className="mr-1 size-3" />
+																	Owned
+																</Button>
+															</PopoverTrigger>
+															<PopoverContent align="start" className="w-72">
+																<div className="space-y-2">
+																	<h4 className="text-sm font-semibold">Matched Arcade</h4>
+																	<div className="text-muted-foreground space-y-1 text-xs">
+																		<p className="text-foreground font-medium">
+																			{getArcadeLabel(user.matchedOwnedArcade)}
+																		</p>
+																		<p>
+																			Already owned by{" "}
+																			<span className="text-foreground font-medium">
+																				{getUserLabel(
+																					user.matchedOwnedArcade.ownerUsername,
+																					user.matchedOwnedArcade.ownerUser
+																				)}
+																			</span>
+																		</p>
+																		{user.matchedOwnedArcade.serial && <p>Keychip {user.matchedOwnedArcade.serial}</p>}
+																		<p>
+																			Matched by{" "}
+																			{user.matchedOwnedArcade.matchSource === "play-history"
+																				? "play/profile history"
+																				: "arcade name"}
+																		</p>
 																	</div>
 																</div>
 															</PopoverContent>
@@ -407,17 +551,20 @@ const AdminUsers = () => {
 													{user.cards.length > 0 ? (
 														<Popover>
 															<PopoverTrigger asChild>
-																<Button variant="outline" size="sm" className="h-6 text-xs px-2 py-0">
-																	<CreditCard className="size-3 mr-1" />
+																<Button variant="outline" size="sm" className="h-6 px-2 py-0 text-xs">
+																	<CreditCard className="mr-1 size-3" />
 																	{user.cards.length}
 																</Button>
 															</PopoverTrigger>
-															<PopoverContent align="start" className="w-56 max-h-64 overflow-y-auto">
+															<PopoverContent align="start" className="max-h-64 w-56 overflow-y-auto">
 																<div className="space-y-2">
-																	<h4 className="font-semibold text-sm">Aime Cards</h4>
+																	<h4 className="text-sm font-semibold">Aime Cards</h4>
 																	<div className="flex flex-col gap-1">
 																		{user.cards.map(c => (
-																			<div key={c.id} className="text-muted-foreground flex items-center gap-2 font-mono text-xs border-b pb-1 last:border-0">
+																			<div
+																				key={c.id}
+																				className="text-muted-foreground flex items-center gap-2 border-b pb-1 font-mono text-xs last:border-0"
+																			>
 																				<CreditCard className="size-3 flex-shrink-0" />
 																				{c.access_code}
 																			</div>
@@ -431,33 +578,50 @@ const AdminUsers = () => {
 													)}
 												</TableCell>
 												<TableCell className="h-16 text-right leading-none">
-													<DropdownMenu>
+													<DropdownMenu modal={false}>
 														<DropdownMenuTrigger asChild>
 															<Button variant="ghost" size="icon" className="h-8 w-8">
 																<MoreVertical className="size-4" />
 															</Button>
 														</DropdownMenuTrigger>
 														<DropdownMenuContent align="end">
-															<DropdownMenuItem onClick={() => openEditModal(user)} className="cursor-pointer">
+															<DropdownMenuItem
+																onSelect={() => deferMenuAction(() => openEditModal(user))}
+																className="cursor-pointer"
+															>
 																<Pencil className="mr-2 size-4" />
 																Edit Account / Profiles
 															</DropdownMenuItem>
 															<DropdownMenuItem
-																onClick={() => banMutation.mutate({ id: user.id, banned: !isBanned(user.cards) })}
+																onSelect={() => banMutation.mutate({ id: user.id, banned: !isBanned(user.cards) })}
 																className="cursor-pointer"
 															>
 																<Ban className="mr-2 size-4" />
 																{isBanned(user.cards) ? "Unban Account" : "Ban Account"}
 															</DropdownMenuItem>
 															<DropdownMenuItem
-																onClick={() => lockMutation.mutate({ id: user.id, locked: !isLocked(user.cards) })}
+																onSelect={() => lockMutation.mutate({ id: user.id, locked: !isLocked(user.cards) })}
 																className="cursor-pointer"
 															>
-																{isLocked(user.cards) ? <Unlock className="mr-2 size-4" /> : <Lock className="mr-2 size-4" />}
+																{isLocked(user.cards) ? (
+																	<Unlock className="mr-2 size-4" />
+																) : (
+																	<Lock className="mr-2 size-4" />
+																)}
 																{isLocked(user.cards) ? "Unlock Account" : "Lock Account"}
 															</DropdownMenuItem>
+															<DropdownMenuSeparator />
 															<DropdownMenuItem
-																onClick={() => setDeletingUser(user)}
+																disabled={user.id === currentUser.userId || !user.transferCandidateArcade}
+																onSelect={() => deferMenuAction(() => setPendingUserAction({ user }))}
+																className="cursor-pointer"
+															>
+																<Shuffle className="mr-2 size-4" />
+																Transfer Keychip Arcade
+															</DropdownMenuItem>
+															<DropdownMenuSeparator />
+															<DropdownMenuItem
+																onSelect={() => deferMenuAction(() => setDeletingUser(user))}
 																className="text-destructive focus:bg-destructive focus:text-destructive-foreground cursor-pointer"
 															>
 																<Trash2 className="mr-2 size-4" />
@@ -482,18 +646,23 @@ const AdminUsers = () => {
 			</Body>
 
 			<Dialog open={!!editingUser} onOpenChange={open => !open && setEditingUser(null)}>
-				<DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto" onOpenAutoFocus={e => e.preventDefault()}>
+				<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl" onOpenAutoFocus={e => e.preventDefault()}>
 					<DialogHeader>
 						<DialogTitle>Edit User</DialogTitle>
 						<DialogDescription>
-							Manage user account settings and game profiles for {editingUser?.username}
+							Manage user account settings and game profiles for{" "}
+							{editingUser ? getUserLabel(editingUser.username, editingUser.id) : ""}
 						</DialogDescription>
 					</DialogHeader>
 
 					<Tabs defaultValue="account" className="mt-4">
 						<TabsList className="w-full">
-							<TabsTrigger value="account" className="flex-1">Account Info</TabsTrigger>
-							<TabsTrigger value="profiles" className="flex-1">Game Profiles</TabsTrigger>
+							<TabsTrigger value="account" className="flex-1">
+								Account Info
+							</TabsTrigger>
+							<TabsTrigger value="profiles" className="flex-1">
+								Game Profiles
+							</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value="account" className="mt-4">
@@ -530,17 +699,27 @@ const AdminUsers = () => {
 											<h4 className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
 												<Building2 className="size-3" /> Arcades ({editingUser.arcades.length})
 											</h4>
-											<ul className="mt-1 list-inside list-disc text-xs max-h-32 overflow-y-auto">
-												{editingUser.arcades.map(a => (
-													<li key={a.id}>{a.nickname || a.name}</li>
-												))}
+											<ul className="mt-1 max-h-32 list-inside list-disc overflow-y-auto text-xs">
+												{editingUser.arcades.length > 0 ? (
+													editingUser.arcades.map(a => <li key={a.id}>{getArcadeLabel(a)}</li>)
+												) : editingUser.matchedOwnedArcade ? (
+													<li>
+														{getArcadeLabel(editingUser.matchedOwnedArcade)} already owned by{" "}
+														{getUserLabel(
+															editingUser.matchedOwnedArcade.ownerUsername,
+															editingUser.matchedOwnedArcade.ownerUser
+														)}
+													</li>
+												) : (
+													<li>None</li>
+												)}
 											</ul>
 										</div>
 										<div>
 											<h4 className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
 												<CreditCard className="size-3" /> Cards ({editingUser.cards.length})
 											</h4>
-											<ul className="mt-1 list-inside list-disc font-mono text-xs max-h-32 overflow-y-auto">
+											<ul className="mt-1 max-h-32 list-inside list-disc overflow-y-auto font-mono text-xs">
 												{editingUser.cards.map(c => (
 													<li key={c.id}>{c.access_code}</li>
 												))}
@@ -575,7 +754,8 @@ const AdminUsers = () => {
 							Cascade Delete User
 						</AlertDialogTitle>
 						<AlertDialogDescription>
-							Are you sure you want to completely delete the user <strong>{deletingUser?.username}</strong>?
+							Are you sure you want to completely delete the user{" "}
+							<strong>{deletingUser ? getUserLabel(deletingUser.username, deletingUser.id) : ""}</strong>?
 							<br />
 							<br />
 							This action will irrevocably delete:
@@ -600,6 +780,51 @@ const AdminUsers = () => {
 							}}
 						>
 							{deleteMutation.isPending ? "Deleting..." : "Delete User"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
+			<AlertDialog open={!!pendingUserAction} onOpenChange={open => !open && setPendingUserAction(null)}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle className="flex items-center gap-2">
+							<Shuffle className="size-5" />
+							Transfer Keychip Arcade
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							<>
+								This will transfer{" "}
+								<strong>
+									{pendingUserAction?.user.transferCandidateArcade
+										? getArcadeLabel(pendingUserAction.user.transferCandidateArcade)
+										: ""}
+								</strong>{" "}
+								to{" "}
+								<strong>
+									{pendingUserAction
+										? `${getUserLabel(pendingUserAction.user.username, pendingUserAction.user.id)} (${pendingUserAction.user.id})`
+										: ""}
+								</strong>
+								.
+								<br />
+								<br />
+								The server will prefer this user's play/profile placeId history, then fall back to arcade
+								names/nicknames, before updating that arcade_owner row from user #{currentUser.userId} to user{" "}
+								{pendingUserAction?.user.id}. The machine/keychip row stays attached to the same arcade.
+							</>
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={pendingActionIsLoading}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							disabled={pendingActionIsLoading}
+							onClick={event => {
+								event.preventDefault()
+								confirmPendingUserAction()
+							}}
+						>
+							{pendingActionIsLoading ? "Working..." : "Confirm"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

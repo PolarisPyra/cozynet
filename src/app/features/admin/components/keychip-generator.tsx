@@ -1,5 +1,6 @@
 import { useState, useTransition } from "react"
 
+import { useQueryClient } from "@tanstack/react-query"
 import { ChevronDown, Loader2, Shuffle } from "lucide-react"
 import { toast } from "sonner"
 
@@ -24,6 +25,7 @@ const gameOptions = [
 type GameType = (typeof gameOptions)[number]["value"]
 
 export const KeychipGenerator = function () {
+	const queryClient = useQueryClient()
 	const [isPending, startTransition] = useTransition()
 	const [openDropdown, setOpenDropdown] = useState(false)
 	const [formData, setFormData] = useState({
@@ -41,7 +43,6 @@ export const KeychipGenerator = function () {
 		const { name, value } = e.target
 		let normalized = value
 		if (name === "aimecard" || name === "namcopcbid") {
-			// Allow only A-Z, 0-9, and dash; user types dash manually. Max 15 chars excluding dash.
 			const filtered = value.toUpperCase().replace(/[^A-Z0-9-]/g, "")
 			let result = ""
 			let nonDashCount = 0
@@ -77,7 +78,6 @@ export const KeychipGenerator = function () {
 		}
 		const uniqueNumbers = Array.from(uniqueSet).join("")
 		const randomNumbers = Math.floor(1000 + Math.random() * 9000)
-		// Store with dash so it displays as A69E-01A... (dash stripped on submit)
 		const randomSerial = `A69E-01A${uniqueNumbers}${randomNumbers}`
 
 		setFormData(data => ({
@@ -91,7 +91,6 @@ export const KeychipGenerator = function () {
 
 		startTransition(async () => {
 			try {
-				// Server expects raw format (no hyphens); strip if user typed a dash
 				const payload = {
 					...formData,
 					aimecard: formData.aimecard.replace(/-/g, ""),
@@ -111,6 +110,7 @@ export const KeychipGenerator = function () {
 				}
 
 				toast.success("Keychip generated successfully!")
+				queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
 				setFormData(data => ({
 					...data,
 					arcade_nickname: "",
@@ -127,7 +127,9 @@ export const KeychipGenerator = function () {
 		<div className="space-y-4">
 			<form onSubmit={handleSubmit} className="space-y-4">
 				<div>
-					<label htmlFor="arcade_nickname" className="text-primary mb-1 block text-sm font-medium">Arcade Nickname</label>
+					<label htmlFor="arcade_nickname" className="text-primary mb-1 block text-sm font-medium">
+						Arcade Nickname
+					</label>
 					<Input
 						id="arcade_nickname"
 						type="text"
@@ -141,7 +143,9 @@ export const KeychipGenerator = function () {
 				</div>
 
 				<div>
-					<label htmlFor="name" className="text-primary mb-1 block text-sm font-medium">Arcade Name</label>
+					<label htmlFor="name" className="text-primary mb-1 block text-sm font-medium">
+						Arcade Name
+					</label>
 					<Input
 						id="name"
 						type="text"
@@ -155,7 +159,9 @@ export const KeychipGenerator = function () {
 				</div>
 
 				<div>
-					<label htmlFor="game-type-trigger" className="text-primary mb-1 block text-sm font-medium">Game Type</label>
+					<label htmlFor="game-type-trigger" className="text-primary mb-1 block text-sm font-medium">
+						Game Type
+					</label>
 					<Popover open={openDropdown} onOpenChange={setOpenDropdown} modal={true}>
 						<PopoverTrigger asChild>
 							<Button id="game-type-trigger" variant="dropdown" type="button">
@@ -229,7 +235,7 @@ export const KeychipGenerator = function () {
 					{isPending ? (
 						<>
 							<Loader2 className="size-4 animate-spin" />
-							<span>Generating…</span>
+							<span>Generating...</span>
 						</>
 					) : (
 						<span>Add new keychip</span>
