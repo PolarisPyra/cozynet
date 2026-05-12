@@ -166,6 +166,10 @@ const findUserKeychipArcade = async (currentUserId: number, targetId: number) =>
 	)
 }
 
+const findExistingUserKeychipArcade = async (targetId: number) => {
+	return selectUserKeychipArcade(await getOwnedKeychipArcades(), await getUserPlayHistoryArcades(targetId))
+}
+
 const AdminUserRoutes = new Hono()
 	.get("/", async c => {
 		try {
@@ -198,18 +202,15 @@ const AdminUserRoutes = new Hono()
 			const usersWithDetails = users.map(user => {
 				const userArcades = arcades.filter(arcade => arcade.user === user.id)
 				const userPlayHistory = playHistoryArcades.filter(history => history.user === user.id)
+				const matchedOwnedArcade =
+					user.id === userId ? undefined : selectUserKeychipArcade(ownedKeychipArcades, userPlayHistory)
 				const transferCandidates = adminOwnedKeychipArcades.filter(
 					candidate => !userArcades.some(arcade => arcade.id === candidate.id)
 				)
 				const transferCandidateArcade =
-					user.id === userId ? undefined : selectUserKeychipArcade(transferCandidates, userPlayHistory)
-				const matchedOwnedArcade =
-					user.id === userId
+					user.id === userId || matchedOwnedArcade
 						? undefined
-						: selectUserKeychipArcade(
-								ownedKeychipArcades.filter(candidate => !userArcades.some(arcade => arcade.id === candidate.id)),
-								userPlayHistory
-							)
+						: selectUserKeychipArcade(transferCandidates, userPlayHistory)
 
 				return {
 					...user,
@@ -223,17 +224,16 @@ const AdminUserRoutes = new Hono()
 								serial: transferCandidateArcade.serial
 							}
 						: null,
-					matchedOwnedArcade:
-						matchedOwnedArcade && matchedOwnedArcade.ownerUser !== user.id
-							? {
-									id: matchedOwnedArcade.id,
-									name: matchedOwnedArcade.name,
-									nickname: matchedOwnedArcade.nickname,
-									serial: matchedOwnedArcade.serial,
-									ownerUser: matchedOwnedArcade.ownerUser,
-									ownerUsername: matchedOwnedArcade.ownerUsername
-								}
-							: null
+					matchedOwnedArcade: matchedOwnedArcade
+						? {
+								id: matchedOwnedArcade.id,
+								name: matchedOwnedArcade.name,
+								nickname: matchedOwnedArcade.nickname,
+								serial: matchedOwnedArcade.serial,
+								ownerUser: matchedOwnedArcade.ownerUser,
+								ownerUsername: matchedOwnedArcade.ownerUsername
+							}
+						: null
 				}
 			})
 
@@ -308,6 +308,13 @@ const AdminUserRoutes = new Hono()
 			}
 
 			const targetUser = await getTargetUser(targetId)
+			const existingArcade = await findExistingUserKeychipArcade(targetId)
+			if (existingArcade) {
+				throw new HTTPException(409, {
+					message: "This user's keychip arcade is already owned"
+				})
+			}
+
 			const arcadeMatch = await findUserKeychipArcade(currentUserId, targetId)
 			if (!arcadeMatch) {
 				throw new HTTPException(404, {
