@@ -805,11 +805,6 @@ const AdminUsers = () => {
 										: ""}
 								</strong>
 								.
-								<br />
-								<br />
-								The server will use this user's play/profile placeId history before updating that arcade_owner row from
-								user #{currentUser.userId} to user {pendingUserAction?.user.id}. The machine/keychip row stays attached
-								to the same arcade.
 							</>
 						</AlertDialogDescription>
 					</AlertDialogHeader>
