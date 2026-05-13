@@ -641,8 +641,9 @@ const FsdecryptPage = () => {
 			rootHandle: DirectoryHandle,
 			ntfsSource: VhdNtfsSource,
 			folderName: string,
-			extraDetails: Detail[] = []
+			getExtraDetails: () => Detail[] = () => []
 		): Promise<CompletedResult> => {
+			appendLog("Scanning NTFS to calculate progress...")
 			const totalBytes = await scanNtfsBytes(ntfsSource, { onLog: appendLog })
 			const writer = createFolderWriter(rootHandle, folderName, totalBytes, setProgress)
 			const extracted = await extractNtfsContents(ntfsSource, writer, { onLog: appendLog })
@@ -651,7 +652,7 @@ const FsdecryptPage = () => {
 				outputFolder: sanitizePathSegment(folderName),
 				outputSize: extracted.bytes,
 				details: [
-					...extraDetails,
+					...getExtraDetails(),
 					...vhdDetails(ntfsSource),
 					{ label: "Files", value: extracted.files.toLocaleString() },
 					{ label: "Folders", value: extracted.directories.toLocaleString() }
@@ -688,7 +689,7 @@ const FsdecryptPage = () => {
 					onLog: appendLog
 				})
 				const ntfsSource = await openVhdChainNtfsSource([internalVhd], { onLog: appendLog })
-				setResult(await extractNtfsSource(rootHandle, ntfsSource, stripExtension(containerFile.name), elapsedDetails()))
+				setResult(await extractNtfsSource(rootHandle, ntfsSource, stripExtension(containerFile.name), elapsedDetails))
 				toast.success("BASE APP extracted")
 			} else if (mode === "option") {
 				if (!containerFile) return
@@ -726,7 +727,7 @@ const FsdecryptPage = () => {
 				const topRawVhd = rawVhdFiles.length > 0 ? rawVhdFiles[rawVhdFiles.length - 1] : undefined
 				const topInputName = topAppVhd?.appName ?? topRawVhd?.name ?? ntfsSource.name
 
-				setResult(await extractNtfsSource(rootHandle, ntfsSource, stripExtension(topInputName), elapsedDetails()))
+				setResult(await extractNtfsSource(rootHandle, ntfsSource, stripExtension(topInputName), elapsedDetails))
 				toast.success("MERGE APPS extracted")
 			}
 
