@@ -11,6 +11,8 @@ const NTFS_ATTR_END = 0xffffffff
 const NTFS_ROOT_RECORD = 5
 const NTFS_FILE_ATTRIBUTE_DIRECTORY = 0x10000000
 const NTFS_FILE_RECORD_DIRECTORY = 0x02
+const EXTRACTION_CONCURRENCY = 4
+const LARGE_FILE_THRESHOLD = 64 * 1024 * 1024
 
 type LocalOutputSink = {
 	write: (chunk: Uint8Array) => Promise<void>
@@ -74,7 +76,15 @@ export type NtfsExtractionResult = {
 
 type NtfsExtractionOptions = {
 	onLog?: (message: string) => void
+	onTotalBytes?: (bytes: number) => void
 	signal?: AbortSignal
+	fileConcurrency?: number
+}
+
+type ExtractionPlan = {
+	directories: string[][]
+	files: Array<{ path: string[]; source: ReadableByteSource }>
+	bytes: number
 }
 
 function readAscii(bytes: Uint8Array) {
@@ -128,6 +138,18 @@ function throwIfAborted(signal: AbortSignal | undefined) {
 	if (signal?.aborted) {
 		throw new DOMException("Extraction cancelled", "AbortError")
 	}
+}
+
+async function runLimited<T>(items: T[], concurrency: number, worker: (item: T) => Promise<void>) {
+	let nextIndex = 0
+	const workers = Array.from({ length: Math.min(Math.max(1, concurrency), items.length) }, async () => {
+		while (nextIndex < items.length) {
+			const item = items[nextIndex++]
+			await worker(item)
+		}
+	})
+
+	await Promise.all(workers)
 }
 
 async function readNtfsBoot(source: ReadableByteSource): Promise<NtfsBoot> {
@@ -482,13 +504,12 @@ function isDirectoryRecord(record: Uint8Array) {
 	return (readU16(record, 0x16) & NTFS_FILE_RECORD_DIRECTORY) !== 0
 }
 
-async function extractDirectory(
+async function planDirectory(
 	ctx: NtfsContext,
-	writer: NtfsExtractionWriter,
 	recordNumber: number,
 	path: string[],
 	visited: Set<number>,
-	result: NtfsExtractionResult,
+	plan: ExtractionPlan,
 	options: NtfsExtractionOptions
 ) {
 	throwIfAborted(options.signal)
@@ -499,6 +520,7 @@ async function extractDirectory(
 
 	const entries = await readDirectoryEntries(ctx, recordNumber)
 	const seenNames = new Set<string>()
+	const childEntries: Array<{ entry: IndexEntry; safeName: string; childPath: string[] }> = []
 
 	for (const entry of entries) {
 		throwIfAborted(options.signal)
@@ -514,33 +536,77 @@ async function extractDirectory(
 		seenNames.add(nameKey)
 
 		const childPath = [...path, safeName]
-		const childRecord = await readFileRecord(ctx, entry.fileReference)
-		const isDirectory = isDirectoryRecord(childRecord) || (entry.fileFlags & NTFS_FILE_ATTRIBUTE_DIRECTORY) !== 0
-
-		if (isDirectory) {
-			if (path.length < 2) {
-				options.onLog?.(`Creating folder ${childPath.join("/")}`)
-			}
-			await writer.createDirectory(childPath)
-			result.directories += 1
-			await extractDirectory(ctx, writer, entry.fileReference, childPath, visited, result, options)
-			continue
-		}
-
-		const dataAttr = attributes(childRecord).find(attr => attr.type === NTFS_ATTR_DATA)
-		if (!dataAttr) {
-			continue
-		}
-
-		const data = parseDataAttribute(childRecord, dataAttr.offset)
-		const fileSource = sourceFromDataAttribute(safeName, ctx.source, ctx.boot, data, entry.size)
-		if (fileSource.size >= 1024 * 1024) {
-			options.onLog?.(`Extracting ${childPath.join("/")} (${fileSource.size.toLocaleString()} bytes)`)
-		}
-		await writer.writeFile(childPath, fileSource)
-		result.files += 1
-		result.bytes += fileSource.size
+		childEntries.push({ entry, safeName, childPath })
 	}
+
+	await runLimited(
+		childEntries,
+		options.fileConcurrency ?? EXTRACTION_CONCURRENCY,
+		async ({ entry, safeName, childPath }) => {
+			throwIfAborted(options.signal)
+			const childRecord = await readFileRecord(ctx, entry.fileReference)
+			const isDirectory = isDirectoryRecord(childRecord) || (entry.fileFlags & NTFS_FILE_ATTRIBUTE_DIRECTORY) !== 0
+
+			if (isDirectory) {
+				plan.directories.push(childPath)
+				await planDirectory(ctx, entry.fileReference, childPath, visited, plan, options)
+				return
+			}
+
+			const dataAttr = attributes(childRecord).find(attr => attr.type === NTFS_ATTR_DATA)
+			if (!dataAttr) {
+				return
+			}
+
+			const data = parseDataAttribute(childRecord, dataAttr.offset)
+			const fileSource = sourceFromDataAttribute(safeName, ctx.source, ctx.boot, data, entry.size)
+			plan.files.push({ path: childPath, source: fileSource })
+			plan.bytes += fileSource.size
+		}
+	)
+}
+
+async function extractPlan(
+	writer: NtfsExtractionWriter,
+	plan: ExtractionPlan,
+	result: NtfsExtractionResult,
+	options: NtfsExtractionOptions
+) {
+	await runLimited(plan.directories, options.fileConcurrency ?? EXTRACTION_CONCURRENCY, async directoryPath => {
+		throwIfAborted(options.signal)
+		if (directoryPath.length < 2) {
+			options.onLog?.(`Creating folder ${directoryPath.join("/")}`)
+		}
+		await writer.createDirectory(directoryPath)
+		result.directories += 1
+	})
+
+	const smallFiles = plan.files.filter(file => file.source.size < LARGE_FILE_THRESHOLD)
+	const largeFiles = plan.files.filter(file => file.source.size >= LARGE_FILE_THRESHOLD)
+
+	for (const file of largeFiles) {
+		throwIfAborted(options.signal)
+		if (file.source.size >= 1024 * 1024) {
+			options.onLog?.(`Extracting ${file.path.join("/")} (${file.source.size.toLocaleString()} bytes)`)
+		}
+		await writer.writeFile(file.path, file.source)
+		result.files += 1
+		result.bytes += file.source.size
+	}
+
+	await runLimited(
+		smallFiles,
+		options.fileConcurrency ?? EXTRACTION_CONCURRENCY,
+		async ({ path: filePath, source: fileSource }) => {
+			throwIfAborted(options.signal)
+			if (fileSource.size >= 1024 * 1024) {
+				options.onLog?.(`Extracting ${filePath.join("/")} (${fileSource.size.toLocaleString()} bytes)`)
+			}
+			await writer.writeFile(filePath, fileSource)
+			result.files += 1
+			result.bytes += fileSource.size
+		}
+	)
 }
 
 async function scanDirectoryBytes(
@@ -601,19 +667,26 @@ export async function extractNtfsContents(
 	throwIfAborted(options.signal)
 	const ctx = await buildNtfsContext(source)
 	const result = { files: 0, directories: 0, bytes: 0 }
+	options.onLog?.(
+		`Using up to ${(options.fileConcurrency ?? EXTRACTION_CONCURRENCY).toString()} concurrent file extract(s)`
+	)
 	throwIfAborted(options.signal)
+	options.onLog?.("Building NTFS extraction plan")
+	const plan: ExtractionPlan = { directories: [], files: [], bytes: 0 }
+	await planDirectory(ctx, NTFS_ROOT_RECORD, [], new Set(), plan, options)
+	options.onLog?.(
+		`Planned ${plan.files.length.toLocaleString()} file(s), ${plan.directories.length.toLocaleString()} folder(s), ${plan.bytes.toLocaleString()} bytes`
+	)
+	options.onTotalBytes?.(plan.bytes)
 	await writer.createDirectory([])
-	await extractDirectory(ctx, writer, NTFS_ROOT_RECORD, [], new Set(), result, options)
+	await extractPlan(writer, plan, result, options)
 	options.onLog?.(
 		`Extracted ${result.files.toLocaleString()} file(s), ${result.directories.toLocaleString()} folder(s), ${result.bytes.toLocaleString()} bytes`
 	)
 	return result
 }
 
-export async function scanNtfsBytes(
-	source: ReadableByteSource,
-	options: NtfsExtractionOptions = {}
-): Promise<number> {
+export async function scanNtfsBytes(source: ReadableByteSource, options: NtfsExtractionOptions = {}): Promise<number> {
 	options.onLog?.(`Scanning NTFS contents from ${source.name}`)
 	throwIfAborted(options.signal)
 	const ctx = await buildNtfsContext(source)

@@ -2,7 +2,7 @@ import { ReadableByteSource, byteSourceFromFile } from "./byte-source"
 
 const SECTOR_SIZE = 512
 const DYNAMIC_HEADER_SIZE = 1024
-const MERGE_CHUNK_SIZE = 1024 * 1024
+const MERGE_CHUNK_SIZE = 32 * 1024 * 1024
 
 const VHD_COOKIE = "conectix"
 const DYNAMIC_HEADER_COOKIE = "cxsparse"
@@ -448,6 +448,7 @@ export async function openVhdChainNtfsSource(
 		size: outputSize,
 		chain: chain.map(layer => layer.name),
 		ntfsOffset,
-		read: (offset, length) => readChainExact(chain, virtualSize, ntfsOffset + offset, Math.min(length, outputSize - offset))
+		read: (offset, length) =>
+			readChainExact(chain, virtualSize, ntfsOffset + offset, Math.min(length, outputSize - offset))
 	}
 }
