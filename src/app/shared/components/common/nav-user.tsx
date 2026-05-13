@@ -1,4 +1,4 @@
-import { Binary, ChevronsUpDown, LogOut, SettingsIcon, Users } from "lucide-react"
+import { Binary, ChevronsUpDown, KeyRound, LogOut, SettingsIcon, Users } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { useIsAdmin } from "@/app/features/admin/hooks"
@@ -99,6 +99,19 @@ export function NavUser({
 								<DropdownMenuSeparator className="bg-border" />
 							</>
 						)}
+						<DropdownMenuGroup>
+							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
+								Tools
+							</DropdownMenuLabel>
+							<DropdownMenuItem
+								onClick={() => navigate("/tools/fsdecrypt")}
+								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
+							>
+								<KeyRound className="text-primary" />
+								fsdecrypt
+							</DropdownMenuItem>
+						</DropdownMenuGroup>
+						<DropdownMenuSeparator className="bg-border" />
 						<DropdownMenuGroup>
 							<DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs font-normal">
 								Settings

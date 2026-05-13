@@ -7,12 +7,12 @@ import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
 import { Toaster } from "@/app/shared/components/ui/sonner"
 
 import { OngekiAllSongs } from "./app/features/ongeki/pages/allsongs"
+import OngekiCards from "./app/features/ongeki/pages/cards"
 import OngekiLeaderboard from "./app/features/ongeki/pages/leaderboard"
 import { OngekiRatingFrames } from "./app/features/ongeki/pages/rating"
 import { OngekiRivals } from "./app/features/ongeki/pages/rivals"
 import { OngekiScorePage } from "./app/features/ongeki/pages/scores"
 import { OngekiSettingsPage } from "./app/features/ongeki/pages/settings"
-import OngekiCards from "./app/features/ongeki/pages/cards"
 import WelcomePage, { WelcomeContent } from "./app/features/public/welcome-page"
 import { AccentColorProvider } from "./app/shared/components/accent-color-provider"
 import { LoginContent } from "./app/shared/components/common/login"
@@ -45,6 +45,7 @@ const ChunithmUserbox = React.lazy(() => import("./app/features/chunithm/pages/u
 const OngekiProfile = React.lazy(() => import("./app/features/ongeki/pages/profile"))
 const OngekiSongLeaderboard = React.lazy(() => import("./app/features/ongeki/pages/song-leaderboard"))
 const OngekiUserbox = React.lazy(() => import("./app/features/ongeki/pages/userbox"))
+const FsdecryptPage = React.lazy(() => import("./app/features/fsdecrypt/pages/fsdecrypt"))
 
 const queryClient = new QueryClient()
 
@@ -82,6 +83,7 @@ const app = (
 										<Route path="/admin/users" element={<AdminUsers />} />
 										<Route path="/admin/icf" element={<AdminIcfEditor />} />
 										<Route path="/account" element={<Account />} />
+										<Route path="/tools/fsdecrypt" element={<FsdecryptPage />} />
 
 										<Route path="/chunithm/settings" element={<ChunithmSettingsPage />} />
 										<Route path="/chunithm/userbox" element={<ChunithmUserbox />} />
