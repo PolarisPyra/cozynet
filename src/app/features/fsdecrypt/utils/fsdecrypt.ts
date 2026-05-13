@@ -316,10 +316,12 @@ async function customKeys(keyFile?: File): Promise<GameKeys | undefined> {
 
 async function resolveKeys(bootId: FscryptBootId, firstPage: Uint8Array, keyFile?: File): Promise<GameKeys> {
 	if (bootId.containerType === FSCRYPT_CONTAINER_TYPE.OPTION) {
-		const iv = bootId.useCustomIv
-			? aesjs.utils.hex.fromBytes(calculateFileIv(OPTION_KEY, EXFAT_HEADER, firstPage))
-			: OPTION_IV
-		return { key: OPTION_KEY, iv }
+		const keys = (await customKeys(keyFile)) ?? { key: OPTION_KEY, iv: OPTION_IV }
+		const iv =
+			!bootId.useCustomIv && keys.iv
+				? keys.iv
+				: aesjs.utils.hex.fromBytes(calculateFileIv(keys.key, EXFAT_HEADER, firstPage))
+		return { key: keys.key, iv }
 	}
 
 	const keyName = bootId.containerType === FSCRYPT_CONTAINER_TYPE.OS ? bootId.osId : bootId.gameId

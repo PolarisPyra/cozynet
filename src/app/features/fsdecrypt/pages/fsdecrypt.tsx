@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { FileArchive, FileKey, FileUp, HardDriveDownload, RotateCcw, Terminal, Zap } from "lucide-react"
+import { FileArchive, FileKey, FileUp, FolderOpen, HardDriveDownload, RotateCcw, Terminal, Zap } from "lucide-react"
 import { toast } from "sonner"
 
 import Header from "@/app/shared/components/common/header"
@@ -30,7 +30,7 @@ function modeLabel(mode: ToolMode) {
 		case "option":
 			return "OPTION"
 		case "vhd":
-			return "MERGE PARENT AND CHILD APPs"
+			return "MERGE APPS"
 	}
 }
 
@@ -57,12 +57,25 @@ type SavePickerWindow = Window &
 
 type DirectoryHandle = {
 	name?: string
+	queryPermission?: (descriptor?: { mode?: "read" | "readwrite" }) => Promise<PermissionState>
+	requestPermission?: (descriptor?: { mode?: "read" | "readwrite" }) => Promise<PermissionState>
 	getDirectoryHandle: (name: string, options?: { create?: boolean }) => Promise<DirectoryHandle>
 	getFileHandle: (
 		name: string,
 		options?: { create?: boolean }
 	) => Promise<{ createWritable: () => Promise<WritableFile> }>
 }
+
+type StoredOutputRoot = {
+	id: string
+	handle: DirectoryHandle
+}
+
+const OUTPUT_FOLDER_HINT =
+	"Create or select an output subfolder, for example Desktop/fsdecrypt-output. Chrome blocks selecting Desktop itself."
+const OUTPUT_ROOT_DB_NAME = "fsdecrypt-output-root"
+const OUTPUT_ROOT_STORE_NAME = "handles"
+const OUTPUT_ROOT_KEY = "current"
 
 function formatBytes(bytes: number) {
 	const units = ["B", "KB", "MB", "GB", "TB"]
@@ -82,6 +95,104 @@ function sanitizePathSegment(name: string) {
 		const code = character.charCodeAt(0)
 		return code < 32 || '<>:"/\\|?*'.includes(character) ? "_" : character
 	}).join("")
+}
+
+function isProtectedDirectoryPickerError(error: unknown) {
+	if (typeof DOMException === "undefined" || !(error instanceof DOMException)) {
+		return false
+	}
+
+	const message = error.message.toLowerCase()
+	return (
+		(error.name === "AbortError" || error.name === "NotAllowedError") &&
+		(message.includes("system files") ||
+			message.includes("sensitive") ||
+			message.includes("dangerous") ||
+			message.includes("blocked"))
+	)
+}
+
+function fsdecryptErrorMessage(error: unknown) {
+	if (isProtectedDirectoryPickerError(error)) {
+		return OUTPUT_FOLDER_HINT
+	}
+
+	return error instanceof Error ? error.message : "fsdecrypt failed"
+}
+
+function openOutputRootDb() {
+	return new Promise<IDBDatabase>((resolve, reject) => {
+		if (typeof indexedDB === "undefined") {
+			reject(new Error("Saving output folder selection requires IndexedDB support"))
+			return
+		}
+
+		const request = indexedDB.open(OUTPUT_ROOT_DB_NAME, 1)
+		request.onupgradeneeded = () => {
+			if (!request.result.objectStoreNames.contains(OUTPUT_ROOT_STORE_NAME)) {
+				request.result.createObjectStore(OUTPUT_ROOT_STORE_NAME, { keyPath: "id" })
+			}
+		}
+		request.onerror = () => reject(request.error ?? new Error("Could not open output folder storage"))
+		request.onsuccess = () => resolve(request.result)
+	})
+}
+
+async function readStoredOutputRootHandle() {
+	const db = await openOutputRootDb()
+	return new Promise<DirectoryHandle | null>((resolve, reject) => {
+		const transaction = db.transaction(OUTPUT_ROOT_STORE_NAME, "readonly")
+		const request = transaction.objectStore(OUTPUT_ROOT_STORE_NAME).get(OUTPUT_ROOT_KEY)
+		request.onerror = () => reject(request.error ?? new Error("Could not read saved output folder"))
+		request.onsuccess = () => resolve((request.result as StoredOutputRoot | undefined)?.handle ?? null)
+		transaction.oncomplete = () => db.close()
+		transaction.onerror = () => reject(transaction.error ?? new Error("Could not read saved output folder"))
+	})
+}
+
+async function writeStoredOutputRootHandle(handle: DirectoryHandle) {
+	const db = await openOutputRootDb()
+	return new Promise<void>((resolve, reject) => {
+		const transaction = db.transaction(OUTPUT_ROOT_STORE_NAME, "readwrite")
+		transaction.objectStore(OUTPUT_ROOT_STORE_NAME).put({ id: OUTPUT_ROOT_KEY, handle } satisfies StoredOutputRoot)
+		transaction.oncomplete = () => {
+			db.close()
+			resolve()
+		}
+		transaction.onerror = () => reject(transaction.error ?? new Error("Could not save output folder"))
+	})
+}
+
+async function clearStoredOutputRootHandle() {
+	const db = await openOutputRootDb()
+	return new Promise<void>((resolve, reject) => {
+		const transaction = db.transaction(OUTPUT_ROOT_STORE_NAME, "readwrite")
+		transaction.objectStore(OUTPUT_ROOT_STORE_NAME).delete(OUTPUT_ROOT_KEY)
+		transaction.oncomplete = () => {
+			db.close()
+			resolve()
+		}
+		transaction.onerror = () => reject(transaction.error ?? new Error("Could not clear saved output folder"))
+	})
+}
+
+async function ensureReadwritePermission(handle: DirectoryHandle) {
+	if (!handle.queryPermission || !handle.requestPermission) {
+		return handle
+	}
+
+	const descriptor = { mode: "readwrite" as const }
+	const currentPermission = await handle.queryPermission(descriptor)
+	if (currentPermission === "granted") {
+		return handle
+	}
+
+	const requestedPermission = await handle.requestPermission(descriptor)
+	if (requestedPermission === "granted") {
+		return handle
+	}
+
+	throw new Error("Output folder permission was not restored. Select the output folder again.")
 }
 
 function ModeToggle({ mode, onChange }: { mode: ToolMode; onChange: (mode: ToolMode) => void }) {
@@ -142,6 +253,7 @@ const FsdecryptPage = () => {
 	const [progress, setProgress] = useState(0)
 	const [result, setResult] = useState<CompletedResult | null>(null)
 	const [logs, setLogs] = useState<string[]>(["Ready"])
+	const [outputRootHandle, setOutputRootHandle] = useState<DirectoryHandle | null>(null)
 
 	useEffect(() => {
 		terminalRef.current?.scrollTo({ top: terminalRef.current.scrollHeight })
@@ -151,6 +263,33 @@ const FsdecryptPage = () => {
 		const timestamp = new Date().toLocaleTimeString()
 		setLogs(current => [...current.slice(-180), `[${timestamp}] ${message}`])
 	}, [])
+
+	useEffect(() => {
+		let cancelled = false
+
+		readStoredOutputRootHandle()
+			.then(handle => {
+				if (cancelled || !handle) {
+					return
+				}
+
+				setOutputRootHandle(handle)
+				appendLog(`Restored output root: ${handle.name ?? "folder"}`)
+			})
+			.catch(error => {
+				if (cancelled) {
+					return
+				}
+
+				appendLog(
+					error instanceof Error ? `Could not restore output root: ${error.message}` : "Could not restore output root"
+				)
+			})
+
+		return () => {
+			cancelled = true
+		}
+	}, [appendLog])
 
 	const canRun = useMemo(() => {
 		if (isBusy) return false
@@ -167,9 +306,21 @@ const FsdecryptPage = () => {
 			throw new Error("Saving output requires a browser with directory picker support")
 		}
 
-		appendLog("Opening folder picker")
-		return picker({ id: "fsdecrypt-output", mode: "readwrite", startIn: "desktop" })
+		appendLog("Opening output folder picker")
+		appendLog(OUTPUT_FOLDER_HINT)
+		const handle = await picker({ id: "fsdecrypt-output", mode: "readwrite", startIn: "desktop" })
+		setOutputRootHandle(handle)
+		appendLog(`Output root selected: ${handle.name ?? "folder"}`)
+		void writeStoredOutputRootHandle(handle).catch(error => {
+			appendLog(error instanceof Error ? `Could not save output root: ${error.message}` : "Could not save output root")
+		})
+		return handle
 	}, [appendLog])
+
+	const chooseOrReuseDirectoryRoot = useCallback(
+		async () => (outputRootHandle ? ensureReadwritePermission(outputRootHandle) : chooseDirectoryRoot()),
+		[chooseDirectoryRoot, outputRootHandle]
+	)
 
 	const createFolderWriter = useCallback(
 		(rootHandle: DirectoryHandle, folderName: string, totalBytes: number): NtfsExtractionWriter => {
@@ -256,7 +407,7 @@ const FsdecryptPage = () => {
 			)
 			if (mode === "container") {
 				if (!containerFile) return
-				const rootHandle = await chooseDirectoryRoot()
+				const rootHandle = await chooseOrReuseDirectoryRoot()
 				const [internalVhd] = await appContainersToVhdSources([containerFile], {
 					keyFile: keyFile ?? undefined,
 					onLog: appendLog
@@ -271,9 +422,10 @@ const FsdecryptPage = () => {
 				toast.success("BASE APP extracted")
 			} else if (mode === "option") {
 				if (!containerFile) return
-				const rootHandle = await chooseDirectoryRoot()
+				const rootHandle = await chooseOrReuseDirectoryRoot()
 				const exfatSource = await openFscryptSource(containerFile, {
 					expectedContainerType: FSCRYPT_CONTAINER_TYPE.OPTION,
+					keyFile: keyFile ?? undefined,
 					onLog: appendLog
 				})
 				const folderName = exfatSource.outputFilename.replace(/\.[^.]+$/, "")
@@ -295,7 +447,7 @@ const FsdecryptPage = () => {
 				setResult(completed)
 				toast.success("OPTION extracted")
 			} else {
-				const rootHandle = await chooseDirectoryRoot()
+				const rootHandle = await chooseOrReuseDirectoryRoot()
 				const appFiles = vhdFiles.filter(file => file.name.toLowerCase().endsWith(".app"))
 				const rawVhdFiles = vhdFiles.filter(file => !file.name.toLowerCase().endsWith(".app"))
 				const appVhds =
@@ -313,8 +465,9 @@ const FsdecryptPage = () => {
 			setProgress(100)
 		} catch (error) {
 			console.error("fsdecrypt tool failed", error)
-			appendLog(error instanceof Error ? `ERROR: ${error.message}` : "ERROR: fsdecrypt failed")
-			toast.error(error instanceof Error ? error.message : "fsdecrypt failed")
+			const message = fsdecryptErrorMessage(error)
+			appendLog(`ERROR: ${message}`)
+			toast.error(message)
 		} finally {
 			setIsBusy(false)
 		}
@@ -325,7 +478,7 @@ const FsdecryptPage = () => {
 		containerFile,
 		createFolderWriter,
 		extractSourceToFolder,
-		chooseDirectoryRoot,
+		chooseOrReuseDirectoryRoot,
 		keyFile,
 		mode,
 		vhdFiles
@@ -337,15 +490,24 @@ const FsdecryptPage = () => {
 		setVhdFiles([])
 		setProgress(0)
 		setLogs(["Ready"])
+		setOutputRootHandle(null)
+		void clearStoredOutputRootHandle().catch(error => {
+			appendLog(
+				error instanceof Error
+					? `Could not clear saved output root: ${error.message}`
+					: "Could not clear saved output root"
+			)
+		})
 		clearResult()
 		if (containerInputRef.current) containerInputRef.current.value = ""
 		if (keyInputRef.current) keyInputRef.current.value = ""
 		if (vhdInputRef.current) vhdInputRef.current.value = ""
-	}, [clearResult])
+	}, [appendLog, clearResult])
 
 	const primaryLabel = "Extract"
 	const selectedFiles = mode === "vhd" ? vhdFiles : containerFile ? [containerFile] : []
-	const keyLabel = mode === "option" ? "Option built-in" : (keyFile?.name ?? "Built-in")
+	const keyLabel = keyFile?.name ?? (mode === "option" ? "Option built-in" : "Built-in")
+	const outputLabel = outputRootHandle?.name ?? "Select subfolder"
 
 	return (
 		<div className="relative flex-1 overflow-auto">
@@ -419,7 +581,7 @@ const FsdecryptPage = () => {
 										<FileUp />
 										{mode === "option" ? "Choose Option" : "Choose Base APP"}
 									</Button>
-									{mode === "container" && (
+									{(mode === "container" || mode === "option") && (
 										<Button
 											type="button"
 											variant="outline"
@@ -456,6 +618,22 @@ const FsdecryptPage = () => {
 									</Button>
 								</>
 							)}
+							<Button
+								type="button"
+								variant="outline"
+								className="h-12 w-full justify-start rounded-sm"
+								disabled={isBusy}
+								onClick={() => {
+									void chooseDirectoryRoot().catch(error => {
+										const message = fsdecryptErrorMessage(error)
+										appendLog(`ERROR: ${message}`)
+										toast.error(message)
+									})
+								}}
+							>
+								<FolderOpen />
+								Output Folder
+							</Button>
 
 							<div className="bg-background/60 rounded-sm border p-3">
 								<div className="text-muted-foreground text-xs">Selected</div>
@@ -474,6 +652,9 @@ const FsdecryptPage = () => {
 								<Separator className="my-3" />
 								<div className="text-muted-foreground text-xs">Key</div>
 								<div className="mt-1 truncate text-sm font-medium">{keyLabel}</div>
+								<Separator className="my-3" />
+								<div className="text-muted-foreground text-xs">Output Root</div>
+								<div className="mt-1 truncate text-sm font-medium">{outputLabel}</div>
 							</div>
 						</div>
 
