@@ -21,7 +21,7 @@ import { cn } from "@/app/shared/utils"
 import { ReadableByteSource } from "../utils/byte-source"
 import { extractExfatContents } from "../utils/exfat"
 import { BUILT_IN_KEY_IDS, FSCRYPT_CONTAINER_TYPE, describeContainerType, openFscryptSource } from "../utils/fsdecrypt"
-import { NtfsExtractionWriter, appContainersToVhdSources, extractNtfsContents } from "../utils/ntfs"
+import { NtfsExtractionWriter, appContainersToVhdSources, extractNtfsContents, scanNtfsBytes } from "../utils/ntfs"
 import { VhdNtfsSource, openVhdChainNtfsSource } from "../utils/vhd"
 
 type ToolMode = "container" | "option" | "vhd"
@@ -643,7 +643,8 @@ const FsdecryptPage = () => {
 			folderName: string,
 			extraDetails: Detail[] = []
 		): Promise<CompletedResult> => {
-			const writer = createFolderWriter(rootHandle, folderName, ntfsSource.size, setProgress)
+			const totalBytes = await scanNtfsBytes(ntfsSource, { onLog: appendLog })
+			const writer = createFolderWriter(rootHandle, folderName, totalBytes, setProgress)
 			const extracted = await extractNtfsContents(ntfsSource, writer, { onLog: appendLog })
 
 			return {

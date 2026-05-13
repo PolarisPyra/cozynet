@@ -284,7 +284,13 @@ async function readFileRecord(ctx: NtfsContext, recordNumber: number) {
 	const bytes =
 		recordNumber === 0
 			? await ctx.source.read(ctx.boot.mftOffset, ctx.boot.recordSize)
-			: await readRuns(ctx.source, ctx.mftRuns, ctx.boot.clusterSize, recordNumber * ctx.boot.recordSize, ctx.boot.recordSize)
+			: await readRuns(
+					ctx.source,
+					ctx.mftRuns,
+					ctx.boot.clusterSize,
+					recordNumber * ctx.boot.recordSize,
+					ctx.boot.recordSize
+				)
 	const fixed = applyFixup(bytes, ctx.boot.bytesPerSector, FILE_MAGIC)
 	ctx.recordCache.set(recordNumber, fixed)
 	return fixed
@@ -396,7 +402,13 @@ async function readDirectoryEntries(ctx: NtfsContext, recordNumber: number) {
 	const { indexBlockSize, entries } = parseIndexRootEntries(rootData.value)
 	const indexAllocation = attrs.find(attr => attr.type === NTFS_ATTR_INDEX_ALLOCATION)
 	if (indexAllocation) {
-		entries.push(...(await parseIndexAllocationEntries(ctx, parseDataAttribute(directoryRecord, indexAllocation.offset), indexBlockSize)))
+		entries.push(
+			...(await parseIndexAllocationEntries(
+				ctx,
+				parseDataAttribute(directoryRecord, indexAllocation.offset),
+				indexBlockSize
+			))
+		)
 	}
 
 	return entries
@@ -518,6 +530,53 @@ async function extractDirectory(
 	}
 }
 
+async function scanDirectoryBytes(
+	ctx: NtfsContext,
+	recordNumber: number,
+	visited: Set<number>,
+	options: { onLog?: (message: string) => void }
+): Promise<number> {
+	if (visited.has(recordNumber)) {
+		return 0
+	}
+	visited.add(recordNumber)
+
+	let totalBytes = 0
+	const entries = await readDirectoryEntries(ctx, recordNumber)
+	const seenNames = new Set<string>()
+
+	for (const entry of entries) {
+		if (isSystemEntry(entry)) {
+			continue
+		}
+
+		const safeName = sanitizePathSegment(entry.name)
+		const nameKey = safeName.toLowerCase()
+		if (seenNames.has(nameKey)) {
+			continue
+		}
+		seenNames.add(nameKey)
+
+		const childRecord = await readFileRecord(ctx, entry.fileReference)
+		const isDirectory = isDirectoryRecord(childRecord) || (entry.fileFlags & NTFS_FILE_ATTRIBUTE_DIRECTORY) !== 0
+
+		if (isDirectory) {
+			totalBytes += await scanDirectoryBytes(ctx, entry.fileReference, visited, options)
+			continue
+		}
+
+		const dataAttr = attributes(childRecord).find(attr => attr.type === NTFS_ATTR_DATA)
+		if (!dataAttr) {
+			continue
+		}
+
+		const data = parseDataAttribute(childRecord, dataAttr.offset)
+		totalBytes += data.resident ? data.value.length : data.realSize || entry.size
+	}
+
+	return totalBytes
+}
+
 export async function extractNtfsContents(
 	source: ReadableByteSource,
 	writer: NtfsExtractionWriter,
@@ -532,6 +591,17 @@ export async function extractNtfsContents(
 		`Extracted ${result.files.toLocaleString()} file(s), ${result.directories.toLocaleString()} folder(s), ${result.bytes.toLocaleString()} bytes`
 	)
 	return result
+}
+
+export async function scanNtfsBytes(
+	source: ReadableByteSource,
+	options: { onLog?: (message: string) => void } = {}
+): Promise<number> {
+	options.onLog?.(`Scanning NTFS contents from ${source.name}`)
+	const ctx = await buildNtfsContext(source)
+	const totalBytes = await scanDirectoryBytes(ctx, NTFS_ROOT_RECORD, new Set(), options)
+	options.onLog?.(`Scanned total of ${totalBytes.toLocaleString()} bytes`)
+	return totalBytes
 }
 
 export async function extractInternalVhdSource(
@@ -563,7 +633,15 @@ export async function extractInternalVhdSource(
 	}
 
 	options.onLog?.(`Found ${internalName} (${entry.size.toLocaleString()} bytes)`)
-	return dataSourceFromAttribute(appFile.name, plaintext.bootId, internalName, plaintext, ctx.boot, parseDataAttribute(record, dataAttr.offset), entry.size)
+	return dataSourceFromAttribute(
+		appFile.name,
+		plaintext.bootId,
+		internalName,
+		plaintext,
+		ctx.boot,
+		parseDataAttribute(record, dataAttr.offset),
+		entry.size
+	)
 }
 
 export async function appContainersToVhdSources(
