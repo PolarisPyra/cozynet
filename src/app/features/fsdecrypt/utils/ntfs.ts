@@ -72,6 +72,11 @@ export type NtfsExtractionResult = {
 	bytes: number
 }
 
+type NtfsExtractionOptions = {
+	onLog?: (message: string) => void
+	signal?: AbortSignal
+}
+
 function readAscii(bytes: Uint8Array) {
 	return new TextDecoder("ascii").decode(bytes)
 }
@@ -117,6 +122,12 @@ function sanitizePathSegment(name: string) {
 		const code = character.charCodeAt(0)
 		return code < 32 || '<>:"/\\|?*'.includes(character) ? "_" : character
 	}).join("")
+}
+
+function throwIfAborted(signal: AbortSignal | undefined) {
+	if (signal?.aborted) {
+		throw new DOMException("Extraction cancelled", "AbortError")
+	}
 }
 
 async function readNtfsBoot(source: ReadableByteSource): Promise<NtfsBoot> {
@@ -478,8 +489,9 @@ async function extractDirectory(
 	path: string[],
 	visited: Set<number>,
 	result: NtfsExtractionResult,
-	options: { onLog?: (message: string) => void }
+	options: NtfsExtractionOptions
 ) {
+	throwIfAborted(options.signal)
 	if (visited.has(recordNumber)) {
 		return
 	}
@@ -489,6 +501,7 @@ async function extractDirectory(
 	const seenNames = new Set<string>()
 
 	for (const entry of entries) {
+		throwIfAborted(options.signal)
 		if (isSystemEntry(entry)) {
 			continue
 		}
@@ -534,8 +547,9 @@ async function scanDirectoryBytes(
 	ctx: NtfsContext,
 	recordNumber: number,
 	visited: Set<number>,
-	options: { onLog?: (message: string) => void }
+	options: NtfsExtractionOptions
 ): Promise<number> {
+	throwIfAborted(options.signal)
 	if (visited.has(recordNumber)) {
 		return 0
 	}
@@ -546,6 +560,7 @@ async function scanDirectoryBytes(
 	const seenNames = new Set<string>()
 
 	for (const entry of entries) {
+		throwIfAborted(options.signal)
 		if (isSystemEntry(entry)) {
 			continue
 		}
@@ -580,11 +595,13 @@ async function scanDirectoryBytes(
 export async function extractNtfsContents(
 	source: ReadableByteSource,
 	writer: NtfsExtractionWriter,
-	options: { onLog?: (message: string) => void } = {}
+	options: NtfsExtractionOptions = {}
 ): Promise<NtfsExtractionResult> {
 	options.onLog?.(`Opening NTFS contents from ${source.name}`)
+	throwIfAborted(options.signal)
 	const ctx = await buildNtfsContext(source)
 	const result = { files: 0, directories: 0, bytes: 0 }
+	throwIfAborted(options.signal)
 	await writer.createDirectory([])
 	await extractDirectory(ctx, writer, NTFS_ROOT_RECORD, [], new Set(), result, options)
 	options.onLog?.(
@@ -595,9 +612,10 @@ export async function extractNtfsContents(
 
 export async function scanNtfsBytes(
 	source: ReadableByteSource,
-	options: { onLog?: (message: string) => void } = {}
+	options: NtfsExtractionOptions = {}
 ): Promise<number> {
 	options.onLog?.(`Scanning NTFS contents from ${source.name}`)
+	throwIfAborted(options.signal)
 	const ctx = await buildNtfsContext(source)
 	const totalBytes = await scanDirectoryBytes(ctx, NTFS_ROOT_RECORD, new Set(), options)
 	options.onLog?.(`Scanned total of ${totalBytes.toLocaleString()} bytes`)

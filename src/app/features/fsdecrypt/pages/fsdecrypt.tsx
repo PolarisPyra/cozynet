@@ -8,6 +8,7 @@ import {
 	HardDriveDownload,
 	type LucideIcon,
 	RotateCcw,
+	Square,
 	Terminal,
 	Zap
 } from "lucide-react"
@@ -37,6 +38,12 @@ type CompletedResult = {
 	details: Detail[]
 }
 
+type RunStats = {
+	elapsedMs: number
+	bytesWritten: number
+	totalBytes: number
+}
+
 type WritableFile = {
 	write: (chunk: Uint8Array) => Promise<void>
 	close: () => Promise<void>
@@ -56,6 +63,7 @@ type DirectoryHandle = {
 	queryPermission?: (descriptor?: { mode?: "read" | "readwrite" }) => Promise<PermissionState>
 	requestPermission?: (descriptor?: { mode?: "read" | "readwrite" }) => Promise<PermissionState>
 	getDirectoryHandle: (name: string, options?: { create?: boolean }) => Promise<DirectoryHandle>
+	removeEntry?: (name: string, options?: { recursive?: boolean }) => Promise<void>
 	getFileHandle: (
 		name: string,
 		options?: { create?: boolean }
@@ -107,6 +115,45 @@ function sanitizePathSegment(name: string) {
 
 function modeLabel(mode: ToolMode) {
 	return MODES.find(item => item.mode === mode)?.label.toUpperCase() ?? mode.toUpperCase()
+}
+
+function formatDuration(ms: number) {
+	if (ms < 60_000) {
+		return `${(ms / 1000).toFixed(1)}s`
+	}
+
+	return `${Math.floor(ms / 60_000)}m ${((ms % 60_000) / 1000).toFixed(0)}s`
+}
+
+function formatThroughput(bytes: number, elapsedMs: number) {
+	if (bytes <= 0 || elapsedMs <= 0) {
+		return "0 B/s"
+	}
+
+	return `${formatBytes((bytes / elapsedMs) * 1000)}/s`
+}
+
+function formatEta(stats: RunStats) {
+	if (stats.bytesWritten <= 0 || stats.totalBytes <= 0 || stats.bytesWritten >= stats.totalBytes) {
+		return "..."
+	}
+
+	const bytesPerMs = stats.bytesWritten / Math.max(stats.elapsedMs, 1)
+	return formatDuration((stats.totalBytes - stats.bytesWritten) / bytesPerMs)
+}
+
+function abortError() {
+	return new DOMException("Extraction cancelled", "AbortError")
+}
+
+function throwIfAborted(signal: AbortSignal) {
+	if (signal.aborted) {
+		throw abortError()
+	}
+}
+
+function isAbortError(error: unknown) {
+	return error instanceof DOMException && error.name === "AbortError"
 }
 
 function isProtectedDirectoryPickerError(error: unknown) {
@@ -207,25 +254,77 @@ async function ensureReadwritePermission(handle: DirectoryHandle) {
 	throw new Error("Output folder permission was not restored. Select the output folder again.")
 }
 
+async function directoryExists(rootHandle: DirectoryHandle, name: string) {
+	try {
+		await rootHandle.getDirectoryHandle(name)
+		return true
+	} catch {
+		return false
+	}
+}
+
+function promptOverwriteMode(folderName: string) {
+	const response = window
+		.prompt(
+			`Output folder "${folderName}" already exists.\n\nType "replace" to delete it first, "merge" to keep it and overwrite matching files, or "cancel" to stop.`,
+			"merge"
+		)
+		?.trim()
+		.toLowerCase()
+
+	if (!response || response === "cancel") {
+		return null
+	}
+
+	if (response === "replace" || response === "merge") {
+		return response
+	}
+
+	throw new Error('Choose "replace", "merge", or "cancel" for the existing output folder.')
+}
+
+async function prepareOutputDirectory(rootHandle: DirectoryHandle, folderName: string) {
+	const outputFolder = sanitizePathSegment(folderName)
+	if (rootHandle.name === outputFolder) {
+		return { outputFolder, outputRoot: rootHandle }
+	}
+
+	if (await directoryExists(rootHandle, outputFolder)) {
+		const mode = promptOverwriteMode(outputFolder)
+		if (!mode) {
+			throw abortError()
+		}
+
+		if (mode === "replace") {
+			if (!rootHandle.removeEntry) {
+				throw new Error("This browser cannot replace existing folders. Choose merge or delete the folder manually.")
+			}
+			await rootHandle.removeEntry(outputFolder, { recursive: true })
+		}
+	}
+
+	return {
+		outputFolder,
+		outputRoot: await rootHandle.getDirectoryHandle(outputFolder, { create: true })
+	}
+}
+
 function createFolderWriter(
-	rootHandle: DirectoryHandle,
-	folderName: string,
+	outputRoot: DirectoryHandle,
 	totalBytes: number,
-	setProgress: (progress: number) => void
+	setProgress: (progress: number) => void,
+	signal: AbortSignal,
+	onBytesWritten: (bytes: number) => void
 ): NtfsExtractionWriter {
-	let outputRoot: Promise<DirectoryHandle> | undefined
 	let written = 0
 	let lastProgressUpdate = 0
-	const outputFolder = sanitizePathSegment(folderName)
-	const useSelectedFolder = rootHandle.name === outputFolder
 
 	const directoryFor = async (path: string[]) => {
 		const safePath = path.map(sanitizePathSegment)
-		let current = await (outputRoot ??= useSelectedFolder
-			? Promise.resolve(rootHandle)
-			: rootHandle.getDirectoryHandle(outputFolder, { create: true }))
+		let current = outputRoot
 
 		for (const segment of safePath) {
+			throwIfAborted(signal)
 			current = await current.getDirectoryHandle(segment, { create: true })
 		}
 
@@ -233,15 +332,19 @@ function createFolderWriter(
 	}
 
 	const writeFile = async (path: string[], source: ReadableByteSource) => {
+		throwIfAborted(signal)
 		const directory = await directoryFor(path.slice(0, -1))
 		const fileHandle = await directory.getFileHandle(sanitizePathSegment(path[path.length - 1]), { create: true })
 		const writable = await fileHandle.createWritable()
 
 		try {
 			for (let offset = 0; offset < source.size; offset += WRITE_CHUNK_SIZE) {
+				throwIfAborted(signal)
 				const chunk = await source.read(offset, Math.min(WRITE_CHUNK_SIZE, source.size - offset))
+				throwIfAborted(signal)
 				await writable.write(chunk)
 				written += chunk.length
+				onBytesWritten(chunk.length)
 
 				const now = performance.now()
 				if (now - lastProgressUpdate > 250 || offset + chunk.length >= source.size) {
@@ -255,7 +358,10 @@ function createFolderWriter(
 	}
 
 	return {
-		createDirectory: path => directoryFor(path).then(() => undefined),
+		createDirectory: path => {
+			throwIfAborted(signal)
+			return directoryFor(path).then(() => undefined)
+		},
 		writeFile
 	}
 }
@@ -435,21 +541,45 @@ function WorkspacePanel({
 	mode,
 	isBusy,
 	progress,
+	runStats,
 	result,
-	selectedFileCount
+	selectedFileCount,
+	onOpenResultFolder
 }: {
 	mode: ToolMode
 	isBusy: boolean
 	progress: number
+	runStats: RunStats
 	result: CompletedResult | null
 	selectedFileCount: number
+	onOpenResultFolder: () => void
 }) {
 	return (
 		<div className="bg-background/40 flex min-h-72 flex-col rounded-sm border">
 			<div className="grid gap-3 p-4 sm:grid-cols-3">
 				<MetadataRow label="Mode" value={modeLabel(mode)} />
 				<MetadataRow label="Files" value={selectedFileCount.toString()} />
-				<MetadataRow label="Output" value={result?.outputFolder ?? "Pending"} muted={!result} />
+				<div className="min-w-0">
+					<div className="text-muted-foreground text-xs">Output</div>
+					<div className="flex items-center gap-2">
+						<div className={cn("truncate text-sm font-medium", !result && "text-muted-foreground")}>
+							{result?.outputFolder ?? "Pending"}
+						</div>
+						{result && (
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								className="size-7 shrink-0 rounded-sm"
+								title="Show output folder"
+								aria-label="Show output folder"
+								onClick={onOpenResultFolder}
+							>
+								<FolderOpen className="size-4" />
+							</Button>
+						)}
+					</div>
+				</div>
 			</div>
 
 			<div className="border-border border-t" />
@@ -462,6 +592,11 @@ function WorkspacePanel({
 							<span className="font-medium">{progress}%</span>
 						</div>
 						<Progress value={progress} />
+						<div className="grid gap-3 pt-2 text-sm sm:grid-cols-3">
+							<MetadataRow label="Elapsed" value={formatDuration(runStats.elapsedMs)} />
+							<MetadataRow label="Throughput" value={formatThroughput(runStats.bytesWritten, runStats.elapsedMs)} />
+							<MetadataRow label="ETA" value={formatEta(runStats)} />
+						</div>
 					</div>
 				)}
 
@@ -525,13 +660,26 @@ const FsdecryptPage = () => {
 	const [vhdFiles, setVhdFiles] = useState<File[]>([])
 	const [isBusy, setIsBusy] = useState(false)
 	const [progress, setProgress] = useState(0)
+	const [runStats, setRunStats] = useState<RunStats>({ elapsedMs: 0, bytesWritten: 0, totalBytes: 0 })
 	const [logs, setLogs] = useState<string[]>(["Ready"])
 	const [result, setResult] = useState<CompletedResult | null>(null)
 	const [outputRootHandle, setOutputRootHandle] = useState<DirectoryHandle | null>(null)
+	const abortControllerRef = useRef<AbortController | null>(null)
+	const runStartedAtRef = useRef(0)
 
 	useEffect(() => {
 		terminalRef.current?.scrollTo({ top: terminalRef.current.scrollHeight })
 	}, [logs])
+
+	useEffect(() => {
+		if (!isBusy) return
+
+		const interval = window.setInterval(() => {
+			setRunStats(current => ({ ...current, elapsedMs: performance.now() - runStartedAtRef.current }))
+		}, 250)
+
+		return () => window.clearInterval(interval)
+	}, [isBusy])
 
 	const appendLog = useCallback((message: string) => {
 		const timestamp = new Date().toLocaleTimeString()
@@ -636,20 +784,37 @@ const FsdecryptPage = () => {
 		})
 	}, [appendLog, chooseDirectoryRoot])
 
+	const handleOpenResultFolder = useCallback(() => {
+		const message = "Browsers cannot reveal local folders in the system file manager. Open the selected output root manually."
+		appendLog(message)
+		toast.info(message)
+	}, [appendLog])
+
+	const handleCancel = useCallback(() => {
+		abortControllerRef.current?.abort()
+		appendLog("Cancelling extraction...")
+	}, [appendLog])
+
 	const extractNtfsSource = useCallback(
 		async (
 			rootHandle: DirectoryHandle,
 			ntfsSource: VhdNtfsSource,
 			folderName: string,
-			getExtraDetails: () => Detail[] = () => []
+			getExtraDetails: () => Detail[],
+			signal: AbortSignal,
+			onBytesWritten: (bytes: number) => void
 		): Promise<CompletedResult> => {
 			appendLog("Scanning NTFS to calculate progress...")
-			const totalBytes = await scanNtfsBytes(ntfsSource, { onLog: appendLog })
-			const writer = createFolderWriter(rootHandle, folderName, totalBytes, setProgress)
-			const extracted = await extractNtfsContents(ntfsSource, writer, { onLog: appendLog })
+			throwIfAborted(signal)
+			const totalBytes = await scanNtfsBytes(ntfsSource, { onLog: appendLog, signal })
+			throwIfAborted(signal)
+			setRunStats(current => ({ ...current, totalBytes }))
+			const { outputFolder, outputRoot } = await prepareOutputDirectory(rootHandle, folderName)
+			const writer = createFolderWriter(outputRoot, totalBytes, setProgress, signal, onBytesWritten)
+			const extracted = await extractNtfsContents(ntfsSource, writer, { onLog: appendLog, signal })
 
 			return {
-				outputFolder: sanitizePathSegment(folderName),
+				outputFolder,
 				outputSize: extracted.bytes,
 				details: [
 					...getExtraDetails(),
@@ -665,17 +830,26 @@ const FsdecryptPage = () => {
 	const handleRun = useCallback(async () => {
 		if (!canRun) return
 
+		const abortController = new AbortController()
+		abortControllerRef.current = abortController
+		runStartedAtRef.current = performance.now()
 		setIsBusy(true)
 		setProgress(0)
+		setRunStats({ elapsedMs: 0, bytesWritten: 0, totalBytes: 0 })
 		setLogs([])
 		clearResult()
 
-		const startTime = performance.now()
 		const elapsedDetails = (): Detail[] => {
-			const ms = performance.now() - startTime
-			const value =
-				ms < 60_000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.floor(ms / 60_000)}m ${((ms % 60_000) / 1000).toFixed(0)}s`
+			const ms = performance.now() - runStartedAtRef.current
+			const value = formatDuration(ms)
 			return [{ label: "Elapsed", value }]
+		}
+		const noteBytesWritten = (bytes: number) => {
+			setRunStats(current => ({
+				...current,
+				bytesWritten: current.bytesWritten + bytes,
+				elapsedMs: performance.now() - runStartedAtRef.current
+			}))
 		}
 
 		try {
@@ -684,26 +858,43 @@ const FsdecryptPage = () => {
 
 			if (mode === "container") {
 				if (!containerFile) return
+				throwIfAborted(abortController.signal)
 				const [internalVhd] = await appContainersToVhdSources([containerFile], {
 					keyFile: keyFile ?? undefined,
 					onLog: appendLog
 				})
+				throwIfAborted(abortController.signal)
 				const ntfsSource = await openVhdChainNtfsSource([internalVhd], { onLog: appendLog })
-				setResult(await extractNtfsSource(rootHandle, ntfsSource, stripExtension(containerFile.name), elapsedDetails))
+				setResult(
+					await extractNtfsSource(
+						rootHandle,
+						ntfsSource,
+						stripExtension(containerFile.name),
+						elapsedDetails,
+						abortController.signal,
+						noteBytesWritten
+					)
+				)
 				toast.success("BASE APP extracted")
 			} else if (mode === "option") {
 				if (!containerFile) return
+				throwIfAborted(abortController.signal)
 				const exfatSource = await openFscryptSource(containerFile, {
 					expectedContainerType: FSCRYPT_CONTAINER_TYPE.OPTION,
 					keyFile: keyFile ?? undefined,
 					onLog: appendLog
 				})
 				const folderName = stripExtension(exfatSource.outputFilename)
-				const writer = createFolderWriter(rootHandle, folderName, exfatSource.size, setProgress)
-				const extracted = await extractExfatContents(exfatSource, writer, { onLog: appendLog })
+				const { outputFolder, outputRoot } = await prepareOutputDirectory(rootHandle, folderName)
+				setRunStats(current => ({ ...current, totalBytes: exfatSource.size }))
+				const writer = createFolderWriter(outputRoot, exfatSource.size, setProgress, abortController.signal, noteBytesWritten)
+				const extracted = await extractExfatContents(exfatSource, writer, {
+					onLog: appendLog,
+					signal: abortController.signal
+				})
 
 				setResult({
-					outputFolder: sanitizePathSegment(folderName),
+					outputFolder,
 					outputSize: extracted.bytes,
 					details: [
 						...elapsedDetails(),
@@ -716,18 +907,29 @@ const FsdecryptPage = () => {
 				})
 				toast.success("OPTION extracted")
 			} else {
+				throwIfAborted(abortController.signal)
 				const appFiles = vhdFiles.filter(file => file.name.toLowerCase().endsWith(".app"))
 				const rawVhdFiles = vhdFiles.filter(file => !file.name.toLowerCase().endsWith(".app"))
 				const appVhds =
 					appFiles.length > 0
 						? await appContainersToVhdSources(appFiles, { keyFile: keyFile ?? undefined, onLog: appendLog })
 						: []
+				throwIfAborted(abortController.signal)
 				const ntfsSource = await openVhdChainNtfsSource([...rawVhdFiles, ...appVhds], { onLog: appendLog })
 				const topAppVhd = appVhds.length > 0 ? appVhds[appVhds.length - 1] : undefined
 				const topRawVhd = rawVhdFiles.length > 0 ? rawVhdFiles[rawVhdFiles.length - 1] : undefined
 				const topInputName = topAppVhd?.appName ?? topRawVhd?.name ?? ntfsSource.name
 
-				setResult(await extractNtfsSource(rootHandle, ntfsSource, stripExtension(topInputName), elapsedDetails))
+				setResult(
+					await extractNtfsSource(
+						rootHandle,
+						ntfsSource,
+						stripExtension(topInputName),
+						elapsedDetails,
+						abortController.signal,
+						noteBytesWritten
+					)
+				)
 				toast.success("MERGE APPS extracted")
 			}
 
@@ -735,10 +937,17 @@ const FsdecryptPage = () => {
 			appendLog("Done")
 		} catch (error) {
 			console.error("fsdecrypt tool failed", error)
-			const message = fsdecryptErrorMessage(error)
-			appendLog(`ERROR: ${message}`)
-			toast.error(message)
+			if (isAbortError(error)) {
+				setProgress(0)
+				appendLog("Cancelled")
+				toast.info("Extraction cancelled")
+			} else {
+				const message = fsdecryptErrorMessage(error)
+				appendLog(`ERROR: ${message}`)
+				toast.error(message)
+			}
 		} finally {
+			abortControllerRef.current = null
 			setIsBusy(false)
 		}
 	}, [
@@ -758,6 +967,7 @@ const FsdecryptPage = () => {
 		setKeyFile(null)
 		setVhdFiles([])
 		setProgress(0)
+		setRunStats({ elapsedMs: 0, bytesWritten: 0, totalBytes: 0 })
 		setLogs(["Ready"])
 		setOutputRootHandle(null)
 		void clearStoredOutputRootHandle().catch(error => {
@@ -786,10 +996,17 @@ const FsdecryptPage = () => {
 								<Zap />
 								Extract
 							</Button>
-							<Button variant="outline" onClick={handleReset} disabled={isBusy}>
-								<RotateCcw />
-								Reset
-							</Button>
+							{isBusy ? (
+								<Button variant="outline" onClick={handleCancel}>
+									<Square />
+									Cancel
+								</Button>
+							) : (
+								<Button variant="outline" onClick={handleReset}>
+									<RotateCcw />
+									Reset
+								</Button>
+							)}
 						</div>
 					</div>
 
@@ -812,8 +1029,10 @@ const FsdecryptPage = () => {
 							mode={mode}
 							isBusy={isBusy}
 							progress={progress}
+							runStats={runStats}
 							result={result}
 							selectedFileCount={selectedFiles.length}
+							onOpenResultFolder={handleOpenResultFolder}
 						/>
 						<BuiltInKeysPanel />
 					</div>
