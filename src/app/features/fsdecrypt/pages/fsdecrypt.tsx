@@ -76,9 +76,9 @@ const OUTPUT_ROOT_STORE_NAME = "handles"
 const OUTPUT_ROOT_KEY = "current"
 
 const MODES = [
-	{ mode: "container", label: "Base APP", icon: FileArchive },
+	{ mode: "container", label: "Base", icon: FileArchive },
 	{ mode: "option", label: "Option", icon: FileKey },
-	{ mode: "vhd", label: "Merge APPs", icon: HardDriveDownload }
+	{ mode: "vhd", label: "Merge", icon: HardDriveDownload }
 ] as const satisfies ReadonlyArray<{ mode: ToolMode; label: string; icon: LucideIcon }>
 
 function formatBytes(bytes: number) {
@@ -395,14 +395,14 @@ function ControlPanel({
 			{isVhdMode ? (
 				<FileAction
 					icon={HardDriveDownload}
-					label="Choose APPs"
+					label="Choose Apps"
 					disabled={isBusy}
 					onClick={() => vhdInputRef.current?.click()}
 				/>
 			) : (
 				<FileAction
 					icon={mode === "option" ? FileKey : FileUp}
-					label={mode === "option" ? "Choose Option" : "Choose Base APP"}
+					label={mode === "option" ? "Choose Option" : "Choose Base"}
 					disabled={isBusy}
 					onClick={() => containerInputRef.current?.click()}
 				/>
