@@ -1,6 +1,6 @@
 import { type ChangeEvent, type RefObject } from "react"
 
-import { FileKey, FileUp, FolderOpen, HardDriveDownload, type LucideIcon, Terminal } from "lucide-react"
+import { FileKey, FileUp, HardDriveDownload, type LucideIcon, Terminal } from "lucide-react"
 
 import { Button } from "@/app/shared/components/ui/button"
 import { Progress } from "@/app/shared/components/ui/progress"
@@ -86,9 +86,7 @@ export function ControlPanel({
 	mode,
 	isBusy,
 	keyLabel,
-	outputLabel,
 	selectedFiles,
-	onChooseOutput,
 	onContainerChange,
 	onKeyChange,
 	onVhdChange
@@ -99,9 +97,7 @@ export function ControlPanel({
 	mode: ToolMode
 	isBusy: boolean
 	keyLabel: string
-	outputLabel: string
 	selectedFiles: File[]
-	onChooseOutput: () => void
 	onContainerChange: (event: ChangeEvent<HTMLInputElement>) => void
 	onKeyChange: (event: ChangeEvent<HTMLInputElement>) => void
 	onVhdChange: (event: ChangeEvent<HTMLInputElement>) => void
@@ -149,7 +145,6 @@ export function ControlPanel({
 				/>
 			)}
 			<FileAction icon={FileKey} label="Choose Key" disabled={isBusy} onClick={() => keyInputRef.current?.click()} />
-			<FileAction icon={FolderOpen} label="Output Folder" disabled={isBusy} onClick={onChooseOutput} />
 
 			<div className="bg-background/60 rounded-sm border p-3">
 				<MetadataRow label="Selected" value={selectedFiles.length === 0 ? "None" : `${selectedFiles.length} file(s)`} />
@@ -165,8 +160,6 @@ export function ControlPanel({
 				)}
 				<div className="border-border my-3 border-t" />
 				<MetadataRow label="Key" value={keyLabel} />
-				<div className="border-border my-3 border-t" />
-				<MetadataRow label="Output Root" value={outputLabel} />
 			</div>
 		</div>
 	)

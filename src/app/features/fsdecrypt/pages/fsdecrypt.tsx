@@ -7,21 +7,14 @@ import Header from "@/app/shared/components/common/header"
 import { Button } from "@/app/shared/components/ui/button"
 
 import { BuiltInKeysPanel, ControlPanel, LogPanel, ModeToggle, WorkspacePanel } from "../components/fsdecrypt-panels"
-import { CompletedResult, Detail, DirectoryHandle, RunStats, SavePickerWindow, ToolMode } from "../types"
+import { CompletedResult, Detail, RunStats, ToolMode } from "../types"
 import { extractExfatContents } from "../utils/exfat"
-import { OUTPUT_FOLDER_HINT, fsdecryptErrorMessage, isAbortError, throwIfAborted } from "../utils/extraction-errors"
+import { fsdecryptErrorMessage, isAbortError, throwIfAborted } from "../utils/extraction-errors"
 import { FSCRYPT_CONTAINER_TYPE, describeContainerType, openFscryptSource } from "../utils/fsdecrypt"
 import { appContainersToVhdSources, extractNtfsContents } from "../utils/ntfs"
-import {
-	clearStoredOutputRootHandle,
-	createFolderWriter,
-	ensureReadwritePermission,
-	prepareOutputDirectory,
-	readStoredOutputRootHandle,
-	writeStoredOutputRootHandle
-} from "../utils/output-directory"
 import { formatDuration, modeLabel, stripExtension, vhdDetails } from "../utils/presentation"
 import { VhdNtfsSource, openVhdChainNtfsSource } from "../utils/vhd"
+import { createZipWriter, downloadBlob } from "../utils/zip-output"
 
 const FsdecryptPage = () => {
 	const containerInputRef = useRef<HTMLInputElement>(null)
@@ -38,7 +31,6 @@ const FsdecryptPage = () => {
 	const [runStats, setRunStats] = useState<RunStats>({ elapsedMs: 0, bytesWritten: 0, totalBytes: 0 })
 	const [logs, setLogs] = useState<string[]>(["Ready"])
 	const [result, setResult] = useState<CompletedResult | null>(null)
-	const [outputRootHandle, setOutputRootHandle] = useState<DirectoryHandle | null>(null)
 	const abortControllerRef = useRef<AbortController | null>(null)
 	const runStartedAtRef = useRef(0)
 
@@ -61,37 +53,9 @@ const FsdecryptPage = () => {
 		setLogs(current => [...current.slice(-220), `[${timestamp}] ${message}`])
 	}, [])
 
-	useEffect(() => {
-		let cancelled = false
-
-		readStoredOutputRootHandle()
-			.then(handle => {
-				if (cancelled || !handle) {
-					return
-				}
-
-				setOutputRootHandle(handle)
-				appendLog(`Restored output root: ${handle.name ?? "folder"}`)
-			})
-			.catch(error => {
-				if (cancelled) {
-					return
-				}
-
-				appendLog(
-					error instanceof Error ? `Could not restore output root: ${error.message}` : "Could not restore output root"
-				)
-			})
-
-		return () => {
-			cancelled = true
-		}
-	}, [appendLog])
-
 	const selectedFiles = mode === "vhd" ? vhdFiles : containerFile ? [containerFile] : []
 	const canRun = !isBusy && (mode === "vhd" ? vhdFiles.length > 0 : Boolean(containerFile))
 	const keyLabel = keyFile?.name ?? (mode === "option" ? " Built-in" : "Built-in")
-	const outputLabel = outputRootHandle?.name ?? "Select subfolder"
 
 	const clearResult = useCallback(() => {
 		setResult(null)
@@ -129,36 +93,6 @@ const FsdecryptPage = () => {
 		[clearResult]
 	)
 
-	const chooseDirectoryRoot = useCallback(async () => {
-		const picker = (window as SavePickerWindow).showDirectoryPicker
-		if (!picker) {
-			throw new Error("Saving output requires a browser with directory picker support")
-		}
-
-		appendLog("Opening output folder picker")
-		appendLog(OUTPUT_FOLDER_HINT)
-		const handle = await picker({ id: "fsdecrypt-output", mode: "readwrite", startIn: "desktop" })
-		setOutputRootHandle(handle)
-		appendLog(`Output root selected: ${handle.name ?? "folder"}`)
-		void writeStoredOutputRootHandle(handle).catch(error => {
-			appendLog(error instanceof Error ? `Could not save output root: ${error.message}` : "Could not save output root")
-		})
-		return handle
-	}, [appendLog])
-
-	const chooseOrReuseDirectoryRoot = useCallback(
-		async () => (outputRootHandle ? ensureReadwritePermission(outputRootHandle) : chooseDirectoryRoot()),
-		[chooseDirectoryRoot, outputRootHandle]
-	)
-
-	const handleChooseOutput = useCallback(() => {
-		void chooseDirectoryRoot().catch(error => {
-			const message = fsdecryptErrorMessage(error)
-			appendLog(`ERROR: ${message}`)
-			toast.error(message)
-		})
-	}, [appendLog, chooseDirectoryRoot])
-
 	const handleCancel = useCallback(() => {
 		abortControllerRef.current?.abort()
 		appendLog("Cancelling extraction...")
@@ -166,24 +100,26 @@ const FsdecryptPage = () => {
 
 	const extractNtfsSource = useCallback(
 		async (
-			rootHandle: DirectoryHandle,
 			ntfsSource: VhdNtfsSource,
 			folderName: string,
 			getExtraDetails: () => Detail[],
 			signal: AbortSignal,
 			onBytesWritten: (bytes: number) => void
 		): Promise<CompletedResult> => {
-			const { outputFolder, outputRoot } = await prepareOutputDirectory(rootHandle, folderName)
+			const outputFolder = `${folderName}.zip`
 			let totalBytes = 1
-			const writer = createFolderWriter(outputRoot, () => totalBytes, setProgress, signal, onBytesWritten)
+			const writer = createZipWriter(folderName, () => totalBytes, setProgress, signal, onBytesWritten)
 			const extracted = await extractNtfsContents(ntfsSource, writer, {
 				onLog: appendLog,
 				onTotalBytes: bytes => {
 					totalBytes = bytes
 					setRunStats(current => ({ ...current, totalBytes: bytes }))
 				},
-				signal
+				signal,
+				fileConcurrency: 1
 			})
+			const archive = await writer.finish()
+			downloadBlob(archive, outputFolder)
 
 			return {
 				outputFolder,
@@ -226,7 +162,6 @@ const FsdecryptPage = () => {
 
 		try {
 			appendLog(`Starting ${modeLabel(mode)} extract`)
-			const rootHandle = await chooseOrReuseDirectoryRoot()
 
 			if (mode === "container") {
 				if (!containerFile) return
@@ -239,7 +174,6 @@ const FsdecryptPage = () => {
 				const ntfsSource = await openVhdChainNtfsSource([internalVhd], { onLog: appendLog })
 				setResult(
 					await extractNtfsSource(
-						rootHandle,
 						ntfsSource,
 						stripExtension(containerFile.name),
 						elapsedDetails,
@@ -257,11 +191,11 @@ const FsdecryptPage = () => {
 					onLog: appendLog
 				})
 				const folderName = stripExtension(exfatSource.outputFilename)
-				const { outputFolder, outputRoot } = await prepareOutputDirectory(rootHandle, folderName)
+				const outputFolder = `${folderName}.zip`
 				let totalBytes = exfatSource.size
 				setRunStats(current => ({ ...current, totalBytes }))
-				const writer = createFolderWriter(
-					outputRoot,
+				const writer = createZipWriter(
+					folderName,
 					() => totalBytes,
 					setProgress,
 					abortController.signal,
@@ -273,8 +207,11 @@ const FsdecryptPage = () => {
 						totalBytes = bytes
 						setRunStats(current => ({ ...current, totalBytes: bytes }))
 					},
-					signal: abortController.signal
+					signal: abortController.signal,
+					fileConcurrency: 1
 				})
+				const archive = await writer.finish()
+				downloadBlob(archive, outputFolder)
 
 				setResult({
 					outputFolder,
@@ -305,7 +242,6 @@ const FsdecryptPage = () => {
 
 				setResult(
 					await extractNtfsSource(
-						rootHandle,
 						ntfsSource,
 						stripExtension(topInputName),
 						elapsedDetails,
@@ -333,17 +269,7 @@ const FsdecryptPage = () => {
 			abortControllerRef.current = null
 			setIsBusy(false)
 		}
-	}, [
-		appendLog,
-		canRun,
-		chooseOrReuseDirectoryRoot,
-		clearResult,
-		containerFile,
-		extractNtfsSource,
-		keyFile,
-		mode,
-		vhdFiles
-	])
+	}, [appendLog, canRun, clearResult, containerFile, extractNtfsSource, keyFile, mode, vhdFiles])
 
 	const handleReset = useCallback(() => {
 		setContainerFile(null)
@@ -352,19 +278,11 @@ const FsdecryptPage = () => {
 		setProgress(0)
 		setRunStats({ elapsedMs: 0, bytesWritten: 0, totalBytes: 0 })
 		setLogs(["Ready"])
-		setOutputRootHandle(null)
-		void clearStoredOutputRootHandle().catch(error => {
-			appendLog(
-				error instanceof Error
-					? `Could not clear saved output root: ${error.message}`
-					: "Could not clear saved output root"
-			)
-		})
 		clearResult()
 		if (containerInputRef.current) containerInputRef.current.value = ""
 		if (keyInputRef.current) keyInputRef.current.value = ""
 		if (vhdInputRef.current) vhdInputRef.current.value = ""
-	}, [appendLog, clearResult])
+	}, [clearResult])
 
 	return (
 		<div className="relative flex-1 overflow-auto">
@@ -401,9 +319,7 @@ const FsdecryptPage = () => {
 							mode={mode}
 							isBusy={isBusy}
 							keyLabel={keyLabel}
-							outputLabel={outputLabel}
 							selectedFiles={selectedFiles}
-							onChooseOutput={handleChooseOutput}
 							onContainerChange={handleContainerChange}
 							onKeyChange={handleKeyChange}
 							onVhdChange={handleVhdChange}
