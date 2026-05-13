@@ -1,6 +1,6 @@
 import { ReadableByteSource } from "./byte-source"
 import { AesBlock, bytesToHex, decryptCbcInto, decryptCbcNoPadding, hexToBytes } from "./crypto"
-import { decryptFscryptPages, getDecryptWorkerCount } from "./decrypt-pool"
+import { decryptFscryptPages, getDecryptBackendLabel } from "./decrypt-pool"
 
 const PAGE_SIZE = 4096
 const BOOTID_SIZE = 96
@@ -346,12 +346,7 @@ export async function openFscryptSource(
 	}
 
 	const fileIv = hexToBytes(keys.iv)
-	const decryptWorkers = getDecryptWorkerCount()
-	onLog?.(
-		decryptWorkers > 0
-			? `Using ${decryptWorkers} decrypt worker(s) for large reads`
-			: "Using inline decrypt for small reads"
-	)
+	onLog?.(`Using ${getDecryptBackendLabel()}`)
 
 	return {
 		name: filename,

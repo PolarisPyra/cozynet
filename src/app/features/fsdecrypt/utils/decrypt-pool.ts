@@ -1,4 +1,4 @@
-import { decryptFscryptPagesLocal } from "./crypto"
+import { decryptFscryptPagesLocal, decryptFscryptPagesNative, hasNativeAesCbc } from "./crypto"
 
 const MIN_WORKER_BYTES = 1024 * 1024
 const MAX_WORKERS = 4
@@ -97,6 +97,7 @@ class DecryptWorkerPool {
 }
 
 let pool: DecryptWorkerPool | undefined
+let nativeAesDisabled = false
 
 function workerCount() {
 	if (typeof Worker === "undefined") {
@@ -132,6 +133,15 @@ export function getDecryptWorkerCount() {
 	return decryptPool()?.size ?? 0
 }
 
+export function getDecryptBackendLabel() {
+	if (!nativeAesDisabled && hasNativeAesCbc()) {
+		return "native Web Crypto AES-CBC for large reads"
+	}
+
+	const workers = getDecryptWorkerCount()
+	return workers > 0 ? `${workers} decrypt worker(s) for large reads` : "inline decrypt for small reads"
+}
+
 export async function decryptFscryptPages(
 	keyHex: string,
 	fileIv: Uint8Array,
@@ -139,6 +149,17 @@ export async function decryptFscryptPages(
 	encrypted: Uint8Array,
 	pageSize: number
 ) {
+	if (!nativeAesDisabled && encrypted.length >= MIN_WORKER_BYTES) {
+		try {
+			const nativeResult = await decryptFscryptPagesNative(keyHex, fileIv, firstPageOffset, encrypted, pageSize)
+			if (nativeResult) {
+				return nativeResult
+			}
+		} catch {
+			nativeAesDisabled = true
+		}
+	}
+
 	const activePool = decryptPool()
 	if (!activePool || encrypted.length < MIN_WORKER_BYTES) {
 		return decryptFscryptPagesLocal(keyHex, fileIv, firstPageOffset, encrypted, pageSize)
