@@ -40,7 +40,8 @@ export const KAMAI_DIFFICULTY_TO_CHART_ID: Record<string, OngekiKamaiImportScore
 	ADVANCED: 1,
 	EXPERT: 2,
 	MASTER: 3,
-	LUNATIC: 10
+	LUNATIC: 10,
+	"Re:MASTER": 10
 }
 
 const getDuplicateScoreKey = (score: OngekiKamaiImportScore) =>
@@ -78,6 +79,25 @@ export const isScoreBestUpdate = (score: OngekiKamaiImportScore, best?: Existing
 	if (score.platinumStars != null && score.platinumStars > (best.platinumScoreStar ?? 0)) return true
 
 	return false
+}
+
+const PLATINUM_STAR_MAP: Record<string, number> = {
+	"0-star": 0,
+	"1-star": 1,
+	"2-star": 2,
+	"3-star": 3,
+	"4-star": 4,
+	"5-star": 5,
+	"R-star": 6
+}
+
+const normalizePlatinumStars = (value: unknown): number | null => {
+	if (typeof value === "number" && Number.isFinite(value)) return value
+	if (typeof value === "string") {
+		const mapped = PLATINUM_STAR_MAP[value]
+		if (mapped !== undefined) return mapped
+	}
+	return null
 }
 
 const sanitizeTimeAchieved = (value: unknown) => (typeof value === "number" ? value : undefined)
@@ -157,7 +177,8 @@ export const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDe
 	const chartMap = new Map(charts.map(chart => [chart.chartID, chart]))
 
 	return pbs.flatMap((pb, index) => {
-		if (pb.game !== "ongeki" || pb.playtype !== "Single") return []
+		if (pb.game !== "ongeki") return []
+		if (pb.playtype && pb.playtype !== "Single") return []
 
 		const chart = pb.chartID ? chartMap.get(pb.chartID) : undefined
 		const musicId = chart?.data?.inGameID
@@ -183,7 +204,7 @@ export const normalizeKamaiPbScores = (pbs: KamaiPbScore[], charts: KamaiChartDe
 				bellLamp: (pb.scoreData?.bellLamp as OngekiKamaiImportScore["bellLamp"]) ?? "NONE",
 				platinumScore: pb.scoreData?.platinumScore ?? null,
 				platinumScoreMax: chart?.data?.maxPlatScore ?? null,
-				platinumStars: pb.scoreData?.platinumStars ?? null,
+				platinumStars: normalizePlatinumStars(pb.scoreData?.platinumStars),
 				timeAchieved: sanitizeTimeAchieved(pb.timeAchieved),
 				judgements: sanitizeJudgements(pb.scoreData?.judgements),
 				maxCombo: pb.scoreData?.optional?.maxCombo,
@@ -409,7 +430,7 @@ export function useKamaiImport(existingScores: OngekiExistingScore[]) {
 		setIsFetchingKamai(true)
 		try {
 			const response = await fetch(
-				`https://kamai.tachi.ac/api/v1/users/${encodeURIComponent(normalized)}/games/ongeki/Single/pbs/all`
+				`https://kamai.tachi.ac/api/v1/users/${encodeURIComponent(normalized)}/games/ongeki/pbs/all`
 			)
 
 			if (!response.ok) throw new Error(`Kamai returned ${response.status}`)

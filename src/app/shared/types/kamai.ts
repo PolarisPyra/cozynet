@@ -1,4 +1,4 @@
-export type KamaiDifficulty = "BASIC" | "ADVANCED" | "EXPERT" | "MASTER" | "ULTIMA" | "LUNATIC"
+export type KamaiDifficulty = "BASIC" | "ADVANCED" | "EXPERT" | "MASTER" | "ULTIMA" | "LUNATIC" | "Re:MASTER"
 
 export type KamaiChartDefinition = {
 	chartID: string
@@ -21,7 +21,7 @@ export type KamaiPbScore = {
 		clearLamp?: string
 		bellLamp?: string
 		platinumScore?: number | null
-		platinumStars?: number | null
+		platinumStars?: number | string | null
 		judgements?: Record<string, number | null>
 		optional?: {
 			maxCombo?: number
