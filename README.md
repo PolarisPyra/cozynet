@@ -32,3 +32,6 @@ cd cozynet
 pnpm install
 pnpm run dev
 ```
+
+Production deployment and service layout are documented in
+[DEPLOYMENT.md](./DEPLOYMENT.md).
