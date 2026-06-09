@@ -37,7 +37,7 @@ import {
 const surfaceClassName =
   "border border-white/[0.08] bg-white/[0.035] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]";
 const labelClassName =
-  "text-[10px] font-black uppercase leading-none tracking-[0.22em] text-muted-foreground";
+  "text-[11px] font-medium leading-none text-muted-foreground";
 
 export function OngekiKamaiImportDialog({
   existingScores,
@@ -80,6 +80,7 @@ function OngekiKamaiImportDialogView({
   getPreviewTextClassName,
   getPreviewMetaClassName,
   resetState,
+  processKamaiFile,
   uploadKamaiFile,
   fetchRemoteScores,
 }: any) {
@@ -146,18 +147,8 @@ function OngekiKamaiImportDialogView({
     }
   };
 
-  const executeImportAction = async () => {
-    if (shouldFetchFromKamai) {
-      await fetchRemoteScores();
-      return;
-    }
-
-    await syncKamaiScores();
-  };
-
-  const primaryButtonDisabled = shouldFetchFromKamai
-    ? isFetchingKamai || importMutation.isPending
-    : selectedRows.length === 0 || importMutation.isPending || isFetchingKamai;
+  const primaryButtonDisabled =
+    selectedRows.length === 0 || importMutation.isPending || isFetchingKamai;
 
   return (
     <Dialog
@@ -178,45 +169,38 @@ function OngekiKamaiImportDialogView({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex h-[88vh] max-h-[920px] w-[96vw] sm:max-w-[1150px] flex-col overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#141414] p-0 outline-none ring-1 ring-white/[0.03]" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader className="border-b border-white/[0.06] px-8 pb-6 pt-8 sm:px-9">
-          <div className="flex items-center gap-4">
-            <div className="grid size-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.045] shadow-inner">
-              <Download className="h-6 w-6 text-white/90" />
-            </div>
-            <div className="min-w-0">
-              <DialogTitle className="text-2xl font-black tracking-tight text-white sm:text-[1.7rem]">
-                Import Records
-              </DialogTitle>
-              <p className="mt-1 text-sm font-medium leading-6 text-muted-foreground">
-                Synchronize your Kamaitachi scores with Cozynet.
-              </p>
-            </div>
-          </div>
+      <DialogContent className="flex max-h-[86vh] w-[calc(100vw-2rem)] sm:max-w-[760px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#171717] p-0 outline-none" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogHeader className="border-b border-white/[0.07] px-6 py-5">
+          <DialogTitle className="text-base font-medium text-white">
+            Import Kamaitachi records
+          </DialogTitle>
+          <p className="text-xs font-normal text-muted-foreground">
+            Upload a Kamaitachi JSON export or fetch records from a user.
+          </p>
         </DialogHeader>
 
-        <div className="flex-1 space-y-7 overflow-y-auto px-8 py-7 custom-scrollbar sm:px-9">
-          <ImportSourceTabs
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6 custom-scrollbar">
+          <ImportSources
             fileName={fileName}
             inputRef={inputRef}
             kamaiUsername={kamaiUsername}
             setKamaiUsername={setKamaiUsername}
             isFetchingKamai={isFetchingKamai}
             shouldFetchFromKamai={shouldFetchFromKamai}
-            importMutation={importMutation}
+            processKamaiFile={processKamaiFile}
             uploadKamaiFile={uploadKamaiFile}
             fetchRemoteScores={fetchRemoteScores}
           />
 
           {previewRows.length > 0 && (
-            <div className="space-y-5">
+            <div className="space-y-4">
               <ImportSummary
                 summary={summary}
                 selectedCount={selectedRows.length}
               />
 
               <div
-                className={cn("overflow-hidden rounded-2xl", surfaceClassName)}
+                className={cn("overflow-hidden rounded-xl", surfaceClassName)}
               >
                 <PreviewToolbar
                   selectedCount={selectedRows.length}
@@ -241,25 +225,24 @@ function OngekiKamaiImportDialogView({
           )}
         </div>
 
-        <DialogFooter className="border-t border-white/[0.06] bg-[#111111] px-8 py-6 sm:px-9">
+        <DialogFooter className="border-t border-white/[0.07] bg-[#141414] px-6 py-4">
           <Button
             variant="ghost"
-            size="lg"
+            size="sm"
             onClick={closeDialog}
             disabled={importMutation.isPending || isFetchingKamai}
-            className="rounded-xl px-7 font-bold text-muted-foreground hover:bg-white/[0.06]"
+            className="rounded-md px-4 font-medium text-muted-foreground hover:bg-white/[0.06]"
           >
             Cancel
           </Button>
           <Button
-            onClick={executeImportAction}
+            onClick={syncKamaiScores}
             disabled={primaryButtonDisabled}
-            size="lg"
-            className="min-w-[160px] rounded-xl bg-white px-8 font-black text-black shadow-sm hover:bg-white/90 disabled:bg-white/40"
+            size="sm"
+            className="min-w-[104px] rounded-md bg-white px-5 font-medium text-black shadow-sm hover:bg-white/90 disabled:bg-white/40"
           >
             <PrimaryButtonContent
               isFetchingKamai={isFetchingKamai}
-              shouldFetchFromKamai={shouldFetchFromKamai}
               isImporting={importMutation.isPending}
               selectedCount={selectedRows.length}
             />
@@ -270,127 +253,107 @@ function OngekiKamaiImportDialogView({
   );
 }
 
-function ImportSourceTabs({
+function ImportSources({
   fileName,
   inputRef,
   kamaiUsername,
   setKamaiUsername,
   isFetchingKamai,
   shouldFetchFromKamai,
+  processKamaiFile,
   uploadKamaiFile,
   fetchRemoteScores,
 }: any) {
-  const [activeTab, setActiveTab] = useState("file");
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const file = event.dataTransfer.files?.[0];
+    if (file) void processKamaiFile(file);
+  };
 
   return (
-    <div className="w-full">
-      <div className="relative mb-8 grid h-12 w-full max-w-[400px] grid-cols-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-1.5 ring-1 ring-white/[0.05]">
-        {/* Sliding Pill */}
-        <div
-          className={cn(
-            "absolute inset-y-1.5 rounded-xl bg-white shadow-lg transition-all duration-500 z-0",
-            activeTab === "file" ? "left-1.5 right-[calc(50%+3px)]" : "left-[calc(50%+3px)] right-1.5"
-          )}
-          style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
+    <div className="space-y-5">
+      <div
+        className={cn(
+          "group flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed border-white/15 p-6 text-center transition-colors hover:border-white/25 hover:bg-white/[0.025]",
+          isDragging && "border-blue-400/70 bg-blue-500/[0.06]",
+          surfaceClassName
+        )}
+        onDragEnter={event => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragOver={event => event.preventDefault()}
+        onDragLeave={event => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDragging(false);
+        }}
+        onDrop={handleDrop}
+      >
+        <Input
+          ref={inputRef}
+          type="file"
+          accept=".json,application/json"
+          className="hidden"
+          onChange={uploadKamaiFile}
         />
-
-        <button
-          onClick={() => setActiveTab("file")}
-          className={cn(
-            "relative z-10 flex items-center justify-center gap-3 h-9 rounded-xl transition-colors duration-300 select-none cursor-pointer text-xs font-black uppercase tracking-[0.16em]",
-            activeTab === "file" ? "text-black" : "text-muted-foreground hover:text-white"
-          )}
-        >
-          <FileUp className={cn("size-4 transition-transform duration-500", activeTab === "file" && "scale-110")} />
-          File Upload
-        </button>
-
-        <button
-          onClick={() => setActiveTab("remote")}
-          className={cn(
-            "relative z-10 flex items-center justify-center gap-3 h-9 rounded-xl transition-colors duration-300 select-none cursor-pointer text-xs font-black uppercase tracking-[0.16em]",
-            activeTab === "remote" ? "text-black" : "text-muted-foreground hover:text-white"
-          )}
-        >
-          <Download className={cn("size-4 transition-transform duration-500", activeTab === "remote" && "scale-110")} />
-          Remote Fetch
-        </button>
+        <FileUp className="mb-3 size-5 text-muted-foreground" />
+        <p className="text-sm font-normal text-white/90">
+          Drag and drop or{" "}
+          <button
+            type="button"
+            className="font-medium text-blue-400 hover:text-blue-300 hover:underline"
+            onClick={() => inputRef.current?.click()}
+          >
+            choose a file
+          </button>
+        </p>
+        <p className="mt-2 text-xs font-normal text-muted-foreground">
+          {fileName ?? "Kamaitachi JSON export"}
+        </p>
       </div>
 
-      <div className="mt-0">
-        {activeTab === "file" ? (
-          <div
-            className={cn(
-              "group flex min-h-36 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/[0.09] p-7 text-center transition-colors hover:bg-white/[0.045]",
-              surfaceClassName
-            )}
-          >
-            <Input
-              ref={inputRef}
-              type="file"
-              accept=".json,application/json"
-              className="hidden"
-              onChange={uploadKamaiFile}
-            />
-            <div className="mb-4 grid size-14 place-items-center rounded-2xl border border-white/[0.08] bg-black/20 transition-transform group-hover:scale-105">
-              <FileUp className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              className="h-11 rounded-xl border-white/[0.1] bg-white/[0.04] px-6 font-black text-white hover:bg-white/[0.08]"
-              onClick={() => inputRef.current?.click()}
-            >
-              Choose Kamai JSON
-            </Button>
-            <p className="mt-4 max-w-full truncate text-xs font-semibold text-muted-foreground">
-              {fileName ?? "Select a JSON export from Kamaitachi"}
-            </p>
-          </div>
-        ) : (
-          <div className={cn("space-y-5 rounded-2xl p-6", surfaceClassName)}>
-            <div className="space-y-2">
-              <label htmlFor="ongeki-kamai-username" className="block px-1 text-sm font-bold text-white/85">
-                Kamaitachi Username
-              </label>
-              <Input
-                id="ongeki-kamai-username"
-                value={kamaiUsername}
-                onChange={event => setKamaiUsername(event.target.value)}
-                onKeyDown={event => {
-                  if (event.key !== "Enter" || event.nativeEvent.isComposing || !shouldFetchFromKamai || isFetchingKamai)
-                    return
-                  event.preventDefault()
-                  void fetchRemoteScores()
-                }}
-                placeholder="e.g. PlayerName"
-                className="h-11 rounded-xl border-white/[0.08] bg-black/20 px-4 text-sm font-semibold shadow-sm"
-                name="ongeki-kamai-player"
-                autoComplete="new-password"
-                disabled={isFetchingKamai}
-              />
-              <p className="px-1 text-xs font-medium leading-5 text-muted-foreground">
-                Your scores will be fetched directly through the Kamaitachi API.
-              </p>
-            </div>
+      <div className="flex items-center gap-4">
+        <div className="h-px flex-1 bg-white/10" />
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">or</span>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
 
-            {shouldFetchFromKamai && (
-              <Button
-                onClick={fetchRemoteScores}
-                disabled={isFetchingKamai}
-                className="h-11 w-full rounded-xl bg-white font-black text-black hover:bg-white/90"
-              >
-                {isFetchingKamai ? (
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="mr-2 h-4 w-4" />
-                )}
-                Download Latest Scores
-              </Button>
-            )}
-          </div>
-        )}
+      <div className="space-y-2">
+        <label htmlFor="ongeki-kamai-username" className="block text-xs font-normal text-white/80">
+          Import from user
+        </label>
+        <div className="flex items-stretch gap-2">
+          <Input
+            id="ongeki-kamai-username"
+            value={kamaiUsername}
+            onChange={event => setKamaiUsername(event.target.value)}
+            onKeyDown={event => {
+              if (event.key !== "Enter" || event.nativeEvent.isComposing || !shouldFetchFromKamai || isFetchingKamai)
+                return
+              event.preventDefault()
+              void fetchRemoteScores()
+            }}
+            placeholder="Kamaitachi username"
+            className="h-10 rounded-md border-white/10 bg-black/20 px-3 text-sm font-normal shadow-none"
+            name="ongeki-kamai-player"
+            autoComplete="new-password"
+            disabled={isFetchingKamai}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={fetchRemoteScores}
+            disabled={!shouldFetchFromKamai || isFetchingKamai}
+            className="h-10 min-w-[96px] shrink-0 rounded-md border-white/10 bg-white/[0.04] px-4 py-0 font-medium text-white hover:bg-white/[0.08]"
+          >
+            {isFetchingKamai ? <LoaderCircle className="size-4 animate-spin" /> : "Fetch"}
+          </Button>
+        </div>
+        <p className="text-[11px] font-normal text-muted-foreground">
+          Fetch public Ongeki records from a Kamaitachi profile.
+        </p>
       </div>
     </div>
   )
@@ -398,7 +361,7 @@ function ImportSourceTabs({
 
 function ImportSummary({ summary, selectedCount }: any) {
   const stats = [
-    { label: "Ready", value: summary.readyCount, sub: "New scores" },
+    { label: "Ready", value: summary.ready, sub: "New scores" },
     { label: "Selected", value: selectedCount, sub: "To import" },
     {
       label: "Synced",
@@ -409,18 +372,18 @@ function ImportSummary({ summary, selectedCount }: any) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className={cn("min-w-0 rounded-2xl px-5 py-3.5", surfaceClassName)}
+          className={cn("min-w-0 rounded-lg px-4 py-3", surfaceClassName)}
         >
           <p className={labelClassName}>{stat.label}</p>
-          <div className="mt-2.5 flex items-end gap-2">
-            <p className="text-2xl font-black leading-none tracking-tight text-white tabular-nums">
+          <div className="mt-2 flex items-end gap-2">
+            <p className="text-lg font-semibold leading-none text-white tabular-nums">
               {stat.value}
             </p>
-            <p className="pb-0.5 text-[10px] font-bold leading-tight text-muted-foreground">
+            <p className="pb-0.5 text-[10px] font-normal leading-tight text-muted-foreground">
               {stat.sub}
             </p>
           </div>
@@ -448,39 +411,35 @@ function PreviewToolbar({
     importableRows.every((row: any) => selectedKeys[row.id]);
 
   return (
-    <div className="flex items-center justify-between border-b border-white/[0.07] p-6 bg-white/[0.01]">
-      <div className="flex items-center gap-8">
+    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.07] bg-white/[0.01] p-4">
+      <div className="flex items-center gap-5">
         <label
           htmlFor="ongeki-select-all"
-          className="flex cursor-pointer select-none items-center gap-3 transition-opacity hover:opacity-80"
+          className="flex cursor-pointer select-none items-center gap-2 transition-opacity hover:opacity-80"
         >
           <Checkbox
             id="ongeki-select-all"
             checked={allVisibleRowsSelected}
             onCheckedChange={(checked) => toggleSelectAll(checked === true)}
-            className="size-6 rounded-lg border-white/[0.14] data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-black"
+            className="size-4 rounded border-white/[0.14] data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-black"
           />
-          <span className="text-sm font-black text-white uppercase tracking-wider">Select All</span>
+          <span className="text-xs font-medium text-white">Select all</span>
         </label>
         
-        <div className="h-10 w-px bg-white/[0.08]" />
+        <div className="h-6 w-px bg-white/[0.08]" />
         
-        <div className="flex flex-col gap-1">
-          <p className={labelClassName}>Active Selection</p>
-          <p className="text-sm font-black text-white tabular-nums">
-            {selectedCount} <span className="text-[10px] text-muted-foreground uppercase tracking-widest ml-1">Scores</span>
-          </p>
-        </div>
+        <p className="text-xs font-normal text-muted-foreground">
+          <span className="font-medium text-white tabular-nums">{selectedCount}</span> selected
+        </p>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex flex-col gap-1.5 mr-2">
-          <p className={cn(labelClassName, "text-right")}>Display Order</p>
+      <div className="flex items-center gap-3">
+        <div>
           <Select value={sortOrder} onValueChange={setSortOrder}>
-            <SelectTrigger className="h-10 w-48 rounded-xl border-white/[0.08] bg-black/40 text-[10px] font-black uppercase tracking-wider">
+            <SelectTrigger className="h-8 w-40 rounded-md border-white/[0.08] bg-black/30 text-xs font-normal">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-border">
+            <SelectContent className="rounded-md border-border">
               <SelectItem value="date-desc">Newest First</SelectItem>
               <SelectItem value="date-asc">Oldest First</SelectItem>
               <SelectItem value="title-asc">Title (A-Z)</SelectItem>
@@ -488,24 +447,19 @@ function PreviewToolbar({
           </Select>
         </div>
 
-        <div className="h-10 w-px bg-white/[0.08] mx-2" />
-
         <label
           htmlFor="ongeki-only-ready"
-          className="group flex flex-col gap-1.5 cursor-pointer select-none"
+          className="group flex h-8 cursor-pointer select-none items-center gap-2 rounded-md border border-white/[0.08] bg-black/30 px-3 transition-colors hover:bg-white/[0.05]"
         >
-          <p className={labelClassName}>Visibility</p>
-          <div className="flex h-10 items-center gap-3 rounded-xl border border-white/[0.08] bg-black/40 px-5 transition-colors group-hover:bg-white/[0.05]">
-            <Checkbox
-              id="ongeki-only-ready"
-              checked={onlyShowReadyRows}
-              onCheckedChange={(checked) =>
-                setOnlyShowReadyRows(checked === true)
-              }
-              className="size-4 border-white/[0.14] data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-black"
-            />
-            <span className="text-[10px] font-black uppercase tracking-wider text-white">Ready Only</span>
-          </div>
+          <Checkbox
+            id="ongeki-only-ready"
+            checked={onlyShowReadyRows}
+            onCheckedChange={(checked) =>
+              setOnlyShowReadyRows(checked === true)
+            }
+            className="size-3.5 border-white/[0.14] data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-black"
+          />
+          <span className="text-xs font-normal text-white">Ready only</span>
         </label>
       </div>
     </div>
@@ -531,8 +485,8 @@ function ImportPreview({
 
   return (
     <div className="flex flex-col">
-      <div className="border-b border-white/[0.07] bg-black/15 px-5 py-3">
-        <p className={labelClassName}>Import Preview</p>
+      <div className="border-b border-white/[0.07] bg-black/15 px-4 py-3">
+        <p className="text-xs font-medium text-white/80">Import preview</p>
       </div>
 
       <div
@@ -591,7 +545,7 @@ function PreviewRow({
         width: "100%",
       }}
       className={cn(
-        "grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 border-b border-white/[0.06] px-5 py-4 transition-colors last:border-0 hover:bg-white/[0.045]",
+        "grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 border-b border-white/[0.06] px-4 py-3 transition-colors last:border-0 hover:bg-white/[0.045]",
         importable && "bg-white/[0.02]",
       )}
     >
@@ -617,7 +571,7 @@ function PreviewRow({
         <div className="flex min-w-0 flex-wrap items-center gap-2.5">
           <p
             className={cn(
-              "min-w-0 truncate text-base font-black leading-tight",
+              "min-w-0 truncate text-sm font-medium leading-tight",
               getPreviewTextClassName(row.status),
             )}
           >
@@ -625,7 +579,7 @@ function PreviewRow({
           </p>
           <span
             className={cn(
-              "shrink-0 rounded-md border px-2 py-1 text-[10px] font-black uppercase leading-none tracking-wide",
+              "shrink-0 rounded border px-2 py-1 text-[10px] font-medium leading-none",
               getPreviewMetaClassName(row.status),
             )}
           >
@@ -636,11 +590,11 @@ function PreviewRow({
 
         <div
           className={cn(
-            "mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold tabular-nums",
+            "mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-normal tabular-nums",
             getPreviewMetaClassName(row.status),
           )}
         >
-          <span className="text-sm font-black">
+          <span className="text-xs font-medium">
             {row.score.toLocaleString()}
           </span>
           <MetaDot />
@@ -716,7 +670,7 @@ function Badge({
   return (
     <span
       className={cn(
-        "inline-flex rounded-md border px-2.5 py-1 text-[10px] font-black uppercase leading-none tracking-wider",
+        "inline-flex rounded border px-2 py-1 text-[10px] font-medium leading-none",
         className,
       )}
     >
@@ -727,12 +681,10 @@ function Badge({
 
 function PrimaryButtonContent({
   isFetchingKamai,
-  shouldFetchFromKamai,
   isImporting,
   selectedCount,
 }: {
   isFetchingKamai: boolean;
-  shouldFetchFromKamai: boolean;
   isImporting: boolean;
   selectedCount: number;
 }) {
@@ -741,15 +693,6 @@ function PrimaryButtonContent({
       <>
         <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
         Fetching…
-      </>
-    );
-  }
-
-  if (shouldFetchFromKamai) {
-    return (
-      <>
-        <Download className="mr-2 h-4 w-4" />
-        Download
       </>
     );
   }
@@ -766,7 +709,7 @@ function PrimaryButtonContent({
   return (
     <>
       <Download className="mr-2 h-4 w-4" />
-      Sync{selectedCount > 0 ? ` ${selectedCount}` : ""}
+      Import{selectedCount > 0 ? ` ${selectedCount}` : ""}
     </>
   );
 }
