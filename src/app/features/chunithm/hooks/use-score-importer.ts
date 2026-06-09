@@ -36,7 +36,8 @@ export function useScoreImporter() {
 			})
 
 			if (!response.ok) {
-				throw new Error("Failed to import scores")
+				const body = (await response.json().catch(() => null)) as { error?: string } | null
+				throw new Error(body?.error ?? "Failed to import scores")
 			}
 
 			return (await response.json()) as ChunithmKamaiImportResult

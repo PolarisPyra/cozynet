@@ -398,7 +398,7 @@ const ChunithmKamaitachiRoutes = new Hono()
 			// Get levels for all songs to calculate ratings
 			const [staticRows] = await db.execute<(DB.ChuniStaticMusic & RowDataPacket)[]>(
 				`SELECT songId, chartId, level as chartLevel
-				FROM chunithm_static_music
+				FROM chuni_static_music
 				WHERE songId IN (${songIds.map(() => "?").join(",")})
 				GROUP BY songId, chartId`,
 				songIds
