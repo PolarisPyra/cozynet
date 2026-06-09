@@ -171,24 +171,24 @@ function ChunithmKamaiImportDialogView({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex h-[88vh] max-h-[920px] w-[96vw] sm:max-w-[1150px] flex-col overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#141414] p-0 outline-none ring-1 ring-white/[0.03]" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader className="border-b border-white/[0.06] px-8 pb-6 pt-8 sm:px-9">
-          <div className="flex items-center gap-4">
-            <div className="grid size-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.045] shadow-inner">
-              <Download className="h-6 w-6 text-white/90" />
+      <DialogContent className="flex max-h-[82vh] w-[calc(100vw-2rem)] sm:max-w-[900px] flex-col overflow-hidden rounded-2xl border border-white/5 bg-[#141414] p-0 outline-none ring-1 ring-white/[0.03]" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogHeader className="border-b border-white/[0.06] px-5 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.045] shadow-inner">
+              <Download className="h-4 w-4 text-white/90" />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-2xl font-black tracking-tight text-white sm:text-[1.7rem]">
+              <DialogTitle className="text-lg font-black tracking-tight text-white">
                 Import Records
               </DialogTitle>
-              <p className="mt-1 text-sm font-medium leading-6 text-muted-foreground">
+              <p className="mt-0.5 text-xs font-medium text-muted-foreground">
                 Synchronize your Kamaitachi scores with Cozynet.
               </p>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 space-y-7 overflow-y-auto px-8 py-7 custom-scrollbar sm:px-9">
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5 custom-scrollbar sm:px-6">
           <ImportSourceTabs
             fileName={fileName}
             inputRef={inputRef}
@@ -201,7 +201,7 @@ function ChunithmKamaiImportDialogView({
           />
 
           {previewRows.length > 0 && (
-            <div className="space-y-5">
+            <div className="space-y-3">
               <ImportSummary
                 summary={summary}
                 selectedCount={selectedRows.length}
@@ -233,21 +233,21 @@ function ChunithmKamaiImportDialogView({
           )}
         </div>
 
-        <DialogFooter className="border-t border-white/[0.06] bg-[#111111] px-8 py-6 sm:px-9">
+        <DialogFooter className="border-t border-white/[0.06] bg-[#111111] px-5 py-3 sm:px-6">
           <Button
             variant="ghost"
-            size="lg"
+            size="sm"
             onClick={closeDialog}
             disabled={importMutation.isPending || isFetchingKamai}
-            className="rounded-xl px-7 font-bold text-muted-foreground hover:bg-white/[0.06]"
+            className="rounded-lg px-4 font-bold text-muted-foreground hover:bg-white/[0.06]"
           >
             Cancel
           </Button>
           <Button
             onClick={executeImportAction}
             disabled={primaryButtonDisabled}
-            size="lg"
-            className="min-w-[160px] rounded-xl bg-white px-8 font-black text-black shadow-sm hover:bg-white/90 disabled:bg-white/40"
+            size="sm"
+            className="min-w-[120px] rounded-lg bg-white px-5 font-black text-black shadow-sm hover:bg-white/90 disabled:bg-white/40"
           >
             <PrimaryButtonContent
               isFetchingKamai={isFetchingKamai}
@@ -276,12 +276,12 @@ function ImportSourceTabs({
 
   return (
     <div className="w-full">
-      <div className="relative mb-8 grid h-12 w-full max-w-[400px] grid-cols-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-1.5 ring-1 ring-white/[0.05]">
+      <div className="relative mb-5 grid h-10 w-full max-w-[340px] grid-cols-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-1 ring-1 ring-white/[0.05]">
         {/* Sliding Pill */}
         <div
           className={cn(
-            "absolute inset-y-1.5 rounded-xl bg-white shadow-lg transition-all duration-500 z-0",
-            activeTab === "file" ? "left-1.5 right-[calc(50%+3px)]" : "left-[calc(50%+3px)] right-1.5"
+            "absolute inset-y-1 rounded-lg bg-white shadow-lg transition-all duration-500 z-0",
+            activeTab === "file" ? "left-1 right-[calc(50%+2px)]" : "left-[calc(50%+2px)] right-1"
           )}
           style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
         />
@@ -289,22 +289,22 @@ function ImportSourceTabs({
         <button
           onClick={() => setActiveTab("file")}
           className={cn(
-            "relative z-10 flex items-center justify-center gap-3 h-9 rounded-xl transition-colors duration-300 select-none cursor-pointer text-xs font-black uppercase tracking-[0.16em]",
+            "relative z-10 flex items-center justify-center gap-2 h-8 rounded-lg transition-colors duration-300 select-none cursor-pointer text-[10px] font-black uppercase tracking-[0.14em]",
             activeTab === "file" ? "text-black" : "text-muted-foreground hover:text-white"
           )}
         >
-          <FileUp className={cn("size-4 transition-transform duration-500", activeTab === "file" && "scale-110")} />
+          <FileUp className="size-3.5" />
           File Upload
         </button>
 
         <button
           onClick={() => setActiveTab("remote")}
           className={cn(
-            "relative z-10 flex items-center justify-center gap-3 h-9 rounded-xl transition-colors duration-300 select-none cursor-pointer text-xs font-black uppercase tracking-[0.16em]",
+            "relative z-10 flex items-center justify-center gap-2 h-8 rounded-lg transition-colors duration-300 select-none cursor-pointer text-[10px] font-black uppercase tracking-[0.14em]",
             activeTab === "remote" ? "text-black" : "text-muted-foreground hover:text-white"
           )}
         >
-          <Download className={cn("size-4 transition-transform duration-500", activeTab === "remote" && "scale-110")} />
+          <Download className="size-3.5" />
           Remote Fetch
         </button>
       </div>
@@ -313,7 +313,7 @@ function ImportSourceTabs({
         {activeTab === "file" ? (
           <div
             className={cn(
-              "group flex min-h-36 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/[0.09] p-7 text-center transition-colors hover:bg-white/[0.045]",
+              "group flex h-44 flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.09] p-6 text-center transition-colors hover:bg-white/[0.045]",
               surfaceClassName
             )}
           >
@@ -324,26 +324,26 @@ function ImportSourceTabs({
               className="hidden"
               onChange={uploadKamaiFile}
             />
-            <div className="mb-4 grid size-14 place-items-center rounded-2xl border border-white/[0.08] bg-black/20 transition-transform group-hover:scale-105">
-              <FileUp className="h-6 w-6 text-muted-foreground" />
+            <div className="mb-3 grid size-9 place-items-center rounded-lg border border-white/[0.08] bg-black/20">
+              <FileUp className="h-4 w-4 text-muted-foreground" />
             </div>
             <Button
               type="button"
               variant="outline"
-              size="default"
-              className="h-11 rounded-xl border-white/[0.1] bg-white/[0.04] px-6 font-black text-white hover:bg-white/[0.08]"
+              size="sm"
+              className="rounded-lg border-white/[0.1] bg-white/[0.04] px-4 font-bold text-white hover:bg-white/[0.08]"
               onClick={() => inputRef.current?.click()}
             >
               Choose Kamai JSON
             </Button>
-            <p className="mt-4 max-w-full truncate text-xs font-semibold text-muted-foreground">
+            <p className="mt-2 max-w-full truncate text-xs font-medium text-muted-foreground">
               {fileName ?? "Select a JSON export from Kamaitachi"}
             </p>
           </div>
         ) : (
-          <div className={cn("space-y-5 rounded-2xl p-6", surfaceClassName)}>
-            <div className="space-y-2">
-              <label htmlFor="chunithm-kamai-username" className="block px-1 text-sm font-bold text-white/85">
+          <div className={cn("flex h-44 items-center rounded-xl p-6", surfaceClassName)}>
+            <div className="w-full space-y-3">
+              <label htmlFor="chunithm-kamai-username" className="block text-xs font-bold text-white/85">
                 Kamaitachi Username
               </label>
               <Input
@@ -357,30 +357,15 @@ function ImportSourceTabs({
                   void fetchRemoteScores()
                 }}
                 placeholder="e.g. PlayerName"
-                className="h-11 rounded-xl border-white/[0.08] bg-black/20 px-4 text-sm font-semibold shadow-sm"
+                className="h-9 rounded-lg border-white/[0.08] bg-black/20 px-3 text-sm font-semibold shadow-sm"
                 name="chunithm-kamai-player"
                 autoComplete="new-password"
                 disabled={isFetchingKamai}
               />
-              <p className="px-1 text-xs font-medium leading-5 text-muted-foreground">
-                Your scores will be fetched directly through the Kamaitachi API.
+              <p className="text-[11px] font-medium text-muted-foreground">
+                Enter your production Kamaitachi username, then use Download below.
               </p>
             </div>
-
-            {shouldFetchFromKamai && (
-              <Button
-                onClick={fetchRemoteScores}
-                disabled={isFetchingKamai}
-                className="h-11 w-full rounded-xl bg-white font-black text-black hover:bg-white/90"
-              >
-                {isFetchingKamai ? (
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="mr-2 h-4 w-4" />
-                )}
-                Download Latest Scores
-              </Button>
-            )}
           </div>
         )}
       </div>
@@ -390,7 +375,7 @@ function ImportSourceTabs({
 
 function ImportSummary({ summary, selectedCount }: any) {
   const stats = [
-    { label: "Ready", value: summary.readyCount, sub: "New scores" },
+    { label: "Ready", value: summary.ready, sub: "New scores" },
     { label: "Selected", value: selectedCount, sub: "To import" },
     {
       label: "Synced",
@@ -401,15 +386,15 @@ function ImportSummary({ summary, selectedCount }: any) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className={cn("min-w-0 rounded-2xl px-5 py-3.5", surfaceClassName)}
+          className={cn("min-w-0 rounded-xl px-4 py-3", surfaceClassName)}
         >
           <p className={labelClassName}>{stat.label}</p>
-          <div className="mt-2.5 flex items-end gap-2">
-            <p className="text-2xl font-black leading-none tracking-tight text-white tabular-nums">
+          <div className="mt-2 flex items-end gap-2">
+            <p className="text-xl font-black leading-none tracking-tight text-white tabular-nums">
               {stat.value}
             </p>
             <p className="pb-0.5 text-[10px] font-bold leading-tight text-muted-foreground">

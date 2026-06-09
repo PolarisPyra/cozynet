@@ -31,6 +31,8 @@ type ExistingBestScore = {
 	isSuccess: number | null
 }
 
+type ImportSortOrder = "date-desc" | "date-asc" | "title-asc"
+
 const KAMAI_DIFFICULTY_TO_CHART_ID: Record<string, number> = {
 	BASIC: 0,
 	ADVANCED: 1,
@@ -78,9 +80,28 @@ const isScoreBestUpdate = (score: ChunithmKamaiImportScore, best?: ExistingBestS
 	return false
 }
 
-const normalizeExportScores = (
-	scores: unknown[]
-): ChunithmKamaiImportScore[] => {
+const sanitizeTimeAchieved = (value: unknown) => (typeof value === "number" ? value : undefined)
+
+const isImportSortOrder = (value: string | null): value is ImportSortOrder =>
+	value === "date-desc" || value === "date-asc" || value === "title-asc"
+
+const sanitizeJudgements = (value: unknown): ChunithmKamaiImportScore["judgements"] | undefined => {
+	if (!value || typeof value !== "object") return undefined
+
+	const judgements = value as Partial<Record<keyof NonNullable<ChunithmKamaiImportScore["judgements"]>, unknown>>
+	const keys: (keyof NonNullable<ChunithmKamaiImportScore["judgements"]>)[] = ["jcrit", "justice", "attack", "miss"]
+
+	if (!keys.every(key => typeof judgements[key] === "number")) return undefined
+
+	return {
+		jcrit: judgements.jcrit as number,
+		justice: judgements.justice as number,
+		attack: judgements.attack as number,
+		miss: judgements.miss as number
+	}
+}
+
+const normalizeExportScores = (scores: unknown[]): ChunithmKamaiImportScore[] => {
 	return scores.flatMap((raw, index) => {
 		if (!raw || typeof raw !== "object") return []
 
@@ -112,8 +133,8 @@ const normalizeExportScores = (
 				score: score.score,
 				noteLamp: score.noteLamp ?? "NONE",
 				clearLamp: score.clearLamp ?? "FAILED",
-				timeAchieved: score.timeAchieved,
-				judgements: score.judgements,
+				timeAchieved: sanitizeTimeAchieved(score.timeAchieved),
+				judgements: sanitizeJudgements(score.judgements),
 				maxCombo: score.optional?.maxCombo
 			}
 		]
@@ -127,7 +148,8 @@ const normalizeKamaiPbScores = (
 	const chartMap = new Map(charts.map((chart) => [chart.chartID, chart]))
 
 	return pbs.flatMap((pb, index) => {
-		if (pb.game !== "chunithm" || pb.playtype !== "Single") return []
+		if (pb.game !== "chunithm") return []
+		if (pb.playtype && pb.playtype !== "Single") return []
 
 		const chart = pb.chartID ? chartMap.get(pb.chartID) : undefined
 		const musicId = chart?.data?.inGameID ?? null
@@ -152,8 +174,8 @@ const normalizeKamaiPbScores = (
 				score: scoreValue,
 				noteLamp: (pb.scoreData?.noteLamp as ChunithmKamaiImportScore["noteLamp"]) ?? "NONE",
 				clearLamp: (pb.scoreData?.clearLamp as ChunithmKamaiImportScore["clearLamp"]) ?? "FAILED",
-				timeAchieved: pb.timeAchieved ?? undefined,
-				judgements: pb.scoreData?.judgements as ChunithmKamaiImportScore["judgements"],
+				timeAchieved: sanitizeTimeAchieved(pb.timeAchieved),
+				judgements: sanitizeJudgements(pb.scoreData?.judgements),
 				maxCombo: pb.scoreData?.optional?.maxCombo
 			}
 		]
@@ -186,9 +208,10 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 	const [kamaiUsername, setKamaiUsername] = useState("")
 	const [lastFetchedKamaiUsername, setLastFetchedKamaiUsername] = useState<string | null>(null)
 	const [isFetchingKamai, setIsFetchingKamai] = useState(false)
-	const [sortOrder, setSortOrder] = useState<"date-desc" | "date-asc" | "title-asc">(() => {
+	const [sortOrder, setSortOrder] = useState<ImportSortOrder>(() => {
 		if (typeof window !== "undefined") {
-			return (localStorage.getItem("chunithm-kamai-import-sort") as any) ?? "date-desc"
+			const savedSortOrder = localStorage.getItem("chunithm-kamai-import-sort")
+			return isImportSortOrder(savedSortOrder) ? savedSortOrder : "date-desc"
 		}
 		return "date-desc"
 	})
@@ -375,7 +398,7 @@ export function useKamaiImport(existingScores: ChunithmExistingScore[]) {
 		setIsFetchingKamai(true)
 		try {
 			const response = await fetch(
-				`https://kamai.tachi.ac/api/v1/users/${encodeURIComponent(normalized)}/games/chunithm/Single/pbs/all`
+				`https://kamai.tachi.ac/api/v1/users/${encodeURIComponent(normalized)}/games/chunithm/pbs/all`
 			)
 
 			if (!response.ok) throw new Error(`Kamai returned ${response.status}`)

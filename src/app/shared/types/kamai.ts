@@ -13,7 +13,7 @@ export type KamaiPbScore = {
 	chartID?: string
 	game?: string
 	playtype?: string
-	songID?: number
+	songID?: string | number
 	timeAchieved?: number | null
 	scoreData?: {
 		score?: number
