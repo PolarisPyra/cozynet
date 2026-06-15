@@ -25,7 +25,7 @@ const ServerNews = () => {
 	}, [])
 
 	return (
-		<div className="relative flex-1 overflow-auto">
+		<div className="relative min-h-0 flex-1 overflow-auto">
 			<Header title="Server Updates" />
 			<div className="mb-4 space-y-8 p-4 sm:px-6 sm:py-0">
 				<div className="bg-card border-border space-y-6 rounded-xl border p-6 shadow-sm">

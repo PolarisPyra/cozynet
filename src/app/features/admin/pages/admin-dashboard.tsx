@@ -23,7 +23,7 @@ const AdminDashboard = () => {
 	// Show loading state while checking authentication
 	if (isLoading) {
 		return (
-			<div className="relative flex-1 overflow-auto">
+			<div className="relative min-h-0 flex-1 overflow-auto">
 				<Header title="Admin Dashboard" />
 				<div className="flex h-64 items-center justify-center">
 					<Spinner />
@@ -38,7 +38,7 @@ const AdminDashboard = () => {
 	}
 
 	return (
-		<div className="relative flex-1 overflow-auto">
+		<div className="relative min-h-0 flex-1 overflow-auto">
 			<Header title="Admin Dashboard" />
 			<div className="mb-4 space-y-8 p-4 sm:px-6 sm:py-0">
 				<div className="bg-card text-card-foreground space-y-6 rounded-sm p-6">

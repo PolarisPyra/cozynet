@@ -3,7 +3,7 @@ import { MaimaiDxVersionManager } from "@/app/features/maimaidx/components/setti
 
 export function MaimaiDxSettings() {
 	return (
-		<div className="relative flex-1 overflow-auto">
+		<div className="relative min-h-0 flex-1 overflow-auto">
 			<Header title={"Maimai DX Settings"} />
 			<div className="mb-4 px-4 pb-4 sm:py-0">
 				<MaimaiDxVersionManager />

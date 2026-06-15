@@ -21,7 +21,7 @@ const AdminIcfEditor = () => {
 
 	if (isLoading) {
 		return (
-			<div className="relative flex-1 overflow-auto">
+			<div className="relative min-h-0 flex-1 overflow-auto">
 				<Header title="ICF Editor" />
 				<div className="flex h-64 items-center justify-center">
 					<Spinner />
@@ -35,7 +35,7 @@ const AdminIcfEditor = () => {
 	}
 
 	return (
-		<div className="relative flex-1 overflow-auto">
+		<div className="relative min-h-0 flex-1 overflow-auto">
 			<Header title="ICF Editor" />
 			<div className="mb-4 p-4 sm:px-6 sm:py-0">
 				<div className="bg-card text-card-foreground space-y-6 rounded-sm p-6">

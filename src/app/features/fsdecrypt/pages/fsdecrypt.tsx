@@ -285,7 +285,7 @@ const FsdecryptPage = () => {
 	}, [clearResult])
 
 	return (
-		<div className="relative flex-1 overflow-auto">
+		<div className="relative min-h-0 flex-1 overflow-auto">
 			<Header title="fsdecrypt" />
 			<div className="mx-auto flex w-full max-w-7xl flex-col gap-4 p-4 sm:px-6 sm:py-0">
 				<section className="bg-card text-card-foreground rounded-sm border">

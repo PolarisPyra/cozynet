@@ -7,7 +7,7 @@ type LayoutProps = React.HTMLAttributes<HTMLDivElement> & {
 }
 
 export const Container = ({ className, children, ...props }: LayoutProps) => (
-	<div className={cn("relative flex-1 overflow-y-scroll overflow-x-hidden", className)} {...props}>
+	<div className={cn("relative min-h-0 flex-1 overflow-y-scroll overflow-x-hidden", className)} {...props}>
 		{children}
 	</div>
 )
