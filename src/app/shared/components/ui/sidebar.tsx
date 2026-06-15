@@ -180,7 +180,7 @@ function Sidebar({
 						<SheetDescription>Displays the mobile sidebar.</SheetDescription>
 					</SheetHeader>
 					<div
-						className="flex h-dvh min-h-0 w-full flex-col overflow-hidden"
+						className="flex h-[var(--visual-viewport-height,100svh)] min-h-0 w-full flex-col overflow-hidden"
 						style={{ backgroundColor: "var(--background)" } as React.CSSProperties}
 					>
 						{children}
