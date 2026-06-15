@@ -180,7 +180,7 @@ function Sidebar({
 						<SheetDescription>Displays the mobile sidebar.</SheetDescription>
 					</SheetHeader>
 					<div
-						className="flex h-full w-full flex-col"
+						className="flex h-dvh min-h-0 w-full flex-col overflow-hidden"
 						style={{ backgroundColor: "var(--background)" } as React.CSSProperties}
 					>
 						{children}
@@ -315,7 +315,7 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
 		<div
 			data-slot="sidebar-header"
 			data-sidebar="header"
-			className={cn("flex flex-col gap-2 p-2", className)}
+			className={cn("flex shrink-0 flex-col gap-2 p-2", className)}
 			{...props}
 		/>
 	)
@@ -326,7 +326,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
 		<div
 			data-slot="sidebar-footer"
 			data-sidebar="footer"
-			className={cn("flex flex-col gap-2 p-2", className)}
+			className={cn("flex shrink-0 flex-col gap-2 p-2", className)}
 			{...props}
 		/>
 	)

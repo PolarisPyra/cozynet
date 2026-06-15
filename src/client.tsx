@@ -67,7 +67,7 @@ const app = (
 								<Route element={<ProtectedRoute />}>
 									<Route
 										element={
-											<div className="bg-background text-foreground flex h-screen overflow-hidden">
+											<div className="bg-background text-foreground flex h-dvh overflow-hidden">
 												<SidebarProvider>
 													<SidebarComponent />
 													<div className="flex flex-1 flex-col overflow-hidden">
