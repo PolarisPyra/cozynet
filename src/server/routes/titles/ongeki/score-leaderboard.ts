@@ -33,6 +33,8 @@ const OngekiScoreLeaderboardRoutes = new Hono().get(
 	),
 	async c => {
 		try {
+			const { versions } = c.payload
+			const version = versions.ongeki_version
 			const { musicId, chartId } = c.req.param()
 			const queryParams = c.req.valid("query")
 			const limit = queryParams.limit || 100
@@ -81,33 +83,31 @@ const OngekiScoreLeaderboardRoutes = new Hono().get(
 				[musicId, chartId, limit]
 			)
 
-			const [songInfo] = await db.execute<(DB.OngekiStaticMusic & RowDataPacket)[]>(
-				`
-					SELECT
-						title,
-						artist,
-						jacketPath
-					FROM ongeki_static_music
-					WHERE songId = ?
-					LIMIT 1
-				`,
-				[musicId]
-			)
-
 			const [chartInfo] = await db.execute<(DB.OngekiStaticMusic & RowDataPacket)[]>(
 				`
 					SELECT
-						level
-					FROM ongeki_static_music
-					WHERE songId = ? AND chartId = ?
-					LIMIT 1
+						m.level,
+						title,
+						artist,
+						jacketPath
+					FROM ongeki_static_music m
+					INNER JOIN (
+						SELECT songId, chartId, MAX(version) AS latest_version
+						FROM ongeki_static_music
+						WHERE version <= ?
+						GROUP BY songId, chartId
+					) sv
+						ON m.songId = sv.songId
+						AND m.chartId = sv.chartId
+						AND m.version = sv.latest_version
+					WHERE m.songId = ? AND m.chartId = ?
 				`,
-				[musicId, chartId]
+				[version, musicId, chartId]
 			)
 
 			return c.json({
-				song: songInfo[0] || null,
-				chart: chartInfo[0] || null,
+				song: chartInfo[0] || null,
+				chart: chartInfo[0] ? { level: chartInfo[0].level } : null,
 				leaderboard: results,
 				total: results.length
 			})
@@ -118,4 +118,3 @@ const OngekiScoreLeaderboardRoutes = new Hono().get(
 )
 
 export { OngekiScoreLeaderboardRoutes }
-

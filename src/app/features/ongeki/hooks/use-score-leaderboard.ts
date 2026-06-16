@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query"
 
 import { api } from "@/app/shared/utils"
 
+import { useOngekiVersion } from "./use-version"
+
 interface LeaderboardEntry {
 	userId: number
 	username: string
@@ -27,8 +29,10 @@ interface LeaderboardResponse {
 }
 
 export function useScoreLeaderboard(musicId: number, chartId: number, limit: number = 100, enabled: boolean = true) {
+	const version = useOngekiVersion()
+
 	return useQuery({
-		queryKey: ["ongeki", "score-leaderboard", musicId, chartId, limit],
+		queryKey: ["ongeki", "score-leaderboard", musicId, chartId, limit, version],
 		queryFn: async () => {
 			const response = await api.ongeki["score-leaderboard"][":musicId"][":chartId"].$get({
 				param: {
@@ -46,7 +50,6 @@ export function useScoreLeaderboard(musicId: number, chartId: number, limit: num
 
 			return (await response.json()) as LeaderboardResponse
 		},
-		enabled: enabled && musicId > 0 && chartId > 0
+		enabled: enabled && musicId > 0 && chartId > 0 && Boolean(version)
 	})
 }
-
