@@ -20,7 +20,8 @@ const CHUNITHM_LOGOS: Record<number, string> = {
 	[16]: `${CDN}/chunithm/logos/16.webp`, // Luminous Plus
 	[17]: `${CDN}/chunithm/logos/17.webp`, // Verse
 	[18]: `${CDN}/chunithm/logos/18.webp`, // XVerse
-	[19]: `${CDN}/chunithm/logos/19.webp` // X-VERSE-X
+	[19]: `${CDN}/chunithm/logos/19.webp`, // X-VERSE-X
+	[20]: `${CDN}/chunithm/logos/20.webp` // Mate
 }
 
 export const getChunithmLogo = {

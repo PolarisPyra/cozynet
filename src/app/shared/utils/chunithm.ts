@@ -26,7 +26,8 @@ export const ChunithmVersions: Record<number, string> = {
 	16: "LUMINOUS PLUS",
 	17: "VERSE",
 	18: "X-VERSE",
-	19: "X-VERSE-X"
+	19: "X-VERSE-X",
+	20: "MATE"
 }
 
 export const enum ChunithmAvatarCategory {
@@ -119,6 +120,8 @@ const SCORE_GRADE_THRESHOLDS = [
 ] as const
 
 const ROM_VERSION_MAPPING = [
+	{ versionNum: 25000, versionId: 20, name: "MATE" },
+	{ versionNum: 24500, versionId: 19, name: "X_VERSE_X" },
 	{ versionNum: 24000, versionId: 18, name: "X_VERSE" },
 	{ versionNum: 23000, versionId: 17, name: "VERSE" },
 	{ versionNum: 22500, versionId: 16, name: "LUMINOUS_PLUS" },
