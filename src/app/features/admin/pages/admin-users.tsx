@@ -233,7 +233,7 @@ const AdminUsers = () => {
 			const res = await api.admin.users[":id"].arcades["transfer-keychip"].$post({
 				param: { id: id.toString() }
 			})
-			if (!res.ok) throw new Error("Failed to transfer keychip arcade")
+			if (!res.ok) throw new Error("Failed to transfer arcade")
 			return await res.json()
 		},
 		onSuccess: result => {
@@ -241,7 +241,7 @@ const AdminUsers = () => {
 			setPendingUserAction(null)
 			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
 		},
-		onError: () => toast.error("Failed to transfer keychip arcade")
+		onError: () => toast.error("Failed to transfer arcade")
 	})
 
 	const deleteMutation = useMutation({
@@ -615,7 +615,7 @@ const AdminUsers = () => {
 																className="cursor-pointer"
 															>
 																<Shuffle className="mr-2 size-4" />
-																{ownsMatchedArcade(user) ? "Already owned" : "Transfer Keychip Arcade"}
+																{ownsMatchedArcade(user) ? "Already owned" : "transfer arcade"}
 															</DropdownMenuItem>
 															<DropdownMenuSeparator />
 															<DropdownMenuItem
@@ -788,7 +788,7 @@ const AdminUsers = () => {
 					<AlertDialogHeader>
 						<AlertDialogTitle className="flex items-center gap-2">
 							<Shuffle className="size-5" />
-							Transfer Keychip Arcade
+							Transfer Arcade
 						</AlertDialogTitle>
 						<AlertDialogDescription>
 							<>
