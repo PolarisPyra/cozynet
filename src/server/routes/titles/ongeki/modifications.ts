@@ -34,7 +34,7 @@ const OngekiModsRoutes = new Hono()
 						SELECT
 							?, c.cardId, 5, 0, 70, 70, 0, 0, 0, 0, "2021-01-01 00:00:00.0", "2021-01-01 00:00:00.0", c.choKaikaSkillId, 1, "2021-01-01 00:00:00.0"
 						FROM ongeki_static_cards AS c
-						WHERE c.version = ?
+						WHERE c.version <= ?
 						ON DUPLICATE KEY UPDATE
 							digitalStock = 5,
 							level = 70,
