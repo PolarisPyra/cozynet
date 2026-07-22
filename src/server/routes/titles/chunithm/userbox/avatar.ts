@@ -47,6 +47,14 @@ async function getCurrentAvatarItems(userId: number, version: number): Promise<A
 			ELSE 0
 		END AS locked
 		FROM chuni_static_avatar csa
+		JOIN (
+			SELECT avatarAccessoryId, MAX(version) AS version
+			FROM chuni_static_avatar
+			WHERE version <= ?
+			GROUP BY avatarAccessoryId
+		) latest
+			ON latest.avatarAccessoryId = csa.avatarAccessoryId
+			AND latest.version = csa.version
 		LEFT JOIN chuni_item_item cii
 			ON cii.itemId = csa.avatarAccessoryId
 		AND cii.user = ?
@@ -70,7 +78,7 @@ AND (
 AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
 		ORDER BY csa.category
       	`,
-		[userId, userId, version, userId, version]
+		[version, userId, userId, version, userId, version]
 	)
 	return result
 }
@@ -118,12 +126,20 @@ const routes = new Hono()
 				const placeholders = itemIds.map(() => "?").join(",")
 				const [items] = await db.execute<(AvatarItem & RowDataPacket)[]>(
 					`
-					SELECT avatarAccessoryId as avatarAcessoryId
-					FROM chuni_static_avatar
-					WHERE avatarAccessoryId IN (${placeholders})
-					  AND version <= ?
+					SELECT csa.avatarAccessoryId as avatarAcessoryId
+					FROM chuni_static_avatar csa
+					JOIN (
+						SELECT avatarAccessoryId, MAX(version) AS version
+						FROM chuni_static_avatar
+						WHERE version <= ?
+						GROUP BY avatarAccessoryId
+					) latest
+						ON latest.avatarAccessoryId = csa.avatarAccessoryId
+						AND latest.version = csa.version
+					WHERE csa.avatarAccessoryId IN (${placeholders})
+					  AND csa.version <= ?
 				`,
-					[...itemIds, version]
+					[version, ...itemIds, version]
 				)
 				if (items.length !== itemIds.length) {
 					throw new HTTPException(400, {
@@ -223,6 +239,14 @@ const routes = new Hono()
 						ELSE 1
 					END AS sort_current
 				FROM chuni_static_avatar csa
+				JOIN (
+					SELECT avatarAccessoryId, MAX(version) AS version
+					FROM chuni_static_avatar
+					WHERE version <= ?
+					GROUP BY avatarAccessoryId
+				) latest
+					ON latest.avatarAccessoryId = csa.avatarAccessoryId
+					AND latest.version = csa.version
 				LEFT JOIN chuni_item_item cii
 				ON cii.itemId = csa.avatarAccessoryId
 				AND cii.user = ?
@@ -246,6 +270,7 @@ const routes = new Hono()
 			`
 
 				const [items] = await db.execute<(AvatarItem & { sort_current: number } & RowDataPacket)[]>(query, [
+					version,
 					userId,
 					userId,
 					version,
@@ -288,12 +313,20 @@ const routes = new Hono()
 				// Validate item id
 				const [items] = await db.execute<RowDataPacket[]>(
 					`
-						SELECT avatarAccessoryId
+					SELECT csa.avatarAccessoryId
+					FROM chuni_static_avatar csa
+					JOIN (
+						SELECT avatarAccessoryId, MAX(version) AS version
 						FROM chuni_static_avatar
-						WHERE avatarAccessoryId = ?
-						AND version <= ?
+						WHERE version <= ?
+						GROUP BY avatarAccessoryId
+					) latest
+						ON latest.avatarAccessoryId = csa.avatarAccessoryId
+						AND latest.version = csa.version
+						WHERE csa.avatarAccessoryId = ?
+						AND csa.version <= ?
 					`,
-					[id, version]
+					[version, id, version]
 				)
 				if (items.length === 0) {
 					throw new HTTPException(404, {
@@ -349,6 +382,14 @@ const routes = new Hono()
 						ELSE 0
 					END AS locked
 				FROM chuni_static_avatar csa
+				JOIN (
+					SELECT avatarAccessoryId, MAX(version) AS version
+					FROM chuni_static_avatar
+					WHERE version <= ?
+					GROUP BY avatarAccessoryId
+				) latest
+					ON latest.avatarAccessoryId = csa.avatarAccessoryId
+					AND latest.version = csa.version
 				LEFT JOIN chuni_item_item cii
 				ON cii.itemId = csa.avatarAccessoryId
 				AND cii.user = ?
@@ -360,7 +401,7 @@ const routes = new Hono()
 				AND csa.version <= ?
 				AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
 				`,
-				[userId, userId, id, version]
+				[version, userId, userId, id, version]
 			)
 			if (item.length === 0) {
 				throw new HTTPException(404, {
