@@ -125,7 +125,7 @@ const routes = new Hono()
 				const { filter } = await c.req.json()
 				const { locked } = filter
 
-				let whereClause = "WHERE dsm.version = ?"
+				let whereClause = "WHERE dsm.version <= ?"
 				const params = [version]
 
 				if (locked === true) {

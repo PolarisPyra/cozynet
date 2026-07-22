@@ -57,7 +57,7 @@ async function getCurrentAvatarItems(userId: number, version: number): Promise<A
 			ON csa.opt = cso.id
 		LEFT JOIN cozynet_web_permissions dwp
 			ON dwp.user = ?
-		WHERE csa.version = ?
+		WHERE csa.version <= ?
 AND (
     (csa.category = 1 AND csa.avatarAccessoryId = cpd.avatarWear) OR
     (csa.category = 2 AND csa.avatarAccessoryId = cpd.avatarHead) OR
@@ -121,7 +121,7 @@ const routes = new Hono()
 					SELECT avatarAccessoryId as avatarAcessoryId
 					FROM chuni_static_avatar
 					WHERE avatarAccessoryId IN (${placeholders})
-					  AND version = ?
+					  AND version <= ?
 				`,
 					[...itemIds, version]
 				)
@@ -233,7 +233,7 @@ const routes = new Hono()
 				ON csa.opt = cso.id
 				LEFT JOIN cozynet_web_permissions dwp
 				ON dwp.user = ?
-				WHERE csa.version = ?
+				WHERE csa.version <= ?
 				AND (
 					csa.category IN (${placeholders})
 					${locked !== null ? `AND (cii.user IS ${locked ? "NULL" : "NOT NULL"})` : ""}
@@ -291,7 +291,7 @@ const routes = new Hono()
 						SELECT avatarAccessoryId
 						FROM chuni_static_avatar
 						WHERE avatarAccessoryId = ?
-						AND version = ?
+						AND version <= ?
 					`,
 					[id, version]
 				)
@@ -357,7 +357,7 @@ const routes = new Hono()
 				LEFT JOIN cozynet_web_permissions dwp
 				ON dwp.user = ?
 				WHERE csa.avatarAccessoryId = ?
-				AND csa.version = ?
+				AND csa.version <= ?
 				AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
 				`,
 				[userId, userId, id, version]

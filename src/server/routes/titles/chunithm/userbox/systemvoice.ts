@@ -40,7 +40,7 @@ async function getCurrentSystemVoice(userId: number, version: number): Promise<S
 		LEFT JOIN chuni_item_item cii ON cii.itemId = dssv.systemVoiceId AND cii.user = cpd.user AND cii.itemKind = 9
 		LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
 		LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
-		WHERE cpd.user = ? AND cpd.version = ? AND dssv.version = ?
+		WHERE cpd.user = ? AND cpd.version = ? AND dssv.version <= ?
 		AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)
 		LIMIT 1
 		`,
@@ -145,7 +145,7 @@ const routes = new Hono()
 			LEFT JOIN chuni_item_item cii ON cii.itemId = dssv.systemVoiceId AND cii.user = ? AND cii.itemKind = 9
 			LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
 			LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
-			WHERE dssv.version = ?
+			WHERE dssv.version <= ?
 			AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)${additionalWhere}
 			`,
 				[userId, userId, version]
@@ -176,7 +176,7 @@ const routes = new Hono()
 			LEFT JOIN chuni_profile_data cpd ON cpd.user = ? AND cpd.version = ?
 			LEFT JOIN chuni_static_opts cso ON dssv.opt = cso.id
 			LEFT JOIN cozynet_web_permissions dwp ON dwp.user = ?
-			WHERE dssv.version = ?
+			WHERE dssv.version <= ?
 			AND (dwp.status = 1 OR cso.isEnable = 1 OR cso.name IS NULL)${additionalWhere}
 			ORDER BY
 				locked DESC,

@@ -30,7 +30,7 @@ async function getCurrentNameplate(userId: number, version: number): Promise<Nam
         FROM chuni_profile_data cpd
         JOIN cozynet_static_chuni_nameplate dsn
             ON dsn.nameplateId = cpd.nameplateId
-            AND dsn.version = ?
+            AND dsn.version <= ?
         LEFT JOIN chuni_item_item cii
             ON cii.itemId = dsn.nameplateId
             AND cii.user = ?
@@ -123,7 +123,7 @@ const routes = new Hono()
 				const { filter } = await c.req.json()
 				const { locked } = filter
 
-				let whereClause = "WHERE dsn.version = ?"
+				let whereClause = "WHERE dsn.version <= ?"
 				const params = [version]
 
 				if (locked === true) {

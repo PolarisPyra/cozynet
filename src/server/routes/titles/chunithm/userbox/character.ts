@@ -30,7 +30,7 @@ async function getCurrentCharacter(userId: number, version: number): Promise<Cha
         FROM chuni_profile_data cpd
         JOIN cozynet_static_chuni_character dsn
             ON dsn.characterId = cpd.characterId
-            AND dsn.version = ?
+            AND dsn.version <= ?
         LEFT JOIN chuni_item_character cic
             ON cic.characterId = dsn.characterId
             AND cic.user = ?
@@ -125,7 +125,7 @@ const routes = new Hono()
 				const { filter } = await c.req.json()
 				const { locked } = filter
 
-				let whereClause = "WHERE dsn.version = ?"
+				let whereClause = "WHERE dsn.version <= ?"
 				const params = [version]
 
 				if (locked === true) {

@@ -28,7 +28,7 @@ async function getCurrentStage(userId: number, version: number): Promise<StageIt
 				FROM chuni_profile_data cpd
 				INNER JOIN cozynet_static_chuni_stages dsn
 					ON dsn.stageId = cpd.stageId
-					AND dsn.version IN (18, 19)
+					AND dsn.version <= ?
 				LEFT JOIN chuni_item_item cii
 					ON cii.itemId = dsn.stageId
 					AND cii.user = ?
@@ -42,7 +42,7 @@ async function getCurrentStage(userId: number, version: number): Promise<StageIt
 					AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name NOT IN ('A000', 'A283')))
 					AND dsn.name != 'Linked VERSE'
 			`,
-			[userId, userId, userId, version]
+			[version, userId, userId, userId, version]
 		)
 		return result
 	}
@@ -58,7 +58,7 @@ async function getCurrentStage(userId: number, version: number): Promise<StageIt
 			FROM chuni_profile_data cpd
 			INNER JOIN cozynet_static_chuni_stages dsn
 				ON dsn.stageId = cpd.stageId
-				AND dsn.version = ?
+				AND dsn.version <= ?
 			LEFT JOIN chuni_item_item cii
 				ON cii.itemId = dsn.stageId
 				AND cii.user = ?
@@ -186,7 +186,7 @@ const routes = new Hono()
 									ON dsn.opt = cso.id
 								LEFT JOIN cozynet_web_permissions dwp
 									ON dwp.user = ?
-								WHERE dsn.version IN (18, 19)
+								WHERE dsn.version <= ?
 									AND cii.user IS NULL
 									AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name NOT IN ('A000', 'A283')))
 									AND dsn.name != 'Linked VERSE'
@@ -194,7 +194,7 @@ const routes = new Hono()
 									locked DESC,
 									dsn.stageId DESC
 							`,
-							[userId, version, userId, userId, version, userId]
+							[userId, version, userId, userId, version, userId, version]
 						)
 						const totalCount = items.length > 0 ? items[0].total_count : 0
 						return c.json({
@@ -232,7 +232,7 @@ const routes = new Hono()
 									ON dsn.opt = cso.id
 								LEFT JOIN cozynet_web_permissions dwp
 									ON dwp.user = ?
-								WHERE dsn.version IN (18, 19)
+								WHERE dsn.version <= ?
 									AND cii.user IS NOT NULL
 									AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name NOT IN ('A000', 'A283')))
 									AND dsn.name != 'Linked VERSE'
@@ -240,7 +240,7 @@ const routes = new Hono()
 									locked DESC,
 									dsn.stageId DESC
 							`,
-							[userId, version, userId, userId, version, userId]
+							[userId, version, userId, userId, version, userId, version]
 						)
 						const totalCount = items.length > 0 ? items[0].total_count : 0
 						return c.json({
@@ -277,14 +277,14 @@ const routes = new Hono()
 								ON dsn.opt = cso.id
 							LEFT JOIN cozynet_web_permissions dwp
 								ON dwp.user = ?
-							WHERE dsn.version IN (18, 19)
+							WHERE dsn.version <= ?
 								AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name NOT IN ('A000', 'A283')))
 								AND dsn.name != 'Linked VERSE'
 							ORDER BY
 								locked DESC,
 								dsn.stageId DESC
 						`,
-						[userId, version, userId, userId, version, userId]
+						[userId, version, userId, userId, version, userId, version]
 					)
 					const totalCount = items.length > 0 ? items[0].total_count : 0
 					return c.json({
@@ -322,7 +322,7 @@ const routes = new Hono()
 								ON dsn.opt = cso.id
 							LEFT JOIN cozynet_web_permissions dwp
 								ON dwp.user = ?
-							WHERE dsn.version = ?
+							WHERE dsn.version <= ?
 								AND cii.user IS NULL
 								AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name NOT IN ('A000', 'A283')))
 								AND dsn.name != 'Linked VERSE'
@@ -368,7 +368,7 @@ const routes = new Hono()
 								ON dsn.opt = cso.id
 							LEFT JOIN cozynet_web_permissions dwp
 								ON dwp.user = ?
-							WHERE dsn.version = ?
+							WHERE dsn.version <= ?
 								AND cii.user IS NOT NULL
 								AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name NOT IN ('A000', 'A283')))
 								AND dsn.name != 'Linked VERSE'
@@ -413,7 +413,7 @@ const routes = new Hono()
 							ON dsn.opt = cso.id
 						LEFT JOIN cozynet_web_permissions dwp
 							ON dwp.user = ?
-						WHERE dsn.version = ?
+						WHERE dsn.version <= ?
 							AND (cso.name IS NULL OR ((dwp.status = 1 OR cso.isEnable = 1) AND cso.name NOT IN ('A000', 'A283')))
 							AND dsn.name != 'Linked VERSE'
 						ORDER BY
