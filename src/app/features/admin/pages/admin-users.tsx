@@ -15,7 +15,8 @@ import {
 	ShieldX,
 	Shuffle,
 	Trash2,
-	Unlock
+	Unlock,
+	X
 } from "lucide-react"
 import { useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -201,7 +202,7 @@ const AdminUsers = () => {
 	const searchItems = useMemo(() => {
 		return allUsers.map(u => ({
 			id: u.id,
-			title: getUserLabel(u.username, u.id)
+			title: `${getUserLabel(u.username, u.id)} (ID ${u.id})`
 		}))
 	}, [allUsers])
 
@@ -387,7 +388,7 @@ const AdminUsers = () => {
 				title="User Management"
 				searchProps={{
 					items: searchItems,
-					onSelect: value => setSearchParam("search", value),
+					onSelect: (_, item) => setSearchParam("search", item ? item.id.toString() : null),
 					placeholder: "Search users...",
 					emptyMessage: "No users found.",
 					groupLabel: "Users"
@@ -606,8 +607,19 @@ const AdminUsers = () => {
 							Prune Inactive Users
 						</Button>
 						{searchQuery && (
-							<div className="text-muted-foreground text-sm">
-								{sortedUsers.length} {sortedUsers.length === 1 ? "user" : "users"} found
+							<div className="flex items-center gap-2">
+								<div className="text-muted-foreground text-sm">
+									{sortedUsers.length} {sortedUsers.length === 1 ? "user" : "users"} found
+								</div>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-8 px-2 text-xs"
+									onClick={() => setSearchParam("search", null)}
+								>
+									<X className="mr-1 size-3" />
+									Clear search
+								</Button>
 							</div>
 						)}
 					</div>
