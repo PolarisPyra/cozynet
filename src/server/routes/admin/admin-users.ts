@@ -318,10 +318,6 @@ const AdminUserRoutes = new Hono()
 			const targetId = parseInt(c.req.param("id"))
 
 			assertAdmin(currentUserId, currentUserPermissions)
-			if (currentUserId === targetId) {
-				throw new HTTPException(400, { message: "Cannot transfer an arcade to the current owner" })
-			}
-
 			const targetUser = await getTargetUser(targetId)
 			const { arcadeId: selectedArcadeId } = c.req.valid("json")
 			const arcadeMatch = (await getOwnedKeychipArcades()).find(arcade => Number(arcade.id) === selectedArcadeId)

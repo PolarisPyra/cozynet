@@ -57,7 +57,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/shared/components/ui/tabs"
 import { STANDARD_PAGE_SIZE } from "@/app/shared/constants/pagination"
 import { usePagination } from "@/app/shared/hooks/use-pagination"
-import { useCurrentUser } from "@/app/shared/hooks/users/use-current-user"
 import { Body, Container } from "@/app/shared/pages/layout/layout"
 import { UserRole } from "@/app/shared/types"
 import { api } from "@/app/shared/utils"
@@ -123,8 +122,6 @@ const AdminUsers = () => {
 	const sortOrder: SortOrder = searchParams.get("sort") === "id_asc" ? "id_asc" : "id_desc"
 
 	const queryClient = useQueryClient()
-	const currentUser = useCurrentUser()
-
 	const [editingUser, setEditingUser] = useState<UserWithDetails | null>(null)
 	const [deletingUser, setDeletingUser] = useState<UserWithDetails | null>(null)
 	const [pendingUserAction, setPendingUserAction] = useState<PendingUserAction>(null)
@@ -591,7 +588,7 @@ const AdminUsers = () => {
 														variant="ghost"
 														size="icon"
 														className="mr-1 h-8 w-8"
-														disabled={user.id === currentUser.userId || !user.playedArcades.length}
+														disabled={!user.playedArcades.length}
 														onClick={() =>
 															setPendingUserAction({
 																user,
