@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
 	Ban,
 	Building2,
+	ChevronsUpDown,
 	CreditCard,
 	KeySquare,
 	Lock,
@@ -33,6 +34,14 @@ import {
 } from "@/app/shared/components/ui/alert-dialog"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Button } from "@/app/shared/components/ui/button"
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList
+} from "@/app/shared/components/ui/command"
 import {
 	Dialog,
 	DialogContent,
@@ -81,37 +90,38 @@ type UserWithDetails = {
 		is_banned: boolean
 	}[]
 	arcades: { user: number; id: number; name: string; nickname: string }[]
-	playedArcades: {
-		id: number
-		name: string | null
-		nickname: string | null
-		serial: string | null
-		ownerUser: number | null
-		ownerUsername: string | null
-	}[]
-	transferCandidateArcade: {
-		id: number
-		name: string | null
-		nickname: string | null
-		serial: string | null
-	} | null
-	matchedOwnedArcade: {
-		id: number
-		name: string | null
-		nickname: string | null
-		serial: string | null
-		ownerUser: number
-		ownerUsername: string | null
-	} | null
+	gameUsernames: {
+		chunithm: string | null
+		ongeki: string | null
+		maimaidx: string | null
+	}
 }
 
 type SortOrder = "id_desc" | "id_asc"
-type PendingUserAction = {
-	user: UserWithDetails
-	selectedArcadeId: number | null
-} | null
+type ArcadeLookup = {
+	id: number
+	name: string | null
+	nickname: string | null
+	serial: string
+	ownerUser: number | null
+	ownerUsername: string | null
+}
 
 const getUserLabel = (username: string | null, id: number) => username || `User #${id}`
+
+const getGameUsernameSummary = (gameUsernames: UserWithDetails["gameUsernames"]) =>
+	[
+		gameUsernames.chunithm && `CHUNITHM: ${gameUsernames.chunithm}`,
+		gameUsernames.ongeki && `ONGEKI: ${gameUsernames.ongeki}`,
+		gameUsernames.maimaidx && `maimai: ${gameUsernames.maimaidx}`
+	]
+		.filter(Boolean)
+		.join(" · ")
+
+const normalizeSearchText = (value: string) => value.normalize("NFKC").toLocaleLowerCase()
+
+const commandFilter = (value: string, search: string) =>
+	normalizeSearchText(value).includes(normalizeSearchText(search)) ? 1 : 0
 
 const getArcadeLabel = (arcade: { id: number; name: string | null; nickname: string | null }) =>
 	arcade.nickname || arcade.name || `Arcade #${arcade.id}`
@@ -124,8 +134,16 @@ const AdminUsers = () => {
 	const queryClient = useQueryClient()
 	const [editingUser, setEditingUser] = useState<UserWithDetails | null>(null)
 	const [deletingUser, setDeletingUser] = useState<UserWithDetails | null>(null)
-	const [pendingUserAction, setPendingUserAction] = useState<PendingUserAction>(null)
+	const [pruneDialogOpen, setPruneDialogOpen] = useState(false)
 	const [keychipGeneratorOpen, setKeychipGeneratorOpen] = useState(false)
+	const [ownerDialogOpen, setOwnerDialogOpen] = useState(false)
+	const [ownerConfirmOpen, setOwnerConfirmOpen] = useState(false)
+	const [serialSearch, setSerialSearch] = useState("")
+	const [arcadeLookup, setArcadeLookup] = useState<ArcadeLookup | null>(null)
+	const [selectedOwnerId, setSelectedOwnerId] = useState("")
+	const [serialPickerOpen, setSerialPickerOpen] = useState(false)
+	const [ownerPickerOpen, setOwnerPickerOpen] = useState(false)
+	const ownerDialogContentRef = useRef<HTMLDivElement>(null)
 
 	const [editForm, setEditForm] = useState({
 		username: "",
@@ -142,7 +160,20 @@ const AdminUsers = () => {
 		}
 	})
 
+	const { data: arcadeData } = useQuery({
+		queryKey: ["admin", "arcades"],
+		queryFn: async () => {
+			const res = await api.admin.arcades.$get()
+			if (!res.ok) throw new Error("Failed to fetch arcades")
+			return await res.json()
+		}
+	})
+
 	const allUsers = useMemo(() => (data?.users as unknown as UserWithDetails[]) || [], [data])
+	const availableArcades = useMemo(
+		() => (arcadeData as unknown as { arcades?: ArcadeLookup[] } | undefined)?.arcades ?? [],
+		[arcadeData]
+	)
 
 	const filteredUsers = useMemo(() => {
 		if (!searchQuery.trim()) return allUsers
@@ -234,25 +265,42 @@ const AdminUsers = () => {
 		onError: () => toast.error("Failed to update lock status")
 	})
 
-	const transferKeychipArcadeMutation = useMutation({
-		mutationFn: async ({ id, arcadeId }: { id: number; arcadeId: number }) => {
-			const res = await api.admin.users[":id"].arcades["transfer-keychip"].$post({
-				param: { id: id.toString() },
-				json: { arcadeId }
+	const ownerMutation = useMutation({
+		mutationFn: async ({ arcadeId, userId }: { arcadeId: number; userId: number }) => {
+			const res = await api.admin.arcades[":id"].owner.$post({
+				param: { id: arcadeId.toString() },
+				json: { userId }
 			})
 			if (!res.ok) {
 				const errorBody = (await res.json().catch(() => null)) as { error?: string; message?: string } | null
-				throw new Error(errorBody?.error || errorBody?.message || "Failed to Transfer Arcade")
+				throw new Error(errorBody?.error || errorBody?.message || "Failed to reassign arcade owner")
 			}
 			return await res.json()
 		},
 		onSuccess: result => {
-			toast.success(`Transferred arcade #${result.arcadeId} to ${result.username || `user #${result.userId}`}`)
-			setPendingUserAction(null)
+			toast.success(`Arcade reassigned to ${result.username || `user #${result.userId}`}`)
+			setOwnerConfirmOpen(false)
+			setOwnerDialogOpen(false)
+			setArcadeLookup(null)
+			setSerialSearch("")
+			setSelectedOwnerId("")
 			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
 		},
-		onError: error => toast.error(error instanceof Error ? error.message : "Failed to Transfer Arcade")
+		onError: error => toast.error(error instanceof Error ? error.message : "Failed to reassign arcade owner")
 	})
+
+	const selectArcade = (serial: string) => {
+		setSerialSearch(serial)
+		setArcadeLookup(availableArcades.find(arcade => arcade.serial === serial) ?? null)
+		setSelectedOwnerId("")
+	}
+
+	const openOwnerDialog = () => {
+		setSelectedOwnerId("")
+		setSerialPickerOpen(false)
+		setOwnerPickerOpen(false)
+		setOwnerDialogOpen(true)
+	}
 
 	const deleteMutation = useMutation({
 		mutationFn: async (id: number) => {
@@ -270,6 +318,34 @@ const AdminUsers = () => {
 		onError: () => {
 			toast.error("Failed to delete user")
 		}
+	})
+
+	const prunePreviewQuery = useQuery({
+		queryKey: ["admin", "prune-inactive-preview"],
+		enabled: false,
+		queryFn: async () => {
+			const res = await api.admin.users["prune-inactive"].preview.$get()
+			if (!res.ok) throw new Error("Failed to preview inactive users")
+			return await res.json()
+		}
+	})
+
+	const pruneMutation = useMutation({
+		mutationFn: async (userIds: number[]) => {
+			const res = await api.admin.users["prune-inactive"].$post({ json: { userIds } })
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null
+				throw new Error(body?.message || body?.error || "Failed to prune inactive users")
+			}
+			return await res.json()
+		},
+		onSuccess: result => {
+			toast.success(`Pruned ${result.deletedUserIds.length} inactive users`)
+			setPruneDialogOpen(false)
+			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
+			queryClient.invalidateQueries({ queryKey: ["admin", "arcades"] })
+		},
+		onError: error => toast.error(error instanceof Error ? error.message : "Failed to prune inactive users")
 	})
 
 	const openEditModal = (user: UserWithDetails) => {
@@ -302,17 +378,6 @@ const AdminUsers = () => {
 
 	const isBanned = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_banned)
 	const isLocked = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_locked)
-	const pendingActionIsLoading = transferKeychipArcadeMutation.isPending
-
-	const confirmPendingUserAction = () => {
-		if (!pendingUserAction?.selectedArcadeId) return
-
-		transferKeychipArcadeMutation.mutate({
-			id: pendingUserAction.user.id,
-			arcadeId: pendingUserAction.selectedArcadeId
-		})
-	}
-
 	return (
 		<Container>
 			<Header
@@ -329,7 +394,7 @@ const AdminUsers = () => {
 				<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
 					<div className="flex items-center gap-2">
 						<Select value={sortOrder} onValueChange={value => setSearchParam("sort", value)}>
-							<SelectTrigger className="h-8 w-[150px] text-xs">
+							<SelectTrigger size="sm" className="w-[150px] py-0 text-xs">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
@@ -354,12 +419,162 @@ const AdminUsers = () => {
 								</div>
 							</DialogContent>
 						</Dialog>
+						<Dialog open={ownerDialogOpen} onOpenChange={setOwnerDialogOpen}>
+							<DialogContent ref={ownerDialogContentRef} className="sm:max-w-lg">
+								<DialogHeader>
+									<DialogTitle>Reassign Arcade Owner</DialogTitle>
+									<DialogDescription>Find an arcade by its exact PCBID/keychip serial.</DialogDescription>
+								</DialogHeader>
+								<div className="space-y-4 pt-2">
+									<Popover modal={false} open={serialPickerOpen} onOpenChange={setSerialPickerOpen}>
+										<PopoverTrigger asChild>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={serialPickerOpen}
+												className="w-full justify-between"
+											>
+												{serialSearch || "Select PCBID/keychip serial"}
+												<ChevronsUpDown className="size-4 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent
+											container={ownerDialogContentRef.current}
+											className="w-[--radix-popover-trigger-width] p-0"
+										>
+											<Command filter={commandFilter}>
+												<CommandInput autoFocus placeholder="Search serials or arcades..." />
+												<CommandList className="max-h-64 overflow-y-auto">
+													<CommandEmpty>No matching arcade found.</CommandEmpty>
+													<CommandGroup>
+														{availableArcades.map(arcade => (
+															<CommandItem
+																key={`${arcade.id}-${arcade.serial}`}
+																value={`${arcade.serial} ${getArcadeLabel(arcade)} ${arcade.ownerUsername ?? ""}`}
+																onSelect={() => {
+																	selectArcade(arcade.serial)
+																	setSerialPickerOpen(false)
+																}}
+															>
+																<div className="flex min-w-0 flex-col">
+																	<span className="font-mono text-xs">{arcade.serial}</span>
+																	<span className="text-muted-foreground truncate text-xs">
+																		{getArcadeLabel(arcade)} ·{" "}
+																		{arcade.ownerUsername ? `Owner: ${arcade.ownerUsername}` : "No owner"}
+																	</span>
+																</div>
+															</CommandItem>
+														))}
+													</CommandGroup>
+												</CommandList>
+											</Command>
+										</PopoverContent>
+									</Popover>
+									{arcadeLookup && (
+										<div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md border p-3 text-sm">
+											<span className="text-muted-foreground">Arcade</span>
+											<span className="truncate font-medium">{getArcadeLabel(arcadeLookup)}</span>
+											<span className="text-muted-foreground">Serial</span>
+											<span className="truncate font-mono text-xs">{arcadeLookup.serial}</span>
+											<span className="text-muted-foreground">Current owner</span>
+											<span className="truncate">
+												{arcadeLookup.ownerUser
+													? `${getUserLabel(arcadeLookup.ownerUsername, arcadeLookup.ownerUser)} · ID ${arcadeLookup.ownerUser}`
+													: "None"}
+											</span>
+											<span className="text-muted-foreground">New owner</span>
+											<span>
+												<Popover open={ownerPickerOpen} onOpenChange={setOwnerPickerOpen} modal={false}>
+													<PopoverTrigger asChild>
+														<Button
+															variant="outline"
+															role="combobox"
+															aria-expanded={ownerPickerOpen}
+															className="w-full justify-between"
+														>
+															{selectedOwnerId
+																? getUserLabel(
+																		allUsers.find(user => user.id.toString() === selectedOwnerId)?.username ?? null,
+																		Number(selectedOwnerId)
+																	)
+																: "Select intended owner"}
+															<ChevronsUpDown className="size-4 opacity-50" />
+														</Button>
+													</PopoverTrigger>
+													<PopoverContent
+														align="end"
+														container={ownerDialogContentRef.current}
+														className="w-[--radix-popover-trigger-width] p-0"
+													>
+														<Command filter={commandFilter}>
+															<CommandInput autoFocus placeholder="Search usernames or player names..." />
+															<CommandList className="max-h-64 overflow-y-auto">
+																<CommandEmpty>No matching user found.</CommandEmpty>
+																<CommandGroup>
+																	{allUsers.map(user => (
+																		<CommandItem
+																			key={user.id}
+																			value={`${user.username ?? ""} ${user.id} ${user.gameUsernames.chunithm ?? ""} ${user.gameUsernames.ongeki ?? ""} ${user.gameUsernames.maimaidx ?? ""}`}
+																			onSelect={() => {
+																				setSelectedOwnerId(user.id.toString())
+																				setOwnerPickerOpen(false)
+																			}}
+																		>
+																			<div className="flex min-w-0 flex-col">
+																				<span>
+																					{getUserLabel(user.username, user.id)} (ID {user.id})
+																				</span>
+																				<span className="text-muted-foreground truncate text-xs">
+																					{getGameUsernameSummary(user.gameUsernames) || "No game usernames"}
+																				</span>
+																			</div>
+																		</CommandItem>
+																	))}
+																</CommandGroup>
+															</CommandList>
+														</Command>
+													</PopoverContent>
+												</Popover>
+											</span>
+											<span />
+											<span>
+												<Button
+													className="w-full"
+													disabled={!selectedOwnerId}
+													onClick={() => setOwnerConfirmOpen(true)}
+												>
+													Confirm reassignment
+												</Button>
+											</span>
+										</div>
+									)}
+								</div>
+							</DialogContent>
+						</Dialog>
 					</div>
-					{searchQuery && (
-						<div className="text-muted-foreground text-sm">
-							{sortedUsers.length} {sortedUsers.length === 1 ? "user" : "users"} found
-						</div>
-					)}
+					<div className="flex items-center gap-2">
+						<Button variant="outline" size="sm" className="h-8 text-xs" onClick={openOwnerDialog}>
+							<Shuffle className="mr-1 size-3.5" />
+							Transfer Arcade Ownership
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							className="border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive h-8 text-xs focus-visible:ring-0"
+							onClick={() => {
+								setPruneDialogOpen(true)
+								prunePreviewQuery.refetch()
+							}}
+						>
+							<Trash2 className="mr-1 size-3.5" />
+							Prune Inactive Users
+						</Button>
+						{searchQuery && (
+							<div className="text-muted-foreground text-sm">
+								{sortedUsers.length} {sortedUsers.length === 1 ? "user" : "users"} found
+							</div>
+						)}
+					</div>
 				</div>
 
 				{isLoading ? (
@@ -519,36 +734,6 @@ const AdminUsers = () => {
 																</div>
 															</PopoverContent>
 														</Popover>
-													) : user.matchedOwnedArcade ? (
-														<Popover>
-															<PopoverTrigger asChild>
-																<Button variant="outline" size="sm" className="h-6 px-2 py-0 text-xs">
-																	<Building2 className="mr-1 size-3" />
-																	Owned
-																</Button>
-															</PopoverTrigger>
-															<PopoverContent align="start" className="w-72">
-																<div className="space-y-2">
-																	<h4 className="text-sm font-semibold">Matched Arcade</h4>
-																	<div className="text-muted-foreground space-y-1 text-xs">
-																		<p className="text-foreground font-medium">
-																			{getArcadeLabel(user.matchedOwnedArcade)}
-																		</p>
-																		<p>
-																			Already owned by{" "}
-																			<span className="text-foreground font-medium">
-																				{getUserLabel(
-																					user.matchedOwnedArcade.ownerUsername,
-																					user.matchedOwnedArcade.ownerUser
-																				)}
-																			</span>
-																		</p>
-																		{user.matchedOwnedArcade.serial && <p>Keychip {user.matchedOwnedArcade.serial}</p>}
-																		<p>Matched by play/profile history</p>
-																	</div>
-																</div>
-															</PopoverContent>
-														</Popover>
 													) : (
 														<span className="text-muted-foreground text-xs">None</span>
 													)}
@@ -584,22 +769,6 @@ const AdminUsers = () => {
 													)}
 												</TableCell>
 												<TableCell className="h-16 text-right leading-none">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mr-1 h-8 w-8"
-														disabled={!user.playedArcades.length}
-														onClick={() =>
-															setPendingUserAction({
-																user,
-																selectedArcadeId: user.transferCandidateArcade?.id ?? user.playedArcades[0]?.id ?? null
-															})
-														}
-														aria-label="Transfer Arcade"
-														title="Transfer Arcade"
-													>
-														<Shuffle className="size-4" />
-													</Button>
 													<DropdownMenu modal={false}>
 														<DropdownMenuTrigger asChild>
 															<Button variant="ghost" size="icon" className="h-8 w-8">
@@ -715,14 +884,6 @@ const AdminUsers = () => {
 											<ul className="mt-1 max-h-32 list-inside list-disc overflow-y-auto text-xs">
 												{editingUser.arcades.length > 0 ? (
 													editingUser.arcades.map(a => <li key={a.id}>{getArcadeLabel(a)}</li>)
-												) : editingUser.matchedOwnedArcade ? (
-													<li>
-														{getArcadeLabel(editingUser.matchedOwnedArcade)} already owned by{" "}
-														{getUserLabel(
-															editingUser.matchedOwnedArcade.ownerUsername,
-															editingUser.matchedOwnedArcade.ownerUser
-														)}
-													</li>
 												) : (
 													<li>None</li>
 												)}
@@ -758,6 +919,79 @@ const AdminUsers = () => {
 					</Tabs>
 				</DialogContent>
 			</Dialog>
+
+			<AlertDialog open={pruneDialogOpen} onOpenChange={setPruneDialogOpen}>
+				<AlertDialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+					<AlertDialogHeader>
+						<AlertDialogTitle className="text-destructive flex items-center gap-2">
+							<ShieldAlert className="size-5" />
+							Prune Inactive Users
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							This permanently deletes users with no CHUNITHM, ONGEKI, or maimai player name. The preview below is the
+							exact deletion chain for this run.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					{prunePreviewQuery.isFetching ? (
+						<div className="text-muted-foreground py-8 text-center text-sm">Building deletion preview...</div>
+					) : prunePreviewQuery.isError ? (
+						<div className="text-destructive py-8 text-center text-sm">Failed to build deletion preview.</div>
+					) : prunePreviewQuery.data?.users.length ? (
+						<div className="space-y-3">
+							<div className="text-sm font-medium">
+								{prunePreviewQuery.data.total} user{prunePreviewQuery.data.total === 1 ? "" : "s"} will be deleted
+							</div>
+							<div className="max-h-80 space-y-3 overflow-y-auto rounded-md border p-3">
+								{prunePreviewQuery.data.users.map(user => (
+									<div key={user.id} className="space-y-1 border-b pb-3 last:border-0 last:pb-0">
+										<div className="font-medium">
+											{getUserLabel(user.username, user.id)} (ID {user.id})
+										</div>
+										<div className="text-muted-foreground text-xs">Deletion chain:</div>
+										<ul className="text-muted-foreground list-inside list-disc text-xs">
+											<li>User account and authentication data</li>
+											{user.linkedData.map(item => (
+												<li key={item.table}>
+													{item.table} ({item.count} row{item.count === 1 ? "" : "s"})
+												</li>
+											))}
+											{user.keychips.length > 0 ? (
+												user.keychips.map(keychip => (
+													<li key={keychip.serial}>
+														Keychip {keychip.serial} and its owned arcade
+														{keychip.arcadeName ? ` (${keychip.arcadeName})` : ""}
+													</li>
+												))
+											) : (
+												<li>No owned keychip</li>
+											)}
+											<li>Final aime_user record</li>
+										</ul>
+									</div>
+								))}
+							</div>
+						</div>
+					) : (
+						<div className="text-muted-foreground rounded-md border p-6 text-center text-sm">
+							No inactive users found.
+						</div>
+					)}
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={pruneMutation.isPending}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							className="bg-background dark:bg-input/30 border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive h-9 rounded-md px-4 py-2 text-sm focus-visible:ring-0"
+							disabled={pruneMutation.isPending || !prunePreviewQuery.data?.users.length}
+							onClick={event => {
+								event.preventDefault()
+								const users = prunePreviewQuery.data?.users ?? []
+								if (users.length) pruneMutation.mutate(users.map(user => user.id))
+							}}
+						>
+							{pruneMutation.isPending ? "Pruning..." : "Confirm prune"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 
 			<AlertDialog open={!!deletingUser} onOpenChange={open => !open && setDeletingUser(null)}>
 				<AlertDialogContent>
@@ -798,65 +1032,32 @@ const AdminUsers = () => {
 				</AlertDialogContent>
 			</AlertDialog>
 
-			<AlertDialog open={!!pendingUserAction} onOpenChange={open => !open && setPendingUserAction(null)}>
+			<AlertDialog open={ownerConfirmOpen} onOpenChange={setOwnerConfirmOpen}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle className="flex items-center gap-2">
-							<Shuffle className="size-5" />
-							Transfer Arcade
-						</AlertDialogTitle>
-						<AlertDialogDescription>Select an arcade this user has played at.</AlertDialogDescription>
-						<div className="max-h-80 space-y-3 overflow-y-auto rounded-md border p-2">
-							{Object.entries(
-								(pendingUserAction?.user.playedArcades ?? []).reduce<Record<string, UserWithDetails["playedArcades"]>>(
-									(groups, arcade) => {
-										const group = arcade.ownerUser ? `User ${arcade.ownerUser}` : "Unassigned"
-										;(groups[group] ??= []).push(arcade)
-										return groups
-									},
-									{}
-								)
-							).map(([group, arcades]) => (
-								<div key={group} className="space-y-1">
-									<div className="text-muted-foreground border-b px-2 py-1 text-xs font-semibold">{group}</div>
-									{arcades.map(arcade => (
-										<button
-											key={`${arcade.id}-${arcade.serial ?? ""}`}
-											type="button"
-											onClick={() =>
-												setPendingUserAction(current =>
-													current ? { ...current, selectedArcadeId: arcade.id } : current
-												)
-											}
-											className={`w-full rounded px-2 py-2 text-left text-sm ${
-												pendingUserAction?.selectedArcadeId === arcade.id
-													? "bg-primary/10 ring-primary ring-1"
-													: "hover:bg-muted"
-											}`}
-										>
-											<div>{getArcadeLabel(arcade)}</div>
-											{arcade.ownerUser === pendingUserAction?.user.id && (
-												<div className="text-xs font-medium text-green-600 dark:text-green-400">
-													Already owned by User {pendingUserAction.user.id}
-												</div>
-											)}
-											{arcade.serial && <div className="text-muted-foreground font-mono text-xs">{arcade.serial}</div>}
-										</button>
-									))}
-								</div>
-							))}
-						</div>
+						<AlertDialogTitle>Confirm owner reassignment</AlertDialogTitle>
+						<AlertDialogDescription>
+							Update the owner of {arcadeLookup ? getArcadeLabel(arcadeLookup) : "this arcade"} to{" "}
+							{selectedOwnerId
+								? getUserLabel(
+										allUsers.find(user => user.id === Number(selectedOwnerId))?.username ?? null,
+										Number(selectedOwnerId)
+									)
+								: "the selected user"}
+							? This changes arcade_owner.user.
+						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={pendingActionIsLoading}>Cancel</AlertDialogCancel>
+						<AlertDialogCancel disabled={ownerMutation.isPending}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							disabled={pendingActionIsLoading}
+							disabled={ownerMutation.isPending || !arcadeLookup || !selectedOwnerId}
 							onClick={event => {
 								event.preventDefault()
-								confirmPendingUserAction()
+								if (arcadeLookup && selectedOwnerId)
+									ownerMutation.mutate({ arcadeId: arcadeLookup.id, userId: Number(selectedOwnerId) })
 							}}
 						>
-							{pendingActionIsLoading ? "Working..." : "Confirm"}
+							{ownerMutation.isPending ? "Reassigning..." : "Reassign owner"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

@@ -9,6 +9,7 @@ import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
 
+import { AdminArcadeRoutes } from "./admin-arcades"
 import { AdminUserRoutes } from "./admin-users"
 
 const AdminRoutes = new Hono()
@@ -112,6 +113,7 @@ const AdminRoutes = new Hono()
 			}
 		}
 	)
+	.route("/arcades", AdminArcadeRoutes)
 	.route("/users", AdminUserRoutes)
 
 export { AdminRoutes }
