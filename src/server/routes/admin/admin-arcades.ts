@@ -4,6 +4,7 @@ import type { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/prom
 import { z } from "zod"
 
 import { UserRole } from "@/app/shared/types"
+import { keychipSerialSchema } from "@/app/shared/types/validation/auth"
 import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
@@ -130,6 +131,58 @@ const AdminArcadeRoutes = new Hono()
 			}
 		} catch (error) {
 			throw rethrowWithMessage("Failed to reassign arcade owner", error)
+		}
+	})
+	.put("/:id/machine/:machineId", validateJson(z.object({ serial: keychipSerialSchema })), async c => {
+		try {
+			assertAdmin(c.payload.userId, c.payload.permissions)
+			const arcadeId = Number(c.req.param("id"))
+			const machineId = Number(c.req.param("machineId"))
+			const { serial } = c.req.valid("json")
+
+			const [machines] = await db.execute<RowDataPacket[]>("SELECT id FROM machine WHERE id = ? AND arcade = ?", [
+				machineId,
+				arcadeId
+			])
+			if (!machines[0]) throw new HTTPException(404, { message: "Machine not found for this arcade" })
+
+			const [duplicates] = await db.execute<RowDataPacket[]>(
+				"SELECT id FROM machine WHERE serial = ? AND id <> ? LIMIT 1",
+				[serial, machineId]
+			)
+			if (duplicates[0]) throw new HTTPException(409, { message: "That PCBID/keychip serial is already in use" })
+
+			await db.execute<ResultSetHeader>("UPDATE machine SET serial = ? WHERE id = ? AND arcade = ?", [
+				serial,
+				machineId,
+				arcadeId
+			])
+			return c.json({ success: true, machineId, serial })
+		} catch (error) {
+			throw rethrowWithMessage("Failed to update machine serial", error)
+		}
+	})
+	.put("/:id/machine/:machineId/pcbid", validateJson(z.object({ pcbid: z.string() })), async c => {
+		try {
+			assertAdmin(c.payload.userId, c.payload.permissions)
+			const arcadeId = Number(c.req.param("id"))
+			const machineId = Number(c.req.param("machineId"))
+			const { pcbid } = c.req.valid("json")
+
+			const [machines] = await db.execute<RowDataPacket[]>("SELECT id FROM machine WHERE id = ? AND arcade = ?", [
+				machineId,
+				arcadeId
+			])
+			if (!machines[0]) throw new HTTPException(404, { message: "Machine not found for this arcade" })
+
+			await db.execute<ResultSetHeader>("UPDATE machine SET pcbid = ? WHERE id = ? AND arcade = ?", [
+				pcbid,
+				machineId,
+				arcadeId
+			])
+			return c.json({ success: true, machineId, pcbid })
+		} catch (error) {
+			throw rethrowWithMessage("Failed to update machine PCBID", error)
 		}
 	})
 

@@ -180,9 +180,11 @@ const AdminUserRoutes = new Hono()
 
 			// Get arcades for all users
 			const [arcades] = await db.execute<RowDataPacket[]>(
-				`SELECT ao.user, a.id, a.name, a.nickname 
-				 FROM arcade_owner ao 
-				 JOIN arcade a ON ao.arcade = a.id`
+				`SELECT ao.user, a.id, a.name, a.nickname, m.id AS machineId, m.serial, m.pcbid
+				 FROM arcade_owner ao
+				 JOIN arcade a ON ao.arcade = a.id
+				 LEFT JOIN machine m ON m.arcade = a.id
+				 ORDER BY a.id ASC, m.id ASC`
 			)
 			// Combine data
 			const usersWithDetails = users.map(user => {

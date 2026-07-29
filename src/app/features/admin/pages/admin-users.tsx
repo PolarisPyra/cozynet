@@ -90,7 +90,15 @@ type UserWithDetails = {
 		is_locked: boolean
 		is_banned: boolean
 	}[]
-	arcades: { user: number; id: number; name: string; nickname: string }[]
+	arcades: {
+		user: number
+		id: number
+		name: string | null
+		nickname: string | null
+		machineId: number | null
+		serial: string | null
+		pcbid: string | null
+	}[]
 	gameUsernames: {
 		chunithm: string | null
 		ongeki: string | null
@@ -151,6 +159,8 @@ const AdminUsers = () => {
 		email: "",
 		permissions: 0
 	})
+	const [serialEdits, setSerialEdits] = useState<Record<number, string>>({})
+	const [pcbidEdits, setPcbidEdits] = useState<Record<number, string>>({})
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["admin", "users"],
@@ -232,6 +242,65 @@ const AdminUsers = () => {
 		onError: () => {
 			toast.error("Failed to update user")
 		}
+	})
+
+	const updateMachineSerialMutation = useMutation({
+		mutationFn: async ({ arcadeId, machineId, serial }: { arcadeId: number; machineId: number; serial: string }) => {
+			const res = await api.admin.arcades[":id"].machine[":machineId"].$put({
+				param: { id: arcadeId.toString(), machineId: machineId.toString() },
+				json: { serial }
+			})
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null
+				throw new Error(body?.message || body?.error || "Failed to update PCBID/keychip serial")
+			}
+			return await res.json()
+		},
+		onSuccess: result => {
+			toast.success(`Serial updated to ${result.serial}`)
+			setEditingUser(current =>
+				current
+					? {
+							...current,
+							arcades: current.arcades.map(arcade =>
+								arcade.machineId === result.machineId ? { ...arcade, serial: result.serial } : arcade
+							)
+						}
+					: current
+			)
+			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
+			queryClient.invalidateQueries({ queryKey: ["admin", "arcades"] })
+		},
+		onError: error => toast.error(error instanceof Error ? error.message : "Failed to update PCBID/keychip serial")
+	})
+
+	const updateMachinePcbidMutation = useMutation({
+		mutationFn: async ({ arcadeId, machineId, pcbid }: { arcadeId: number; machineId: number; pcbid: string }) => {
+			const res = await api.admin.arcades[":id"].machine[":machineId"].pcbid.$put({
+				param: { id: arcadeId.toString(), machineId: machineId.toString() },
+				json: { pcbid }
+			})
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null
+				throw new Error(body?.message || body?.error || "Failed to update machine PCBID")
+			}
+			return await res.json()
+		},
+		onSuccess: result => {
+			toast.success(`PCBID updated to ${result.pcbid}`)
+			setEditingUser(current =>
+				current
+					? {
+							...current,
+							arcades: current.arcades.map(arcade =>
+								arcade.machineId === result.machineId ? { ...arcade, pcbid: result.pcbid } : arcade
+							)
+						}
+					: current
+			)
+			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
+		},
+		onError: error => toast.error(error instanceof Error ? error.message : "Failed to update machine PCBID")
 	})
 
 	const banMutation = useMutation({
@@ -354,6 +423,16 @@ const AdminUsers = () => {
 
 	const openEditModal = (user: UserWithDetails) => {
 		setEditingUser(user)
+		setSerialEdits(
+			Object.fromEntries(
+				user.arcades.filter(arcade => arcade.machineId !== null).map(arcade => [arcade.machineId, arcade.serial ?? ""])
+			)
+		)
+		setPcbidEdits(
+			Object.fromEntries(
+				user.arcades.filter(arcade => arcade.machineId !== null).map(arcade => [arcade.machineId, arcade.pcbid ?? ""])
+			)
+		)
 		setEditForm({
 			username: user.username ?? "",
 			email: user.email ?? "",
@@ -907,6 +986,103 @@ const AdminUsers = () => {
 									/>
 								</div>
 								<div className="space-y-2">
+									<Label>PCBID / Keychip Serials</Label>
+									{editingUser?.arcades.length ? (
+										<div className="max-h-48 space-y-3 overflow-y-auto rounded-md border p-2">
+											{editingUser.arcades.map(arcade => (
+												<div
+													key={`${arcade.id}-${arcade.machineId ?? "none"}`}
+													className="space-y-2 border-b pb-3 last:border-0 last:pb-0"
+												>
+													<div className="text-muted-foreground flex items-center gap-1 text-xs">
+														<Building2 className="size-3 shrink-0" />
+														<span className="truncate">{getArcadeLabel(arcade)}</span>
+													</div>
+													{arcade.machineId !== null ? (
+														<>
+															<div className="space-y-1">
+																<Label className="text-xs">PCBID</Label>
+																<div className="flex items-center gap-1">
+																	<Input
+																		value={pcbidEdits[arcade.machineId] ?? ""}
+																		onChange={event =>
+																			setPcbidEdits(current => ({
+																				...current,
+																				[arcade.machineId as number]: event.target.value
+																			}))
+																		}
+																		className="h-8 font-mono text-xs"
+																		placeholder="PCBID"
+																	/>
+																	<Button
+																		type="button"
+																		variant="outline"
+																		size="sm"
+																		className="h-8 w-28 px-3 text-xs"
+																		disabled={
+																			updateMachinePcbidMutation.isPending ||
+																			pcbidEdits[arcade.machineId] === (arcade.pcbid ?? "")
+																		}
+																		onClick={() =>
+																			updateMachinePcbidMutation.mutate({
+																				arcadeId: arcade.id,
+																				machineId: arcade.machineId as number,
+																				pcbid: pcbidEdits[arcade.machineId as number]
+																			})
+																		}
+																	>
+																		Save PCBID
+																	</Button>
+																</div>
+															</div>
+															<div className="flex items-end gap-1">
+																<div className="min-w-0 flex-1 space-y-1">
+																			<Label className="text-xs">Machine Serial</Label>
+																	<Input
+																		value={serialEdits[arcade.machineId] ?? ""}
+																		onChange={event =>
+																			setSerialEdits(current => ({
+																				...current,
+																				[arcade.machineId as number]: event.target.value
+																			}))
+																		}
+																		className="h-8 font-mono text-xs"
+																											placeholder="Machine Serial"
+																	/>
+																</div>
+																<Button
+																	type="button"
+																	variant="outline"
+																	size="sm"
+																	className="h-8 w-28 px-3 text-xs"
+																	disabled={
+																		updateMachineSerialMutation.isPending ||
+																		!serialEdits[arcade.machineId] ||
+																		serialEdits[arcade.machineId] === arcade.serial
+																	}
+																	onClick={() =>
+																		updateMachineSerialMutation.mutate({
+																			arcadeId: arcade.id,
+																			machineId: arcade.machineId as number,
+																			serial: serialEdits[arcade.machineId as number]
+																		})
+																	}
+																>
+																		Save Serial
+																</Button>
+															</div>
+														</>
+													) : (
+														<span className="text-muted-foreground text-xs">No PCBID/keychip serial assigned</span>
+													)}
+												</div>
+											))}
+										</div>
+									) : (
+										<span className="text-muted-foreground text-xs">None</span>
+									)}
+								</div>
+								<div className="space-y-2">
 									<Label htmlFor="permissions">Role</Label>
 									<Select
 										value={editForm.permissions.toString()}
@@ -921,34 +1097,6 @@ const AdminUsers = () => {
 										</SelectContent>
 									</Select>
 								</div>
-
-								{editingUser && (
-									<div className="bg-muted mt-6 space-y-4 rounded-md p-4">
-										<h3 className="text-sm font-semibold">Linked Resources</h3>
-										<div>
-											<h4 className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
-												<Building2 className="size-3" /> Arcades ({editingUser.arcades.length})
-											</h4>
-											<ul className="mt-1 max-h-32 list-inside list-disc overflow-y-auto text-xs">
-												{editingUser.arcades.length > 0 ? (
-													editingUser.arcades.map(a => <li key={a.id}>{getArcadeLabel(a)}</li>)
-												) : (
-													<li>None</li>
-												)}
-											</ul>
-										</div>
-										<div>
-											<h4 className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
-												<CreditCard className="size-3" /> Cards ({editingUser.cards.length})
-											</h4>
-											<ul className="mt-1 max-h-32 list-inside list-disc overflow-y-auto font-mono text-xs">
-												{editingUser.cards.map(c => (
-													<li key={c.id}>{c.access_code}</li>
-												))}
-											</ul>
-										</div>
-									</div>
-								)}
 
 								<div className="flex justify-end gap-2 pt-4">
 									<Button type="button" variant="outline" onClick={() => setEditingUser(null)}>
