@@ -281,10 +281,13 @@ const AdminUsers = () => {
 			toast.success(`Arcade reassigned to ${result.username || `user #${result.userId}`}`)
 			setOwnerConfirmOpen(false)
 			setOwnerDialogOpen(false)
+			setSerialPickerOpen(false)
+			setOwnerPickerOpen(false)
 			setArcadeLookup(null)
 			setSerialSearch("")
 			setSelectedOwnerId("")
 			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
+			queryClient.invalidateQueries({ queryKey: ["admin", "arcades"] })
 		},
 		onError: error => toast.error(error instanceof Error ? error.message : "Failed to reassign arcade owner")
 	})
@@ -419,7 +422,17 @@ const AdminUsers = () => {
 								</div>
 							</DialogContent>
 						</Dialog>
-						<Dialog open={ownerDialogOpen} onOpenChange={setOwnerDialogOpen}>
+						<Dialog
+							open={ownerDialogOpen}
+							onOpenChange={open => {
+								setOwnerDialogOpen(open)
+								if (!open) {
+									setOwnerConfirmOpen(false)
+									setSerialPickerOpen(false)
+									setOwnerPickerOpen(false)
+								}
+							}}
+						>
 							<DialogContent ref={ownerDialogContentRef} className="sm:max-w-lg">
 								<DialogHeader>
 									<DialogTitle>Reassign Arcade Owner</DialogTitle>
@@ -538,13 +551,36 @@ const AdminUsers = () => {
 											</span>
 											<span />
 											<span>
-												<Button
-													className="w-full"
-													disabled={!selectedOwnerId}
-													onClick={() => setOwnerConfirmOpen(true)}
-												>
-													Confirm reassignment
-												</Button>
+												{ownerConfirmOpen ? (
+													<div className="flex justify-end gap-2">
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={() => setOwnerConfirmOpen(false)}
+															disabled={ownerMutation.isPending}
+														>
+															Cancel
+														</Button>
+														<Button
+															size="sm"
+															disabled={ownerMutation.isPending || !arcadeLookup || !selectedOwnerId}
+															onClick={() => {
+																if (arcadeLookup && selectedOwnerId)
+																	ownerMutation.mutate({ arcadeId: arcadeLookup.id, userId: Number(selectedOwnerId) })
+															}}
+														>
+															{ownerMutation.isPending ? "Reassigning..." : "Reassign owner"}
+														</Button>
+													</div>
+												) : (
+													<Button
+														className="w-full"
+														disabled={!selectedOwnerId}
+														onClick={() => setOwnerConfirmOpen(true)}
+													>
+														Confirm reassignment
+													</Button>
+												)}
 											</span>
 										</div>
 									)}
@@ -1027,37 +1063,6 @@ const AdminUsers = () => {
 							}}
 						>
 							{deleteMutation.isPending ? "Deleting..." : "Delete User"}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-
-			<AlertDialog open={ownerConfirmOpen} onOpenChange={setOwnerConfirmOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Confirm owner reassignment</AlertDialogTitle>
-						<AlertDialogDescription>
-							Update the owner of {arcadeLookup ? getArcadeLabel(arcadeLookup) : "this arcade"} to{" "}
-							{selectedOwnerId
-								? getUserLabel(
-										allUsers.find(user => user.id === Number(selectedOwnerId))?.username ?? null,
-										Number(selectedOwnerId)
-									)
-								: "the selected user"}
-							? This changes arcade_owner.user.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={ownerMutation.isPending}>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							disabled={ownerMutation.isPending || !arcadeLookup || !selectedOwnerId}
-							onClick={event => {
-								event.preventDefault()
-								if (arcadeLookup && selectedOwnerId)
-									ownerMutation.mutate({ arcadeId: arcadeLookup.id, userId: Number(selectedOwnerId) })
-							}}
-						>
-							{ownerMutation.isPending ? "Reassigning..." : "Reassign owner"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
