@@ -82,6 +82,14 @@ type UserWithDetails = {
 		is_banned: boolean
 	}[]
 	arcades: { user: number; id: number; name: string; nickname: string }[]
+	playedArcades: {
+		id: number
+		name: string | null
+		nickname: string | null
+		serial: string | null
+		ownerUser: number | null
+		ownerUsername: string | null
+	}[]
 	transferCandidateArcade: {
 		id: number
 		name: string | null
@@ -101,6 +109,7 @@ type UserWithDetails = {
 type SortOrder = "id_desc" | "id_asc"
 type PendingUserAction = {
 	user: UserWithDetails
+	selectedArcadeId: number | null
 } | null
 
 const getUserLabel = (username: string | null, id: number) => username || `User #${id}`
@@ -229,11 +238,15 @@ const AdminUsers = () => {
 	})
 
 	const transferKeychipArcadeMutation = useMutation({
-		mutationFn: async (id: number) => {
+		mutationFn: async ({ id, arcadeId }: { id: number; arcadeId: number }) => {
 			const res = await api.admin.users[":id"].arcades["transfer-keychip"].$post({
-				param: { id: id.toString() }
+				param: { id: id.toString() },
+				json: { arcadeId }
 			})
-			if (!res.ok) throw new Error("Failed to Transfer Arcade")
+			if (!res.ok) {
+				const errorBody = (await res.json().catch(() => null)) as { error?: string; message?: string } | null
+				throw new Error(errorBody?.error || errorBody?.message || "Failed to Transfer Arcade")
+			}
 			return await res.json()
 		},
 		onSuccess: result => {
@@ -241,7 +254,7 @@ const AdminUsers = () => {
 			setPendingUserAction(null)
 			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
 		},
-		onError: () => toast.error("Failed to Transfer Arcade")
+		onError: error => toast.error(error instanceof Error ? error.message : "Failed to Transfer Arcade")
 	})
 
 	const deleteMutation = useMutation({
@@ -292,13 +305,15 @@ const AdminUsers = () => {
 
 	const isBanned = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_banned)
 	const isLocked = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_locked)
-	const ownsMatchedArcade = (user: UserWithDetails) => user.matchedOwnedArcade?.ownerUser === user.id
 	const pendingActionIsLoading = transferKeychipArcadeMutation.isPending
 
 	const confirmPendingUserAction = () => {
-		if (!pendingUserAction) return
+		if (!pendingUserAction?.selectedArcadeId) return
 
-		transferKeychipArcadeMutation.mutate(pendingUserAction.user.id)
+		transferKeychipArcadeMutation.mutate({
+			id: pendingUserAction.user.id,
+			arcadeId: pendingUserAction.selectedArcadeId
+		})
 	}
 
 	return (
@@ -572,6 +587,22 @@ const AdminUsers = () => {
 													)}
 												</TableCell>
 												<TableCell className="h-16 text-right leading-none">
+													<Button
+														variant="ghost"
+														size="icon"
+														className="mr-1 h-8 w-8"
+														disabled={user.id === currentUser.userId || !user.playedArcades.length}
+														onClick={() =>
+															setPendingUserAction({
+																user,
+																selectedArcadeId: user.transferCandidateArcade?.id ?? user.playedArcades[0]?.id ?? null
+															})
+														}
+														aria-label="Transfer Arcade"
+														title="Transfer Arcade"
+													>
+														<Shuffle className="size-4" />
+													</Button>
 													<DropdownMenu modal={false}>
 														<DropdownMenuTrigger asChild>
 															<Button variant="ghost" size="icon" className="h-8 w-8">
@@ -603,19 +634,6 @@ const AdminUsers = () => {
 																	<Lock className="mr-2 size-4" />
 																)}
 																{isLocked(user.cards) ? "Unlock Account" : "Lock Account"}
-															</DropdownMenuItem>
-															<DropdownMenuSeparator />
-															<DropdownMenuItem
-																disabled={
-																	user.id === currentUser.userId ||
-																	ownsMatchedArcade(user) ||
-																	!user.transferCandidateArcade
-																}
-																onSelect={() => deferMenuAction(() => setPendingUserAction({ user }))}
-																className="cursor-pointer"
-															>
-																<Shuffle className="mr-2 size-4" />
-																{ownsMatchedArcade(user) ? "Already owned" : "Transfer Arcade"}
 															</DropdownMenuItem>
 															<DropdownMenuSeparator />
 															<DropdownMenuItem
@@ -790,23 +808,47 @@ const AdminUsers = () => {
 							<Shuffle className="size-5" />
 							Transfer Arcade
 						</AlertDialogTitle>
-						<AlertDialogDescription>
-							<>
-								This will transfer{" "}
-								<strong>
-									{pendingUserAction?.user.transferCandidateArcade
-										? getArcadeLabel(pendingUserAction.user.transferCandidateArcade)
-										: ""}
-								</strong>{" "}
-								to{" "}
-								<strong>
-									{pendingUserAction
-										? `${getUserLabel(pendingUserAction.user.username, pendingUserAction.user.id)} (${pendingUserAction.user.id})`
-										: ""}
-								</strong>
-								.
-							</>
-						</AlertDialogDescription>
+						<AlertDialogDescription>Select an arcade this user has played at.</AlertDialogDescription>
+						<div className="max-h-80 space-y-3 overflow-y-auto rounded-md border p-2">
+							{Object.entries(
+								(pendingUserAction?.user.playedArcades ?? []).reduce<Record<string, UserWithDetails["playedArcades"]>>(
+									(groups, arcade) => {
+										const group = arcade.ownerUser ? `User ${arcade.ownerUser}` : "Unassigned"
+										;(groups[group] ??= []).push(arcade)
+										return groups
+									},
+									{}
+								)
+							).map(([group, arcades]) => (
+								<div key={group} className="space-y-1">
+									<div className="text-muted-foreground border-b px-2 py-1 text-xs font-semibold">{group}</div>
+									{arcades.map(arcade => (
+										<button
+											key={`${arcade.id}-${arcade.serial ?? ""}`}
+											type="button"
+											onClick={() =>
+												setPendingUserAction(current =>
+													current ? { ...current, selectedArcadeId: arcade.id } : current
+												)
+											}
+											className={`w-full rounded px-2 py-2 text-left text-sm ${
+												pendingUserAction?.selectedArcadeId === arcade.id
+													? "bg-primary/10 ring-primary ring-1"
+													: "hover:bg-muted"
+											}`}
+										>
+											<div>{getArcadeLabel(arcade)}</div>
+											{arcade.ownerUser === pendingUserAction?.user.id && (
+												<div className="text-xs font-medium text-green-600 dark:text-green-400">
+													Already owned by User {pendingUserAction.user.id}
+												</div>
+											)}
+											{arcade.serial && <div className="text-muted-foreground font-mono text-xs">{arcade.serial}</div>}
+										</button>
+									))}
+								</div>
+							))}
+						</div>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={pendingActionIsLoading}>Cancel</AlertDialogCancel>

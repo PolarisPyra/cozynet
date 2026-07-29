@@ -31,6 +31,16 @@ type PlayHistoryArcadeRow = {
 	sourceRank: number
 } & RowDataPacket
 
+type PlayedArcadeRow = {
+	id: number
+	name: string | null
+	nickname: string | null
+	serial: string | null
+	machineId: number
+	ownerUser: number | null
+	ownerUsername: string | null
+} & RowDataPacket
+
 const assertAdmin = (userId: number | undefined, permissions: number | undefined) => {
 	if (!userId || permissions !== UserRole.Admin) {
 		throw new HTTPException(403)
@@ -159,17 +169,6 @@ const selectUserKeychipArcade = (arcades: ArcadeTransferRow[], playHistory: Play
 	return matches[0]
 }
 
-const findUserKeychipArcade = async (currentUserId: number, targetId: number) => {
-	return selectUserKeychipArcade(
-		await getAdminOwnedKeychipArcades(currentUserId),
-		await getUserPlayHistoryArcades(targetId)
-	)
-}
-
-const findExistingUserKeychipArcade = async (targetId: number) => {
-	return selectUserKeychipArcade(await getOwnedKeychipArcades(), await getUserPlayHistoryArcades(targetId))
-}
-
 const isOwnedByTargetUser = (arcade: MatchedArcadeTransferRow | undefined, targetId: number) =>
 	arcade?.ownerUser === targetId
 
@@ -196,6 +195,14 @@ const AdminUserRoutes = new Hono()
 				 FROM arcade_owner ao 
 				 JOIN arcade a ON ao.arcade = a.id`
 			)
+			const [playedArcadeDetails] = await db.execute<PlayedArcadeRow[]>(
+				`SELECT a.id, a.name, a.nickname, m.id AS machineId, m.serial,
+					ao.user AS ownerUser, owner.username AS ownerUsername
+				 FROM arcade a
+				 JOIN machine m ON m.arcade = a.id
+				 LEFT JOIN arcade_owner ao ON ao.arcade = a.id AND ao.permissions = 1
+				 LEFT JOIN aime_user owner ON owner.id = ao.user`
+			)
 
 			const adminOwnedKeychipArcades = await getAdminOwnedKeychipArcades(userId)
 			const ownedKeychipArcades = await getOwnedKeychipArcades()
@@ -205,6 +212,10 @@ const AdminUserRoutes = new Hono()
 			const usersWithDetails = users.map(user => {
 				const userArcades = arcades.filter(arcade => arcade.user === user.id)
 				const userPlayHistory = playHistoryArcades.filter(history => history.user === user.id)
+				const playedArcades = userPlayHistory
+					.map(history => playedArcadeDetails.find(arcade => arcade.id === history.arcade))
+					.filter((arcade): arcade is PlayedArcadeRow => !!arcade)
+					.filter((arcade, index, all) => all.findIndex(candidate => candidate.id === arcade.id) === index)
 				const matchedOwnedArcade =
 					user.id === userId ? undefined : selectUserKeychipArcade(ownedKeychipArcades, userPlayHistory)
 				const transferCandidates = adminOwnedKeychipArcades.filter(
@@ -219,6 +230,7 @@ const AdminUserRoutes = new Hono()
 					...user,
 					cards: cards.filter(card => card.user === user.id),
 					arcades: userArcades,
+					playedArcades,
 					transferCandidateArcade: transferCandidateArcade
 						? {
 								id: transferCandidateArcade.id,
@@ -300,7 +312,7 @@ const AdminUserRoutes = new Hono()
 			throw rethrowWithMessage("Failed to generate keychip for user", error)
 		}
 	})
-	.post("/:id/arcades/transfer-keychip", async c => {
+	.post("/:id/arcades/transfer-keychip", validateJson(z.object({ arcadeId: z.number().int() })), async c => {
 		try {
 			const { userId: currentUserId, permissions: currentUserPermissions } = c.payload
 			const targetId = parseInt(c.req.param("id"))
@@ -311,18 +323,20 @@ const AdminUserRoutes = new Hono()
 			}
 
 			const targetUser = await getTargetUser(targetId)
-			const existingArcade = await findExistingUserKeychipArcade(targetId)
-			if (isOwnedByTargetUser(existingArcade, targetId)) {
-				throw new HTTPException(409, {
-					message: "This user's keychip arcade is already owned"
-				})
-			}
-
-			const arcadeMatch = await findUserKeychipArcade(currentUserId, targetId)
+			const { arcadeId: selectedArcadeId } = c.req.valid("json")
+			const arcadeMatch = (await getOwnedKeychipArcades()).find(arcade => Number(arcade.id) === selectedArcadeId)
+			const targetPlayHistory = await getUserPlayHistoryArcades(targetId)
+			const isPlayedByTarget = targetPlayHistory.some(history => Number(history.arcade) === selectedArcadeId)
 			if (!arcadeMatch) {
 				throw new HTTPException(404, {
-					message: "No admin-owned keychip arcade was found in this user's play/profile history"
+					message: "The selected arcade has no owner or no machine"
 				})
+			}
+			if (!isPlayedByTarget) {
+				throw new HTTPException(404, { message: "This user has no recorded play history at the selected arcade" })
+			}
+			if (arcadeMatch.ownerUser === targetId) {
+				throw new HTTPException(409, { message: "This user already owns the selected arcade" })
 			}
 
 			const connection = await db.getConnection()
@@ -342,8 +356,7 @@ const AdminUserRoutes = new Hono()
 					INNER JOIN aime_user owner ON owner.id = ao.user
 					INNER JOIN arcade a ON a.id = ao.arcade
 					INNER JOIN machine m ON m.arcade = a.id
-					WHERE ao.user = ?
-					AND ao.permissions = 1
+					WHERE ao.permissions = 1
 					AND ao.arcade = ?
 					AND NOT EXISTS (
 						SELECT 1
@@ -352,18 +365,17 @@ const AdminUserRoutes = new Hono()
 						AND target_ao.user = ?
 					)
 					FOR UPDATE`,
-					[currentUserId, arcadeMatch.id, targetId]
+					[arcadeMatch.id, targetId]
 				)
 
 				const arcade = lockedArcades[0]
-				const arcadeStillMatches = selectUserKeychipArcade(lockedArcades, await getUserPlayHistoryArcades(targetId))
-				if (!arcade || !arcadeStillMatches) {
+				if (!arcade) {
 					throw new HTTPException(404, { message: "Matching keychip arcade is no longer transferable" })
 				}
 
 				await connection.execute<ResultSetHeader>(
 					"UPDATE arcade_owner SET user = ?, permissions = 1 WHERE user = ? AND arcade = ?",
-					[targetId, currentUserId, arcade.id]
+					[targetId, arcade.ownerUser, arcade.id]
 				)
 
 				await connection.commit()
