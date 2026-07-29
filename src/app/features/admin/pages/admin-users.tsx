@@ -464,7 +464,7 @@ const AdminUsers = () => {
 														{availableArcades.map(arcade => (
 															<CommandItem
 																key={`${arcade.id}-${arcade.serial}`}
-																value={`${arcade.serial} ${getArcadeLabel(arcade)} ${arcade.ownerUsername ?? ""}`}
+																value={`${arcade.serial} ${arcade.name ?? ""} ${arcade.nickname ?? ""} ${arcade.ownerUsername ?? ""}`}
 																onSelect={() => {
 																	selectArcade(arcade.serial)
 																	setSerialPickerOpen(false)
