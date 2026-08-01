@@ -14,6 +14,7 @@ export namespace DB {
 		created_date: string
 		last_login_date: string
 		suspend_expire_time: string
+		primary_eamuse_card: number | null
 		access_code?: string
 	}
 
