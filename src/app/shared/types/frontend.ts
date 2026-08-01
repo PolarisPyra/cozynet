@@ -40,6 +40,16 @@ export type Mai2Playlog = DB.Mai2Playlog & {
 	songVersion: number
 }
 
+export type PopnPlaylog = DB.PopnPlaylog &
+	Record<string, unknown> & {
+		title: string | null
+		artist: string | null
+		genre: string | null
+		category: string | null
+		difficulty: number | null
+		chartId: number | null
+	}
+
 export type ChunithmStaticMusic = DB.ChuniStaticMusic & {
 	charts: Array<{ chartId: number | null; level: number | null }>
 }
@@ -51,6 +61,8 @@ export type OngekiStaticMusic = DB.OngekiStaticMusic & {
 export type Mai2StaticMusic = DB.Mai2StaticMusic & {
 	charts: Array<{ chartId: number | null; difficulty: number | null; level: number | null }>
 }
+
+export type PopnStaticMusic = DB.PopnStaticMusic & Record<string, unknown>
 
 export type ChunithmRating = DB.ChuniProfileRating & {
 	score: number

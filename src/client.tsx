@@ -13,6 +13,9 @@ import { OngekiRatingFrames } from "./app/features/ongeki/pages/rating"
 import { OngekiRivals } from "./app/features/ongeki/pages/rivals"
 import { OngekiScorePage } from "./app/features/ongeki/pages/scores"
 import { OngekiSettingsPage } from "./app/features/ongeki/pages/settings"
+import PopnAllSongs from "./app/features/popn/pages/allsongs"
+import PopnScorePage from "./app/features/popn/pages/scores"
+import PopnSettingsPage from "./app/features/popn/pages/settings"
 import WelcomePage, { WelcomeContent } from "./app/features/public/welcome-page"
 import { AccentColorProvider } from "./app/shared/components/accent-color-provider"
 import { LoginContent } from "./app/shared/components/common/login"
@@ -133,6 +136,10 @@ const app = (
 										<Route path="/ongeki/song-leaderboard/:musicId/:chartId" element={<OngekiSongLeaderboard />} />
 										<Route path="/ongeki/rivals" element={<OngekiRivals />} />
 										<Route path="/ongeki/profile" element={<OngekiProfile />} />
+
+										<Route path="/konami/popn/settings" element={<PopnSettingsPage />} />
+										<Route path="/konami/popn/scores" element={<PopnScorePage />} />
+										<Route path="/konami/popn/allsongs" element={<PopnAllSongs />} />
 									</Route>
 								</Route>
 

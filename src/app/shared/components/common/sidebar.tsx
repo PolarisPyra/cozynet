@@ -84,6 +84,20 @@ const MENU_CONFIG: MenuItem[] = [
 				]
 			}
 		]
+	},
+	{
+		name: "Konami",
+		icon: Joystick,
+		children: [
+			{
+				name: "Pop'n Music",
+				icon: Folder,
+				children: [
+					{ name: "Scores", href: "/konami/popn/scores", icon: NotepadText },
+					{ name: "All Songs", href: "/konami/popn/allsongs", icon: BoomBox }
+				]
+			}
+		]
 	}
 ]
 

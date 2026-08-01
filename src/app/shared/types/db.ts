@@ -694,6 +694,35 @@ export namespace DB {
 		version: number
 		songVersion: number
 	}
+
+	export type PopnPlaylog = {
+		id: number
+		user_id: number
+		music_num: number | null
+		sheet_num: number | null
+		clear_type: number | null
+		clear_rank: number | null
+		score: number | null
+		cool: number | null
+		great: number | null
+		good: number | null
+		bad: number | null
+		combo: number | null
+		playdate: string | null
+		cnt: number
+	}
+
+	export type PopnStaticMusic = {
+		id: number
+		version: number
+		songId: number | null
+		chartId: number | null
+		title: string | null
+		artist: string | null
+		genre: string | null
+		category: string | null
+		difficulty: number | null
+	}
 	export type ChuniStaticAvatar = {
 		id: number
 		version: number
