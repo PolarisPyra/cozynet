@@ -156,7 +156,6 @@ export function CardManagement() {
 					</div>
 				</CardHeader>
 				<CardContent className="space-y-2 p-4 sm:p-6">
-					{addCardSection}
 					<div className="space-y-3">
 						{cardsQuery.isLoading ? (
 							<div className="text-muted-foreground flex items-center gap-2 py-6 text-sm">
@@ -217,6 +216,7 @@ export function CardManagement() {
 							</div>
 						)}
 					</div>
+					{addCardSection}
 				</CardContent>
 			</Card>
 		</div>
