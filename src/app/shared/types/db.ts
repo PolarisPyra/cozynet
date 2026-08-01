@@ -43,6 +43,7 @@ export namespace DB {
 	}
 	export type UserCard = (AimeCard | EamuseCard) & {
 		card_type: "allnet" | "eamuse"
+		is_primary: boolean
 	}
 	export type AimeUserGameLocks = {
 		id: number

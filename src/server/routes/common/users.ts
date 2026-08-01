@@ -26,15 +26,16 @@ const bindCard = async (connection: ExecutableConnection, table: CardTable, acce
 		if (users.length > 0) throw new HTTPException(409, { message: "Card already bound to another user" })
 
 		await connection.execute<ResultSetHeader>(`UPDATE ${table} SET user = ? WHERE id = ?`, [userId, card.id])
-		return
+		return card.id
 	}
 
-	if (card) return
+	if (card) return card.id
 
-	await connection.execute<ResultSetHeader>(
+	const [result] = await connection.execute<ResultSetHeader>(
 		`INSERT INTO ${table} (user, access_code, created_date, is_locked, is_banned, memo) VALUES (?, ?, NOW(), 0, 0, '')`,
 		[userId, accessCode]
 	)
+	return result.insertId
 }
 
 const UserRoutes = new Hono()
@@ -53,11 +54,16 @@ const UserRoutes = new Hono()
 
 			const [cards] = await db.execute<(DB.UserCard & RowDataPacket)[]>(
 				`SELECT id, user, access_code, idm, created_date, last_login_date, is_locked, is_banned, memo,
-						'allnet' AS card_type
+					'allnet' AS card_type, NULL AS is_primary
 				 FROM aime_card WHERE user = ?
 				 UNION ALL
 				 SELECT id, user, access_code, idm, created_date, last_login_date, is_locked, is_banned, memo,
-						'eamuse' AS card_type
+						'eamuse' AS card_type,
+						EXISTS (
+							SELECT 1 FROM aime_card primary_card
+							WHERE primary_card.user = eamuse_card.user
+							  AND primary_card.primary_eamuse_card = eamuse_card.id
+						) AS is_primary
 				 FROM eamuse_card WHERE user = ?
 				 ORDER BY created_date ASC, id ASC`,
 				[userId, userId]
@@ -90,7 +96,19 @@ const UserRoutes = new Hono()
 				try {
 					await connection.beginTransaction()
 					if (accessCode) await bindCard(connection, "aime_card", accessCode, userId)
-					if (eamuseAccessCode) await bindCard(connection, "eamuse_card", eamuseAccessCode, userId)
+					if (eamuseAccessCode) {
+						const eamuseCardId = await bindCard(connection, "eamuse_card", eamuseAccessCode, userId)
+						const [primaryCandidates] = await connection.execute<(Pick<DB.AimeCard, "id"> & RowDataPacket)[]>(
+							"SELECT id FROM aime_card WHERE user = ? AND primary_eamuse_card IS NULL ORDER BY id ASC LIMIT 1",
+							[userId]
+						)
+						if (eamuseCardId && primaryCandidates[0]) {
+							await connection.execute<ResultSetHeader>(
+								"UPDATE aime_card SET primary_eamuse_card = ? WHERE id = ? AND user = ? AND primary_eamuse_card IS NULL",
+								[eamuseCardId, primaryCandidates[0].id, userId]
+							)
+						}
+					}
 					await connection.commit()
 				} catch (error) {
 					await connection.rollback()
