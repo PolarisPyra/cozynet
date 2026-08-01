@@ -59,6 +59,37 @@ const UserRoutes = new Hono()
 				)
 
 				if (cards.length === 0) {
+					// Complete the user's existing card when the missing identifier is supplied.
+					// This prevents an E004-only bind from creating a second row for an
+					// account that already has its ALL.NET card row.
+					const [ownedCards] = await db.execute<(DB.AimeCard & RowDataPacket)[]>(
+						"SELECT * FROM aime_card WHERE user = ? ORDER BY id ASC",
+						[userId]
+					)
+
+					if (ownedCards.length === 1) {
+						const existingCard = ownedCards[0]
+						const accessCodeFits = !accessCode || !existingCard.access_code || existingCard.access_code === accessCode
+						const eamuseCodeFits =
+							!eamuseAccessCode ||
+							!existingCard.eamuse_access_code ||
+							existingCard.eamuse_access_code === eamuseAccessCode
+
+						if (accessCodeFits && eamuseCodeFits && (!existingCard.access_code || !existingCard.eamuse_access_code)) {
+							await db.execute<ResultSetHeader>(
+								"UPDATE aime_card SET access_code = COALESCE(?, access_code), eamuse_access_code = COALESCE(?, eamuse_access_code) WHERE id = ?",
+								[accessCode || null, eamuseAccessCode || null, existingCard.id]
+							)
+							return c.json({ success: true })
+						}
+					}
+
+					if (ownedCards.length > 0) {
+						throw new HTTPException(409, {
+							message: "Your account already has a different card bound to it"
+						})
+					}
+
 					// Card doesn't exist, create a new one
 					// Generate IDM (16 hex characters) - typically derived from access code
 					// For simplicity, we'll generate a random hex string
