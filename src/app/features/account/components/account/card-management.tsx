@@ -92,12 +92,6 @@ export function CardManagement() {
 
 	const addCardSection = (
 		<div className="border-border space-y-4 border-b pb-0">
-			<div className="flex items-center justify-between gap-3">
-				<div>
-					<h3 className="text-base font-semibold">Add Card</h3>
-					<p className="text-muted-foreground mt-1 text-sm">Bind another card to this account.</p>
-				</div>
-			</div>
 			<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
 				<form
 					className="space-y-3"
@@ -164,7 +158,6 @@ export function CardManagement() {
 				<CardContent className="space-y-2 p-4 sm:p-6">
 					{addCardSection}
 					<div className="space-y-3">
-						<h3 className="text-base font-semibold">My Cards</h3>
 						{cardsQuery.isLoading ? (
 							<div className="text-muted-foreground flex items-center gap-2 py-6 text-sm">
 								<LoaderCircle className="h-4 w-4 animate-spin" /> Loading cards...
