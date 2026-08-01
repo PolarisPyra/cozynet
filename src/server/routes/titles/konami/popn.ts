@@ -1,8 +1,10 @@
 import { Hono } from "hono"
-import type { RowDataPacket } from "mysql2"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
+import { z } from "zod"
 
-import { DB } from "@/app/shared/types"
+import { DB, DaphnisUserOptionKey } from "@/app/shared/types"
 import { db } from "@/server/db"
+import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
 
 const PopnStaticMusic = new Hono().get("music", async c => {
@@ -65,4 +67,48 @@ const PopnProfileRoutes = new Hono().get("playlog", async c => {
 	}
 })
 
-export const PopnRoutes = new Hono().route("static", PopnStaticMusic).route("profile", PopnProfileRoutes)
+const PopnSettingsRoutes = new Hono()
+	.get("forceUnlock", async c => {
+		try {
+			const { userId } = c.payload
+			const [rows] = await db.execute<(Pick<DB.DaphnisUserOption, "value"> & RowDataPacket)[]>(
+				"SELECT value FROM cozynet_user_option WHERE user = ? AND `key` = ?",
+				[userId, DaphnisUserOptionKey.PopnForceUnlockSongs]
+			)
+
+			return c.json({ forceUnlockSongs: Number(rows[0]?.value ?? 0) !== 0 })
+		} catch (error) {
+			throw rethrowWithMessage("Failed to get Pop'n song force-unlock setting", error)
+		}
+	})
+	.post(
+		"forceUnlock",
+		validateJson(z.object({ enabled: z.boolean() })),
+		async c => {
+			try {
+				const { userId } = c.payload
+				const { enabled } = await c.req.json()
+				const value = enabled ? 1 : 0
+				const [update] = await db.execute<ResultSetHeader>(
+					"UPDATE cozynet_user_option SET value = ? WHERE user = ? AND `key` = ?",
+					[value, userId, DaphnisUserOptionKey.PopnForceUnlockSongs]
+				)
+
+				if (update.affectedRows === 0) {
+					await db.execute<ResultSetHeader>(
+						"INSERT INTO cozynet_user_option (user, `key`, value) VALUES (?, ?, ?)",
+						[userId, DaphnisUserOptionKey.PopnForceUnlockSongs, value]
+					)
+				}
+
+				return c.json({ forceUnlockSongs: enabled })
+			} catch (error) {
+				throw rethrowWithMessage("Failed to update Pop'n song force-unlock setting", error)
+			}
+		}
+	)
+
+export const PopnRoutes = new Hono()
+	.route("static", PopnStaticMusic)
+	.route("profile", PopnProfileRoutes)
+	.route("settings", PopnSettingsRoutes)

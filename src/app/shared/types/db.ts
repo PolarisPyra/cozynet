@@ -2155,5 +2155,6 @@ export enum DaphnisUserOptionKey {
 	hasDownload = "has_download",
 	hasSpecial = "has_special",
 	MaxTickets = "max_tickets",
-	UnlockAllSongs = "unlock_all_songs"
+	UnlockAllSongs = "unlock_all_songs",
+	PopnForceUnlockSongs = "popn_force_unlock_songs"
 }

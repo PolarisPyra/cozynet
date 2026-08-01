@@ -1,3 +1,4 @@
 export { songFilters, scoreFilters } from "./use-filters"
+export { usePopnForceUnlockSongs, useUpdatePopnForceUnlockSongs } from "./use-force-unlock"
 export { usePopnSongs } from "./use-songs"
 export { usePopnScores } from "./use-scores"
