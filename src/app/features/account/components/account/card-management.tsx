@@ -28,7 +28,6 @@ const getErrorMessage = async (response: Response, fallback: string) => {
 }
 
 export function CardManagement() {
-	const [accessCode, setAccessCode] = useState("")
 	const [eamuseAccessCode, setEamuseAccessCode] = useState("")
 	const queryClient = useQueryClient()
 	const cardsQuery = useQuery({
@@ -41,20 +40,13 @@ export function CardManagement() {
 	})
 
 	const bindMutation = useMutation({
-		mutationFn: async ({
-			accessCode: value,
-			eamuseAccessCode: eamuseValue
-		}: {
-			accessCode?: string
-			eamuseAccessCode?: string
-		}) => {
+		mutationFn: async (eamuseValue: string) => {
 			const response = await api.users.cards.bind.$post({
-				json: { ...(value ? { accessCode: value } : {}), ...(eamuseValue ? { eamuseAccessCode: eamuseValue } : {}) }
+				json: { eamuseAccessCode: eamuseValue }
 			})
 			if (!response.ok) throw new Error(await getErrorMessage(response, "Failed to add card"))
 		},
 		onSuccess: async () => {
-			setAccessCode("")
 			setEamuseAccessCode("")
 			await queryClient.invalidateQueries({ queryKey: ["users", "cards"] })
 			toast.success("Card added to your account")
@@ -63,18 +55,9 @@ export function CardManagement() {
 	})
 
 	const unbindMutation = useMutation({
-		mutationFn: async ({
-			accessCode: value,
-			eamuseAccessCode: eamuseValue
-		}: {
-			accessCode?: string
-			eamuseAccessCode?: string
-		}) => {
+		mutationFn: async (eamuseValue: string) => {
 			const response = await api.users.cards.unbind.$post({
-				json: {
-					...(value ? { accessCode: value } : {}),
-					...(eamuseValue ? { eamuseAccessCode: eamuseValue } : {})
-				}
+				json: { eamuseAccessCode: eamuseValue }
 			})
 			if (!response.ok) throw new Error(await getErrorMessage(response, "Failed to remove card"))
 		},
@@ -86,9 +69,11 @@ export function CardManagement() {
 	})
 
 	const cards = cardsQuery.data ?? []
-	const canSubmit =
-		(accessCode.trim().length === 20 || /^E004[0-9A-Fa-f]{12}$/.test(eamuseAccessCode.trim())) &&
-		!bindMutation.isPending
+	const displayCards = [
+		...cards.filter(card => card.card_type === "allnet"),
+		...cards.filter(card => card.card_type === "eamuse")
+	]
+	const canSubmit = /^E004[0-9A-Fa-f]{12}$/.test(eamuseAccessCode.trim()) && !bindMutation.isPending
 
 	const addCardSection = (
 		<div className="space-y-4">
@@ -97,25 +82,9 @@ export function CardManagement() {
 					className="space-y-3"
 					onSubmit={event => {
 						event.preventDefault()
-						if (canSubmit)
-							bindMutation.mutate({
-								accessCode: accessCode.trim() || undefined,
-								eamuseAccessCode: eamuseAccessCode.trim() || undefined
-							})
+						if (canSubmit) bindMutation.mutate(eamuseAccessCode.trim())
 					}}
 				>
-					<label htmlFor="account-card-number" className="text-sm font-medium">
-						ALL.NET Access Code
-					</label>
-					<Input
-						id="account-card-number"
-						value={accessCode}
-						onChange={event => setAccessCode(event.target.value)}
-						placeholder="Enter ALL.NET access code"
-						maxLength={20}
-						inputMode="numeric"
-						className="w-full"
-					/>
 					<label htmlFor="account-eamuse-code" className="text-sm font-medium">
 						e-amusement Code (E004)
 					</label>
@@ -151,8 +120,8 @@ export function CardManagement() {
 				<CardHeader className="border-border flex items-center gap-2 border-b px-4 py-3 sm:px-6">
 					<CreditCard className="text-muted-foreground h-5 w-5" />
 					<div>
-						<CardTitle className="text-lg">Card Management</CardTitle>
-						<p className="text-muted-foreground mt-1 text-sm">Manage the cards bound to your account.</p>
+						<CardTitle className="text-lg">EAMUSE Card Management</CardTitle>
+						<p className="text-muted-foreground mt-1 text-sm">Manage the e-amusement cards bound to your account.</p>
 					</div>
 				</CardHeader>
 				<CardContent className="space-y-2 p-4 sm:p-6">
@@ -167,49 +136,53 @@ export function CardManagement() {
 							</p>
 						) : (
 							<div className="grid gap-3 lg:grid-cols-2">
-								{cards.map(card => {
+								{displayCards.map(card => {
 									const blocked = card.is_locked || card.is_banned
 									return (
 										<div key={`${card.card_type}-${card.id}`} className="bg-muted/30 overflow-hidden rounded-md border">
 											<div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-												<span className="text-sm font-semibold">{card.is_primary ? "Primary Card" : "My Card"}</span>
+												<span className="text-sm font-semibold">
+													{card.card_type === "allnet"
+														? "AIME CARD"
+														: card.is_primary
+															? "Primary e-amusement Card"
+															: "e-amusement Card"}
+												</span>
 												<Badge variant={blocked ? "destructive" : "secondary"} className="rounded-sm text-xs">
 													{card.is_banned
 														? "Banned"
 														: card.is_locked
 															? "Locked"
 															: card.card_type === "allnet"
-																? "ALL.NET"
+																? "AIME CARD"
 																: "eAMUSEMENT"}
 												</Badge>
 											</div>
 											<div className="divide-y text-sm">
 												<div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-3 px-4 py-3">
 													<span className="text-muted-foreground font-medium">
-														{card.card_type === "allnet" ? "ALL.NET Access Code" : "e-amusement Code"}
+														{card.card_type === "allnet" ? "Card Number" : "e-amusement Code"}
 													</span>
 													<code className="truncate text-right text-xs sm:text-sm">
 														{formatCardNumber(card.access_code)}
 													</code>
 												</div>
 											</div>
-											<div className="flex justify-end border-t px-4 py-3">
-												<Button
-													variant="destructive"
-													size="sm"
-													disabled={unbindMutation.isPending}
-													onClick={() => {
-														if (window.confirm("Remove this card from your account?"))
-															unbindMutation.mutate(
-																card.card_type === "allnet"
-																	? { accessCode: card.access_code }
-																	: { eamuseAccessCode: card.access_code }
-															)
-													}}
-												>
-													<Trash2 className="h-4 w-4" /> Remove
-												</Button>
-											</div>
+											{card.card_type === "eamuse" && (
+												<div className="flex justify-end border-t px-4 py-3">
+													<Button
+														variant="destructive"
+														size="sm"
+														disabled={unbindMutation.isPending}
+														onClick={() => {
+															if (window.confirm("Remove this card from your account?"))
+																unbindMutation.mutate(card.access_code)
+														}}
+													>
+														<Trash2 className="h-4 w-4" /> Remove
+													</Button>
+												</div>
+											)}
 										</div>
 									)
 								})}
