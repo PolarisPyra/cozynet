@@ -34,7 +34,7 @@ const PopnProfileRoutes = new Hono().get("playlog", async c => {
 			`
 			SELECT
 				p.*,
-				latest.cnt AS cnt,
+				1 AS cnt,
 				m.title,
 				m.artist,
 				m.genre,
@@ -42,13 +42,6 @@ const PopnProfileRoutes = new Hono().get("playlog", async c => {
 				m.difficulty,
 				m.chartId
 			FROM popn_playlog p
-			INNER JOIN (
-				SELECT music_num, sheet_num, MAX(id) AS latestId, COUNT(*) AS cnt
-				FROM popn_playlog
-				WHERE user_id = ?
-				GROUP BY music_num, sheet_num
-			) latest
-				ON latest.latestId = p.id
 			LEFT JOIN popn_static_music m
 				ON m.songId = p.music_num
 				AND m.chartId = p.sheet_num
@@ -60,7 +53,7 @@ const PopnProfileRoutes = new Hono().get("playlog", async c => {
 			WHERE p.user_id = ?
 			ORDER BY p.playdate DESC, p.id DESC
 		`,
-			[userId, userId]
+			[userId]
 		)
 
 		return c.json(results)
