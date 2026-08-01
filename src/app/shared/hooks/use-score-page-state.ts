@@ -31,6 +31,7 @@ export function useScorePageState<T extends Record<string, unknown>>({
 		try {
 			const saved = localStorage.getItem(storageKey)
 			if (saved === "grid" || saved === "comfortable") return "grid"
+			if (saved === "list") return "list"
 			return defaultDensity
 		} catch {
 			return defaultDensity
