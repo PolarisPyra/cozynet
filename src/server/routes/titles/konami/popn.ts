@@ -49,7 +49,7 @@ const PopnProfileRoutes = new Hono().get("playlog", async c => {
 				GROUP BY music_num, sheet_num
 			) latest
 				ON latest.latestId = p.id
-			INNER JOIN popn_static_music m
+			LEFT JOIN popn_static_music m
 				ON m.songId = p.music_num
 				AND m.chartId = p.sheet_num
 				AND m.version = (
