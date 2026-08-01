@@ -31,14 +31,6 @@ const bindCard = async (connection: ExecutableConnection, table: CardTable, acce
 
 	if (card) return
 
-	const [ownedCards] = await connection.execute<(Pick<DB.AimeCard, "id"> & RowDataPacket)[]>(
-		`SELECT id FROM ${table} WHERE user = ?`,
-		[userId]
-	)
-	if (ownedCards.length > 0) {
-		throw new HTTPException(409, { message: "Your account already has a different card bound to it" })
-	}
-
 	await connection.execute<ResultSetHeader>(
 		`INSERT INTO ${table} (user, access_code, created_date, is_locked, is_banned, memo) VALUES (?, ?, NOW(), 0, 0, '')`,
 		[userId, accessCode]
