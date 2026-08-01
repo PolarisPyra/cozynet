@@ -20,15 +20,28 @@ export namespace DB {
 	export type AimeCard = {
 		id: number
 		user: number
-		access_code: string | null
-		eamuse_access_code: string | null
-		idm: string
-		chip_id: number
+		access_code: string
+		idm: string | null
+		chip_id: number | null
 		created_date: string
 		last_login_date: string
 		is_locked: boolean
 		is_banned: boolean
 		memo: string
+	}
+	export type EamuseCard = {
+		id: number
+		user: number
+		access_code: string
+		idm: string | null
+		created_date: string
+		last_login_date: string
+		is_locked: boolean
+		is_banned: boolean
+		memo: string
+	}
+	export type UserCard = (AimeCard | EamuseCard) & {
+		card_type: "allnet" | "eamuse"
 	}
 	export type AimeUserGameLocks = {
 		id: number

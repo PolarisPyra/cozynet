@@ -5,9 +5,45 @@ import { z } from "zod"
 
 import { DB } from "@/app/shared/types"
 import { accessCodeSchema, eamuseAccessCodeSchema } from "@/app/shared/types/validation/auth"
-import { db } from "@/server/db"
+import { type ExecutableConnection, db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
+
+type CardTable = "aime_card" | "eamuse_card"
+
+const bindCard = async (connection: ExecutableConnection, table: CardTable, accessCode: string, userId: number) => {
+	const [cards] = await connection.execute<(Pick<DB.AimeCard, "id" | "user"> & RowDataPacket)[]>(
+		`SELECT id, user FROM ${table} WHERE access_code = ?`,
+		[accessCode]
+	)
+
+	const card = cards[0]
+	if (card && card.user !== userId) {
+		const [users] = await connection.execute<(DB.AimeUser & RowDataPacket)[]>(
+			"SELECT id FROM aime_user WHERE id = ? AND (username IS NOT NULL OR password IS NOT NULL)",
+			[card.user]
+		)
+		if (users.length > 0) throw new HTTPException(409, { message: "Card already bound to another user" })
+
+		await connection.execute<ResultSetHeader>(`UPDATE ${table} SET user = ? WHERE id = ?`, [userId, card.id])
+		return
+	}
+
+	if (card) return
+
+	const [ownedCards] = await connection.execute<(Pick<DB.AimeCard, "id"> & RowDataPacket)[]>(
+		`SELECT id FROM ${table} WHERE user = ?`,
+		[userId]
+	)
+	if (ownedCards.length > 0) {
+		throw new HTTPException(409, { message: "Your account already has a different card bound to it" })
+	}
+
+	await connection.execute<ResultSetHeader>(
+		`INSERT INTO ${table} (user, access_code, created_date, is_locked, is_banned, memo) VALUES (?, ?, NOW(), 0, 0, '')`,
+		[userId, accessCode]
+	)
+}
 
 const UserRoutes = new Hono()
 	.post("/verify", async c => {
@@ -23,9 +59,16 @@ const UserRoutes = new Hono()
 			const { userId } = c.payload
 			if (!userId) throw new HTTPException(403)
 
-			const [cards] = await db.execute<(DB.AimeCard & RowDataPacket)[]>(
-				"SELECT * FROM aime_card WHERE user = ? ORDER BY id ASC",
-				[userId]
+			const [cards] = await db.execute<(DB.UserCard & RowDataPacket)[]>(
+				`SELECT id, user, access_code, idm, created_date, last_login_date, is_locked, is_banned, memo,
+						'allnet' AS card_type
+				 FROM aime_card WHERE user = ?
+				 UNION ALL
+				 SELECT id, user, access_code, idm, created_date, last_login_date, is_locked, is_banned, memo,
+						'eamuse' AS card_type
+				 FROM eamuse_card WHERE user = ?
+				 ORDER BY created_date ASC, id ASC`,
+				[userId, userId]
 			)
 
 			return c.json({ cards })
@@ -51,90 +94,18 @@ const UserRoutes = new Hono()
 				const { accessCode, eamuseAccessCode } = await c.req.json()
 
 				if (!userId) throw new HTTPException(403)
-
-				// Check if card exists
-				const [cards] = await db.execute<(DB.AimeCard & RowDataPacket)[]>(
-					"SELECT * FROM aime_card WHERE (? IS NOT NULL AND access_code = ?) OR (? IS NOT NULL AND eamuse_access_code = ?)",
-					[accessCode || null, accessCode || null, eamuseAccessCode || null, eamuseAccessCode || null]
-				)
-
-				if (cards.length === 0) {
-					// Complete the user's existing card when the missing identifier is supplied.
-					// This prevents an E004-only bind from creating a second row for an
-					// account that already has its ALL.NET card row.
-					const [ownedCards] = await db.execute<(DB.AimeCard & RowDataPacket)[]>(
-						"SELECT * FROM aime_card WHERE user = ? ORDER BY id ASC",
-						[userId]
-					)
-
-					if (ownedCards.length === 1) {
-						const existingCard = ownedCards[0]
-						const accessCodeFits = !accessCode || !existingCard.access_code || existingCard.access_code === accessCode
-						const eamuseCodeFits =
-							!eamuseAccessCode ||
-							!existingCard.eamuse_access_code ||
-							existingCard.eamuse_access_code === eamuseAccessCode
-
-						if (accessCodeFits && eamuseCodeFits && (!existingCard.access_code || !existingCard.eamuse_access_code)) {
-							await db.execute<ResultSetHeader>(
-								"UPDATE aime_card SET access_code = COALESCE(?, access_code), eamuse_access_code = COALESCE(?, eamuse_access_code) WHERE id = ?",
-								[accessCode || null, eamuseAccessCode || null, existingCard.id]
-							)
-							return c.json({ success: true })
-						}
-					}
-
-					if (ownedCards.length > 0) {
-						throw new HTTPException(409, {
-							message: "Your account already has a different card bound to it"
-						})
-					}
-
-					// Card doesn't exist, create a new one
-					// Generate IDM (16 hex characters) - typically derived from access code
-					// For simplicity, we'll generate a random hex string
-					const idm =
-						eamuseAccessCode || Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("")
-
-					// Generate chip_id (random number)
-					const chipId = Math.floor(Math.random() * 1000000)
-
-					// Create new card bound to user
-					await db.execute<ResultSetHeader>(
-						`INSERT INTO aime_card (user, access_code, eamuse_access_code, idm, chip_id, created_date, is_locked, is_banned, memo)
-						VALUES (?, ?, ?, ?, ?, NOW(), 0, 0, '')`,
-						[userId, accessCode || null, eamuseAccessCode || null, idm, chipId]
-					)
-
-					return c.json({ success: true })
+				const connection = (await db.getConnection()) as ExecutableConnection
+				try {
+					await connection.beginTransaction()
+					if (accessCode) await bindCard(connection, "aime_card", accessCode, userId)
+					if (eamuseAccessCode) await bindCard(connection, "eamuse_card", eamuseAccessCode, userId)
+					await connection.commit()
+				} catch (error) {
+					await connection.rollback()
+					throw error
+				} finally {
+					connection.release()
 				}
-
-				if (cards.length > 1) {
-					throw new HTTPException(409, { message: "The supplied card identifiers belong to different cards" })
-				}
-
-				const card = cards[0]
-
-				// Check if already bound to this user
-				if (card.user === userId) {
-					throw new HTTPException(409, { message: "Card already bound to your account" })
-				}
-
-				// Check if bound to another user
-				const [users] = await db.execute<(DB.AimeUser & RowDataPacket)[]>(
-					"SELECT * FROM aime_user WHERE id = ? AND username IS NOT NULL",
-					[card.user]
-				)
-
-				if (users.length > 0) {
-					throw new HTTPException(409, { message: "Card already bound to another user" })
-				}
-
-				// Bind card to user
-				await db.execute<ResultSetHeader>(
-					"UPDATE aime_card SET user = ?, access_code = COALESCE(?, access_code), eamuse_access_code = COALESCE(?, eamuse_access_code) WHERE id = ?",
-					[userId, accessCode || null, eamuseAccessCode || null, card.id]
-				)
 
 				return c.json({ success: true })
 			} catch (error) {
@@ -162,25 +133,15 @@ const UserRoutes = new Hono()
 
 				if (!userId) throw new HTTPException(403)
 
-				// Verify card belongs to user
-				const [cards] = await db.execute<(DB.AimeCard & RowDataPacket)[]>(
-					"SELECT * FROM aime_card WHERE user = ? AND ((? IS NOT NULL AND access_code = ?) OR (? IS NOT NULL AND eamuse_access_code = ?))",
-					[userId, accessCode || null, accessCode || null, eamuseAccessCode || null, eamuseAccessCode || null]
-				)
-
-				if (cards.length === 0) {
-					throw new HTTPException(404, { message: "Card not found or not bound to your account" })
-				}
-
-				// Delete the card
-				const [result] = await db.execute<ResultSetHeader>("DELETE FROM aime_card WHERE id = ? AND user = ?", [
-					cards[0].id,
-					userId
+				const table = accessCode ? "aime_card" : "eamuse_card"
+				const value = accessCode || eamuseAccessCode
+				const [result] = await db.execute<ResultSetHeader>(`DELETE FROM ${table} WHERE user = ? AND access_code = ?`, [
+					userId,
+					value
 				])
 
-				if (result.affectedRows === 0) {
+				if (result.affectedRows === 0)
 					throw new HTTPException(404, { message: "Card not found or not bound to your account" })
-				}
 
 				return c.json({ success: true })
 			} catch (error) {

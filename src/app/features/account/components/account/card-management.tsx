@@ -12,11 +12,11 @@ import { api } from "@/app/shared/utils"
 
 type UserCard = {
 	id: number
-	access_code: string | null
-	eamuse_access_code: string | null
+	access_code: string
 	idm: string | null
 	is_locked: boolean
 	is_banned: boolean
+	card_type: "allnet" | "eamuse"
 }
 
 const formatCardNumber = (value: string) => value.replace(/(.{4})/g, "$1 ").trim()
@@ -113,7 +113,7 @@ export function CardManagement() {
 							{cards.map(card => {
 								const blocked = card.is_locked || card.is_banned
 								return (
-									<div key={card.id} className="bg-muted/30 overflow-hidden rounded-md border">
+									<div key={`${card.card_type}-${card.id}`} className="bg-muted/30 overflow-hidden rounded-md border">
 										<div className="flex items-center justify-between gap-3 border-b px-4 py-3">
 											<span className="text-sm font-semibold">My Card</span>
 											<Badge variant={blocked ? "destructive" : "secondary"} className="rounded-sm text-xs">
@@ -121,7 +121,7 @@ export function CardManagement() {
 													? "Banned"
 													: card.is_locked
 														? "Locked"
-														: card.access_code
+														: card.card_type === "allnet"
 															? "ALL.NET"
 															: "eAMUSEMENT"}
 											</Badge>
@@ -129,10 +129,10 @@ export function CardManagement() {
 										<div className="divide-y text-sm">
 											<div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-3 px-4 py-3">
 												<span className="text-muted-foreground font-medium">
-													{card.access_code ? "ALL.NET Access Code" : "e-amusement Code"}
+													{card.card_type === "allnet" ? "ALL.NET Access Code" : "e-amusement Code"}
 												</span>
 												<code className="truncate text-right text-xs sm:text-sm">
-													{formatCardNumber(card.access_code || card.eamuse_access_code || "")}
+													{formatCardNumber(card.access_code)}
 												</code>
 											</div>
 										</div>
@@ -144,9 +144,9 @@ export function CardManagement() {
 												onClick={() => {
 													if (window.confirm("Remove this card from your account?"))
 														unbindMutation.mutate(
-															card.access_code
+															card.card_type === "allnet"
 																? { accessCode: card.access_code }
-																: { eamuseAccessCode: card.eamuse_access_code || undefined }
+																: { eamuseAccessCode: card.access_code }
 														)
 												}}
 											>
