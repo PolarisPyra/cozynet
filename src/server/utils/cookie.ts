@@ -17,7 +17,7 @@ export const signAndSetCookie = async (
 		userId: user.id,
 		username: user.username,
 		permissions: user.permissions || 0,
-		aimeCardId: card?.access_code,
+		aimeCardId: card?.access_code ?? undefined,
 		versions
 	}
 	// Create JWT token

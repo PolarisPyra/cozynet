@@ -20,7 +20,7 @@ export namespace DB {
 	export type AimeCard = {
 		id: number
 		user: number
-		access_code: string
+		access_code: string | null
 		eamuse_access_code: string | null
 		idm: string
 		chip_id: number

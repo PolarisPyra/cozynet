@@ -12,7 +12,8 @@ import { api } from "@/app/shared/utils"
 
 type UserCard = {
 	id: number
-	access_code: string
+	access_code: string | null
+	eamuse_access_code: string | null
 	idm: string | null
 	is_locked: boolean
 	is_banned: boolean
@@ -43,11 +44,11 @@ export function CardManagement() {
 			accessCode: value,
 			eamuseAccessCode: eamuseValue
 		}: {
-			accessCode: string
+			accessCode?: string
 			eamuseAccessCode?: string
 		}) => {
 			const response = await api.users.cards.bind.$post({
-				json: { accessCode: value, ...(eamuseValue ? { eamuseAccessCode: eamuseValue } : {}) }
+				json: { ...(value ? { accessCode: value } : {}), ...(eamuseValue ? { eamuseAccessCode: eamuseValue } : {}) }
 			})
 			if (!response.ok) throw new Error(await getErrorMessage(response, "Failed to add card"))
 		},
@@ -61,8 +62,19 @@ export function CardManagement() {
 	})
 
 	const unbindMutation = useMutation({
-		mutationFn: async (value: string) => {
-			const response = await api.users.cards.unbind.$post({ json: { accessCode: value } })
+		mutationFn: async ({
+			accessCode: value,
+			eamuseAccessCode: eamuseValue
+		}: {
+			accessCode?: string
+			eamuseAccessCode?: string
+		}) => {
+			const response = await api.users.cards.unbind.$post({
+				json: {
+					...(value ? { accessCode: value } : {}),
+					...(eamuseValue ? { eamuseAccessCode: eamuseValue } : {})
+				}
+			})
 			if (!response.ok) throw new Error(await getErrorMessage(response, "Failed to remove card"))
 		},
 		onSuccess: async () => {
@@ -73,7 +85,9 @@ export function CardManagement() {
 	})
 
 	const cards = cardsQuery.data ?? []
-	const canSubmit = accessCode.trim().length === 20 && !bindMutation.isPending
+	const canSubmit =
+		(accessCode.trim().length === 20 || /^E004[0-9A-Fa-f]{12}$/.test(eamuseAccessCode.trim())) &&
+		!bindMutation.isPending
 
 	return (
 		<div className="space-y-4">
@@ -103,14 +117,22 @@ export function CardManagement() {
 										<div className="flex items-center justify-between gap-3 border-b px-4 py-3">
 											<span className="text-sm font-semibold">My Card</span>
 											<Badge variant={blocked ? "destructive" : "secondary"} className="rounded-sm text-xs">
-												{card.is_banned ? "Banned" : card.is_locked ? "Locked" : "ALL.NET"}
+												{card.is_banned
+													? "Banned"
+													: card.is_locked
+														? "Locked"
+														: card.access_code
+															? "ALL.NET"
+															: "eAMUSEMENT"}
 											</Badge>
 										</div>
 										<div className="divide-y text-sm">
 											<div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-3 px-4 py-3">
-												<span className="text-muted-foreground font-medium">ALL.NET Access Code</span>
+												<span className="text-muted-foreground font-medium">
+													{card.access_code ? "ALL.NET Access Code" : "e-amusement Code"}
+												</span>
 												<code className="truncate text-right text-xs sm:text-sm">
-													{formatCardNumber(card.access_code)}
+													{formatCardNumber(card.access_code || card.eamuse_access_code || "")}
 												</code>
 											</div>
 										</div>
@@ -121,7 +143,11 @@ export function CardManagement() {
 												disabled={unbindMutation.isPending}
 												onClick={() => {
 													if (window.confirm("Remove this card from your account?"))
-														unbindMutation.mutate(card.access_code)
+														unbindMutation.mutate(
+															card.access_code
+																? { accessCode: card.access_code }
+																: { eamuseAccessCode: card.eamuse_access_code || undefined }
+														)
 												}}
 											>
 												<Trash2 className="h-4 w-4" /> Remove
@@ -146,7 +172,7 @@ export function CardManagement() {
 							event.preventDefault()
 							if (canSubmit)
 								bindMutation.mutate({
-									accessCode: accessCode.trim(),
+									accessCode: accessCode.trim() || undefined,
 									eamuseAccessCode: eamuseAccessCode.trim() || undefined
 								})
 						}}
@@ -183,7 +209,7 @@ export function CardManagement() {
 							Add Card
 						</Button>
 						<p className="text-muted-foreground text-xs">
-							The e-amusement code is the 16-character E004 Konami card identifier.
+							Enter either identifier, or both together. The E004 code is the Konami card identifier.
 						</p>
 					</form>
 					<div className="text-muted-foreground space-y-2 text-sm lg:pt-7">

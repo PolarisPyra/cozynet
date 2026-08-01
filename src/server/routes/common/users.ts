@@ -36,10 +36,14 @@ const UserRoutes = new Hono()
 	.post(
 		"/cards/bind",
 		validateJson(
-			z.object({
-				accessCode: accessCodeSchema,
-				eamuseAccessCode: eamuseAccessCodeSchema.optional()
-			})
+			z
+				.object({
+					accessCode: accessCodeSchema.optional(),
+					eamuseAccessCode: eamuseAccessCodeSchema.optional()
+				})
+				.refine(value => value.accessCode || value.eamuseAccessCode, {
+					message: "An ALL.NET access code or e-amusement code is required"
+				})
 		),
 		async c => {
 			try {
@@ -50,15 +54,16 @@ const UserRoutes = new Hono()
 
 				// Check if card exists
 				const [cards] = await db.execute<(DB.AimeCard & RowDataPacket)[]>(
-					"SELECT * FROM aime_card WHERE access_code = ?",
-					[accessCode]
+					"SELECT * FROM aime_card WHERE (? IS NOT NULL AND access_code = ?) OR (? IS NOT NULL AND eamuse_access_code = ?)",
+					[accessCode || null, accessCode || null, eamuseAccessCode || null, eamuseAccessCode || null]
 				)
 
 				if (cards.length === 0) {
 					// Card doesn't exist, create a new one
 					// Generate IDM (16 hex characters) - typically derived from access code
 					// For simplicity, we'll generate a random hex string
-					const idm = Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("")
+					const idm =
+						eamuseAccessCode || Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("")
 
 					// Generate chip_id (random number)
 					const chipId = Math.floor(Math.random() * 1000000)
@@ -67,10 +72,14 @@ const UserRoutes = new Hono()
 					await db.execute<ResultSetHeader>(
 						`INSERT INTO aime_card (user, access_code, eamuse_access_code, idm, chip_id, created_date, is_locked, is_banned, memo)
 						VALUES (?, ?, ?, ?, ?, NOW(), 0, 0, '')`,
-						[userId, accessCode, eamuseAccessCode || null, idm, chipId]
+						[userId, accessCode || null, eamuseAccessCode || null, idm, chipId]
 					)
 
 					return c.json({ success: true })
+				}
+
+				if (cards.length > 1) {
+					throw new HTTPException(409, { message: "The supplied card identifiers belong to different cards" })
 				}
 
 				const card = cards[0]
@@ -92,8 +101,8 @@ const UserRoutes = new Hono()
 
 				// Bind card to user
 				await db.execute<ResultSetHeader>(
-					"UPDATE aime_card SET user = ?, eamuse_access_code = COALESCE(?, eamuse_access_code) WHERE access_code = ?",
-					[userId, eamuseAccessCode || null, accessCode]
+					"UPDATE aime_card SET user = ?, access_code = COALESCE(?, access_code), eamuse_access_code = COALESCE(?, eamuse_access_code) WHERE id = ?",
+					[userId, accessCode || null, eamuseAccessCode || null, card.id]
 				)
 
 				return c.json({ success: true })
@@ -106,21 +115,26 @@ const UserRoutes = new Hono()
 	.post(
 		"/cards/unbind",
 		validateJson(
-			z.object({
-				accessCode: accessCodeSchema
-			})
+			z
+				.object({
+					accessCode: accessCodeSchema.optional(),
+					eamuseAccessCode: eamuseAccessCodeSchema.optional()
+				})
+				.refine(value => value.accessCode || value.eamuseAccessCode, {
+					message: "An ALL.NET access code or e-amusement code is required"
+				})
 		),
 		async c => {
 			try {
 				const { userId } = c.payload
-				const { accessCode } = await c.req.json()
+				const { accessCode, eamuseAccessCode } = await c.req.json()
 
 				if (!userId) throw new HTTPException(403)
 
 				// Verify card belongs to user
 				const [cards] = await db.execute<(DB.AimeCard & RowDataPacket)[]>(
-					"SELECT * FROM aime_card WHERE access_code = ? AND user = ?",
-					[accessCode, userId]
+					"SELECT * FROM aime_card WHERE user = ? AND ((? IS NOT NULL AND access_code = ?) OR (? IS NOT NULL AND eamuse_access_code = ?))",
+					[userId, accessCode || null, accessCode || null, eamuseAccessCode || null, eamuseAccessCode || null]
 				)
 
 				if (cards.length === 0) {
@@ -128,8 +142,8 @@ const UserRoutes = new Hono()
 				}
 
 				// Delete the card
-				const [result] = await db.execute<ResultSetHeader>("DELETE FROM aime_card WHERE access_code = ? AND user = ?", [
-					accessCode,
+				const [result] = await db.execute<ResultSetHeader>("DELETE FROM aime_card WHERE id = ? AND user = ?", [
+					cards[0].id,
 					userId
 				])
 
