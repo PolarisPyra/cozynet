@@ -30,7 +30,8 @@ export function PopnScoresPage() {
 	} = useScorePageState({
 		data: scores,
 		filters: scoreFilters,
-		storageKey: "popn-scores-density"
+		storageKey: "popn-scores-density",
+		defaultDensity: "grid"
 	})
 	const searchItems = useMemo(() => (scores || []).map(score => ({ id: score.id, title: score.title || "" })), [scores])
 

@@ -12,22 +12,28 @@ interface UseScorePageStateOptions<T> {
 	filters: any // The filter definitions
 	storageKey: string
 	searchKey?: string
+	defaultDensity?: Density
 }
 
 /**
  * Shared hook to manage common state and logic for score pages.
  * Handles: density, search, filtering, and pagination.
  */
-export function useScorePageState<T extends Record<string, unknown>>({ data, filters, storageKey }: UseScorePageStateOptions<T>) {
+export function useScorePageState<T extends Record<string, unknown>>({
+	data,
+	filters,
+	storageKey,
+	defaultDensity = "list"
+}: UseScorePageStateOptions<T>) {
 	const [searchQuery, setSearchQuery] = useState("")
 	const [filterValues, setFilterValues] = useState<FilterValues>(getDefaults(filters))
 	const [density, setDensity] = useState<Density>(() => {
 		try {
 			const saved = localStorage.getItem(storageKey)
 			if (saved === "grid" || saved === "comfortable") return "grid"
-			return "list"
+			return defaultDensity
 		} catch {
-			return "list"
+			return defaultDensity
 		}
 	})
 
@@ -43,7 +49,8 @@ export function useScorePageState<T extends Record<string, unknown>>({ data, fil
 	const filtered = useFiltering(data || [], filters, searchQuery, filterValues)
 	const { page, setPage, totalPages, paged } = usePagination(filtered, STANDARD_PAGE_SIZE, [searchQuery, filterValues])
 
-	const hasActiveFilters = Boolean(searchQuery) || Object.values(filterValues).some((value, index) => value !== defaults[index])
+	const hasActiveFilters =
+		Boolean(searchQuery) || Object.values(filterValues).some((value, index) => value !== defaults[index])
 	const showEmptyState = (data || []).length > 0 && filtered.length === 0
 
 	const resetFilters = () => {
