@@ -21,6 +21,7 @@ export namespace DB {
 		id: number
 		user: number
 		access_code: string
+		eamuse_access_code: string | null
 		idm: string
 		chip_id: number
 		created_date: string

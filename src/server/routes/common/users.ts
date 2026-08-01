@@ -4,7 +4,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2"
 import { z } from "zod"
 
 import { DB } from "@/app/shared/types"
-import { accessCodeSchema } from "@/app/shared/types/validation/auth"
+import { accessCodeSchema, eamuseAccessCodeSchema } from "@/app/shared/types/validation/auth"
 import { db } from "@/server/db"
 import { validateJson } from "@/server/middleware/validator"
 import { rethrowWithMessage } from "@/server/utils/error"
@@ -37,13 +37,14 @@ const UserRoutes = new Hono()
 		"/cards/bind",
 		validateJson(
 			z.object({
-				accessCode: accessCodeSchema
+				accessCode: accessCodeSchema,
+				eamuseAccessCode: eamuseAccessCodeSchema.optional()
 			})
 		),
 		async c => {
 			try {
 				const { userId } = c.payload
-				const { accessCode } = await c.req.json()
+				const { accessCode, eamuseAccessCode } = await c.req.json()
 
 				if (!userId) throw new HTTPException(403)
 
@@ -64,9 +65,9 @@ const UserRoutes = new Hono()
 
 					// Create new card bound to user
 					await db.execute<ResultSetHeader>(
-						`INSERT INTO aime_card (user, access_code, idm, chip_id, created_date, is_locked, is_banned, memo)
-						VALUES (?, ?, ?, ?, NOW(), 0, 0, '')`,
-						[userId, accessCode, idm, chipId]
+						`INSERT INTO aime_card (user, access_code, eamuse_access_code, idm, chip_id, created_date, is_locked, is_banned, memo)
+						VALUES (?, ?, ?, ?, ?, NOW(), 0, 0, '')`,
+						[userId, accessCode, eamuseAccessCode || null, idm, chipId]
 					)
 
 					return c.json({ success: true })
@@ -90,7 +91,10 @@ const UserRoutes = new Hono()
 				}
 
 				// Bind card to user
-				await db.execute<ResultSetHeader>("UPDATE aime_card SET user = ? WHERE access_code = ?", [userId, accessCode])
+				await db.execute<ResultSetHeader>(
+					"UPDATE aime_card SET user = ?, eamuse_access_code = COALESCE(?, eamuse_access_code) WHERE access_code = ?",
+					[userId, eamuseAccessCode || null, accessCode]
+				)
 
 				return c.json({ success: true })
 			} catch (error) {

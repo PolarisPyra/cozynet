@@ -18,6 +18,10 @@ export const usernameSchema = z
 	.regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens")
 
 export const accessCodeSchema = z.string().trim().length(20, "Access code must be exactly 20 characters")
+export const eamuseAccessCodeSchema = z
+	.string()
+	.trim()
+	.regex(/^E004[0-9A-Fa-f]{12}$/, "e-amusement code must be a 16-character E004 code")
 export const turnstileTokenSchema = z.string().trim().min(1).max(2048)
 
 export const keychipSerialSchema = z

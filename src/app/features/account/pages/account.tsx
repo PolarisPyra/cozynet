@@ -3,6 +3,7 @@ import { useAuth } from "@/app/shared/hooks/auth/use-auth"
 
 import { ArcadeLocation } from "../components/account/arcade-location"
 import { ArcadeName } from "../components/account/arcade-name"
+import { CardManagement } from "../components/account/card-management"
 import { ChangePassword } from "../components/account/change-password"
 import { ChangeUsername } from "../components/account/change-username"
 
@@ -29,6 +30,7 @@ const Account = () => {
 						</div>
 					</div>
 				</div>
+				<CardManagement />
 				<div className="bg-card text-card-foreground space-y-6 rounded-sm p-6">
 					<div className="border-border flex items-center gap-2 border-b pb-3">
 						<h2 className="text-lg font-semibold">Arcade Settings</h2>

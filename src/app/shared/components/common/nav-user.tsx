@@ -144,13 +144,6 @@ export function NavUser({
 								<SettingsIcon className="text-primary" />
 								Pop'n Music
 							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={() => navigate("/maimaidx/settings")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<SettingsIcon className="text-primary" />
-								Maimai DX
-							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator className="bg-border" />
 						<DropdownMenuItem
