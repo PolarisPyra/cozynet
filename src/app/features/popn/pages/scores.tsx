@@ -83,11 +83,10 @@ export function PopnScoresPage() {
 											<TableHead>Song</TableHead>
 											<TableHead>Difficulty</TableHead>
 											<TableHead>Level</TableHead>
-											<TableHead>Score</TableHead>
-											<TableHead>Combo</TableHead>
-											<TableHead>Clear Rank</TableHead>
-											<TableHead>Plays</TableHead>
-											<TableHead>Date</TableHead>
+										<TableHead>Score</TableHead>
+										<TableHead>Combo</TableHead>
+										<TableHead>Clear Rank</TableHead>
+										<TableHead>Date</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
@@ -101,10 +100,9 @@ export function PopnScoresPage() {
 												<TableCell className="font-semibold tabular-nums">
 													{score.score?.toLocaleString() ?? "—"}
 												</TableCell>
-												<TableCell>{score.combo ?? "—"}</TableCell>
-												<TableCell>{score.clear_rank ?? "—"}</TableCell>
-												<TableCell>{score.cnt}</TableCell>
-												<TableCell className="text-muted-foreground">{formatPopnDate(score.playdate)}</TableCell>
+														<TableCell>{score.combo ?? "—"}</TableCell>
+														<TableCell>{score.clear_rank ?? "—"}</TableCell>
+														<TableCell className="text-muted-foreground">{formatPopnDate(score.playdate)}</TableCell>
 											</TableRow>
 										))}
 									</TableBody>
@@ -148,15 +146,11 @@ export function PopnScoresPage() {
 											<div className="text-muted-foreground text-xs">Level</div>
 											<div className="font-semibold">{score.difficulty ?? "—"}</div>
 										</div>
-										<div>
-											<div className="text-muted-foreground text-xs">Combo</div>
-											<div className="font-semibold">{score.combo ?? "—"}</div>
-										</div>
-										<div>
-											<div className="text-muted-foreground text-xs">Plays</div>
-											<div className="font-semibold">{score.cnt}</div>
-										</div>
-									</div>
+													<div>
+														<div className="text-muted-foreground text-xs">Combo</div>
+														<div className="font-semibold">{score.combo ?? "—"}</div>
+													</div>
+											</div>
 									<div className="text-muted-foreground mt-auto pt-4 text-xs">{formatPopnDate(score.playdate)}</div>
 								</div>
 							))}
