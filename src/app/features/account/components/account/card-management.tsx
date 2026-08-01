@@ -69,10 +69,7 @@ export function CardManagement() {
 	})
 
 	const cards = cardsQuery.data ?? []
-	const displayCards = [
-		...cards.filter(card => card.card_type === "allnet"),
-		...cards.filter(card => card.card_type === "eamuse")
-	]
+	const displayCards = cards.filter(card => card.card_type === "eamuse")
 	const canSubmit = /^E004[0-9A-Fa-f]{12}$/.test(eamuseAccessCode.trim()) && !bindMutation.isPending
 
 	const addCardSection = (
@@ -132,7 +129,7 @@ export function CardManagement() {
 							</div>
 						) : cards.length === 0 ? (
 							<p className="text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
-								No cards bound yet.
+								No e-amusement cards bound yet.
 							</p>
 						) : (
 							<div className="grid gap-3 lg:grid-cols-2">
@@ -142,47 +139,33 @@ export function CardManagement() {
 										<div key={`${card.card_type}-${card.id}`} className="bg-muted/30 overflow-hidden rounded-md border">
 											<div className="flex items-center justify-between gap-3 border-b px-4 py-3">
 												<span className="text-sm font-semibold">
-													{card.card_type === "allnet"
-														? "AIME CARD"
-														: card.is_primary
-															? "Primary e-amusement Card"
-															: "e-amusement Card"}
+													{card.is_primary ? "Primary e-amusement Card" : "e-amusement Card"}
 												</span>
 												<Badge variant={blocked ? "destructive" : "secondary"} className="rounded-sm text-xs">
-													{card.is_banned
-														? "Banned"
-														: card.is_locked
-															? "Locked"
-															: card.card_type === "allnet"
-																? "AIME CARD"
-																: "eAMUSEMENT"}
+													{card.is_banned ? "Banned" : card.is_locked ? "Locked" : "eAMUSEMENT"}
 												</Badge>
 											</div>
 											<div className="divide-y text-sm">
 												<div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-3 px-4 py-3">
-													<span className="text-muted-foreground font-medium">
-														{card.card_type === "allnet" ? "Card Number" : "e-amusement Code"}
-													</span>
+													<span className="text-muted-foreground font-medium">e-amusement Code</span>
 													<code className="truncate text-right text-xs sm:text-sm">
 														{formatCardNumber(card.access_code)}
 													</code>
 												</div>
 											</div>
-											{card.card_type === "eamuse" && (
-												<div className="flex justify-end border-t px-4 py-3">
-													<Button
-														variant="destructive"
-														size="sm"
-														disabled={unbindMutation.isPending}
-														onClick={() => {
-															if (window.confirm("Remove this card from your account?"))
-																unbindMutation.mutate(card.access_code)
-														}}
-													>
-														<Trash2 className="h-4 w-4" /> Remove
-													</Button>
-												</div>
-											)}
+											<div className="flex justify-end border-t px-4 py-3">
+												<Button
+													variant="destructive"
+													size="sm"
+													disabled={unbindMutation.isPending}
+													onClick={() => {
+														if (window.confirm("Remove this card from your account?"))
+															unbindMutation.mutate(card.access_code)
+													}}
+												>
+													<Trash2 className="h-4 w-4" /> Remove
+												</Button>
+											</div>
 										</div>
 									)
 								})}
