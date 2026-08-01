@@ -91,7 +91,7 @@ export function CardManagement() {
 		!bindMutation.isPending
 
 	const addCardSection = (
-		<div className="border-border space-y-4 border-b pb-3">
+		<div className="border-border space-y-4 border-b pb-0">
 			<div className="flex items-center justify-between gap-3">
 				<div>
 					<h3 className="text-base font-semibold">Add Card</h3>
@@ -161,7 +161,7 @@ export function CardManagement() {
 						<p className="text-muted-foreground mt-1 text-sm">Manage the cards bound to your account.</p>
 					</div>
 				</CardHeader>
-				<CardContent className="space-y-4 p-4 sm:p-6">
+				<CardContent className="space-y-2 p-4 sm:p-6">
 					{addCardSection}
 					<div className="space-y-3">
 						<h3 className="text-base font-semibold">My Cards</h3>
