@@ -91,7 +91,7 @@ export function CardManagement() {
 		!bindMutation.isPending
 
 	const addCardSection = (
-		<div className="border-border space-y-4 border-b pb-0">
+		<div className="space-y-4">
 			<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
 				<form
 					className="space-y-3"
