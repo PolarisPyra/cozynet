@@ -42,14 +42,17 @@ const PopnProfileRoutes = new Hono().get("playlog", async c => {
 				m.difficulty,
 				m.chartId
 			FROM popn_playlog p
+			LEFT JOIN (
+				SELECT songId, chartId, MAX(version) AS maxVersion
+				FROM popn_static_music
+				GROUP BY songId, chartId
+			) latest
+				ON latest.songId = p.music_num
+				AND latest.chartId = p.sheet_num
 			LEFT JOIN popn_static_music m
-				ON m.songId = p.music_num
-				AND m.chartId = p.sheet_num
-				AND m.version = (
-					SELECT MAX(mv.version)
-					FROM popn_static_music mv
-					WHERE mv.songId = m.songId AND mv.chartId = m.chartId
-				)
+				ON m.songId = latest.songId
+				AND m.chartId = latest.chartId
+				AND m.version = latest.maxVersion
 			WHERE p.user_id = ?
 			ORDER BY p.playdate DESC, p.id DESC
 		`,
