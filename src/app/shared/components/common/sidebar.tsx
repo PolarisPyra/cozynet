@@ -4,14 +4,14 @@ import {
 	Bell,
 	BoomBox,
 	ChevronRight,
-	CircuitBoard,
-	CreditCard,
 	Folder,
 	FolderOpen,
+	Globe2,
 	HeartIcon,
 	Joystick,
 	LayoutGrid,
 	List,
+	MonitorCog,
 	NotepadText,
 	Pencil,
 	SettingsIcon,
@@ -107,9 +107,9 @@ const MENU_CONFIG: MenuItem[] = [
 		icon: User,
 		children: [
 			{ name: "General", icon: SettingsIcon, href: "/account/general" },
-			{ name: "Cabinets", icon: CircuitBoard, href: "/account/cabinets" },
-			{ name: "Allnet", icon: Joystick, href: "/account/allnet" },
-			{ name: "Bemani", icon: CreditCard, href: "/account/bemani" }
+			{ name: "Cabinets", icon: MonitorCog, href: "/account/cabinets" },
+			{ name: "Allnet", icon: Globe2, href: "/account/allnet" },
+			{ name: "Bemani", icon: Globe2, href: "/account/bemani" }
 		]
 	}
 ]
