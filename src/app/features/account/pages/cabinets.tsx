@@ -1,4 +1,4 @@
-import { CircuitBoard, LoaderCircle } from "lucide-react"
+import { LoaderCircle } from "lucide-react"
 
 import Header from "@/app/shared/components/common/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/shared/components/ui/card"
@@ -13,7 +13,6 @@ const CabinetsPage = () => {
 			<div className="mb-4 space-y-8 p-4 sm:px-6 sm:py-0">
 				<Card className="rounded-md shadow-none">
 					<CardHeader className="border-border flex items-center gap-2 border-b px-4 py-3 sm:px-6">
-						<CircuitBoard className="text-muted-foreground h-5 w-5" />
 						<div>
 							<CardTitle className="text-lg">My Cabinets</CardTitle>
 							<p className="text-muted-foreground mt-1 text-sm">View the cabinets assigned to your current account.</p>
@@ -31,7 +30,6 @@ const CabinetsPage = () => {
 										<tr>
 											<th className="px-4 py-3 font-semibold sm:px-6">Name</th>
 											<th className="px-4 py-3 font-semibold sm:px-6">PCB ID</th>
-											<th className="px-4 py-3 font-semibold sm:px-6">Keychip ID</th>
 										</tr>
 									</thead>
 									<tbody className="divide-y">
@@ -42,9 +40,6 @@ const CabinetsPage = () => {
 												</td>
 												<td className="px-4 py-4 sm:px-6">
 													<code className="text-xs break-all sm:text-sm">{machine.pcbid || "Not assigned"}</code>
-												</td>
-												<td className="text-muted-foreground px-4 py-4 sm:px-6">
-													<code className="text-xs break-all sm:text-sm">{machine.serial || "Not assigned"}</code>
 												</td>
 											</tr>
 										))}
