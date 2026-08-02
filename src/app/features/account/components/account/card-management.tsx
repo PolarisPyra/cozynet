@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Check, CreditCard, LoaderCircle, Trash2 } from "lucide-react"
+import { Check, LoaderCircle, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Badge } from "@/app/shared/components/ui/badge"
@@ -115,7 +115,6 @@ export function CardManagement() {
 		<div className="space-y-4">
 			<Card className="rounded-md shadow-none">
 				<CardHeader className="border-border flex items-center gap-2 border-b px-4 py-3 sm:px-6">
-					<CreditCard className="text-muted-foreground h-5 w-5" />
 					<div>
 						<CardTitle className="text-lg">e-amusement Card Management</CardTitle>
 						<p className="text-muted-foreground mt-1 text-sm">Manage the e-amusement cards bound to your account.</p>
