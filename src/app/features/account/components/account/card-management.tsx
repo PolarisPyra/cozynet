@@ -113,7 +113,7 @@ export function CardManagement() {
 
 	return (
 		<div className="space-y-4">
-			<Card className="rounded-md shadow-none">
+			<Card className="gap-0 rounded-md py-0 shadow-none">
 				<CardHeader className="border-border flex items-center gap-2 border-b px-4 py-3 sm:px-6">
 					<div>
 						<CardTitle className="text-lg">e-amusement Card Management</CardTitle>

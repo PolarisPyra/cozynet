@@ -11,7 +11,7 @@ const CabinetsPage = () => {
 		<div className="relative min-h-0 flex-1 overflow-auto">
 			<Header title="Cabinets" />
 			<div className="mb-4 space-y-8 p-4 sm:px-6 sm:py-0">
-				<Card className="rounded-md shadow-none">
+				<Card className="gap-0 rounded-md py-0 shadow-none">
 					<CardHeader className="border-border flex items-center gap-2 border-b px-4 py-3 sm:px-6">
 						<div>
 							<CardTitle className="text-lg">My Cabinets</CardTitle>
