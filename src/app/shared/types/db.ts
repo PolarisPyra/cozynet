@@ -933,6 +933,7 @@ export namespace DB {
 		id: number
 		arcade: number
 		serial: string
+		pcbid: string | null
 		board: string | null
 		game: string | null
 		country: string | null

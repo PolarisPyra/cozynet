@@ -117,13 +117,6 @@ export function NavUser({
 								Settings
 							</DropdownMenuLabel>
 							<DropdownMenuItem
-								onClick={() => navigate("/account")}
-								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
-							>
-								<SettingsIcon className="text-primary" />
-								Account
-							</DropdownMenuItem>
-							<DropdownMenuItem
 								onClick={() => navigate("/chunithm/settings")}
 								className="text-primary hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground cursor-pointer"
 							>

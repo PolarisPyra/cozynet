@@ -31,6 +31,10 @@ import "./index.css"
 
 // Lazy-load large pages and feature components to reduce initial bundle size
 const Account = React.lazy(() => import("./app/features/account/pages/account"))
+const AccountAllnet = React.lazy(() => import("./app/features/account/pages/allnet"))
+const AccountBemani = React.lazy(() => import("./app/features/account/pages/bemani"))
+const AccountCabinets = React.lazy(() => import("./app/features/account/pages/cabinets"))
+const AccountGeneral = React.lazy(() => import("./app/features/account/pages/general"))
 const ProfilePage = React.lazy(() => import("./app/features/account/pages/profile"))
 const AdminDashboard = React.lazy(() => import("./app/features/admin/pages/admin-dashboard"))
 const AdminUsers = React.lazy(() => import("./app/features/admin/pages/admin-users"))
@@ -112,6 +116,10 @@ const app = (
 										<Route path="/admin/users" element={<AdminUsers />} />
 										<Route path="/admin/icf" element={<AdminIcfEditor />} />
 										<Route path="/account" element={<Account />} />
+										<Route path="/account/allnet" element={<AccountAllnet />} />
+										<Route path="/account/bemani" element={<AccountBemani />} />
+										<Route path="/account/cabinets" element={<AccountCabinets />} />
+										<Route path="/account/general" element={<AccountGeneral />} />
 										<Route path="/tools/fsdecrypt" element={<FsdecryptPage />} />
 
 										<Route path="/chunithm/settings" element={<ChunithmSettingsPage />} />

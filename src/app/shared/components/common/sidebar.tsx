@@ -4,6 +4,8 @@ import {
 	Bell,
 	BoomBox,
 	ChevronRight,
+	CircuitBoard,
+	CreditCard,
 	Folder,
 	FolderOpen,
 	HeartIcon,
@@ -12,6 +14,7 @@ import {
 	List,
 	NotepadText,
 	Pencil,
+	SettingsIcon,
 	Swords,
 	Trophy,
 	User
@@ -97,6 +100,16 @@ const MENU_CONFIG: MenuItem[] = [
 					{ name: "All Songs", href: "/konami/popn/allsongs", icon: BoomBox }
 				]
 			}
+		]
+	},
+	{
+		name: "Account",
+		icon: User,
+		children: [
+			{ name: "General", icon: SettingsIcon, href: "/account/general" },
+			{ name: "Cabinets", icon: CircuitBoard, href: "/account/cabinets" },
+			{ name: "Allnet", icon: Joystick, href: "/account/allnet" },
+			{ name: "Bemani", icon: CreditCard, href: "/account/bemani" }
 		]
 	}
 ]
@@ -187,7 +200,7 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 			</span>
 			{hasChildren && (
 				<ChevronRight
-					className={cn("ml-auto size-4 shrink-0 transition-all duration-500", isOpen && "rotate-90 scale-125")}
+					className={cn("ml-auto size-4 shrink-0 transition-all duration-500", isOpen && "scale-125 rotate-90")}
 					style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
 				/>
 			)}
@@ -234,8 +247,8 @@ const MenuItemComponent = React.memo(function MenuItemComponent({
 					asChild
 					isActive={isActive}
 					className={cn(
-						"transition-colors duration-200 hover:bg-accent/50",
-						isActive && "border-l-2", 
+						"hover:bg-accent/50 transition-colors duration-200",
+						isActive && "border-l-2",
 						!borderColor && isActive && "border-primary"
 					)}
 					style={borderColor ? { borderLeftColor: borderColor } : undefined}
