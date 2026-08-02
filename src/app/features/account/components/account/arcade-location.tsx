@@ -94,7 +94,7 @@ export function ArcadeLocation() {
 		currentArcade.length > 0
 
 	return (
-		<div className="bg-card">
+		<div>
 			<div className="mb-6">
 				<h2 className="text-primary mb-2 text-xl font-semibold">Change Arcade Location</h2>
 				{isLoading ? (

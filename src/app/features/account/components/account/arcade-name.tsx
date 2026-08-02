@@ -76,7 +76,7 @@ export function ArcadeName() {
 	}
 
 	return (
-		<div className="bg-card">
+		<div>
 			<div className="mb-6">
 				<h2 className="text-foreground mb-2 text-xl font-semibold">Change Arcade Name</h2>
 				{isLoading ? (
