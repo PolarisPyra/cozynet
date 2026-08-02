@@ -117,7 +117,7 @@ export function CardManagement() {
 				<CardHeader className="border-border flex items-center gap-2 border-b px-4 py-3 sm:px-6">
 					<CreditCard className="text-muted-foreground h-5 w-5" />
 					<div>
-						<CardTitle className="text-lg">EAMUSE Card Management</CardTitle>
+						<CardTitle className="text-lg">e-amusement Card Management</CardTitle>
 						<p className="text-muted-foreground mt-1 text-sm">Manage the e-amusement cards bound to your account.</p>
 					</div>
 				</CardHeader>
