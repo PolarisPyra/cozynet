@@ -25,7 +25,7 @@ type Arcade = {
 	nickname?: string
 }
 
-export function ArcadeName() {
+export function ArcadeName({ hideHeader = false }: { hideHeader?: boolean }) {
 	const { data: currentArcade, isLoading } = useCurrentArcade()
 	const { mutate: updateArcadeName, isPending } = useUpdateArcadeName()
 
@@ -77,21 +77,23 @@ export function ArcadeName() {
 
 	return (
 		<div>
-			<div className="mb-6">
-				<h2 className="text-foreground mb-2 text-xl font-semibold">Change Arcade Name</h2>
-				{isLoading ? (
-					<div className="flex items-center gap-2">
-						<Spinner size={16} />
-						<span className="text-muted-foreground text-sm">Loading arcades...</span>
-					</div>
-				) : selectedArcade ? (
-					<p className="text-muted-foreground text-sm">
-						Update name or nickname for <span className="text-foreground font-medium">{selectedArcade.name}</span>
-					</p>
-				) : currentArcade && currentArcade.length > 0 ? (
-					<p className="text-muted-foreground text-sm">Select an arcade to update its name or nickname</p>
-				) : null}
-			</div>
+			{!hideHeader && (
+				<div className="mb-6">
+					<h2 className="text-foreground mb-2 text-xl font-semibold">Change Arcade Name</h2>
+					{isLoading ? (
+						<div className="flex items-center gap-2">
+							<Spinner size={16} />
+							<span className="text-muted-foreground text-sm">Loading arcades...</span>
+						</div>
+					) : selectedArcade ? (
+						<p className="text-muted-foreground text-sm">
+							Update name or nickname for <span className="text-foreground font-medium">{selectedArcade.name}</span>
+						</p>
+					) : currentArcade && currentArcade.length > 0 ? (
+						<p className="text-muted-foreground text-sm">Select an arcade to update its name or nickname</p>
+					) : null}
+				</div>
+			)}
 
 			{!isLoading && (!currentArcade || currentArcade.length === 0) ? (
 				<div className="rounded-sm border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">

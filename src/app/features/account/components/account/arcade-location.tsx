@@ -45,7 +45,7 @@ const getStatesForCountry = (country: string | null): State[] => {
 	return result.sort((a, b) => a.state.localeCompare(b.state))
 }
 
-export function ArcadeLocation() {
+export function ArcadeLocation({ hideHeader = false }: { hideHeader?: boolean }) {
 	const { data: currentArcade, isLoading } = useCurrentArcade()
 	const { mutate: updateArcadeLocation, isPending } = useUpdateArcadeLocation()
 
@@ -95,20 +95,22 @@ export function ArcadeLocation() {
 
 	return (
 		<div>
-			<div className="mb-6">
-				<h2 className="text-primary mb-2 text-xl font-semibold">Change Arcade Location</h2>
-				{isLoading ? (
-					<div className="text-primary-muted flex items-center gap-2 text-sm">
-						<Spinner size={16} /> Loading arcades...
-					</div>
-				) : selectedArcade ? (
-					<p className="text-primary-muted text-sm">
-						Configure location for <span className="font-medium">{selectedArcade.name}</span>
-					</p>
-				) : currentArcade && currentArcade.length > 0 ? (
-					<p className="text-primary-muted text-sm">Select an arcade to configure its location</p>
-				) : null}
-			</div>
+			{!hideHeader && (
+				<div className="mb-6">
+					<h2 className="text-primary mb-2 text-xl font-semibold">Change Arcade Location</h2>
+					{isLoading ? (
+						<div className="text-primary-muted flex items-center gap-2 text-sm">
+							<Spinner size={16} /> Loading arcades...
+						</div>
+					) : selectedArcade ? (
+						<p className="text-primary-muted text-sm">
+							Configure location for <span className="font-medium">{selectedArcade.name}</span>
+						</p>
+					) : currentArcade && currentArcade.length > 0 ? (
+						<p className="text-primary-muted text-sm">Select an arcade to configure its location</p>
+					) : null}
+				</div>
+			)}
 
 			{!isLoading && (!currentArcade || currentArcade.length === 0) ? (
 				<div className="rounded-sm border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
