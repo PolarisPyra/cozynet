@@ -112,6 +112,11 @@ const generateSegaKeychipSerial = async () => {
 	throw new HTTPException(409, { message: "Failed to generate a unique keychip serial" })
 }
 
+const pcbidSchema = z
+	.string()
+	.trim()
+	.regex(/^0120[0-9A-Fa-f]{16}$/, "PCBID must be 20 hexadecimal characters starting with 0120")
+
 const AdminUserRoutes = new Hono()
 	.get("/", async c => {
 		try {
@@ -334,6 +339,65 @@ const AdminUserRoutes = new Hono()
 			throw rethrowWithMessage("Failed to generate keychip for user", error)
 		}
 	})
+	.post(
+		"/pcbid/generate",
+		validateJson(
+			z.object({
+				userId: z.number().int().positive(),
+				pcbid: pcbidSchema,
+				primary: z.boolean()
+			})
+		),
+		async c => {
+			try {
+				const { userId: currentUserId, permissions: currentUserPermissions } = c.payload
+				assertAdmin(currentUserId, currentUserPermissions)
+				const { userId: targetId, pcbid, primary } = c.req.valid("json")
+				const targetUser = await getTargetUser(targetId)
+				const displayName = targetUser.username || `User ${targetId}`
+
+				const connection = await db.getConnection()
+				try {
+					await connection.beginTransaction()
+					const [existingMachines] = await connection.execute<RowDataPacket[]>(
+						"SELECT id FROM machine WHERE pcbid = ? LIMIT 1 FOR UPDATE",
+						[pcbid]
+					)
+					if (existingMachines.length > 0) {
+						throw new HTTPException(409, { message: "That PCBID is already in use" })
+					}
+
+					const [arcadeResult] = await connection.execute<ResultSetHeader>(
+						"INSERT INTO arcade (name, nickname) VALUES (?, ?)",
+						[`${displayName}'s PCBID arcade`, `${displayName}'s PCBID arcade`]
+					)
+					const arcadeId = arcadeResult.insertId
+
+					if (primary) {
+						await connection.execute("UPDATE arcade_owner SET permissions = 0 WHERE user = ?", [targetId])
+					}
+					await connection.execute<ResultSetHeader>(
+						"INSERT INTO arcade_owner (user, arcade, permissions) VALUES (?, ?, ?)",
+						[targetId, arcadeId, primary ? 1 : 0]
+					)
+					await connection.execute<ResultSetHeader>(
+						"INSERT INTO machine (arcade, serial, pcbid, game) VALUES (?, ?, ?, ?)",
+						[arcadeId, "", pcbid, null]
+					)
+
+					await connection.commit()
+					return c.json({ success: true, arcadeId, pcbid, primary, userId: targetId, username: targetUser.username })
+				} catch (error) {
+					await connection.rollback()
+					throw error
+				} finally {
+					connection.release()
+				}
+			} catch (error) {
+				throw rethrowWithMessage("Failed to generate PCBID", error)
+			}
+		}
+	)
 	.put(
 		"/:id",
 		validateJson(

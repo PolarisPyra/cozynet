@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
 	Ban,
+	Binary,
 	Building2,
 	ChevronsUpDown,
 	CreditCard,
@@ -35,6 +36,7 @@ import {
 } from "@/app/shared/components/ui/alert-dialog"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Button } from "@/app/shared/components/ui/button"
+import { Checkbox } from "@/app/shared/components/ui/checkbox"
 import {
 	Command,
 	CommandEmpty,
@@ -145,6 +147,8 @@ const AdminUsers = () => {
 	const [deletingUser, setDeletingUser] = useState<UserWithDetails | null>(null)
 	const [pruneDialogOpen, setPruneDialogOpen] = useState(false)
 	const [keychipGeneratorOpen, setKeychipGeneratorOpen] = useState(false)
+	const [pcbidGeneratorOpen, setPcbidGeneratorOpen] = useState(false)
+	const [pcbidForm, setPcbidForm] = useState({ userId: "", pcbid: "", primary: true })
 	const [ownerDialogOpen, setOwnerDialogOpen] = useState(false)
 	const [ownerConfirmOpen, setOwnerConfirmOpen] = useState(false)
 	const [serialSearch, setSerialSearch] = useState("")
@@ -181,6 +185,10 @@ const AdminUsers = () => {
 	})
 
 	const allUsers = useMemo(() => (data?.users as unknown as UserWithDetails[]) || [], [data])
+	const generatePcbid = () => {
+		const randomPart = Array.from({ length: 14 }, () => Math.floor(Math.random() * 16).toString(16)).join("")
+		return `012000${randomPart}`.toUpperCase()
+	}
 	const availableArcades = useMemo(
 		() => (arcadeData as unknown as { arcades?: ArcadeLookup[] } | undefined)?.arcades ?? [],
 		[arcadeData]
@@ -301,6 +309,25 @@ const AdminUsers = () => {
 			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
 		},
 		onError: error => toast.error(error instanceof Error ? error.message : "Failed to update machine PCBID")
+	})
+
+	const generatePcbidMutation = useMutation({
+		mutationFn: async (payload: { userId: number; pcbid: string; primary: boolean }) => {
+			const res = await api.admin.users.pcbid.generate.$post({ json: payload })
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null
+				throw new Error(body?.message || body?.error || "Failed to generate PCBID")
+			}
+			return await res.json()
+		},
+		onSuccess: result => {
+			toast.success(`PCBID generated: ${result.pcbid}`)
+			setPcbidGeneratorOpen(false)
+			setPcbidForm({ userId: "", pcbid: "", primary: true })
+			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
+			queryClient.invalidateQueries({ queryKey: ["admin", "arcades"] })
+		},
+		onError: error => toast.error(error instanceof Error ? error.message : "Failed to generate PCBID")
 	})
 
 	const banMutation = useMutation({
@@ -461,6 +488,10 @@ const AdminUsers = () => {
 
 	const isBanned = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_banned)
 	const isLocked = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_locked)
+	const openPcbidGenerator = () => {
+		setPcbidForm({ userId: allUsers[0]?.id.toString() ?? "", pcbid: generatePcbid(), primary: true })
+		setPcbidGeneratorOpen(true)
+	}
 	return (
 		<Container>
 			<Header
@@ -500,6 +531,93 @@ const AdminUsers = () => {
 								<div className="pt-2">
 									<KeychipGenerator />
 								</div>
+							</DialogContent>
+						</Dialog>
+						<Dialog open={pcbidGeneratorOpen} onOpenChange={setPcbidGeneratorOpen}>
+							<DialogTrigger asChild>
+								<Button variant="outline" size="sm" className="h-8 text-xs" onClick={openPcbidGenerator}>
+									<Binary className="mr-1 size-3.5" />
+									Generate PCBID
+								</Button>
+							</DialogTrigger>
+							<DialogContent className="sm:max-w-md">
+								<DialogHeader>
+									<DialogTitle>PCBID Generator</DialogTitle>
+									<DialogDescription>Assign a new PCBID to a user.</DialogDescription>
+								</DialogHeader>
+								<form
+									className="space-y-4 pt-2"
+									onSubmit={event => {
+										event.preventDefault()
+										if (!pcbidForm.userId || !pcbidForm.pcbid) return
+										generatePcbidMutation.mutate({
+											userId: Number(pcbidForm.userId),
+											pcbid: pcbidForm.pcbid,
+											primary: pcbidForm.primary
+										})
+									}}
+								>
+									<div>
+										<Label htmlFor="pcbid-user">User</Label>
+										<Select
+											value={pcbidForm.userId}
+											onValueChange={userId => setPcbidForm(current => ({ ...current, userId }))}
+										>
+											<SelectTrigger id="pcbid-user" className="mt-1">
+												<SelectValue placeholder="Select a user" />
+											</SelectTrigger>
+											<SelectContent>
+												{allUsers.map(user => (
+													<SelectItem key={user.id} value={user.id.toString()}>
+														{getUserLabel(user.username, user.id)} (ID {user.id})
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+									<div>
+										<Label htmlFor="generated-pcbid">PCBID</Label>
+										<div className="mt-1 flex gap-2">
+											<Input
+												id="generated-pcbid"
+												value={pcbidForm.pcbid}
+												onChange={event =>
+													setPcbidForm(current => ({
+														...current,
+														pcbid: event.target.value
+															.toUpperCase()
+															.replace(/[^0-9A-F]/g, "")
+															.slice(0, 20)
+													}))
+												}
+												className="font-mono"
+											/>
+											<Button
+												type="button"
+												variant="outline"
+												onClick={() => setPcbidForm(current => ({ ...current, pcbid: generatePcbid() }))}
+											>
+												<Shuffle className="size-4" />
+												Randomize
+											</Button>
+										</div>
+										<p className="text-muted-foreground mt-1 text-xs">20 characters, starting with 0120.</p>
+									</div>
+									<label className="flex items-center gap-2 text-sm">
+										<Checkbox
+											checked={pcbidForm.primary}
+											onCheckedChange={checked => setPcbidForm(current => ({ ...current, primary: checked === true }))}
+										/>
+										<span>Make this the user&apos;s primary PCBID</span>
+									</label>
+									<Button
+										type="submit"
+										disabled={generatePcbidMutation.isPending || !pcbidForm.userId || pcbidForm.pcbid.length !== 20}
+										className="w-full"
+									>
+										{generatePcbidMutation.isPending ? "Generating..." : "Generate PCBID"}
+									</Button>
+								</form>
 							</DialogContent>
 						</Dialog>
 						<Dialog
@@ -1037,7 +1155,7 @@ const AdminUsers = () => {
 															</div>
 															<div className="flex items-end gap-1">
 																<div className="min-w-0 flex-1 space-y-1">
-																			<Label className="text-xs">Machine Serial</Label>
+																	<Label className="text-xs">Machine Serial</Label>
 																	<Input
 																		value={serialEdits[arcade.machineId] ?? ""}
 																		onChange={event =>
@@ -1047,7 +1165,7 @@ const AdminUsers = () => {
 																			}))
 																		}
 																		className="h-8 font-mono text-xs"
-																											placeholder="Machine Serial"
+																		placeholder="Machine Serial"
 																	/>
 																</div>
 																<Button
@@ -1068,7 +1186,7 @@ const AdminUsers = () => {
 																		})
 																	}
 																>
-																		Save Serial
+																	Save Serial
 																</Button>
 															</div>
 														</>
