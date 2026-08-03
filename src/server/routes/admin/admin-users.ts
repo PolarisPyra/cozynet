@@ -115,7 +115,7 @@ const generateSegaKeychipSerial = async () => {
 const pcbidSchema = z
 	.string()
 	.trim()
-	.regex(/^0120[0-9A-Fa-f]{16}$/, "PCBID must be 20 hexadecimal characters starting with 0120")
+	.regex(/^0120[01][0-9A-Fa-f]{15}$/, "PCBID must match 0120[0|1][15 hex digits]")
 
 const AdminUserRoutes = new Hono()
 	.get("/", async c => {
@@ -352,37 +352,37 @@ const AdminUserRoutes = new Hono()
 				const { userId: currentUserId, permissions: currentUserPermissions } = c.payload
 				assertAdmin(currentUserId, currentUserPermissions)
 				const { userId: targetId, pcbid } = c.req.valid("json")
-				const targetUser = await getTargetUser(targetId)
-				const displayName = targetUser.username || `User ${targetId}`
 
 				const connection = await db.getConnection()
 				try {
 					await connection.beginTransaction()
+					const [userMachines] = await connection.execute<RowDataPacket[]>(
+						`SELECT m.id
+						FROM machine m
+						INNER JOIN arcade_owner ao ON ao.arcade = m.arcade
+						WHERE ao.user = ?
+						ORDER BY m.id ASC
+						LIMIT 1
+						FOR UPDATE`,
+						[targetId]
+					)
+					const machineId = userMachines[0]?.id
+					if (!machineId) {
+						throw new HTTPException(404, { message: "Selected user has no machine to update" })
+					}
+
 					const [existingMachines] = await connection.execute<RowDataPacket[]>(
-						"SELECT id FROM machine WHERE pcbid = ? LIMIT 1 FOR UPDATE",
-						[pcbid]
+						"SELECT id FROM machine WHERE pcbid = ? AND id <> ? LIMIT 1 FOR UPDATE",
+						[pcbid, machineId]
 					)
 					if (existingMachines.length > 0) {
 						throw new HTTPException(409, { message: "That PCBID is already in use" })
 					}
 
-					const [arcadeResult] = await connection.execute<ResultSetHeader>(
-						"INSERT INTO arcade (name, nickname) VALUES (?, ?)",
-						[`${displayName}'s PCBID arcade`, `${displayName}'s PCBID arcade`]
-					)
-					const arcadeId = arcadeResult.insertId
-
-					await connection.execute<ResultSetHeader>(
-						"INSERT INTO arcade_owner (user, arcade, permissions) VALUES (?, ?, ?)",
-						[targetId, arcadeId, 1]
-					)
-					await connection.execute<ResultSetHeader>(
-						"INSERT INTO machine (arcade, serial, pcbid, game) VALUES (?, ?, ?, ?)",
-						[arcadeId, "", pcbid, null]
-					)
+					await connection.execute<ResultSetHeader>("UPDATE machine SET pcbid = ? WHERE id = ?", [pcbid, machineId])
 
 					await connection.commit()
-					return c.json({ success: true, arcadeId, pcbid, userId: targetId, username: targetUser.username })
+					return c.json({ success: true, machineId, pcbid, userId: targetId })
 				} catch (error) {
 					await connection.rollback()
 					throw error

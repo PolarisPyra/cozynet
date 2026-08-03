@@ -185,8 +185,9 @@ const AdminUsers = () => {
 
 	const allUsers = useMemo(() => (data?.users as unknown as UserWithDetails[]) || [], [data])
 	const generatePcbid = () => {
-		const randomPart = Array.from({ length: 14 }, () => Math.floor(Math.random() * 16).toString(16)).join("")
-		return `012000${randomPart}`.toUpperCase()
+		const formatVariant = Math.floor(Math.random() * 2)
+		const randomPart = Array.from({ length: 15 }, () => Math.floor(Math.random() * 16).toString(16)).join("")
+		return `0120${formatVariant}${randomPart}`.toUpperCase()
 	}
 	const availableArcades = useMemo(
 		() => (arcadeData as unknown as { arcades?: ArcadeLookup[] } | undefined)?.arcades ?? [],
@@ -542,7 +543,7 @@ const AdminUsers = () => {
 							<DialogContent className="sm:max-w-md">
 								<DialogHeader>
 									<DialogTitle>PCBID Generator</DialogTitle>
-									<DialogDescription>Assign a new PCBID to a user.</DialogDescription>
+									<DialogDescription>Update the selected user&apos;s existing machine PCBID.</DialogDescription>
 								</DialogHeader>
 								<form
 									className="space-y-4 pt-2"
