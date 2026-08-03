@@ -344,15 +344,14 @@ const AdminUserRoutes = new Hono()
 		validateJson(
 			z.object({
 				userId: z.number().int().positive(),
-				pcbid: pcbidSchema,
-				primary: z.boolean()
+				pcbid: pcbidSchema
 			})
 		),
 		async c => {
 			try {
 				const { userId: currentUserId, permissions: currentUserPermissions } = c.payload
 				assertAdmin(currentUserId, currentUserPermissions)
-				const { userId: targetId, pcbid, primary } = c.req.valid("json")
+				const { userId: targetId, pcbid } = c.req.valid("json")
 				const targetUser = await getTargetUser(targetId)
 				const displayName = targetUser.username || `User ${targetId}`
 
@@ -373,12 +372,9 @@ const AdminUserRoutes = new Hono()
 					)
 					const arcadeId = arcadeResult.insertId
 
-					if (primary) {
-						await connection.execute("UPDATE arcade_owner SET permissions = 0 WHERE user = ?", [targetId])
-					}
 					await connection.execute<ResultSetHeader>(
 						"INSERT INTO arcade_owner (user, arcade, permissions) VALUES (?, ?, ?)",
-						[targetId, arcadeId, primary ? 1 : 0]
+						[targetId, arcadeId, 1]
 					)
 					await connection.execute<ResultSetHeader>(
 						"INSERT INTO machine (arcade, serial, pcbid, game) VALUES (?, ?, ?, ?)",
@@ -386,7 +382,7 @@ const AdminUserRoutes = new Hono()
 					)
 
 					await connection.commit()
-					return c.json({ success: true, arcadeId, pcbid, primary, userId: targetId, username: targetUser.username })
+					return c.json({ success: true, arcadeId, pcbid, userId: targetId, username: targetUser.username })
 				} catch (error) {
 					await connection.rollback()
 					throw error

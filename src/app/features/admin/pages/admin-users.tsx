@@ -36,7 +36,6 @@ import {
 } from "@/app/shared/components/ui/alert-dialog"
 import { Badge } from "@/app/shared/components/ui/badge"
 import { Button } from "@/app/shared/components/ui/button"
-import { Checkbox } from "@/app/shared/components/ui/checkbox"
 import {
 	Command,
 	CommandEmpty,
@@ -148,7 +147,7 @@ const AdminUsers = () => {
 	const [pruneDialogOpen, setPruneDialogOpen] = useState(false)
 	const [keychipGeneratorOpen, setKeychipGeneratorOpen] = useState(false)
 	const [pcbidGeneratorOpen, setPcbidGeneratorOpen] = useState(false)
-	const [pcbidForm, setPcbidForm] = useState({ userId: "", pcbid: "", primary: true })
+	const [pcbidForm, setPcbidForm] = useState({ userId: "", pcbid: "" })
 	const [ownerDialogOpen, setOwnerDialogOpen] = useState(false)
 	const [ownerConfirmOpen, setOwnerConfirmOpen] = useState(false)
 	const [serialSearch, setSerialSearch] = useState("")
@@ -312,7 +311,7 @@ const AdminUsers = () => {
 	})
 
 	const generatePcbidMutation = useMutation({
-		mutationFn: async (payload: { userId: number; pcbid: string; primary: boolean }) => {
+		mutationFn: async (payload: { userId: number; pcbid: string }) => {
 			const res = await api.admin.users.pcbid.generate.$post({ json: payload })
 			if (!res.ok) {
 				const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null
@@ -323,7 +322,7 @@ const AdminUsers = () => {
 		onSuccess: result => {
 			toast.success(`PCBID generated: ${result.pcbid}`)
 			setPcbidGeneratorOpen(false)
-			setPcbidForm({ userId: "", pcbid: "", primary: true })
+			setPcbidForm({ userId: "", pcbid: "" })
 			queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
 			queryClient.invalidateQueries({ queryKey: ["admin", "arcades"] })
 		},
@@ -489,7 +488,7 @@ const AdminUsers = () => {
 	const isBanned = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_banned)
 	const isLocked = (cards: UserWithDetails["cards"]) => cards.length > 0 && cards.some(c => c.is_locked)
 	const openPcbidGenerator = () => {
-		setPcbidForm({ userId: allUsers[0]?.id.toString() ?? "", pcbid: generatePcbid(), primary: true })
+		setPcbidForm({ userId: allUsers[0]?.id.toString() ?? "", pcbid: generatePcbid() })
 		setPcbidGeneratorOpen(true)
 	}
 	return (
@@ -552,8 +551,7 @@ const AdminUsers = () => {
 										if (!pcbidForm.userId || !pcbidForm.pcbid) return
 										generatePcbidMutation.mutate({
 											userId: Number(pcbidForm.userId),
-											pcbid: pcbidForm.pcbid,
-											primary: pcbidForm.primary
+											pcbid: pcbidForm.pcbid
 										})
 									}}
 								>
@@ -603,13 +601,6 @@ const AdminUsers = () => {
 										</div>
 										<p className="text-muted-foreground mt-1 text-xs">20 characters, starting with 0120.</p>
 									</div>
-									<label className="flex items-center gap-2 text-sm">
-										<Checkbox
-											checked={pcbidForm.primary}
-											onCheckedChange={checked => setPcbidForm(current => ({ ...current, primary: checked === true }))}
-										/>
-										<span>Make this the user&apos;s primary PCBID</span>
-									</label>
 									<Button
 										type="submit"
 										disabled={generatePcbidMutation.isPending || !pcbidForm.userId || pcbidForm.pcbid.length !== 20}
