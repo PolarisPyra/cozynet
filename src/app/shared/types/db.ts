@@ -2173,5 +2173,11 @@ export enum DaphnisUserOptionKey {
 	hasSpecial = "has_special",
 	MaxTickets = "max_tickets",
 	UnlockAllSongs = "unlock_all_songs",
-	PopnForceUnlockSongs = "popn_force_unlock_songs"
+	PopnForceUnlockSongs = "popn_force_unlock_songs",
+	PopnMusicPhase = "popn_music_phase",
+	PopnExtraStagePhase = "popn_extra_stage_phase",
+	PopnTataitePonponPhase = "popn_tataite_ponpon_phase",
+	PopnForceUnlockDeco = "popn_force_unlock_deco",
+	PopnEnableTimePlayMode = "popn_enable_time_play_mode",
+	PopnEnableLicenses = "popn_enable_licenses"
 }
