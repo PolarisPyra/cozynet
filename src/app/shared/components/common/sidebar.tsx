@@ -17,7 +17,8 @@ import {
 	SettingsIcon,
 	Swords,
 	Trophy,
-	User
+	User,
+	Users
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
@@ -83,6 +84,7 @@ const MENU_CONFIG: MenuItem[] = [
 					{ name: "Leaderboard", href: "/ongeki/leaderboard", icon: Trophy },
 					{ name: "All Songs", href: "/ongeki/allsongs", icon: BoomBox },
 					{ name: "Rating Frame", href: "/ongeki/rating", icon: List },
+					{ name: "Multiplayer", href: "/ongeki/multiplayer", icon: Users },
 					{ name: "Profile", href: "/ongeki/profile", icon: User }
 				]
 			}

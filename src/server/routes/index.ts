@@ -5,6 +5,7 @@ import { AllCommonRoutes } from "./common"
 import { AimeCardRoute } from "./common/aime"
 import { ArcadeRoutes } from "./common/arcades"
 import { UserRoutes } from "./common/users"
+import { AllPartyRoutes } from "./party"
 import { AllChunithmRoutes } from "./titles/chunithm"
 import { AllKonamiRoutes } from "./titles/konami"
 import { AllMaimaiDXRoutes } from "./titles/maimaidx"
@@ -23,6 +24,7 @@ const Routes = new Hono()
 	.route("/konami", AllKonamiRoutes)
 	.route("/maimaidx", AllMaimaiDXRoutes)
 	.route("/arcades", ArcadeRoutes)
+	.route("/party", AllPartyRoutes)
 
 export { Routes, UnprotectedRoutes }
 

@@ -7,6 +7,21 @@ import tsconfigPaths from "vite-tsconfig-paths"
 // Generate a random hash for cache busting
 const buildHash = Math.floor(Math.random() * 90000) + 10000
 
+// http-proxy-middleware crashes (null.split) if the target lacks a scheme.
+// Tolerate bare hostnames in env so a typo doesn't take down `pnpm dev`.
+function normalizeProxyTarget(raw: string): string {
+	const v = (raw || "").trim()
+	if (!v) return "http://localhost:80"
+	const withScheme = /^[a-z]+:\/\//i.test(v) ? v : `http://${v}`
+	try {
+		new URL(withScheme)
+		return withScheme
+	} catch {
+		console.warn(`[vite] /ws/party proxy target "${raw}" is not a valid URL; falling back to http://localhost:80`)
+		return "http://localhost:80"
+	}
+}
+
 const buildDateYearMonthDay = date => {
 	const d = new Date(date)
 	const year = d.getFullYear()
@@ -112,6 +127,12 @@ export default defineConfig(({ mode }) => {
 					changeOrigin: true,
 					secure: false,
 					rewrite: path => path
+				},
+				"/ws/party": {
+					target: normalizeProxyTarget(env.ARTEMIS_WS_URL || env.ARTEMIS_BASE_URL || "http://localhost:80"),
+					changeOrigin: true,
+					secure: false,
+					ws: true
 				}
 			},
 			port: parseInt(env.CLIENT_PORT) || 3000,
@@ -135,7 +156,8 @@ export default defineConfig(({ mode }) => {
 				BUILD_TIME_12_HOUR: buildTime12HourFormat(new Date().toISOString()),
 				CDN_URL: env.CDN_URL,
 				USE_REACT_STRICT: env.NODE_ENV === "development",
-				BUILD_HASH: buildHash
+				BUILD_HASH: buildHash,
+				ARTEMIS_WS_URL: env.ARTEMIS_WS_URL || ""
 			}
 		}
 	}
